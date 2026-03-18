@@ -5,7 +5,7 @@ Formalization of the key algebraic and analytic results from:
 
   Hugo Duminil-Copin and Stanislav Smirnov,
   "The connective constant of the honeycomb lattice equals √(2+√2)",
-  Annals of Mathematics, 175(3), 1653–1665, 2012.
+  Annals of Mathematics, 175(3), 1653--1665, 2012.
 
 ## Overview
 
@@ -33,7 +33,7 @@ We formalize:
 
 import Mathlib
 
-open Real Complex
+open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
@@ -133,8 +133,8 @@ PROBLEM
 PROVIDED SOLUTION
 Use the already proved lemmas j_mul_conj_lam_pow_four and conj_j_mul_lam_pow_four. We have j * conj(λ)^4 = -I and conj(j) * λ^4 = I, so their sum is -I + I = 0.
 -/
-theorem pair_cancellation : j * starRingEnd ℂ lam ^ 4 + starRingEnd ℂ j * lam ^ 4 = 0 := by
-  simp +decide [ show j = Complex.exp ( Complex.I * ( 2 * Real.pi / 3 ) ) from rfl, show lam = Complex.exp ( -Complex.I * ( 5 * Real.pi / 24 ) ) from rfl, ← Complex.exp_nat_mul, ← Complex.exp_conj ] ; ring;
+theorem pair_cancellation : j * conj lam ^ 4 + conj j * lam ^ 4 = 0 := by
+  simp +decide [ show j = Complex.exp ( Complex.I * ( 2 * Real.pi / 3 ) ) from rfl, show lam = Complex.exp ( -Complex.I * ( 5 * Real.pi / 24 ) ) from rfl, ← Complex.exp_nat_mul, ← Complex.exp_conj ] ; ring_nf;
   norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] ; ring_nf ; norm_num [ mul_div ] ;
   rw [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring;
 
@@ -155,10 +155,10 @@ PROVIDED SOLUTION
 Use j_conj_lam_sum which gives j*conj(λ) + conj(j)*λ = ↑(-2*cos(π/8)), and then xc_inv which gives xc⁻¹ = √(2+√2), and sqrt_two_add_sqrt_two_eq which gives √(2+√2) = 2*cos(π/8). So xc = 1/(2*cos(π/8)), and thus xc * (-2*cos(π/8)) = -1. Hence 1 + xc*(j*conj(λ) + conj(j)*λ) = 1 + xc*(-2*cos(π/8)) = 1 - 1 = 0. Rewrite using mul_add to distribute xc.
 -/
 theorem triplet_cancellation :
-    1 + (xc : ℂ) * j * starRingEnd ℂ lam + (xc : ℂ) * starRingEnd ℂ j * lam = 0 := by
-  norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] at * ; ring;
-  unfold j lam xc; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring;
-  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring, show Real.pi * ( 5 / 24 ) = Real.pi / 3 - Real.pi / 8 by ring ] ; norm_num [ Real.sin_sub, Real.cos_sub ] ; ring ; norm_num;
+    1 + (xc : ℂ) * j * conj lam + (xc : ℂ) * conj j * lam = 0 := by
+  norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] at * ; ring_nf;
+  unfold j lam xc; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring_nf;
+  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring, show Real.pi * ( 5 / 24 ) = Real.pi / 3 - Real.pi / 8 by ring ] ; norm_num [ Real.sin_sub, Real.cos_sub ] ; ring_nf ; norm_num;
   rw [ mul_inv_cancel₀ ( by positivity ) ] ; ring
 
 /-! ## Intermediate algebraic facts -/
@@ -170,17 +170,15 @@ j · conj(λ)⁴ = -I (used in pair cancellation).
 PROVIDED SOLUTION
 j·conj(λ)⁴ = exp(i·2π/3)·exp(i·5π/24)⁴ = exp(i·2π/3)·exp(i·20π/24) = exp(i·2π/3)·exp(i·5π/6) = exp(i·(2π/3 + 5π/6)) = exp(i·(4π/6 + 5π/6)) = exp(i·9π/6) = exp(i·3π/2) = -i.
 -/
-lemma j_mul_conj_lam_pow_four : j * starRingEnd ℂ lam ^ 4 = -Complex.I := by
+lemma j_mul_conj_lam_pow_four : j * conj lam ^ 4 = -Complex.I := by
   -- We know that $j = \exp(i \cdot 2\pi/3)$ and $\lambda = \exp(-i \cdot 5\pi/24)$.
-  have h_j : j = Complex.exp (Complex.I * (2 * Real.pi / 3)) := by
-    exact?
-  have h_lam : lam = Complex.exp (-Complex.I * (5 * Real.pi / 24)) := by
-    exact?
-  have h_conj_lam : starRingEnd ℂ lam = Complex.exp (Complex.I * (5 * Real.pi / 24)) := by
+  have h_j : j = Complex.exp (Complex.I * (2 * Real.pi / 3)) := rfl
+  have h_lam : lam = Complex.exp (-Complex.I * (5 * Real.pi / 24)) := rfl
+  have h_conj_lam : conj lam = Complex.exp (Complex.I * (5 * Real.pi / 24)) := by
     norm_num [ h_lam, Complex.ext_iff, Complex.exp_re, Complex.exp_im ]
   rw [h_j, h_conj_lam] at *; ring_nf at *; norm_num [Complex.ext_iff, Complex.exp_re, Complex.exp_im] at *; (
   rw [ ← Complex.exp_nat_mul ] ; ring_nf ; norm_num [ Complex.exp_re, Complex.exp_im, mul_div ] ; ring_nf ; norm_num [ mul_div ] ;
-  rw [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring ; norm_num;);
+  rw [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring_nf ; norm_num;);
 
 /-
 PROBLEM
@@ -189,9 +187,9 @@ conj(j) · λ⁴ = I (used in pair cancellation).
 PROVIDED SOLUTION
 conj(j)·λ⁴ = exp(-i·2π/3)·exp(-i·5π/24)⁴ = exp(-i·2π/3)·exp(-i·20π/24) = exp(-i·2π/3)·exp(-i·5π/6) = exp(-i·(2π/3+5π/6)) = exp(-i·3π/2) = i.
 -/
-lemma conj_j_mul_lam_pow_four : starRingEnd ℂ j * lam ^ 4 = Complex.I := by
-  unfold lam j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, ← Complex.exp_nat_mul ] ; ring;
-  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring, show Real.pi * ( 5 / 6 ) = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring ; norm_num;
+lemma conj_j_mul_lam_pow_four : conj j * lam ^ 4 = Complex.I := by
+  unfold lam j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, ← Complex.exp_nat_mul ] ; ring_nf;
+  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring, show Real.pi * ( 5 / 6 ) = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring_nf ; norm_num;
 
 /-
 PROBLEM
@@ -202,8 +200,8 @@ PROVIDED SOLUTION
 j·conj(λ) = exp(i·2π/3)·exp(i·5π/24) = exp(i·(2π/3 + 5π/24)) = exp(i·(16π/24 + 5π/24)) = exp(i·21π/24) = exp(i·7π/8). So Re(j·conj(λ)) = cos(7π/8) = -cos(π/8).
 -/
 lemma re_j_conj_lam :
-    (j * starRingEnd ℂ lam).re = -Real.cos (Real.pi / 8) := by
-  unfold j lam; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring; norm_num [ mul_div ] ;
+    (j * conj lam).re = -Real.cos (Real.pi / 8) := by
+  unfold j lam; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring_nf; norm_num [ mul_div ] ;
   rw [ ← Real.cos_add ] ; ring_nf ; norm_num [ mul_div ] ; ring_nf ; (
   rw [ show Real.pi * ( 7 / 8 ) = Real.pi - Real.pi / 8 by ring, Real.cos_pi_sub ] ; norm_num [ Real.sqrt_div_self ] ; ring;);
 
@@ -216,8 +214,8 @@ PROVIDED SOLUTION
 Since conj(j * conj(λ)) = conj(j) * λ, the sum j*conj(λ) + conj(j)*λ = 2 * Re(j*conj(λ)). By re_j_conj_lam, Re(j*conj(λ)) = -cos(π/8). So the sum = 2*(-cos(π/8)) = -2*cos(π/8). Cast to complex.
 -/
 lemma j_conj_lam_sum :
-    j * starRingEnd ℂ lam + starRingEnd ℂ j * lam = ↑(-2 * Real.cos (Real.pi / 8)) := by
-  convert congr_arg ( fun x : ℝ => x : ℝ → ℂ ) ( show 2 * ( j * ( starRingEnd ℂ ) lam |> Complex.re ) = -2 * Real.cos ( Real.pi / 8 ) from ?_ ) using 1;
+    j * conj lam + conj j * lam = ↑(-2 * Real.cos (Real.pi / 8)) := by
+  convert congr_arg ( fun x : ℝ => x : ℝ → ℂ ) ( show 2 * ( j * ( conj ) lam |> Complex.re ) = -2 * Real.cos ( Real.pi / 8 ) from ?_ ) using 1;
   · norm_num [ Complex.ext_iff ] at *; constructor <;> linarith;
   · rw [ re_j_conj_lam ] ; ring
 
@@ -257,15 +255,15 @@ theorem fekete_submultiplicative {a : ℕ → ℝ} (ha_pos : ∀ n, 0 < a n)
       exact by rcases exists_lt_of_csInf_lt ( show { x : ℝ | ∃ n : ℕ, 1 ≤ n ∧ a n ^ ( 1 / ( n : ℝ ) ) = x }.Nonempty from ⟨ _, ⟨ 1, by norm_num, rfl ⟩ ⟩ ) ( lt_add_of_pos_right _ <| half_pos hε_pos ) with ⟨ x, ⟨ n, hn, rfl ⟩, hx ⟩ ; exact ⟨ n, hn, hx ⟩ ;;
     -- By submultiplicativity, we have $a(n) \leq a(m)^q \cdot a(r)$ where $n = qm + r$ and $0 \leq r < m$.
     have h_submult : ∀ n : ℕ, n ≥ m → a n ≤ a m ^ (n / m : ℕ) * a (n % m) := by
-      intro n hn; rw [ ← Nat.div_add_mod n m ] ; induction' n / m with k hk IH <;> simp_all +decide [ pow_succ, mul_assoc ] ;
-      convert le_trans ( ha_submult ( m * k + n % m ) m ) ( mul_le_mul_of_nonneg_right hk ( le_of_lt ( ha_pos m ) ) ) using 1 ; ring;
+      intro n hn; rw [ ← Nat.div_add_mod n m ] ; induction' n / m with k hk IH <;> simp_all +decide ;
+      convert le_trans ( ha_submult ( m * k + n % m ) m ) ( mul_le_mul_of_nonneg_right hk ( le_of_lt ( ha_pos m ) ) ) using 1 ; ring_nf;
       rw [ show ( m * ( k + 1 ) + n % m ) / m = ( m * k + n % m ) / m + 1 from Nat.le_antisymm ( Nat.le_of_lt_succ <| Nat.div_lt_of_lt_mul <| by linarith [ Nat.div_add_mod ( m * k + n % m ) m, Nat.mod_lt ( m * k + n % m ) hm.1, Nat.mod_lt n hm.1 ] ) ( Nat.le_div_iff_mul_le hm.1 |>.2 <| by linarith [ Nat.div_mul_le_self ( m * k + n % m ) m, Nat.mod_lt ( m * k + n % m ) hm.1, Nat.mod_lt n hm.1 ] ) ] ; ring;
     -- Taking the $n$-th root of both sides of the inequality $a(n) \leq a(m)^q \cdot a(r)$, we get $a(n)^{1/n} \leq a(m)^{q/n} \cdot a(r)^{1/n}$.
     have h_root : ∀ n : ℕ, n ≥ m → a n ^ (1 / (n : ℝ)) ≤ a m ^ ((n / m : ℕ) / (n : ℝ)) * a (n % m) ^ (1 / (n : ℝ)) := by
       intros n hn
       have h_root : a n ^ (1 / (n : ℝ)) ≤ (a m ^ (n / m : ℕ) * a (n % m)) ^ (1 / (n : ℝ)) := by
         exact Real.rpow_le_rpow ( le_of_lt ( ha_pos _ ) ) ( h_submult _ hn ) ( by positivity );
-      convert h_root using 1 ; rw [ Real.mul_rpow ( pow_nonneg ( le_of_lt ( ha_pos _ ) ) _ ) ( le_of_lt ( ha_pos _ ) ) ] ; rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( le_of_lt ( ha_pos _ ) ) ] ; ring;
+      convert h_root using 1 ; rw [ Real.mul_rpow ( pow_nonneg ( le_of_lt ( ha_pos _ ) ) _ ) ( le_of_lt ( ha_pos _ ) ) ] ; rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( le_of_lt ( ha_pos _ ) ) ] ; ring_nf;
     -- As $n \to \infty$, $(n / m) / n \to 1 / m$ and $a(r)^{1/n} \to 1$ for any fixed $r$.
     have h_lim : Filter.Tendsto (fun n : ℕ => a m ^ ((n / m : ℕ) / (n : ℝ))) Filter.atTop (nhds (a m ^ (1 / (m : ℝ)))) ∧ ∀ r : ℕ, r < m → Filter.Tendsto (fun n : ℕ => a r ^ (1 / (n : ℝ))) Filter.atTop (nhds 1) := by
       constructor;
@@ -273,8 +271,8 @@ theorem fekete_submultiplicative {a : ℕ → ℝ} (ha_pos : ∀ n, 0 < a n)
         have h_frac : Filter.Tendsto (fun n : ℕ => (n / m : ℕ) / (n : ℝ)) Filter.atTop (nhds (1 / (m : ℝ))) := by
           -- We can use the fact that $(n / m : ℕ) / (n : ℝ) = 1 / m - (n % m : ℕ) / (n : ℝ) * (1 / m)$.
           have h_div : ∀ n : ℕ, n ≥ m → (n / m : ℕ) / (n : ℝ) = 1 / m - (n % m : ℕ) / (n : ℝ) * (1 / m) := by
-            intro n hn; rw [ div_mul_eq_mul_div, div_sub_div, div_eq_div_iff ] <;> ring <;> norm_num [ show n ≠ 0 by linarith, show m ≠ 0 by linarith ] ;
-            rw [ ← Nat.mod_add_div n m ] ; norm_num [ sq, mul_assoc, mul_comm, mul_left_comm, ne_of_gt ( zero_lt_one.trans_le hm.1 ) ] ; ring;
+            intro n hn; rw [ div_mul_eq_mul_div, div_sub_div, div_eq_div_iff ] <;> ring_nf <;> norm_num [ show n ≠ 0 by linarith, show m ≠ 0 by linarith ] ;
+            rw [ ← Nat.mod_add_div n m ] ; norm_num [ sq, mul_assoc, mul_comm, mul_left_comm, ne_of_gt ( zero_lt_one.trans_le hm.1 ) ] ; ring_nf;
             norm_num [ Nat.add_mul_div_left _ _ ( by linarith : 0 < m ) ] ; ring;
           -- Since $(n % m : ℕ) / (n : ℝ) \to 0$ as $n \to \infty$, we have $(n / m : ℕ) / (n : ℝ) \to 1 / m$.
           have h_mod : Filter.Tendsto (fun n : ℕ => (n % m : ℕ) / (n : ℝ)) Filter.atTop (nhds 0) := by
@@ -287,7 +285,7 @@ theorem fekete_submultiplicative {a : ℕ → ℝ} (ha_pos : ∀ n, 0 < a n)
       have h_lim_prod : Filter.Tendsto (fun n : ℕ => a m ^ ((n / m : ℕ) / (n : ℝ)) * a (n % m) ^ (1 / (n : ℝ))) Filter.atTop (nhds (a m ^ (1 / (m : ℝ)) * 1)) := by
         refine' Filter.Tendsto.mul h_lim.1 _;
         rw [ Metric.tendsto_nhds ] at *;
-        intro ε hε_pos; simp_all +decide [ Nat.mod_eq_of_lt ] ;
+        intro ε hε_pos; simp_all +decide
         choose! N hN using fun r hr => Metric.tendsto_atTop.mp ( h_lim.2 r hr ) ε hε_pos;
         exact ⟨ Finset.sup ( Finset.range m ) N, fun n hn => hN _ ( Nat.mod_lt _ hm.1 ) _ ( le_trans ( Finset.le_sup ( f := N ) ( Finset.mem_range.mpr ( Nat.mod_lt _ hm.1 ) ) ) hn ) ⟩;
       simpa using h_lim_prod.eventually ( gt_mem_nhds <| by linarith );
@@ -335,7 +333,7 @@ The boundary identity (Lemma 2 of the paper) expressed abstractly:
     for all strip widths T.
 -/
 theorem bridge_bound_of_strip_identity {A B E : ℝ}
-    (hA : 0 ≤ A) (hB : 0 ≤ B) (hE : 0 ≤ E)
+    (hA : 0 ≤ A) (hE : 0 ≤ E)
     (hid : 1 = c_alpha * A + B + c_eps * E) : B ≤ 1 := by
   -- Since $c_\alpha$ and $c_\varepsilon$ are positive, the terms $c_\alpha \cdot A$ and $c_\varepsilon \cdot E$ are non-negative. Therefore, $B$ must be less than or equal to 1 because adding positive terms to $B$ can't make the sum exceed 1.
   have h_pos : 0 ≤ c_alpha * A ∧ 0 ≤ c_eps * E := by
@@ -361,7 +359,7 @@ PROVIDED SOLUTION
 By induction on T. The recurrence B_n ≤ c_α·x_c·B_{n+1}² + B_{n+1} means B_{n+1} ≥ B_n / (1 + c_α·x_c·B_{n+1}). Since B_T ≤ 1 by bridge_bound, we have c_α·x_c·B_{n+1} ≤ c_α·x_c, so the denominator is at most 1 + c_α·x_c. One can show by induction that if B_T ≥ δ₀/T where δ₀ = min(δ, 1/(c_α·x_c)), then using the quadratic recurrence B_{T+1} ≥ 1/(c_α·x_c·(T+1)) follows. The key idea: from c_α·x_c·u² + u ≥ v, if v ≥ δ₀/T then u ≥ δ₀/(T+1).
 -/
 theorem bridge_lower_bound {B : ℕ → ℝ} {δ : ℝ}
-    (hδ : 0 < δ) (hB1 : δ ≤ B 1)
+    (hB1 : δ ≤ B 1)
     (hB_pos : ∀ n, 0 < B n)
     (hrec : ∀ n, B n ≤ c_alpha * xc * B (n + 1) ^ 2 + B (n + 1)) :
     ∀ T, 1 ≤ T → min δ (1 / (c_alpha * xc)) / T ≤ B T := by
@@ -393,8 +391,8 @@ For x < x_c, the bridge partition function decays exponentially.
     Since a bridge of width T has length ≥ T and B^{x_c}_T ≤ 1, we get
     B^x_T ≤ (x/x_c)^T.
 -/
-theorem bridge_exponential_decay {x : ℝ} (hx : 0 < x) (hxxc : x < xc)
-    {BT_xc : ℝ} (hBT : BT_xc ≤ 1) (hBT_pos : 0 ≤ BT_xc) (T : ℕ) :
+theorem bridge_exponential_decay {x : ℝ} (hx : 0 < x)
+    {BT_xc : ℝ} (hBT : BT_xc ≤ 1) (T : ℕ) :
     (x / xc) ^ T * BT_xc ≤ (x / xc) ^ T := by
   exact mul_le_of_le_one_right ( pow_nonneg ( div_nonneg hx.le ( le_of_lt ( show 0 < xc from by rw [ show xc = 1 / Real.sqrt ( 2 + Real.sqrt 2 ) by rfl ] ; positivity ) ) ) _ ) hBT
 
@@ -416,5 +414,130 @@ theorem prod_one_add_geometric_converges {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1)
   have h_exp_log_prod : Filter.Tendsto (fun N => Real.exp (∑ T ∈ Finset.range N, Real.log (1 + r ^ (T + 1)))) Filter.atTop (nhds (Real.exp (∑' T, Real.log (1 + r ^ (T + 1))))) := by
     exact Real.continuous_exp.continuousAt.tendsto.comp h_log_prod.hasSum.tendsto_sum_nat;
   exact ⟨ _, Real.exp_pos _, h_exp_log_prod.congr fun N => by rw [ Real.exp_sum, Finset.prod_congr rfl fun _ _ => Real.exp_log ( by positivity ) ] ⟩
+
+/-! ## The hexagonal lattice, self-avoiding walks, and the main theorem
+
+We now define the hexagonal (honeycomb) lattice as a simple graph, formalize
+self-avoiding walks on it, define the connective constant, and state the
+main theorem: μ = √(2+√2).
+-/
+
+/-- Vertex of the hexagonal (honeycomb) lattice.
+    Each vertex is represented as (x, y, sublattice) where sublattice ∈ {false, true}
+    corresponds to the two sublattices of this bipartite graph.
+
+    In the geometric realization, sublattice-false vertices sit at positions
+    determined by the integer coordinates (x, y) via the lattice basis vectors,
+    and sublattice-true vertices are their neighbors within each unit cell. -/
+abbrev HexVertex := ℤ × ℤ × Bool
+
+/-- The origin vertex of the hexagonal lattice (used as the starting point
+    for counting self-avoiding walks). -/
+def hexOrigin : HexVertex := (0, 0, false)
+
+/-- The hexagonal (honeycomb) lattice as a simple graph.
+
+    Each vertex (x, y, false) is adjacent to exactly three vertices:
+    • (x, y, true)     — the neighbor within the same unit cell
+    • (x+1, y, true)   — the neighbor in the adjacent cell to the right
+    • (x, y+1, true)   — the neighbor in the adjacent cell above
+
+    Each vertex (x, y, true) is adjacent to the corresponding three
+    false-sublattice vertices. This gives the unique (up to isomorphism)
+    3-regular infinite planar bipartite graph known as the honeycomb lattice. -/
+def hexGraph : SimpleGraph HexVertex where
+  Adj v w :=
+    (v.2.2 = false ∧ w.2.2 = true ∧
+      ((v.1 = w.1 ∧ v.2.1 = w.2.1) ∨
+       (v.1 + 1 = w.1 ∧ v.2.1 = w.2.1) ∨
+       (v.1 = w.1 ∧ v.2.1 + 1 = w.2.1))) ∨
+    (v.2.2 = true ∧ w.2.2 = false ∧
+      ((w.1 = v.1 ∧ w.2.1 = v.2.1) ∨
+       (w.1 + 1 = v.1 ∧ w.2.1 = v.2.1) ∨
+       (w.1 = v.1 ∧ w.2.1 + 1 = v.2.1)))
+  symm v w h := by
+    rcases h with ⟨h1, h2, h3 | h3 | h3⟩ | ⟨h1, h2, h3 | h3 | h3⟩ <;>
+      simp_all
+  loopless := ⟨fun v h => by rcases h with ⟨h1, h2, _⟩ | ⟨h1, h2, _⟩ <;> simp_all⟩
+
+/-- The set of n-step self-avoiding walks from vertex v on the hexagonal lattice.
+    An n-step SAW is an injective function w : Fin (n+1) → HexVertex with w(0) = v
+    and consecutive vertices adjacent in hexGraph. The injectivity condition
+    (w visits every vertex at most once) is what makes the walk "self-avoiding". -/
+structure SAW (v : HexVertex) (n : ℕ) where
+  w : HexVertex
+  p : hexGraph.Path v w
+  l : p.1.length = n
+
+/-- The set of n-step SAWs from any fixed vertex is finite.
+    This follows from the fact that an n-step SAW visits n+1 distinct vertices,
+    all within graph-distance n of the starting vertex, and the hexagonal
+    lattice is locally finite. -/
+instance (v : HexVertex) (n : ℕ) : Fintype (SAW v n) := by sorry
+
+/-- The number of n-step self-avoiding walks from the origin on the
+    hexagonal lattice. This is the sequence c_n in the paper. -/
+def saw_count (n : ℕ) : ℕ := Fintype.card (SAW hexOrigin n)
+
+/-- There is always at least one n-step SAW from the origin
+    (the walk along a fixed ray has c_n ≥ 1 for all n). -/
+lemma saw_count_pos : ∀ n, 0 < saw_count n := by sorry
+
+/-- The SAW count is submultiplicative: c_{n+m} ≤ c_n · c_m.
+    This follows because any (n+m)-step SAW can be uniquely cut after n steps
+    into an n-step SAW and a translate of an m-step SAW, giving an injection
+    from (n+m)-step SAWs into pairs of (n-step, m-step) SAWs. -/
+lemma saw_count_submult : ∀ n m, saw_count (n + m) ≤ saw_count n * saw_count m := by sorry
+
+/-- The connective constant of the hexagonal lattice, defined as
+    inf_{n ≥ 1} c_n^{1/n}, where c_n is the number of n-step self-avoiding
+    walks from the origin.
+
+    By Fekete's lemma (submultiplicativity of c_n), this infimum equals
+    the limit lim_{n→∞} c_n^{1/n}. -/
+def connective_constant : ℝ :=
+  sInf ((fun n => (saw_count n : ℝ) ^ (1 / (n : ℝ))) '' Set.Ici 1)
+
+/-- The connective constant equals the limit of c_n^{1/n} as n → ∞.
+    This is a consequence of Fekete's lemma applied to the submultiplicative
+    sequence c_n. -/
+lemma connective_constant_is_limit :
+    Filter.Tendsto (fun n => (saw_count n : ℝ) ^ (1 / (n : ℝ)))
+      Filter.atTop (nhds connective_constant) := by sorry
+
+/-- The connective constant is positive (in fact ≥ √2, since c_n ≥ (√2)^n). -/
+lemma connective_constant_pos : 0 < connective_constant := by sorry
+
+/-- **Main Theorem** (Duminil-Copin & Smirnov, 2012):
+    The connective constant of the hexagonal lattice equals √(2+√2).
+
+    The proof proceeds in two parts:
+    • **Lower bound** (μ ≥ √(2+√2)): At the critical fugacity x_c = 1/√(2+√2),
+      the parafermionic observable satisfies a vertex relation (Lemma 1) which,
+      when summed over strip domains, yields the identity
+      1 = c_α·A + B + c_ε·E (Lemma 2). This forces the partition function
+      Z(x_c) = ∞, either through the E-terms or through the lower bound
+      B_T ≥ c/T from the recurrence relation.
+    • **Upper bound** (μ ≤ √(2+√2)): The Hammersley-Welsh bridge decomposition
+      expresses Z(x) as a product over bridge partition functions. Since
+      B_T^{x_c} ≤ 1 and bridges of width T have length ≥ T, for x < x_c
+      we get B_T^x ≤ (x/x_c)^T, giving Z(x) < ∞. -/
+theorem connective_constant_eq :
+    connective_constant = Real.sqrt (2 + Real.sqrt 2) := by sorry
+
+/-- Equivalent formulation: the connective constant equals 1/x_c. -/
+theorem connective_constant_eq_inv_xc :
+    connective_constant = xc⁻¹ := by sorry
+
+/-- The partition function Z(x) diverges for x > x_c.
+    This is the lower bound half of the main theorem: μ ≥ 1/x_c = √(2+√2). -/
+theorem partition_function_diverges_above_xc :
+    ∀ x > xc, ¬ Summable (fun n => (saw_count n : ℝ) * x ^ n) := by sorry
+
+/-- The partition function Z(x) converges for x < x_c.
+    This is the upper bound half of the main theorem: μ ≤ 1/x_c = √(2+√2). -/
+theorem partition_function_converges_below_xc :
+    ∀ x, 0 < x → x < xc →
+      Summable (fun n => (saw_count n : ℝ) * x ^ n) := by sorry
 
 end
