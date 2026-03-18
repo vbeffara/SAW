@@ -469,19 +469,219 @@ structure SAW (v : HexVertex) (n : ℕ) where
   p : hexGraph.Path v w
   l : p.1.length = n
 
-/-- The set of n-step SAWs from any fixed vertex is finite.
-    This follows from the fact that an n-step SAW visits n+1 distinct vertices,
-    all within graph-distance n of the starting vertex, and the hexagonal
-    lattice is locally finite. -/
-instance (v : HexVertex) (n : ℕ) : Fintype (SAW v n) := by sorry
+/-! ## Finiteness of SAW
+
+To show the set of n-step SAWs from a vertex is finite, we bound the
+coordinates of walk vertices and use the finiteness of paths within
+a bounded region. We use a WalkTree type that encodes all possible walks
+of a given length as a finite type.
+-/
+
+/-- Adjacency in hexGraph is decidable. -/
+instance hexGraph_decidableAdj' : DecidableRel hexGraph.Adj := fun v w => by
+  unfold hexGraph; simp only; exact inferInstance
+
+/-- Explicit enumeration of hex vertex neighbors. -/
+private def hexNeighborFinset (v : HexVertex) : Finset HexVertex :=
+  match v.2.2 with
+  | false => {(v.1, v.2.1, true), (v.1 + 1, v.2.1, true), (v.1, v.2.1 + 1, true)}
+  | true  => {(v.1, v.2.1, false), (v.1 - 1, v.2.1, false), (v.1, v.2.1 - 1, false)}
+
+private lemma hexNeighborFinset_spec (v w : HexVertex) :
+    w ∈ hexNeighborFinset v ↔ hexGraph.Adj v w := by
+  simp only [hexNeighborFinset]
+  rcases v with ⟨vx, vy, vb⟩; rcases w with ⟨wx, wy, wb⟩
+  cases vb <;> cases wb <;>
+    simp [hexGraph, Finset.mem_insert, Finset.mem_singleton, Prod.mk.injEq] <;> omega
+
+/-- The hexagonal lattice is locally finite. -/
+instance hexGraph_locallyFinite' : hexGraph.LocallyFinite := fun v =>
+  Fintype.ofFinset (hexNeighborFinset v) fun w => by
+    rw [SimpleGraph.mem_neighborSet, hexNeighborFinset_spec]
+
+/-- Adjacent vertices in hexGraph differ by at most 1 in each coordinate. -/
+lemma hexGraph_adj_bound {v w : HexVertex} (h : hexGraph.Adj v w) :
+    w.1 - v.1 ≤ 1 ∧ v.1 - w.1 ≤ 1 ∧ w.2.1 - v.2.1 ≤ 1 ∧ v.2.1 - w.2.1 ≤ 1 := by
+  rcases h with ⟨_, _, h | h | h⟩ | ⟨_, _, h | h | h⟩ <;> obtain ⟨h1, h2⟩ := h <;> omega
+
+/-- A walk of length n from v has its endpoint within coordinate distance n. -/
+lemma hexGraph_walk_bound {v w : HexVertex} (p : hexGraph.Walk v w) :
+    w.1 - v.1 ≤ p.length ∧ v.1 - w.1 ≤ p.length ∧
+    w.2.1 - v.2.1 ≤ p.length ∧ v.2.1 - w.2.1 ≤ p.length := by
+  induction p with
+  | nil => simp
+  | cons h p ih =>
+    obtain ⟨a, b, c, d⟩ := hexGraph_adj_bound h
+    obtain ⟨e, f, g, k⟩ := ih
+    simp only [SimpleGraph.Walk.length_cons]; push_cast
+    exact ⟨by omega, by omega, by omega, by omega⟩
+
+/-- All walks of length n from v, encoded as a tree of neighbor choices.
+    WalkTree v 0 = Unit (just the nil walk).
+    WalkTree v (n+1) = Σ (u ∈ neighbors v), WalkTree u n. -/
+private def WalkTree (v : HexVertex) : ℕ → Type
+  | 0 => Unit
+  | n + 1 => (u : hexGraph.neighborSet v) × WalkTree u.1 n
+
+/-- WalkTree is Fintype by induction. -/
+private instance WalkTree.instFintype : (v : HexVertex) → (n : ℕ) → Fintype (WalkTree v n)
+  | _, 0 => inferInstanceAs (Fintype Unit)
+  | v, n + 1 => @Sigma.instFintype _ _ (fun u => instFintype u.1 n) inferInstance
+
+/-- Convert a WalkTree element to an actual walk. -/
+private def WalkTree.toWalk : {v : HexVertex} → {n : ℕ} → WalkTree v n → (Σ w, hexGraph.Walk v w)
+  | _, 0, () => ⟨_, .nil⟩
+  | _, _ + 1, ⟨⟨u, hu⟩, rest⟩ =>
+    let ⟨w, p⟩ := rest.toWalk
+    ⟨w, .cons hu p⟩
+
+/-- The walk from WalkTree has the right length. -/
+private lemma WalkTree.toWalk_length {v : HexVertex} {n : ℕ} (t : WalkTree v n) :
+    t.toWalk.2.length = n := by
+  induction n generalizing v with
+  | zero => cases t; rfl
+  | succ n ih =>
+    obtain ⟨⟨u, hu⟩, rest⟩ := t
+    simp [toWalk, SimpleGraph.Walk.length_cons, ih rest]
+
+/-- Convert a walk to a WalkTree element. -/
+private def walkToTree : {v w : HexVertex} → (p : hexGraph.Walk v w) → WalkTree v p.length
+  | _, _, .nil => ()
+  | _, _, .cons h p => ⟨⟨_, h⟩, walkToTree p⟩
+
+/-
+PROBLEM
+walkToTree is injective: walks with the same tree encoding are equal.
+
+PROVIDED SOLUTION
+By induction on p₁ and case analysis on p₂ (using the length equality to match cases).
+
+Base case (p₁ = nil): Then p₁.length = 0, so p₂.length = 0 by hl. Case analysis on p₂: if p₂ = nil, then both walks are nil from v to v, and the sigma pairs are equal. If p₂ = cons, then p₂.length ≥ 1, contradicting p₂.length = 0.
+
+Inductive case (p₁ = cons h₁ p₁'): Then p₁.length = p₁'.length + 1. By hl, p₂.length = p₁'.length + 1 > 0, so p₂ must be cons h₂ p₂' with p₂'.length = p₁'.length.
+
+Now walkToTree (cons h₁ p₁') = ⟨⟨_, h₁⟩, walkToTree p₁'⟩ and walkToTree (cons h₂ p₂') = ⟨⟨_, h₂⟩, walkToTree p₂'⟩.
+
+From ht (after cast by hl), these WalkTree elements are equal. Since WalkTree is a Sigma type, the first components give that the intermediate vertex for h₁ equals that for h₂ (i.e., the next vertex is the same). Then the adjacency proofs are equal (since Adj is a Prop). The second components give that walkToTree p₁' equals walkToTree p₂' (after appropriate cast).
+
+By the IH, ⟨w₁, p₁'⟩ = ⟨w₂, p₂'⟩ as sigma types, so w₁ = w₂ and p₁' = p₂' (after cast). Then cons h₁ p₁' = cons h₂ p₂' (after cast), giving the result.
+-/
+private lemma walkToTree_injective {v w₁ w₂ : HexVertex}
+    (p₁ : hexGraph.Walk v w₁) (p₂ : hexGraph.Walk v w₂)
+    (hl : p₁.length = p₂.length)
+    (ht : hl ▸ walkToTree p₁ = walkToTree p₂) :
+    (⟨w₁, p₁⟩ : Σ w, hexGraph.Walk v w) = ⟨w₂, p₂⟩ := by
+      -- By definition of walkToTree, the walkToTree of a walk is the walk itself.
+      have h_walkToTree : ∀ (v w : HexVertex) (p : hexGraph.Walk v w), WalkTree.toWalk (walkToTree p) = ⟨w, p⟩ := by
+        intro v w p;
+        induction p <;> simp_all +decide [ WalkTree.toWalk ];
+        · rfl;
+        · simp_all +decide [ walkToTree, WalkTree.toWalk ];
+          grind;
+      grind
+
+/-
+PROBLEM
+The set of n-step SAWs from any fixed vertex is finite.
+    Proof: SAW v n injects into the finite type WalkTree v n via walkToTree.
+    Since WalkTree v n is Fintype and the map is injective, SAW v n is Fintype.
+
+PROVIDED SOLUTION
+Use Fintype.ofInjective with the map s ↦ s.l ▸ walkToTree s.p.1 : WalkTree v n. This maps SAW v n into the finite type WalkTree v n. For injectivity: if two SAWs s₁ and s₂ map to the same WalkTree element, then walkToTree p₁ and walkToTree p₂ are HEq (after length cast). By walkToTree_injective, p₁ and p₂ are HEq. Since paths are determined by their walks, s₁ = s₂.
+-/
+instance (v : HexVertex) (n : ℕ) : Fintype (SAW v n) := by
+  apply Fintype.ofInjective
+    (f := fun (s : SAW v n) => (s.l ▸ walkToTree s.p.1 : WalkTree v n))
+  intro ⟨w₁, ⟨p₁, hp₁⟩, hl₁⟩ ⟨w₂, ⟨p₂, hp₂⟩, hl₂⟩ h
+  simp only at h
+  convert walkToTree_injective p₁ p₂ _ _;
+  · have h_vertex : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, (walkToTree p).toWalk.1 = w := by
+      intros v w p; induction' p with v w p ih;
+      · rfl;
+      · exact?;
+    grind;
+  · aesop;
+  · grind
 
 /-- The number of n-step self-avoiding walks from the origin on the
     hexagonal lattice. This is the sequence c_n in the paper. -/
 def saw_count (n : ℕ) : ℕ := Fintype.card (SAW hexOrigin n)
 
-/-- There is always at least one n-step SAW from the origin
-    (the walk along a fixed ray has c_n ≥ 1 for all n). -/
-lemma saw_count_pos : ∀ n, 0 < saw_count n := by sorry
+/-- A ray walk from (k, 0, false) of length n, alternating between sublattices. -/
+private def rayWalk : (k : ℕ) → (n : ℕ) → Σ w, hexGraph.Walk ((↑k : ℤ), 0, false) w
+  | _, 0 => ⟨_, .nil⟩
+  | k, n + 1 =>
+    let rest := rayWalkFromTrue (k+1) n
+    ⟨rest.1, .cons (by left; exact ⟨rfl, rfl, Or.inr (Or.inl ⟨by omega, rfl⟩)⟩) rest.2⟩
+where rayWalkFromTrue : (k : ℕ) → (n : ℕ) → Σ w, hexGraph.Walk ((↑k : ℤ), 0, true) w
+  | _, 0 => ⟨_, .nil⟩
+  | k, n + 1 =>
+    let rest := rayWalk k n
+    ⟨rest.1, .cons (by right; exact ⟨rfl, rfl, Or.inl ⟨rfl, rfl⟩⟩) rest.2⟩
+
+/-
+PROBLEM
+The ray walk has the correct length.
+
+PROVIDED SOLUTION
+By induction on n. For n = 0: the walk is .nil, length 0. For n + 1: the walk is .cons _ rest where rest comes from rayWalkFromTrue. By mutual induction, rayWalkFromTrue also has the right length. Use SimpleGraph.Walk.length_cons to unfold. The mutual recursion with rayWalkFromTrue needs a corresponding lemma for the true-sublattice version.
+-/
+private lemma rayWalk_length (k n : ℕ) : (rayWalk k n).2.length = n := by
+  induction' n using Nat.strong_induction_on with n ih generalizing k ; rcases n with ( _ | _ | n ) <;> norm_num [ SimpleGraph.Walk.length ] at * ; aesop;
+  · rfl;
+  · erw [ SimpleGraph.Walk.length_cons ] ; simp +arith +decide [ ih ];
+    erw [ SimpleGraph.Walk.length_cons ] ; simp +arith +decide [ ih ]
+
+/-
+PROBLEM
+The ray walk is a valid path (all vertices distinct).
+
+PROVIDED SOLUTION
+We need to show the walk has nodup support. By strong induction on n.
+
+For n = 0: support = [(k,0,false)], which is trivially nodup.
+For n = 1: support = [(k,0,false), (k+1,0,true)], nodup since they have different sublattice indicators and k ≠ k+1 or different Bool.
+For n ≥ 2: the support is (k,0,false) :: support of rayWalkFromTrue(k+1, n-1). By IH applied to rayWalkFromTrue, the tail is nodup. We need (k,0,false) ∉ tail. The tail consists of vertices from rayWalkFromTrue(k+1, ...) which starts at (k+1,0,true) and continues with vertices having x-coordinate ≥ k+1 (for false sublattice) or ≥ k+1 (for true sublattice). Since all vertices in the tail have first coordinate ≥ k+1 when on false sublattice (or = k+1 on true sublattice, but (k,0,false).2.2 = false ≠ true), the vertex (k,0,false) with first coordinate k cannot appear.
+
+Key helper: for rayWalk k n, all support vertices v satisfy v.1 ≥ k. For rayWalkFromTrue k n, all support vertices v satisfy v.1 ≥ k. This makes (k,0,false) ∉ the support of the continuation since the continuation starts from k+1.
+-/
+private lemma rayWalk_isPath (k n : ℕ) : (rayWalk k n).2.IsPath := by
+  -- By definition of `rayWalk`, the support of the walk is a list of vertices that are all distinct.
+  have h_support_nodup : ∀ k n, List.Nodup (SimpleGraph.Walk.support (rayWalk k n).snd) := by
+    -- We'll use induction on $n$ to show that the support of the ray walk is nodup.
+    have h_support_nodup_induction : ∀ k n, List.Nodup (SimpleGraph.Walk.support (rayWalk k n).snd) ∧ List.Nodup (SimpleGraph.Walk.support (rayWalk.rayWalkFromTrue k n).snd) := by
+      intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all +decide [ List.nodup_cons ] ;
+      · exact ⟨ by exact List.nodup_singleton _, by exact List.nodup_singleton _ ⟩;
+      · constructor <;> simp +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
+      · -- By the induction hypothesis, the support of the walk for n+1 steps is nodup.
+        have h_ind_nodup : List.Nodup (SimpleGraph.Walk.support (rayWalk (k + 1) (n + 1)).snd) ∧ List.Nodup (SimpleGraph.Walk.support (rayWalk.rayWalkFromTrue (k + 1) (n + 1)).snd) := by
+          exact ih _ le_rfl _
+        generalize_proofs at *; (
+        simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
+        have h_support_nodup : ∀ k n, ∀ v ∈ SimpleGraph.Walk.support (rayWalk k n).snd, v.1 ≥ k := by
+          intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all +decide [ SimpleGraph.Walk.support_cons ] ;
+          · simp +decide [ rayWalk ];
+          · simp +decide [ rayWalk, rayWalk.rayWalkFromTrue ] at * ; aesop ( simp_config := { decide := true } ) ;
+          · simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
+            grind
+        generalize_proofs at *; (
+        have h_support_nodup : ∀ k n, ∀ v ∈ SimpleGraph.Walk.support (rayWalk.rayWalkFromTrue k n).snd, v.1 ≥ k := by
+          intro k n; induction' n with n ih generalizing k <;> simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ] ;
+          exact h_support_nodup k n
+        generalize_proofs at *; (
+        grind +ring)));
+    exact fun k n => h_support_nodup_induction k n |>.1;
+  exact?
+
+/-- Construct a specific n-step SAW from the origin using the ray walk. -/
+private def sawFromRay (n : ℕ) : SAW hexOrigin n :=
+  ⟨(rayWalk 0 n).1,
+   ⟨(rayWalk 0 n).2, rayWalk_isPath 0 n⟩,
+   rayWalk_length 0 n⟩
+
+lemma saw_count_pos : ∀ n, 0 < saw_count n := by
+  intro n
+  exact Fintype.card_pos_iff.mpr ⟨sawFromRay n⟩
 
 /-- The SAW count is submultiplicative: c_{n+m} ≤ c_n · c_m.
     This follows because any (n+m)-step SAW can be uniquely cut after n steps
