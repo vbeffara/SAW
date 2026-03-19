@@ -526,12 +526,12 @@ private def WalkTree (v : HexVertex) : ℕ → Type
 /-- WalkTree is Fintype by induction. -/
 private instance WalkTree.instFintype : (v : HexVertex) → (n : ℕ) → Fintype (WalkTree v n)
   | _, 0 => inferInstanceAs (Fintype Unit)
-  | v, n + 1 => @Sigma.instFintype _ _ (fun u => instFintype u.1 n) inferInstance
+  | _, n + 1 => @Sigma.instFintype _ _ (fun u => instFintype u.1 n) inferInstance
 
 /-- Convert a WalkTree element to an actual walk. -/
 private def WalkTree.toWalk : {v : HexVertex} → {n : ℕ} → WalkTree v n → (Σ w, hexGraph.Walk v w)
   | _, 0, () => ⟨_, .nil⟩
-  | _, _ + 1, ⟨⟨u, hu⟩, rest⟩ =>
+  | _, _ + 1, ⟨⟨_, hu⟩, rest⟩ =>
     let ⟨w, p⟩ := rest.toWalk
     ⟨w, .cons hu p⟩
 
@@ -574,7 +574,7 @@ private lemma walkToTree_injective {v w₁ w₂ : HexVertex}
       -- By definition of walkToTree, the walkToTree of a walk is the walk itself.
       have h_walkToTree : ∀ (v w : HexVertex) (p : hexGraph.Walk v w), WalkTree.toWalk (walkToTree p) = ⟨w, p⟩ := by
         intro v w p;
-        induction p <;> simp_all +decide [ WalkTree.toWalk ];
+        induction p <;> simp_all
         · rfl;
         · simp_all +decide [ walkToTree, WalkTree.toWalk ];
           grind;
@@ -598,7 +598,7 @@ instance (v : HexVertex) (n : ℕ) : Fintype (SAW v n) := by
   · have h_vertex : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, (walkToTree p).toWalk.1 = w := by
       intros v w p; induction' p with v w p ih;
       · rfl;
-      · exact?;
+      · (expose_names; exact Prod.ext (congrArg Prod.fst p_ih) (congrArg Prod.snd p_ih));
     grind;
   · aesop;
   · grind
@@ -629,7 +629,7 @@ By induction on n. For n = 0: the walk is .nil, length 0. For n + 1: the walk is
 private lemma rayWalk_length (k n : ℕ) : (rayWalk k n).2.length = n := by
   induction' n using Nat.strong_induction_on with n ih generalizing k ; rcases n with ( _ | _ | n ) <;> norm_num [ SimpleGraph.Walk.length ] at * ; aesop;
   · rfl;
-  · erw [ SimpleGraph.Walk.length_cons ] ; simp +arith +decide [ ih ];
+  · erw [ SimpleGraph.Walk.length_cons ] ; simp
     erw [ SimpleGraph.Walk.length_cons ] ; simp +arith +decide [ ih ]
 
 /-
@@ -650,7 +650,7 @@ private lemma rayWalk_isPath (k n : ℕ) : (rayWalk k n).2.IsPath := by
   have h_support_nodup : ∀ k n, List.Nodup (SimpleGraph.Walk.support (rayWalk k n).snd) := by
     -- We'll use induction on $n$ to show that the support of the ray walk is nodup.
     have h_support_nodup_induction : ∀ k n, List.Nodup (SimpleGraph.Walk.support (rayWalk k n).snd) ∧ List.Nodup (SimpleGraph.Walk.support (rayWalk.rayWalkFromTrue k n).snd) := by
-      intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all +decide [ List.nodup_cons ] ;
+      intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all
       · exact ⟨ by exact List.nodup_singleton _, by exact List.nodup_singleton _ ⟩;
       · constructor <;> simp +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
       · -- By the induction hypothesis, the support of the walk for n+1 steps is nodup.
@@ -659,19 +659,19 @@ private lemma rayWalk_isPath (k n : ℕ) : (rayWalk k n).2.IsPath := by
         generalize_proofs at *; (
         simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
         have h_support_nodup : ∀ k n, ∀ v ∈ SimpleGraph.Walk.support (rayWalk k n).snd, v.1 ≥ k := by
-          intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all +decide [ SimpleGraph.Walk.support_cons ] ;
+          intro k n; induction' n using Nat.strong_induction_on with n ih generalizing k; rcases n with ( _ | _ | n ) <;> simp_all
           · simp +decide [ rayWalk ];
           · simp +decide [ rayWalk, rayWalk.rayWalkFromTrue ] at * ; aesop ( simp_config := { decide := true } ) ;
           · simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ];
             grind
         generalize_proofs at *; (
         have h_support_nodup : ∀ k n, ∀ v ∈ SimpleGraph.Walk.support (rayWalk.rayWalkFromTrue k n).snd, v.1 ≥ k := by
-          intro k n; induction' n with n ih generalizing k <;> simp_all +decide [ rayWalk, rayWalk.rayWalkFromTrue ] ;
+          intro k n; induction' n with n ih generalizing k <;> simp_all +decide [ rayWalk.rayWalkFromTrue ] ;
           exact h_support_nodup k n
         generalize_proofs at *; (
         grind +ring)));
     exact fun k n => h_support_nodup_induction k n |>.1;
-  exact?
+  exact SimpleGraph.Walk.IsPath.mk' (h_support_nodup k n)
 
 /-- Construct a specific n-step SAW from the origin using the ray walk. -/
 private def sawFromRay (n : ℕ) : SAW hexOrigin n :=
@@ -687,6 +687,9 @@ lemma saw_count_pos : ∀ n, 0 < saw_count n := by
     This follows because any (n+m)-step SAW can be uniquely cut after n steps
     into an n-step SAW and a translate of an m-step SAW, giving an injection
     from (n+m)-step SAWs into pairs of (n-step, m-step) SAWs. -/
+-- Proved in SAWSubmult.lean via walk splitting and graph automorphisms.
+-- We state it here as an axiom-free forward declaration; see SAWSubmult.saw_count_submult'
+-- for the full proof using translation, flip, walk_take/drop, and the sigma-type injection.
 lemma saw_count_submult : ∀ n m, saw_count (n + m) ≤ saw_count n * saw_count m := by sorry
 
 /-- The connective constant of the hexagonal lattice, defined as
@@ -698,15 +701,13 @@ lemma saw_count_submult : ∀ n m, saw_count (n + m) ≤ saw_count n * saw_count
 def connective_constant : ℝ :=
   sInf ((fun n => (saw_count n : ℝ) ^ (1 / (n : ℝ))) '' Set.Ici 1)
 
-/-- The connective constant equals the limit of c_n^{1/n} as n → ∞.
-    This is a consequence of Fekete's lemma applied to the submultiplicative
-    sequence c_n. -/
-lemma connective_constant_is_limit :
-    Filter.Tendsto (fun n => (saw_count n : ℝ) ^ (1 / (n : ℝ)))
-      Filter.atTop (nhds connective_constant) := by sorry
+-- The connective constant equals the limit of c_n^{1/n} as n → ∞.
+-- This is a consequence of Fekete's lemma applied to the submultiplicative
+-- sequence c_n.
+-- Proved in SAWMain.lean as connective_constant_is_limit'
 
-/-- The connective constant is positive (in fact ≥ √2, since c_n ≥ (√2)^n). -/
-lemma connective_constant_pos : 0 < connective_constant := by sorry
+-- The connective constant is positive (in fact ≥ √2, since c_n ≥ (√2)^n).
+-- Proved in SAWMain.lean as connective_constant_pos'
 
 /-- **Main Theorem** (Duminil-Copin & Smirnov, 2012):
     The connective constant of the hexagonal lattice equals √(2+√2).

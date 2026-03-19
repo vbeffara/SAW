@@ -368,7 +368,7 @@ These values, combined with σ = 5/8, give:
     Since winding to the top part of α is +π and to the bottom is -π,
     and σ = 5/8, the average is cos(5π/8) = -cos(3π/8) = -c_α. -/
 lemma left_boundary_coeff : Real.cos (sigma * Real.pi) = -c_alpha := by
-  unfold sigma c_alpha; rw [← Real.cos_pi_sub]; ring
+  unfold sigma c_alpha; rw [← Real.cos_pi_sub]; ring_nf
 
 /-- The winding contribution from the right boundary gives coefficient 1.
     Since winding to β is 0, exp(-iσ·0) = 1. -/
