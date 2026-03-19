@@ -726,19 +726,140 @@ def connective_constant : ℝ :=
 theorem connective_constant_eq :
     connective_constant = Real.sqrt (2 + Real.sqrt 2) := by sorry
 
-/-- Equivalent formulation: the connective constant equals 1/x_c. -/
+/-
+PROBLEM
+Equivalent formulation: the connective constant equals 1/x_c.
+
+PROVIDED SOLUTION
+connective_constant = √(2+√2) by connective_constant_eq. And xc⁻¹ = √(2+√2) by xc_inv. So connective_constant = xc⁻¹.
+-/
 theorem connective_constant_eq_inv_xc :
-    connective_constant = xc⁻¹ := by sorry
+    connective_constant = xc⁻¹ := by
+      rw [ connective_constant_eq, xc_inv ]
 
-/-- The partition function Z(x) diverges for x > x_c.
-    This is the lower bound half of the main theorem: μ ≥ 1/x_c = √(2+√2). -/
+/-
+PROBLEM
+The partition function Z(x) diverges for x > x_c.
+    This is the lower bound half of the main theorem: μ ≥ 1/x_c = √(2+√2).
+
+PROVIDED SOLUTION
+For x > xc, we have x > connective_constant⁻¹ (by connective_constant_eq_inv_xc). By partition_diverges_above_inv_cc (from SAWBridge.lean), the series diverges. Note: partition_diverges_above_inv_cc requires 0 < x and connective_constant⁻¹ < x. Since xc > 0 and x > xc, we have x > 0.
+
+Actually, partition_diverges_above_inv_cc is in SAWBridge.lean which SAW.lean doesn't import. But we can reproduce the argument:
+
+Since x > xc = cc⁻¹ (using connective_constant_eq_inv_xc), we have cc⁻¹ < x, so cc * x > 1. For n ≥ 1, saw_count n ≥ cc^n (by the same argument as saw_count_ge_cc_pow). So c_n * x^n ≥ (cc*x)^n ≥ 1. The terms don't tend to 0, hence not summable.
+
+Use Summable.tendsto_atTop_zero for the contradiction.
+
+Actually since SAW.lean has connective_constant_eq_inv_xc (just proved), and we know cc⁻¹ = xc. So x > xc = cc⁻¹. This means cc * x > 1 (since cc > 0). For n ≥ 1, from the definition of cc as infimum, cc ≤ c_n^{1/n}, so cc^n ≤ c_n. Then c_n * x^n ≥ (cc * x)^n ≥ 1. Terms don't converge to 0, so not summable.
+-/
 theorem partition_function_diverges_above_xc :
-    ∀ x > xc, ¬ Summable (fun n => (saw_count n : ℝ) * x ^ n) := by sorry
+    ∀ x > xc, ¬ Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
+      -- Since $x > x_c$, we have $x > \mu^{-1}$, which implies $\mu x > 1$.
+      intro x hx
+      have hmu_x_gt_1 : connective_constant * x > 1 := by
+        rw [ connective_constant_eq_inv_xc ];
+        rw [ inv_mul_eq_div, gt_iff_lt, lt_div_iff₀ ] <;> nlinarith [ show 0 < xc from by exact one_div_pos.mpr <| Real.sqrt_pos.mpr <| by positivity ];
+      -- For $n \geq 1$, we have $c_n \geq \mu^n$.
+      have hcn_ge_mu_n : ∀ n ≥ 1, (saw_count n : ℝ) ≥ connective_constant ^ n := by
+        intro n hn
+        have hmu_le_c_n : connective_constant ≤ (saw_count n : ℝ) ^ (1 / (n : ℝ)) := by
+          exact csInf_le ⟨ 0, Set.forall_mem_image.2 fun n hn => by positivity ⟩ ⟨ n, hn, rfl ⟩;
+        exact le_trans ( pow_le_pow_left₀ ( show 0 ≤ connective_constant by exact Real.sInf_nonneg ( Set.forall_mem_image.2 fun n hn => Real.rpow_nonneg ( Nat.cast_nonneg _ ) _ ) ) hmu_le_c_n _ ) ( by rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( Nat.cast_nonneg _ ), one_div_mul_cancel ( by positivity ), Real.rpow_one ] );
+      -- Therefore, $c_n x^n \geq (\mu x)^n \geq 1$ for all $n \geq 1$.
+      have hcn_xn_ge_1 : ∀ n ≥ 1, (saw_count n : ℝ) * x ^ n ≥ 1 := by
+        exact fun n hn => le_trans ( one_le_pow₀ hmu_x_gt_1.le ) ( by simpa only [ mul_pow ] using mul_le_mul_of_nonneg_right ( hcn_ge_mu_n n hn ) ( pow_nonneg ( le_trans ( show 0 ≤ x from le_trans ( show 0 ≤ xc from div_nonneg zero_le_one <| Real.sqrt_nonneg _ ) hx.le ) le_rfl ) _ ) );
+      exact fun h => absurd ( h.tendsto_atTop_zero ) fun H => absurd ( le_of_tendsto_of_tendsto tendsto_const_nhds H <| Filter.eventually_atTop.mpr ⟨ 1, fun n hn => hcn_xn_ge_1 n hn ⟩ ) ( by norm_num )
 
-/-- The partition function Z(x) converges for x < x_c.
-    This is the upper bound half of the main theorem: μ ≤ 1/x_c = √(2+√2). -/
+/-
+PROBLEM
+The partition function Z(x) converges for x < x_c.
+    This is the upper bound half of the main theorem: μ ≤ 1/x_c = √(2+√2).
+
+PROVIDED SOLUTION
+For 0 < x < xc = cc⁻¹ (by connective_constant_eq_inv_xc), we have x < cc⁻¹. So cc * x < 1. By connective_constant_is_limit' (from SAWMain), c_n^{1/n} → cc. Pick r with cc * x < r < 1. Eventually c_n^{1/n} < r/x, so c_n < (r/x)^n. Then c_n * x^n < r^n. Since r < 1, Σ r^n converges. By comparison, Σ c_n x^n converges.
+
+Actually connective_constant_is_limit' is in SAWMain.lean. Since SAW.lean doesn't import SAWMain, we need to reprove this or use a different approach.
+
+Alternative approach: Since connective_constant_eq gives cc = √(2+√2), and xc = 1/√(2+√2), for x < xc:
+- cc * x < cc * xc = √(2+√2) * (1/√(2+√2)) = 1
+- By fekete_submultiplicative (from SAW.lean), ∃ μ s.t. c_n^{1/n} → μ and μ = cc
+- Eventually c_n^{1/n} < r/x for some r < 1, so c_n x^n < r^n
+- Series converges by comparison with geometric series
+
+But we need the Fekete limit. Let me use fekete_submultiplicative directly:
+- From saw_count_submult, c_{n+m} ≤ c_n c_m (sorry but used)
+- fekete_submultiplicative gives ∃ μ with c_n^{1/n} → μ
+- connective_constant_eq gives μ = cc = √(2+√2) (but this is circular for cc_eq)
+
+Actually the cleanest approach: since this theorem USES connective_constant_eq (which is sorry'd), let me just prove it assuming connective_constant_eq.
+
+connective_constant = √(2+√2) by connective_constant_eq. xc = 1/√(2+√2). So cc⁻¹ = xc. Since x < xc = cc⁻¹, by the root test / Fekete limit argument:
+- By fekete_submultiplicative applied to saw_count (using saw_count_submult), ∃ μ with c_n^{1/n} → μ
+- μ = cc (proved in connective_constant_is_limit' from SAWMain.lean, but not available here)
+- Need an alternative approach
+
+Let me use connective_constant_eq directly. cc = √(2+√2) > 0. x < xc = 1/cc. So ccx < 1. Pick r = (1+ccx)/2. Then ccx < r < 1.
+
+By fekete_submultiplicative with a = saw_count (cast to ℝ), using saw_count_submult:
+∃ μ, c_n^{1/n} → μ.
+
+The limit μ = cc (= sInf ...). Since c_n^{1/n} → μ = cc, eventually c_n^{1/n} < r/x (since cc < r/x because r > ccx). Then c_n < (r/x)^n, c_n x^n < r^n, converges.
+
+Use saw_count_submult to invoke fekete_submultiplicative. The rest is the root test argument.
+-/
 theorem partition_function_converges_below_xc :
     ∀ x, 0 < x → x < xc →
-      Summable (fun n => (saw_count n : ℝ) * x ^ n) := by sorry
+      Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
+        -- By Lemma `connective_constant_eq`, we know that connective_constant = √(2 + √2). Therefore, for x < x_c, we have x < 1/connective_constant.
+        intro x hx_pos hx_lt_xc
+        have hx_lt_inv : x < 1 / connective_constant := by
+          rw [ connective_constant_eq_inv_xc ] ; aesop;
+        -- By the definition of `connective_constant`, we know that for all sufficiently large $n$, $(saw_count n)^{1/n} \leq connective_constant + \epsilon$ for any $\epsilon > 0$.
+        have h_bound : ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, (saw_count n : ℝ) ^ (1 / (n : ℝ)) ≤ connective_constant + ε := by
+          intro ε hε_pos
+          obtain ⟨N, hN⟩ : ∃ N : ℕ, ∀ n ≥ N, (saw_count n : ℝ) ^ (1 / (n : ℝ)) ≤ connective_constant + ε := by
+            have h_inf : ∀ n ≥ 1, (saw_count n : ℝ) ^ (1 / (n : ℝ)) ≥ connective_constant := by
+              exact fun n hn => csInf_le ⟨ 0, Set.forall_mem_image.2 fun n hn => by positivity ⟩ ⟨ n, hn, rfl ⟩
+            -- By the definition of the infimum, for any ε > 0, there exists some N such that (saw_count N : ℝ) ^ (1 / (N : ℝ)) < connective_constant + ε.
+            obtain ⟨N, hN⟩ : ∃ N : ℕ, N ≥ 1 ∧ (saw_count N : ℝ) ^ (1 / (N : ℝ)) < connective_constant + ε := by
+              have := exists_lt_of_csInf_lt ( show ( Set.Nonempty ( Set.image ( fun n : ℕ => ( saw_count n : ℝ ) ^ ( 1 / ( n : ℝ ) ) ) ( Set.Ici 1 ) ) ) from ⟨ _, Set.mem_image_of_mem _ ( show 1 ∈ Set.Ici 1 from by norm_num ) ⟩ ) ( show connective_constant < connective_constant + ε from lt_add_of_pos_right _ hε_pos ) ; aesop;
+            -- By the submultiplicative property, we have $(saw_count (kN + r))^{1/(kN + r)} \leq ((saw_count N)^k * (saw_count r))^{1/(kN + r)}$.
+            have h_submul : ∀ k r : ℕ, r < N → (saw_count (k * N + r) : ℝ) ^ (1 / (k * N + r : ℝ)) ≤ ((saw_count N : ℝ) ^ k * (saw_count r : ℝ)) ^ (1 / (k * N + r : ℝ)) := by
+              intros k r hr
+              have h_submul_step : saw_count (k * N + r) ≤ saw_count N ^ k * saw_count r := by
+                induction' k with k ih generalizing r <;> simp_all +decide [ Nat.succ_mul, pow_succ' ];
+                rw [ add_right_comm ];
+                convert saw_count_submult ( k * N + r ) N |> le_trans <| mul_le_mul_of_nonneg_right ( ih r hr ) ( Nat.cast_nonneg _ ) using 1 ; ring;
+              exact Real.rpow_le_rpow ( Nat.cast_nonneg _ ) ( mod_cast h_submul_step ) ( by positivity );
+            -- Taking the limit as $k \to \infty$, we get $(saw_count (kN + r))^{1/(kN + r)} \leq (saw_count N)^{1/N}$.
+            have h_lim : ∀ r : ℕ, r < N → Filter.Tendsto (fun k : ℕ => ((saw_count N : ℝ) ^ k * (saw_count r : ℝ)) ^ (1 / (k * N + r : ℝ))) Filter.atTop (nhds ((saw_count N : ℝ) ^ (1 / (N : ℝ)))) := by
+              intro r hr
+              have h_lim : Filter.Tendsto (fun k : ℕ => ((saw_count N : ℝ) ^ k) ^ (1 / (k * N + r : ℝ))) Filter.atTop (nhds ((saw_count N : ℝ) ^ (1 / (N : ℝ)))) := by
+                have h_lim : Filter.Tendsto (fun k : ℕ => ((saw_count N : ℝ) ^ (1 / (N + r / (k : ℝ) : ℝ)))) Filter.atTop (nhds ((saw_count N : ℝ) ^ (1 / (N : ℝ)))) := by
+                  exact le_trans ( Filter.Tendsto.rpow tendsto_const_nhds ( tendsto_const_nhds.div ( tendsto_const_nhds.add ( tendsto_const_nhds.div_atTop tendsto_natCast_atTop_atTop ) ) ( by norm_num; linarith ) ) ( Or.inl <| by norm_cast; linarith [ show 0 < saw_count N from saw_count_pos N ] ) ) ( by norm_num );
+                refine h_lim.congr' ?_;
+                filter_upwards [ Filter.eventually_gt_atTop 0 ] with k hk;
+                rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( Nat.cast_nonneg _ ) ] ; ring_nf;
+                field_simp [mul_comm, mul_assoc, mul_left_comm];
+              have h_lim : Filter.Tendsto (fun k : ℕ => ((saw_count r : ℝ) ^ (1 / (k * N + r : ℝ)))) Filter.atTop (nhds 1) := by
+                simpa using tendsto_const_nhds.rpow ( tendsto_inv_atTop_zero.comp ( show Filter.Tendsto ( fun k : ℕ => ( k : ℝ ) * N + r ) Filter.atTop ( Filter.atTop ) from Filter.tendsto_atTop_mono ( fun k => by nlinarith [ show ( N : ℝ ) ≥ 1 by norm_cast; linarith ] ) tendsto_natCast_atTop_atTop ) ) ( Or.inl <| Nat.cast_ne_zero.mpr <| ne_of_gt <| saw_count_pos r );
+              convert ‹Tendsto ( fun k : ℕ => ( saw_count N ^ k : ℝ ) ^ ( 1 / ( k * N + r : ℝ ) ) ) Filter.atTop ( nhds ( saw_count N ^ ( 1 / ( N : ℝ ) ) ) ) ›.mul h_lim using 2 <;> norm_num [ Real.mul_rpow ( pow_nonneg ( Nat.cast_nonneg _ ) _ ) ( Nat.cast_nonneg _ ) ];
+            -- Therefore, there exists some $K$ such that for all $k \geq K$, $(saw_count (kN + r))^{1/(kN + r)} \leq connective_constant + \epsilon$.
+            obtain ⟨K, hK⟩ : ∃ K : ℕ, ∀ k ≥ K, ∀ r : ℕ, r < N → (saw_count (k * N + r) : ℝ) ^ (1 / (k * N + r : ℝ)) ≤ connective_constant + ε := by
+              choose! K hK using fun r hr => Metric.tendsto_atTop.mp ( h_lim r hr ) ( connective_constant + ε - ( saw_count N : ℝ ) ^ ( 1 / ( N : ℝ ) ) ) ( sub_pos.mpr hN.2 ) ; use Finset.sup ( Finset.range N ) K; intros k hk r hr; exact le_trans ( h_submul k r hr ) ( by linarith [ abs_lt.mp ( hK r hr k ( le_trans ( Finset.le_sup ( f := K ) ( Finset.mem_range.mpr hr ) ) hk ) ) ] ) ;
+            use K * N + N; intros n hn; rw [ show n = ( n / N ) * N + ( n % N ) by rw [ Nat.div_add_mod' ] ] ; specialize hK ( n / N ) ( by nlinarith [ Nat.div_add_mod n N, Nat.mod_lt n ( by linarith : 0 < N ) ] ) ( n % N ) ( Nat.mod_lt n ( by linarith : 0 < N ) ) ; aesop;
+          use N;
+        -- Choose $\epsilon$ such that $(connective_constant + \epsilon) * x < 1$.
+        obtain ⟨ε, hε_pos, hε⟩ : ∃ ε > 0, (connective_constant + ε) * x < 1 := by
+          rw [ lt_div_iff₀ ] at hx_lt_inv;
+          · exact ⟨ ( 1 - x * connective_constant ) / ( 2 * x ), div_pos ( by linarith ) ( by positivity ), by nlinarith [ mul_div_cancel₀ ( 1 - x * connective_constant ) ( by positivity : ( 2 * x ) ≠ 0 ) ] ⟩;
+          · exact connective_constant_eq.symm ▸ by positivity;
+        -- Using the bound from h_bound, we can show that for all sufficiently large $n$, $(saw_count n) * x^n \leq ((connective_constant + \epsilon) * x)^n$.
+        have h_summable : ∃ N : ℕ, ∀ n ≥ N, (saw_count n : ℝ) * x ^ n ≤ ((connective_constant + ε) * x) ^ n := by
+          obtain ⟨ N, hN ⟩ := h_bound ε hε_pos;
+          use N + 1; intros n hn; specialize hN n ( by linarith ) ; rcases eq_or_ne n 0 <;> simp_all +decide [ mul_pow ] ;
+          exact le_trans ( by rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( Nat.cast_nonneg _ ), inv_mul_cancel₀ ( by positivity ), Real.rpow_one ] ) ( pow_le_pow_left₀ ( by positivity ) hN _ );
+        obtain ⟨ N, hN ⟩ := h_summable; rw [ ← summable_nat_add_iff N ] ; exact Summable.of_nonneg_of_le ( fun n => mul_nonneg ( Nat.cast_nonneg _ ) ( pow_nonneg hx_pos.le _ ) ) ( fun n => hN _ ( Nat.le_add_left _ _ ) ) ( summable_geometric_of_lt_one ( by exact mul_nonneg ( add_nonneg ( by exact Real.sInf_nonneg ( Set.forall_mem_image.2 fun n hn => by positivity ) ) hε_pos.le ) hx_pos.le ) hε |> Summable.comp_injective <| add_left_injective _ ) ;
 
 end

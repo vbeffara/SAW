@@ -1,59 +1,102 @@
 # Summary: Continued Formalization of SAW.tex
 
-## New files created
+## Session Overview
 
-### `RequestProject/SAWSubmult.lean` (sorry-free, ~475 lines)
-Formalizes the **submultiplicativity** of self-avoiding walk counts: `c_{n+m} ≤ c_n · c_m`.
+Continued the formalization of "The connective constant of the honeycomb lattice equals √(2+√2)" by Duminil-Copin and Smirnov. This session focused on:
 
-**Key proved results:**
-- **Graph automorphisms**: `hexTranslate` (translation) and `hexFlip` (sublattice swap) are graph automorphisms of the hexagonal lattice, preserving adjacency, walks, and paths
-- **Walk splitting**: `walk_take_isPath` and `walk_drop_isPath` — splitting a path at any position preserves the path property
-- **SAW vertex independence**: `saw_count_vertex_independent` — the number of n-step SAWs is the same from any vertex (using translation + flip)
-- **Submultiplicativity injection**: `sawSplit` splits an (n+m)-step SAW into a sigma pair of n-step and m-step SAWs; proved injective via `sawSplit_injective`
-- **Main result**: `saw_count_submult'` — `∀ n m, saw_count (n + m) ≤ saw_count n * saw_count m`
+1. **Partition function analysis** — proving abstract results about the radius of convergence
+2. **Bridge decomposition infrastructure** — defining bridges and the decomposition structure
+3. **Proof structure completion** — proving key theorems conditional on the main result
+4. **Reduction to partition function characterization** — showing the main theorem follows from Z(x) convergence/divergence
 
-All 25+ lemmas in this file are fully proved (no sorry, standard axioms only).
+## New file: `RequestProject/SAWBridge.lean` (~490 lines)
 
-### `RequestProject/SAWMain.lean` (sorry-free, ~240 lines)
-Formalizes results about the **connective constant** and **conjectures from Section 4**.
+### Sorry-free theorems (key new results):
 
-**Key proved results:**
-- **`connective_constant_is_limit'`**: The connective constant equals `lim_{n→∞} c_n^{1/n}`, proved from scratch using Fekete's lemma + submultiplicativity + a direct infimum argument
-- **`connective_constant_pos'`**: The connective constant is positive (μ ≥ 1 > 0)
+| Theorem | Description |
+|---------|-------------|
+| `saw_count_ge_cc_pow` | c_n ≥ μ^n for all n ≥ 1 (from μ = inf c_n^{1/n}) |
+| `partition_diverges_above_inv_cc` | Z(x) = Σ c_n x^n diverges for x > 1/μ |
+| `partition_converges_below_inv_cc` | Z(x) converges for 0 < x < 1/μ |
+| `cc_eq_inv_of_partition_radius` | μ = 1/x₀ if Z diverges above x₀ and converges below |
+| `connective_constant_ge_one` | μ ≥ 1 |
+| `main_theorem_from_partition` | Main theorem follows from partition function characterization |
+| `Z_nonneg` | Z(x) ≥ 0 for x ≥ 0 |
 
-**Formalized conjectures from Section 4 of the paper:**
-- **Nienhuis' asymptotic formula**: `nienhuis_asymptotic_conjecture` — `c_n ~ A · n^{γ-1} · μ^n` with γ = 43/32
-- **Flory exponent conjecture**: `flory_exponent_conjecture` — mean-square displacement grows as `n^{3/2}`
-- **SLE parameter**: κ = 8/3 for the conjectured scaling limit
-- **Bridge decay conjecture**: `B_T^{x_c} ~ T^{-1/4}`
-- **Hammersley-Welsh bound statement**: `c_n ≤ exp(κ√n) · μ^n`
+### New definitions:
+- `Z` — partition function Z(x) = Σ c_n x^n
+- `Bridge` — bridges of width T in the hex lattice
+- `HalfPlaneWalk` — half-plane SAWs (start has minimal Re)
+- `BridgeSequence` — finite sequences of bridges with decreasing widths
+- `bridge_partition` — bridge partition function B_T^x
+- `SLE_convergence_conjecture` — Conjecture 1 (SLE(8/3) convergence)
+- `observable_scaling_limit_conjecture` — Conjecture 2 (conformal invariance of F)
+- `conformal_spin_exponent` — σ = 5/8 for the BVP
 
-**New definitions:**
-- `gamma_SAW`, `nu_SAW`, `kappa_SAW` — critical exponents from the physics literature
-- `mean_square_displacement` — formalized using the hex lattice embedding
-- `bridge_decay_conjecture`, `hammersley_welsh_bound_statement` — formal statements of conjectures
+### Abstract proof structure:
+- `lower_bound_from_strip_identity` — lower bound from strip identity (sorry)
+- `hammersley_welsh_bound` — upper bound from bridge decomposition (sorry)
 
-## Changes to existing files
+## Changes to `RequestProject/SAW.lean`
 
-### `RequestProject/SAW.lean`
-- The sorry'd `connective_constant_is_limit` and `connective_constant_pos` were removed (replaced by comments pointing to SAWMain.lean where they're proved)
-- `saw_count_submult` remains as a sorry'd forward declaration (proved in SAWSubmult.lean as `saw_count_submult'`)
+### Newly proved theorems:
 
-## Remaining sorry statements in SAW.lean (5)
-These represent the deepest mathematical content requiring full strip-domain analysis:
-1. `saw_count_submult` — proved in SAWSubmult.lean (forward declaration kept for reference)
-2. `connective_constant_eq` — **Main Theorem** μ = √(2+√2)
-3. `connective_constant_eq_inv_xc` — μ = x_c⁻¹
-4. `partition_function_diverges_above_xc` — Z(x) = ∞ for x > x_c
-5. `partition_function_converges_below_xc` — Z(x) < ∞ for x < x_c
+| Theorem | Description | Depends on sorry? |
+|---------|-------------|-------------------|
+| `connective_constant_eq_inv_xc` | μ = xc⁻¹ | Yes (uses `connective_constant_eq`) |
+| `partition_function_diverges_above_xc` | Z(x) = ∞ for x > xc | Yes (uses `connective_constant_eq`) |
+| `partition_function_converges_below_xc` | Z(x) < ∞ for x < xc | Yes (uses `connective_constant_eq`) |
 
-## Summary of sorry-free content across all files
+These three theorems are proved **conditionally** on the main theorem `connective_constant_eq`. Once the main theorem is established, all three become sorry-free.
+
+## Remaining sorry statements
+
+### In `SAW.lean` (2 sorries):
+1. **`saw_count_submult`** — forward declaration, proved in SAWSubmult.lean as `saw_count_submult'`
+2. **`connective_constant_eq`** — THE main theorem μ = √(2+√2)
+
+### In `SAWBridge.lean` (3 sorries):
+3. **`saw_count_upper_bound`** — elementary bound c_n ≤ 3·2^{n-1} (non-critical)
+4. **`hammersley_welsh_bound`** — bridge decomposition gives Z(x) < ∞ for x < xc
+5. **`lower_bound_from_strip_identity`** — strip identity gives Z(xc) = ∞
+
+### Other files (0 sorries):
+- `SAWSubmult.lean` — fully proved
+- `SAWStrip.lean` — fully proved
+- `SAWMain.lean` — fully proved
+
+## Logical structure
+
+The proof of the main theorem now has a clear logical chain:
+
+```
+Algebraic identities (proved)
+    ↓
+Vertex relation / Lemma 1 (algebraic core proved)
+    ↓
+Strip identity / Lemma 2 (needs combinatorial infrastructure)
+    ↓
+Bridge bounds: B_T ≤ 1, B_T ≥ c/T (abstract versions proved)
+    ↓
+Z(xc) = ∞ (lower_bound_from_strip_identity, sorry)
+Z(x) < ∞ for x < xc (hammersley_welsh_bound, sorry)
+    ↓
+μ = 1/xc = √(2+√2) (main_theorem_from_partition, proved from above)
+```
+
+The remaining gap is the combinatorial infrastructure for:
+- SAWs restricted to strip domains
+- The Hammersley-Welsh bridge decomposition
+- The strip identity (summing vertex relations over domains)
+
+## Total sorry-free content across all files
 
 | File | Lines | Sorry-free theorems | Description |
 |------|-------|-------------------|-------------|
-| SAW.lean | 742 | 18+ | Constants, algebraic identities, Fekete's lemma, bridge bounds, SAW finiteness, SAW count positivity |
+| SAW.lean | ~870 | 20+ | Constants, identities, Fekete's lemma, bridge bounds, SAW finiteness, partition function results |
 | SAWStrip.lean | 424 | 10+ | Hex lattice properties, geometric embedding, strip domains, boundary coefficients |
 | SAWSubmult.lean | 475 | 25+ | Graph automorphisms, walk splitting, vertex independence, submultiplicativity |
-| SAWMain.lean | 240 | 5+ | Connective constant limit/positivity, Section 4 conjectures |
+| SAWMain.lean | 350 | 5+ | Connective constant limit/positivity, Section 4 conjectures |
+| SAWBridge.lean | ~490 | 10+ | Partition function, radius of convergence, bridge definitions, proof structure |
 
-Total: **58+ sorry-free theorems** covering the algebraic, combinatorial, and analytic foundations of the paper.
+**Total: ~70+ sorry-free theorems** covering algebraic, combinatorial, analytic, and structural content from the paper.
