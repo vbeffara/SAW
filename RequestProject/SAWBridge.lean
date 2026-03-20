@@ -238,6 +238,24 @@ theorem cc_eq_inv_of_partition_radius {x₀ : ℝ} (hx₀ : 0 < x₀)
       exact (by
       exact inv_eq_iff_eq_inv.mp ( le_antisymm h_inv_le_x₀ h_inv_ge_x₀ ) ▸ by norm_num;)
 
+/-! ## Partition function monotonicity
+
+If the partition function diverges at x₀, it diverges for all x > x₀.
+This follows from term-by-term comparison since c_n · x^n ≥ c_n · x₀^n
+when x ≥ x₀ ≥ 0 and c_n ≥ 0.
+-/
+
+/-- The partition function diverges monotonically: if it diverges at x₀ > 0,
+    it diverges for all x > x₀. -/
+lemma partition_diverges_mono {x₀ x : ℝ} (hx₀ : 0 < x₀) (hx : x₀ ≤ x)
+    (hdiv : ¬ Summable (fun n => (saw_count n : ℝ) * x₀ ^ n)) :
+    ¬ Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
+  intro h
+  exact hdiv (Summable.of_nonneg_of_le
+    (fun n => mul_nonneg (Nat.cast_nonneg _) (pow_nonneg hx₀.le _))
+    (fun n => mul_le_mul_of_nonneg_left (pow_le_pow_left₀ hx₀.le hx _) (Nat.cast_nonneg _))
+    h)
+
 /-! ## Bridge definitions
 
 A *bridge* of width T in the hexagonal lattice is a self-avoiding walk
@@ -428,11 +446,199 @@ The upper bound follows from the fact that each vertex has at most 3
 neighbors and the walk is self-avoiding.
 -/
 
+/-! ### Degree bound and SAW step count -/
+
+/-
+PROBLEM
+Every vertex in hexGraph has exactly 3 neighbors.
+
+PROVIDED SOLUTION
+Case split on v.2.2 (the Bool component). For false: neighbors are {(v.1, v.2.1, true), (v.1+1, v.2.1, true), (v.1, v.2.1+1, true)}. For true: neighbors are {(v.1, v.2.1, false), (v.1-1, v.2.1, false), (v.1, v.2.1-1, false)}. Use hexNeighborFinset_spec and hexGraph_locallyFinite to relate neighborFinset to these explicit finsets. Actually, from the instance hexGraph_locallyFinite, we know neighborFinset v = hexNeighborFinset v (converted). The card of a 3-element finset of distinct elements is 3. The elements are distinct because they differ in coordinates.
+-/
+lemma hexGraph_degree (v : HexVertex) : (hexGraph.neighborFinset v).card = 3 := by
+  cases' v with x y b;
+  cases y ; simp +decide [ hexGraph ];
+  cases ‹Bool› <;> simp +decide [ SimpleGraph.degree, SimpleGraph.neighborFinset ];
+  · rename_i y; exact Finset.card_eq_three.mpr ⟨ ( x, y, true ), ( x + 1, y, true ), ( x, y + 1, true ), by aesop ⟩ ;
+  · rename_i y; erw [ Finset.card_insert_of_notMem, Finset.card_insert_of_notMem ] <;> simp +decide ;
+    grind
+
+/-
+PROBLEM
+The number of (n+1)-step SAWs is at most 3 times the number of n-step SAWs.
+    This follows because each (n+1)-step SAW truncates to an n-step SAW,
+    and each n-step SAW has at most 3 extensions (one for each neighbor
+    of the endpoint).
+
+PROVIDED SOLUTION
+We construct an injection from SAW hexOrigin (n+1) into SAW hexOrigin n × (hexGraph.neighborSet (hexOrigin)), then use Fintype.card_le_of_injective and hexGraph_degree.
+
+More precisely, define a function f : SAW hexOrigin (n+1) → SAW hexOrigin n that truncates the last step. This is done using p.take n (we have walk_take_isPath). The fiber of f over any n-step SAW s has cardinality at most |hexGraph.neighborFinset s.w| = 3.
+
+So saw_count(n+1) ≤ Σ_{s ∈ SAW(n)} |fiber(s)| ≤ Σ_{s} 3 = 3 · saw_count(n).
+
+Key: define the truncation map using p.take n (giving a walk of length min(n, n+1) = n from origin to p.getVert n), which is a path by walk_take_isPath. The fiber bound follows from: extensions are neighbors of s.w, and there are exactly 3 neighbors.
+
+Use Finset.sum_le_sum or Fintype.card_sigma_le or construct an explicit injection into SAW hexOrigin n × Fin 3.
+-/
+lemma saw_count_step_le_mul_three (n : ℕ) : saw_count (n + 1) ≤ 3 * saw_count n := by
+  rw [ mul_comm ];
+  convert saw_count_submult' n 1 using 1 ; norm_num [ saw_count ];
+  -- By definition of SAW, the set of SAWs of length 1 starting at the origin is in bijection with the set of neighbors of the origin.
+  have h_bij : (SAW hexOrigin 1) ≃ (hexGraph.neighborSet hexOrigin) := by
+    symm;
+    refine' Equiv.ofBijective _ ⟨ _, _ ⟩;
+    intro v;
+    exact ⟨ v, ⟨ SimpleGraph.Walk.cons v.2 SimpleGraph.Walk.nil, by
+      aesop ⟩, by
+      rfl ⟩
+    all_goals generalize_proofs at *;
+    · intro v w h; aesop;
+    · intro s
+      generalize_proofs at *;
+      rcases s with ⟨ w, ⟨ p, hp ⟩, hl ⟩ ; rcases p with ( _ | ⟨ _, _, p ⟩ ) <;> aesop;
+  exact Or.inl ( by rw [ Fintype.card_congr h_bij ] ; rw [ Fintype.card_ofFinset ] ; exact hexGraph_degree hexOrigin ▸ rfl )
+
+/-
+PROBLEM
+For a path of length n ≥ 1 ending at w, the penultimate vertex is adjacent
+    to w and is in the path's support. Therefore at most 2 of w's 3 neighbors
+    are not in the support.
+
+PROVIDED SOLUTION
+The hexagonal lattice is 3-regular (hexGraph_degree: neighborFinset w has card 3). For a path p of length ≥ 1 ending at w, the predecessor of w in the path (the second-to-last vertex) is adjacent to w and is in p.support. So at least one element of neighborFinset w is in p.support, and thus filtered out.
+
+Formally:
+1. Let prev = p.getVert (p.length - 1). Since p has length ≥ 1, we can decompose p as p' ++ [last edge]. The vertex before w is prev.
+2. prev ∈ hexGraph.neighborFinset w (since prev is adjacent to w).
+3. prev ∈ p.support (all getVert values for valid indices are in support).
+4. So prev ∈ neighborFinset w \ {filtered out vertices}, meaning prev is NOT in the filtered set.
+5. (neighborFinset w).filter (u ∉ support) ⊆ (neighborFinset w).erase prev (since prev IS in support and IS in neighborFinset w).
+6. card ((neighborFinset w).erase prev) = card (neighborFinset w) - 1 = 3 - 1 = 2.
+7. By Finset.card_le_card and Finset.card_erase_of_mem.
+
+More concretely: use Finset.card_filter_le_iff or show the filtered set has at most 2 elements.
+
+Alternative: Since card (neighborFinset w) = 3 and at least one member (prev) is in p.support, the filter removes at least 1, so result ≤ 2. Use Finset.card_filter_le and the fact that at least 1 element satisfies the negation.
+
+Formally: card (S.filter P) ≤ card S - card (S.filter (¬P)). We have card S = 3. Need card (S.filter (¬P)) ≥ 1, where ¬P u means u ∈ p.support. This follows from prev ∈ S.filter (¬P).
+
+Use tsub_le_tsub_left or card_sdiff_add_card_eq_card to get: card (filter (∉ support)) = card S - card (filter (∈ support)) ≤ 3 - 1 = 2.
+
+Actually the simplest approach:
+  card (filter (∉ support)) + card (filter (∈ support)) = card S = 3
+  card (filter (∈ support)) ≥ 1 (since prev is in both)
+  Therefore card (filter (∉ support)) ≤ 2.
+-/
+lemma path_extension_bound {v w : HexVertex} (p : hexGraph.Walk v w)
+    (hp : p.IsPath) (hn : 1 ≤ p.length) :
+    ((hexGraph.neighborFinset w).filter (fun u => u ∉ p.support)).card ≤ 2 := by
+  -- Let's denote the predecessor of `w` in the path `p` as `prev`.
+  obtain ⟨prev, hprev⟩ : ∃ prev : HexVertex, prev ∈ p.support ∧ hexGraph.Adj prev w := by
+    induction p ; aesop;
+    cases ‹SimpleGraph.Walk _ _ _› <;> aesop;
+  have h_card_filter : Finset.card (Finset.filter (fun u => u∉ p.support) (hexGraph.neighborFinset w)) ≤ Finset.card (hexGraph.neighborFinset w) - 1 := by
+    have h_card_filter : Finset.card (Finset.filter (fun u => u∉ p.support) (hexGraph.neighborFinset w)) + Finset.card (Finset.filter (fun u => u ∈ p.support) (hexGraph.neighborFinset w)) = Finset.card (hexGraph.neighborFinset w) := by
+      rw [ add_comm, Finset.card_filter_add_card_filter_not ]
+    -- Since `prev` is in the path and adjacent to `w`, it must be in the neighbor set of `w` and in the support of `p`.
+    have h_prev_in_support : prev ∈ Finset.filter (fun u => u ∈ p.support) (hexGraph.neighborFinset w) := by
+      simp_all +decide [ SimpleGraph.neighborFinset ];
+      exact hprev.2.symm;
+    exact Nat.le_sub_one_of_lt ( by linarith [ show Finset.card ( Finset.filter ( fun u => u ∈ p.support ) ( hexGraph.neighborFinset w ) ) ≥ 1 from Finset.card_pos.mpr ⟨ prev, h_prev_in_support ⟩ ] );
+  exact h_card_filter.trans ( by rw [ hexGraph_degree ] )
+
+/-
+PROBLEM
+For a path p of length > n, the vertex at position n+1 is not in
+    the support of p.take n. This is because the path visits all vertices
+    at most once, and position n+1 is beyond the take prefix.
+
+PROVIDED SOLUTION
+p.take n has support = p.support.take (n+1) by SimpleGraph.Walk.take_support_eq_support_take_succ.
+
+The path p is injective on its support (support_nodup from IsPath). So p.support has no duplicates.
+
+p.getVert (n+1) is the element at index n+1 of p.support (via SimpleGraph.Walk.getVert_eq_support_get or similar). Since n < p.length, n+1 ≤ p.length, so index n+1 is valid.
+
+The take (n+1) of p.support only contains elements at indices 0 through n. Since p.support has no duplicates, the element at index n+1 does not appear at any index 0 through n. Therefore p.getVert (n+1) ∉ p.support.take (n+1) = (p.take n).support.
+
+Formally: use List.Nodup.not_mem_of_get_eq_get or show that if p.getVert (n+1) ∈ take (n+1) of support, then p.getVert (n+1) = p.support[i] for some i ≤ n, contradicting nodup since p.support[n+1] = p.getVert(n+1).
+
+Key API:
+- SimpleGraph.Walk.take_support_eq_support_take_succ
+- SimpleGraph.Walk.IsPath.support_nodup
+- List.Nodup.sublist (take is a sublist, nodup persists)
+- List.mem_take_iff_get or similar
+- SimpleGraph.Walk.getVert_mem_support
+-/
+lemma getVert_succ_not_in_take_support {v w : HexVertex}
+    (p : hexGraph.Walk v w) (hp : p.IsPath) (n : ℕ) (hn : n < p.length) :
+    p.getVert (n + 1) ∉ (p.take n).support := by
+  have h_support_take : (p.take n).support = p.support.take (n + 1) := by
+    exact?;
+  rw [ h_support_take, List.mem_iff_get ];
+  have := hp.support_nodup; simp_all +decide [ List.nodup_iff_injective_get ] ;
+  intro x hx; have := @this ⟨ x, by
+    grind ⟩ ⟨ n + 1, by
+    simp +arith +decide at * ; linarith ⟩ ;
+    simp_all +decide
+  exact absurd ( this ( by exact? ) ) ( by linarith [ Fin.is_lt x, List.length_take_le ( n + 1 ) p.support ] )
+
+/-- For n ≥ 1, each n-step SAW has at most 2 valid one-step extensions
+    (the predecessor vertex is excluded). This uses path_extension_bound
+    and a fiber-counting argument. -/
+lemma saw_count_step_le_mul_two (n : ℕ) (hn : 1 ≤ n) : saw_count (n + 1) ≤ 2 * saw_count n := by
+  sorry
+
+/-
+PROBLEM
+saw_count 1 = 3: there are exactly 3 one-step SAWs from the origin.
+
+PROVIDED SOLUTION
+saw_count 1 = Fintype.card (SAW hexOrigin 1). An SAW of length 1 from hexOrigin = (0,0,false) consists of a path of length 1, i.e., a single edge walk to one of the 3 neighbors. The three possible endpoints are (0,0,true), (1,0,true), (0,1,true).
+
+For each neighbor w, there is exactly one SAW of length 1 ending at w (the walk .cons adj .nil). So there are exactly 3 SAWs.
+
+Key approach: Show Fintype.card (SAW hexOrigin 1) = 3 by constructing an explicit equivalence or bijection with Fin 3, or by showing card = card of the neighbor finset.
+
+Alternative: Use that SAW hexOrigin 1 is isomorphic to hexGraph.neighborSet hexOrigin (since a 1-step path from v to w is uniquely determined by the adjacency v~w). Then card = hexGraph_degree hexOrigin = 3.
+-/
+lemma saw_count_one : saw_count 1 = 3 := by
+  convert Fintype.card_eq_nat_card using 1;
+  -- Since the neighbor set of the origin has exactly 3 elements, the cardinality of the set of paths from the origin with length 1 is also 3.
+  have h_card : Nat.card (hexGraph.neighborSet hexOrigin) = 3 := by
+    rw [ Nat.card_eq_fintype_card ] ; norm_num [ hexOrigin ];
+    exact?;
+  rw [ ← h_card ];
+  fapply Nat.card_congr;
+  refine' Equiv.ofBijective _ ⟨ fun x y hxy => _, fun x => _ ⟩;
+  use fun x => ⟨ x, ⟨ .cons x.2 .nil, by
+    aesop ⟩, by
+    rfl ⟩
+  all_goals generalize_proofs at *;
+  · grind;
+  · rcases x with ⟨ w, ⟨ p, hp ⟩, hp' ⟩ ; rcases p with ( _ | ⟨ _, _, p ⟩ ) <;> aesop;
+
 /-- Elementary upper bound: c_n ≤ 3 · 2^{n-1} for n ≥ 1.
     Each step has at most 2 choices (3 neighbors minus the one we came from),
     and there are 3 choices for the first step. -/
 lemma saw_count_upper_bound (n : ℕ) (hn : 1 ≤ n) :
-    (saw_count n : ℝ) ≤ 3 * 2 ^ (n - 1) := by sorry
+    (saw_count n : ℝ) ≤ 3 * 2 ^ (n - 1) := by
+  suffices h : ∀ n, 1 ≤ n → saw_count n ≤ 3 * 2 ^ (n - 1) by exact_mod_cast h n hn
+  intro n hn
+  induction n with
+  | zero => omega
+  | succ n ih =>
+    cases n with
+    | zero => simp [saw_count_one]
+    | succ n =>
+      have ih' := ih (by omega)
+      have : n + 1 - 1 = n := by omega
+      have : n + 1 + 1 - 1 = n + 1 := by omega
+      simp_all
+      calc saw_count (n + 2) ≤ 2 * saw_count (n + 1) := saw_count_step_le_mul_two _ (by omega)
+        _ ≤ 2 * (3 * 2 ^ n) := by omega
+        _ = 3 * 2 ^ (n + 1) := by ring
 
 /-
 PROBLEM
@@ -522,5 +728,31 @@ The full proof of Theorem 1 (μ = √(2+√2)) follows this logical chain:
 
 7. **Conclusion**: μ = √(2+√2) by cc_eq_inv_of_partition_radius.
 -/
+
+/-! ## Reduction of main theorem to two partition function bounds
+
+The main theorem μ = √(2+√2) is equivalent to showing that x_c = 1/√(2+√2)
+is the radius of convergence of the partition function Z(x) = Σ c_n x^n.
+
+This reduces to two statements:
+1. Z(x_c) = ∞ (the partition function diverges at x_c)
+2. Z(x) < ∞ for x < x_c (convergence below x_c)
+
+Statement 1 gives μ ≥ √(2+√2) (lower bound).
+Statement 2 gives μ ≤ √(2+√2) (upper bound).
+
+We formalize this reduction chain explicitly.
+-/
+
+/-- The main theorem follows from divergence at x_c and convergence below x_c.
+    This is the cleanest reduction of the main theorem to partition function bounds. -/
+theorem connective_constant_eq_from_bounds
+    (hdiv_xc : ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n))
+    (hconv : ∀ x, 0 < x → x < xc → Summable (fun n => (saw_count n : ℝ) * x ^ n)) :
+    connective_constant = Real.sqrt (2 + Real.sqrt 2) := by
+  apply main_theorem_from_partition
+  · intro x hx
+    exact partition_diverges_mono xc_pos hx.le hdiv_xc
+  · exact hconv
 
 end
