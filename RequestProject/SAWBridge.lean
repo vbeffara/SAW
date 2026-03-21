@@ -584,6 +584,17 @@ lemma getVert_succ_not_in_take_support {v w : HexVertex}
     simp_all +decide
   exact absurd ( this ( by exact SimpleGraph.Walk.getVert_eq_support_getElem p hn ) ) ( by linarith [ Fin.is_lt x, List.length_take_le ( n + 1 ) p.support ] )
 
+/-- Truncation of an (n+1)-step SAW to an n-step SAW. -/
+private def truncSAW (n : ℕ) (s : SAW hexOrigin (n + 1)) : SAW hexOrigin n where
+  w := s.p.1.getVert n
+  p := ⟨s.p.1.take n, by
+    refine SimpleGraph.Walk.IsPath.mk' ?_
+    rw [SimpleGraph.Walk.take_support_eq_support_take_succ]
+    exact s.p.2.support_nodup.take⟩
+  l := by
+    rw [SimpleGraph.Walk.take_length]
+    simp [s.l]
+
 /-- For n ≥ 1, each n-step SAW has at most 2 valid one-step extensions
     (the predecessor vertex is excluded). This uses path_extension_bound
     and a fiber-counting argument. -/
