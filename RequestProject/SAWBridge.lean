@@ -595,9 +595,17 @@ private def truncSAW (n : ℕ) (s : SAW hexOrigin (n + 1)) : SAW hexOrigin n whe
     rw [SimpleGraph.Walk.take_length]
     simp [s.l]
 
-/-- For n ≥ 1, each n-step SAW has at most 2 valid one-step extensions
-    (the predecessor vertex is excluded). This uses path_extension_bound
-    and a fiber-counting argument. -/
+/-- Fiber counting lemma: if every fiber of f has at most k elements, then |α| ≤ k·|β|. -/
+private lemma card_le_mul_of_fiber_le {α β : Type*} [Fintype α] [Fintype β] [DecidableEq β]
+    (f : α → β) (k : ℕ) (hk : ∀ b : β, (Finset.univ.filter (fun a => f a = b)).card ≤ k) :
+    Fintype.card α ≤ k * Fintype.card β := by
+  have h := Finset.card_eq_sum_card_fiberwise (f := f) (s := Finset.univ) (t := Finset.univ)
+    (fun x _ => Finset.mem_univ _)
+  rw [Finset.card_univ] at h
+  linarith [Finset.sum_le_sum (fun b (_ : b ∈ Finset.univ) => hk b),
+            show ∑ _ ∈ (Finset.univ : Finset β), k = k * Fintype.card β from
+              by rw [Finset.sum_const, smul_eq_mul, Finset.card_univ, mul_comm]]
+
 lemma saw_count_step_le_mul_two (n : ℕ) (hn : 1 ≤ n) : saw_count (n + 1) ≤ 2 * saw_count n := by
   sorry
 
