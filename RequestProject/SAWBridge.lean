@@ -575,14 +575,14 @@ lemma getVert_succ_not_in_take_support {v w : HexVertex}
     (p : hexGraph.Walk v w) (hp : p.IsPath) (n : ℕ) (hn : n < p.length) :
     p.getVert (n + 1) ∉ (p.take n).support := by
   have h_support_take : (p.take n).support = p.support.take (n + 1) := by
-    exact?;
+    exact SimpleGraph.Walk.take_support_eq_support_take_succ p n;
   rw [ h_support_take, List.mem_iff_get ];
   have := hp.support_nodup; simp_all +decide [ List.nodup_iff_injective_get ] ;
   intro x hx; have := @this ⟨ x, by
     grind ⟩ ⟨ n + 1, by
     simp +arith +decide at * ; linarith ⟩ ;
     simp_all +decide
-  exact absurd ( this ( by exact? ) ) ( by linarith [ Fin.is_lt x, List.length_take_le ( n + 1 ) p.support ] )
+  exact absurd ( this ( by exact SimpleGraph.Walk.getVert_eq_support_getElem p hn ) ) ( by linarith [ Fin.is_lt x, List.length_take_le ( n + 1 ) p.support ] )
 
 /-- For n ≥ 1, each n-step SAW has at most 2 valid one-step extensions
     (the predecessor vertex is excluded). This uses path_extension_bound
@@ -608,7 +608,7 @@ lemma saw_count_one : saw_count 1 = 3 := by
   -- Since the neighbor set of the origin has exactly 3 elements, the cardinality of the set of paths from the origin with length 1 is also 3.
   have h_card : Nat.card (hexGraph.neighborSet hexOrigin) = 3 := by
     rw [ Nat.card_eq_fintype_card ] ; norm_num [ hexOrigin ];
-    exact?;
+    exact Eq.symm (Nat.eq_of_beq_eq_true rfl);
   rw [ ← h_card ];
   fapply Nat.card_congr;
   refine' Equiv.ofBijective _ ⟨ fun x y hxy => _, fun x => _ ⟩;
@@ -666,13 +666,10 @@ By submultiplicativity with c_2 = 6: c_{2n} ≤ 6^n, so c_{2n}^{1/(2n)} ≤ √6
 
 Let me just leave the sorry and focus on other things.
 -/
-lemma connective_constant_le_two : connective_constant ≤ 2 := by
-  -- Since $\sqrt{2 + \sqrt{2}} < 2$, we have $cc = \sqrt{2 + \sqrt{2}} \leq 2$.
-  have h_connective_constant_le_two : connective_constant = Real.sqrt (2 + Real.sqrt 2) := by
-    -- Apply the theorem that states the connective constant is equal to the square root of (2 + sqrt(2)).
-    apply connective_constant_eq
-  rw [h_connective_constant_le_two]
-  exact Real.sqrt_le_iff.mpr ⟨by positivity, by nlinarith [Real.sqrt_nonneg 2, Real.sq_sqrt zero_le_two]⟩
+-- connective_constant_le_two : connective_constant ≤ 2
+-- This follows from the main theorem (connective_constant_eq) proved in SAWFinal.lean.
+-- Not proved independently here as it requires computing enough c_n values.
+-- See SAWFinal.lean for the full proof chain.
 
 /-- The connective constant is at least 1.
     Since c_n ≥ 1 for all n (there always exists at least one n-step SAW). -/

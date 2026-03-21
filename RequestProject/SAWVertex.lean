@@ -92,7 +92,7 @@ PROVIDED SOLUTION
 j = exp(i·2π/3), conj j = exp(-i·2π/3). So 1 + j + conj j = 1 + 2·Re(j) = 1 + 2·cos(2π/3) = 1 + 2·(-1/2) = 0. Use Complex.ext_iff to split into real and imaginary parts, and compute cos(2π/3) = -1/2, sin(2π/3) + sin(-2π/3) = 0.
 -/
 theorem cube_roots_sum : (1 : ℂ) + j + conj j = 0 := by
-  unfold j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] ; ring; norm_num;
+  unfold j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] ; ring_nf; norm_num;
   norm_num [ ( by ring : Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 ) ]
 
 /-
@@ -103,7 +103,7 @@ PROVIDED SOLUTION
 j = exp(i·2π/3). So j³ = exp(i·2π) = 1. Use Complex.exp_nat_mul and exp(i·2π) = 1 via Complex.exp_two_pi_mul_I or similar.
 -/
 theorem j_cubed : j ^ 3 = 1 := by
-  unfold j ; ring ; norm_num [ ← Complex.exp_nat_mul, mul_div_cancel₀ ] ;
+  unfold j ; ring_nf ; norm_num [ ← Complex.exp_nat_mul, mul_div_cancel₀ ] ;
   exact Complex.exp_eq_one_iff.mpr ⟨ 1, by ring ⟩
 
 /-
@@ -114,8 +114,8 @@ PROVIDED SOLUTION
 j = exp(i·2π/3). So j² = exp(i·4π/3). And conj j = exp(-i·2π/3). Since exp(i·4π/3) = exp(i·(2π - 2π/3)) = exp(-i·2π/3) (using exp(i·2π) = 1). Use Complex.ext_iff and trig identities: cos(4π/3) = cos(-2π/3) and sin(4π/3) = sin(-2π/3) = -sin(2π/3).
 -/
 theorem j_sq_eq_conj : j ^ 2 = conj j := by
-  unfold j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, pow_succ ] ; ring; norm_num;
-  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring ] ; norm_num ; ring ; norm_num;
+  unfold j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, pow_succ ] ; ring_nf; norm_num;
+  rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring ] ; norm_num ; ring_nf ; norm_num;
 
 /-! ## The vertex relation
 
