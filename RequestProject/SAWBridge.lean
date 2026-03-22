@@ -636,8 +636,7 @@ private lemma saw_eq_of_trunc_and_last (n : ℕ) (s₁ s₂ : SAW hexOrigin (n +
   simp_all +decide [ truncSAW ];
   -- Since the walks are paths, their drop n parts are walks of length 1.
   have h_drop_length : (s₁_w.1.drop n).length = 1 ∧ (s₂_w.1.drop n).length = 1 := by
-    simp_all +decide [ SimpleGraph.Walk.drop ]
-  generalize_proofs at *;
+    simp_all
   -- Since the walks are paths and their drop n parts have length 1, they must be of the form cons adj nil.
   have h_drop_form : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, p.length = 1 → ∃ adj : hexGraph.Adj v w, p = .cons adj .nil := by
     intros v w p hp_length; rcases p with ( _ | ⟨ adj, p ⟩ ) <;> simp_all +decide ;

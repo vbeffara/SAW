@@ -66,11 +66,10 @@ theorem case1_divergence {c : ℝ} (hc : 0 < c) :
 theorem case2_lower_bound
     {B : ℕ → ℝ}
     (hB_nn : ∀ T, 0 ≤ B T)
-    (hB_le : ∀ T, B T ≤ 1)
     (hB_recur : ∀ T, B T ≤ c_alpha * xc * B (T + 1) ^ 2 + B (T + 1))
     (hB1 : 0 < B 1) :
     ¬ Summable (fun T => B (T + 1)) :=
-  case2_divergence hB_nn hB_le hB_recur hB1
+  case2_divergence hB_nn hB_recur hB1
 
 /-! ## The complete lower bound argument
 
@@ -105,7 +104,7 @@ theorem lower_bound_abstract
     have h1 := hstrip' T
     have h2 := hstrip' (T + 1)
     nlinarith [hrecur T, c_alpha_pos, xc_pos]
-  exact case2_divergence hB_nn hB_le hB_recur hB1
+  exact case2_divergence hB_nn hB_recur hB1
 
 /-! ## The upper bound: Z(x) < ∞ for x < x_c
 

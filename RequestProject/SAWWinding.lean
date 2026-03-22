@@ -92,7 +92,7 @@ lemma cos_seven_pi_eight : Real.cos (7 * Real.pi / 8) = -Real.cos (Real.pi / 8) 
   exact Real.cos_pi_sub (Real.pi / 8)
 
 /-- The strip identity bounds. -/
-theorem strip_bounds' {A B E : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B) (hE : 0 ≤ E)
+theorem strip_bounds' {A B E : ℝ} (hA : 0 ≤ A) (hE : 0 ≤ E)
     (hid : 1 = c_alpha * A + B + c_eps * E) :
     B ≤ 1 := by
   nlinarith [c_alpha_pos, c_eps_pos]

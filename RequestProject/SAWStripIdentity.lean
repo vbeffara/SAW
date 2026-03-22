@@ -177,13 +177,6 @@ This is Lemma 2 of the paper.
 
     This is the central identity that drives both the lower and upper bounds. -/
 theorem strip_identity_from_boundary_evaluation
-    (h_vertex_sum :
-      ∀ F_alpha F_beta F_eps : ℝ,
-        0 = -F_alpha + F_beta + F_eps →
-        F_alpha = 1 - c_alpha * A →
-        F_beta = B →
-        F_eps = c_eps * E →
-        1 = c_alpha * A + B + c_eps * E)
     (A B E : ℝ) :
     (0 = -(1 - c_alpha * A) + B + c_eps * E) →
     1 = c_alpha * A + B + c_eps * E := by

@@ -39,7 +39,7 @@ theorem case2_bridge_lower_bound
     intro T; nlinarith [hstrip T, hstrip (T + 1), hrecur T, c_alpha_pos, xc_pos]
   have hα := mul_pos c_alpha_pos xc_pos
   exact ⟨min (B 1) (1 / (c_alpha * xc)), lt_min hB1 (div_pos one_pos hα),
-    quadratic_recurrence_lower_bound hα hB_nn hB_le hB_recur hB1⟩
+    quadratic_recurrence_lower_bound hα hB_nn hB_recur hB1⟩
 
 /-- **The complete lower bound**: In Case 2, the bridge series diverges. -/
 theorem case2_divergence_full
@@ -52,7 +52,7 @@ theorem case2_divergence_full
   have hB_le : ∀ T, B T ≤ 1 := fun T => by nlinarith [hstrip T, c_alpha_pos, hA_nn T]
   have hB_recur : ∀ T, B T ≤ c_alpha * xc * B (T + 1) ^ 2 + B (T + 1) := by
     intro T; nlinarith [hstrip T, hstrip (T + 1), hrecur T, c_alpha_pos, xc_pos]
-  exact case2_divergence hB_nn hB_le hB_recur hB1
+  exact case2_divergence hB_nn hB_recur hB1
 
 /-! ## The complete case analysis
 
@@ -87,7 +87,7 @@ theorem bridge_series_diverges
   -- The recurrence holds
   have hB_recur := bridge_recurrence_general hstrip hrecur hE_decr
   -- Apply the quadratic recurrence lower bound
-  exact case2_divergence hB_nn hB_le hB_recur hB1
+  exact case2_divergence hB_nn hB_recur hB1
 
 /-! ## Bridge scaling bound
 
@@ -97,7 +97,7 @@ For the upper bound, we need B_T^x ≤ (x/x_c)^T for x < x_c.
 /-- The geometric series Σ (x/x_c)^T converges for x < x_c. -/
 theorem geometric_bridge_sum {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
     Summable (fun T => (x / xc) ^ T) :=
-  summable_geometric_of_lt_one (div_nonneg hx.le xc_pos.le) (ratio_lt_one hx hxc)
+  summable_geometric_of_lt_one (div_nonneg hx.le xc_pos.le) (ratio_lt_one hxc)
 
 /-! ## The main theorem from both bounds
 

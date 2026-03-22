@@ -49,13 +49,13 @@ B_T^x ≤ (x/x_c)^T, and the product ∏(1+B_T^x)² converges.
 /-- The abstract bridge decomposition bound.
     If B_T^{x_c} ≤ 1 for all T, and bridges of width T have length ≥ T,
     then for x < x_c, B_T^x ≤ (x/x_c)^T · B_T^{x_c} ≤ (x/x_c)^T. -/
-theorem bridge_ratio_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc)
-    {T : ℕ} {B_xc : ℝ} (hB : B_xc ≤ 1) (hB_nn : 0 ≤ B_xc) :
+theorem bridge_ratio_bound {x : ℝ} (hx : 0 < x)
+    {T : ℕ} {B_xc : ℝ} (hB : B_xc ≤ 1) :
     (x / xc) ^ T * B_xc ≤ (x / xc) ^ T := by
   exact mul_le_of_le_one_right (pow_nonneg (div_nonneg hx.le xc_pos.le) _) hB
 
 /-- The ratio x/x_c is in [0, 1) when x < x_c. -/
-lemma ratio_lt_one {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
+lemma ratio_lt_one {x : ℝ} (hxc : x < xc) :
     x / xc < 1 := by
   exact (div_lt_one xc_pos).mpr hxc
 
@@ -69,7 +69,7 @@ theorem bridge_product_converges {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
     ∃ P : ℝ, 0 < P ∧
       Filter.Tendsto (fun N => ∏ T ∈ Finset.range N, (1 + (x / xc) ^ (T + 1)) ^ 2)
         Filter.atTop (nhds P) := by
-  obtain ⟨P, hP_pos, hP_tend⟩ := prod_one_add_geometric_converges (ratio_nonneg hx) (ratio_lt_one hx hxc)
+  obtain ⟨P, hP_pos, hP_tend⟩ := prod_one_add_geometric_converges (ratio_nonneg hx) (ratio_lt_one hxc)
   exact ⟨P ^ 2, sq_pos_of_pos hP_pos, by
     convert hP_tend.pow 2 using 1
     ext N
@@ -127,8 +127,7 @@ In the case E_T = 0 for all T, the strip identity simplifies to
     this gives B_T ≤ 1 and c_α · A_T ≤ 1. -/
 theorem bridge_from_no_escape {A B : ℕ → ℝ}
     (hstrip : ∀ T, 1 = c_alpha * A T + B T)
-    (hA_nn : ∀ T, 0 ≤ A T)
-    (hB_nn : ∀ T, 0 ≤ B T) :
+    (hA_nn : ∀ T, 0 ≤ A T) :
     ∀ T, B T ≤ 1 := by
   intro T
   nlinarith [hstrip T, c_alpha_pos, hA_nn T]
@@ -391,7 +390,6 @@ This gives α·b² + b < c/T ≤ B T, contradicting the recurrence α·b² + b �
 theorem quadratic_recurrence_lower_bound
     {B : ℕ → ℝ} {α : ℝ} (hα : 0 < α)
     (hB_nn : ∀ T, 0 ≤ B T)
-    (hB_le_one : ∀ T, B T ≤ 1)
     (hrecur : ∀ T, B T ≤ α * B (T + 1) ^ 2 + B (T + 1))
     (hB1 : 0 < B 1) :
     ∀ T : ℕ, 1 ≤ T → min (B 1) (1 / α) / T ≤ B T := by
@@ -426,8 +424,7 @@ then Z(xc) ≥ Σ_{T≥1} c/T = ∞. -/
     it diverges. -/
 theorem diverges_from_harmonic_lower_bound
     {f : ℕ → ℝ} {c : ℝ} (hc : 0 < c)
-    (hf : ∀ n : ℕ, 1 ≤ n → c / n ≤ f n)
-    (hf_nn : ∀ n, 0 ≤ f n) :
+    (hf : ∀ n : ℕ, 1 ≤ n → c / n ≤ f n) :
     ¬ Summable (fun n => f (n + 1)) := by
   intro h
   exact absurd h (not_summable_of_lower_bound hc (fun n => by
@@ -451,16 +448,14 @@ reducing it to the key hypotheses:
     B_T ≥ c/T, and hence Σ B_T = ∞. -/
 theorem case2_divergence {B : ℕ → ℝ}
     (hB_nn : ∀ T, 0 ≤ B T)
-    (hB_le_one : ∀ T, B T ≤ 1)
     (hrecur : ∀ T, B T ≤ c_alpha * xc * B (T + 1) ^ 2 + B (T + 1))
     (hB1 : 0 < B 1) :
     ¬ Summable (fun T => B (T + 1)) := by
   have hαpos : 0 < c_alpha * xc := mul_pos c_alpha_pos xc_pos
-  have hlb := quadratic_recurrence_lower_bound hαpos hB_nn hB_le_one hrecur hB1
+  have hlb := quadratic_recurrence_lower_bound hαpos hB_nn hrecur hB1
   exact diverges_from_harmonic_lower_bound
     (quadratic_lower_const_pos hαpos hB1)
     (fun n hn => hlb n hn)
-    hB_nn
 
 /-! ## Remark (from the paper)
 

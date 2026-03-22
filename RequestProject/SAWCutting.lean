@@ -296,8 +296,6 @@ such vertex gives two bridges whose total weight relates to γ's weight.
     This is formalized as a statement about real-valued partition functions. -/
 theorem cutting_argument_abstract
     {A_T A_T1 : ℝ} {B_T1 : ℝ} {x : ℝ}
-    (hA_le : A_T ≤ A_T1) -- A is increasing (more walks in larger strip)
-    (hx_pos : 0 < x)
     -- The core inequality: the "extra walks" (A_{T+1} - A_T) contribute
     -- at most x · B_{T+1}² when factored through bridge pairs.
     -- The factor x comes from the extra vertex at the cutting point.
@@ -371,8 +369,7 @@ Z(x) ≤ 2 · ∏(1+B_T)².
 /-- The Hammersley-Welsh injection: any SAW decomposes into a pair of
     sequences of bridges. The number of bridge sequences of a given
     width set is bounded by the product of bridge partition functions. -/
-theorem hw_injection_abstract (n : ℕ) {x : ℝ} (hx : 0 < x)
-    {B : ℕ → ℝ} (hB : ∀ T, 0 ≤ B T)
+theorem hw_injection_abstract (n : ℕ) {x : ℝ} {B : ℕ → ℝ}
     -- The number of bridges of width T, weighted by x^ℓ, is B T
     -- The decomposition gives an injection from SAWs into pairs of
     -- sequences of bridges with strictly monotone widths.

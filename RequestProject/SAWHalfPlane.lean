@@ -99,7 +99,7 @@ theorem hexRe_adj_bound {v w : HexVertex} (h : hexGraph.Adj v w) :
   simp only [hexRe, hexEmbed]
   rcases h with ⟨h1, h2, h3⟩ | ⟨h1, h2, h3⟩ <;>
     rcases h3 with ⟨h3a, h3b⟩ | ⟨h3a, h3b⟩ | ⟨h3a, h3b⟩ <;>
-    subst_vars <;> simp [abs_le] <;> push_cast <;> (try constructor) <;> linarith
+    subst_vars <;> simp [abs_le] <;> (try constructor) <;> linarith
 
 /-! ## The cutting argument (Equation 7)
 
@@ -149,7 +149,7 @@ theorem left_boundary_false_only (v : HexVertex) (hv : hexRe v = 0) :
   rcases v with ⟨vx, vy, vb⟩
   cases vb
   · simp [hexRe, hexEmbed] at hv
-    exact ⟨rfl, by push_cast at hv; linarith⟩
+    exact ⟨rfl, by linarith⟩
   · exfalso
     simp [hexRe, hexEmbed] at hv
     -- 3 * vx / 2 + 1 = 0 means vx = -2/3, impossible for integer vx
@@ -208,7 +208,7 @@ theorem bridge_sequence_bound {N : ℕ} {B : ℕ → ℝ} (hB : ∀ k, 0 ≤ B k
 
 /-- For two independent choices of bridge sequences (increasing and decreasing
     parts), the total weight is bounded by the square of the product. -/
-theorem two_sided_bridge_bound {N : ℕ} {B : ℕ → ℝ} (hB : ∀ k, 0 ≤ B k) :
+theorem two_sided_bridge_bound {N : ℕ} {B : ℕ → ℝ} :
     0 ≤ (∏ k ∈ Finset.range N, (1 + B (k + 1))) ^ 2 :=
   sq_nonneg _
 

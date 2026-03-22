@@ -191,7 +191,6 @@ and the analytic strip identity (Lemma 2).
     (the coefficients are equal and opposite). -/
 theorem telescopic_cancellation_abstract {n : ℕ}
     (F : Fin n → ℂ)  -- values at boundary mid-edges
-    (vertex_rels : ∀ v : Fin n, F v = 0)  -- all vertex relations hold
     (h_sum : (∑ i, F i) = 0) :  -- the sum of all relations gives zero
     ∑ i, F i = 0 := h_sum
 
