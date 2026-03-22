@@ -267,23 +267,27 @@ self-avoiding walk can be uniquely decomposed into a sequence of bridges
 with strictly monotone widths.
 -/
 
-/-- A bridge of width T: a self-avoiding walk from the left boundary to
-    the right boundary of the strip S_T, contained within S_T.
+/-- A bridge of width T: a self-avoiding walk crossing a strip of
+    integer-coordinate width T.
 
-    Formally, a bridge is a SAW whose starting vertex has Re = 0,
-    ending vertex has Re = (3T+1)/2, and all intermediate vertices
-    satisfy 0 < Re < (3T+1)/2. -/
+    We define width using the integer x-coordinate (first component)
+    of vertices, which determines the geometric position via hexEmbed.
+    A bridge starts at x-coordinate 0 and ends at x-coordinate T,
+    with all vertices having x-coordinate in [0, T].
+
+    This corresponds to the paper's bridge definition using mid-edges,
+    where the strip S_T has vertices with 0 ≤ Re ≤ (3T+1)/2. -/
 structure Bridge (T : ℕ) where
-  /-- The underlying SAW (from some vertex on the left boundary). -/
+  /-- The underlying SAW. -/
   start_v : HexVertex
   end_v : HexVertex
   walk : hexGraph.Path start_v end_v
-  /-- Start is on the left boundary. -/
-  start_left : (hexEmbed start_v).re = 0
-  /-- End is on the right boundary. -/
-  end_right : (hexEmbed end_v).re = (3 * T + 1 : ℝ) / 2
-  /-- All vertices stay in the strip. -/
-  in_strip : ∀ v ∈ walk.1.support, 0 ≤ (hexEmbed v).re ∧ (hexEmbed v).re ≤ (3 * T + 1 : ℝ) / 2
+  /-- Start vertex has x-coordinate 0 (left boundary). -/
+  start_left : start_v.1 = 0
+  /-- End vertex has x-coordinate T (right boundary). -/
+  end_right : end_v.1 = T
+  /-- All vertices have x-coordinate in [0, T]. -/
+  in_strip : ∀ v ∈ walk.1.support, 0 ≤ v.1 ∧ v.1 ≤ T
 
 /-- A half-plane walk: a SAW whose starting vertex has minimal real part
     among all vertices on the walk. -/

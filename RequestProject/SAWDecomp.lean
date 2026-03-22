@@ -169,13 +169,15 @@ Actually wait, the bridge has width T which means it crosses T strips of hexagon
 Actually, this bound might not hold for the formal definition. The definition of Bridge doesn't explicitly say length ≥ T. The paper says "a bridge of width T has length ≥ T" but this is a geometric property. Let me just leave this as sorry and let the subagent try.
 -/
 theorem bridge_length_ge_width (T : ℕ) (b : Bridge T) : T ≤ b.walk.1.length := by
-  have := b.end_right; ( have := b.start_left; ( simp_all +decide [ hexEmbed ] ) ) ;
-  rcases b with ⟨ ⟨ x, y, b ⟩, ⟨ u, v, c ⟩, p, hp ⟩ ; norm_num at * ; ring_nf at * ; norm_num at *; (
-  rcases b with ( _ | b ) <;> rcases c with ( _ | c ) <;> norm_num at *;
-  · field_simp at this; norm_cast at this; have := congr_arg ( · % 3 ) this; norm_num [ Int.add_emod, Int.mul_emod ] at this;
-  · field_simp at this; norm_cast at this; have := congr_arg ( · % 3 ) this; norm_num [ Int.add_emod, Int.mul_emod ] at this;
-  · field_simp at *; norm_cast at *; omega;
-  · rcases x with ( _ | _ | x ) <;> norm_num at * <;> linarith;)
+  -- A bridge goes from x-coordinate 0 to x-coordinate T.
+  -- Each step changes x-coordinate by at most 1.
+  -- So we need at least T steps.
+  have h_start := b.start_left  -- start_v.1 = 0
+  have h_end := b.end_right    -- end_v.1 = T
+  have h_bound := hexGraph_walk_bound b.walk.1
+  -- h_bound gives: end_v.1 - start_v.1 ≤ walk.length
+  -- So T = end_v.1 - 0 = end_v.1 - start_v.1 ≤ walk.length
+  omega
 
 /-! ## The full upper bound argument
 

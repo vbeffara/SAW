@@ -24,33 +24,11 @@ open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
-/-! ## Decidable adjacency and local finiteness of the hexagonal lattice -/
+/-! ## Decidable adjacency and local finiteness of the hexagonal lattice
 
-/-- Adjacency in hexGraph is decidable, since it is defined by
-    Boolean conditions on integer coordinates. -/
-instance hexGraph_decidableAdj : DecidableRel hexGraph.Adj := fun v w => by
-  unfold hexGraph; simp only; exact inferInstance
-
-/-- Explicit enumeration of the neighbors of each hex vertex. -/
-private def hexNeighborFinset (v : HexVertex) : Finset HexVertex :=
-  match v.2.2 with
-  | false => {(v.1, v.2.1, true), (v.1 + 1, v.2.1, true), (v.1, v.2.1 + 1, true)}
-  | true  => {(v.1, v.2.1, false), (v.1 - 1, v.2.1, false), (v.1, v.2.1 - 1, false)}
-
-private lemma hexNeighborFinset_spec (v w : HexVertex) :
-    w ∈ hexNeighborFinset v ↔ hexGraph.Adj v w := by
-  simp only [hexNeighborFinset]
-  rcases v with ⟨vx, vy, vb⟩
-  rcases w with ⟨wx, wy, wb⟩
-  cases vb <;> cases wb <;>
-    simp [hexGraph, Finset.mem_insert, Finset.mem_singleton, Prod.mk.injEq] <;> omega
-
-/-- The hexagonal lattice is locally finite: each vertex has exactly 3 neighbors.
-    For (x, y, false): neighbors are (x, y, true), (x+1, y, true), (x, y+1, true).
-    For (x, y, true): neighbors are (x, y, false), (x-1, y, false), (x, y-1, false). -/
-instance hexGraph_locallyFinite : hexGraph.LocallyFinite := fun v =>
-  Fintype.ofFinset (hexNeighborFinset v) fun w => by
-    rw [SimpleGraph.mem_neighborSet, hexNeighborFinset_spec]
+These are defined in SAW.lean as `hexGraph_decidableAdj'` and
+`hexGraph_locallyFinite'`, and are available via `import RequestProject.SAW`.
+-/
 
 /-! ## Geometric embedding of the hex lattice into ℂ
 
