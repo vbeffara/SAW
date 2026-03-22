@@ -606,8 +606,117 @@ private lemma card_le_mul_of_fiber_le {α β : Type*} [Fintype α] [Fintype β] 
             show ∑ _ ∈ (Finset.univ : Finset β), k = k * Fintype.card β from
               by rw [Finset.sum_const, smul_eq_mul, Finset.card_univ, mul_comm]]
 
+/-
+PROBLEM
+Two SAWs of length n+1 with the same truncation and same last vertex are equal.
+    The key insight: the walk is determined by take n (the first n steps) and
+    the last vertex w (since the last step is a single edge from getVert n to w).
+
+PROVIDED SOLUTION
+Two SAWs of length n+1 that have the same truncation to length n and the same last vertex must be equal.
+
+By SimpleGraph.Walk.append_take_drop_eq, s.p.1 = (s.p.1.take n).append (s.p.1.drop n). The take n parts are equal (from h_trunc, since truncSAW n s₁ = truncSAW n s₂ implies their walks are equal). The drop n parts are walks of length 1 (since the original walk has length n+1). A walk of length 1 from u to w is uniquely determined (it's Walk.cons adj .nil where adj is a Prop, hence proof-irrelevant). Since both drops go to the same endpoint (h_last: s₁.w = s₂.w), they must be equal. Hence the full walks are equal, and SAW equality follows.
+
+Key steps:
+1. h_trunc implies s₁.p.1.take n = cast (...) (s₂.p.1.take n)
+2. Both drops have length 1 (Walk.drop_length + s.l gives length = (n+1) - n = 1)
+3. A walk of length 1 is Walk.cons adj .nil, unique up to the adjacency proof (which is a Prop)
+4. Both drops end at the same vertex (h_last)
+5. So the drops are equal
+6. By append_take_drop_eq, the full walks are equal
+-/
+private lemma saw_eq_of_trunc_and_last (n : ℕ) (s₁ s₂ : SAW hexOrigin (n + 1))
+    (h_trunc : truncSAW n s₁ = truncSAW n s₂) (h_last : s₁.w = s₂.w) : s₁ = s₂ := by
+  cases' s₁ with s₁_p s₁_w s₁_l s₁_p_path s₁_w_path s₁_l_eq
+  cases' s₂ with s₂_p s₂_w s₂_l s₂_p_path s₂_w_path s₂_l_eq
+  simp_all +decide [ truncSAW ];
+  -- Since the walks are paths, their drop n parts are walks of length 1.
+  have h_drop_length : (s₁_w.1.drop n).length = 1 ∧ (s₂_w.1.drop n).length = 1 := by
+    simp_all +decide [ SimpleGraph.Walk.drop ]
+  generalize_proofs at *;
+  -- Since the walks are paths and their drop n parts have length 1, they must be of the form cons adj nil.
+  have h_drop_form : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, p.length = 1 → ∃ adj : hexGraph.Adj v w, p = .cons adj .nil := by
+    intros v w p hp_length; rcases p with ( _ | ⟨ adj, p ⟩ ) <;> simp_all +decide ;
+    cases p <;> aesop ( simp_config := { singlePass := true } ) ;
+  generalize_proofs at *; (
+  -- Since the walks are paths and their drop n parts are equal, their entire walks must be equal.
+  have h_walk_eq : s₁_w.1 = (s₁_w.1.take n).append (s₁_w.1.drop n) ∧ s₂_w.1 = (s₂_w.1.take n).append (s₂_w.1.drop n) := by
+    norm_num +zetaDelta at *
+  generalize_proofs at *; (
+  grind +ring))
+
+/-
+PROBLEM
+The last vertex of an (n+1)-step SAW is adjacent to the n-th vertex.
+
+PROVIDED SOLUTION
+The walk s.p.1 has length n+1 (by s.l). So s.p.1.getVert n and s.p.1.getVert (n+1) are adjacent vertices in the walk. Since s.w is the endpoint of the walk, s.p.1.getVert (n+1) = s.w (getVert at the length position equals the endpoint). Use SimpleGraph.Walk.adj_getVert_succ or directly induction on the walk.
+-/
+private lemma saw_last_adj (n : ℕ) (s : SAW hexOrigin (n + 1)) :
+    hexGraph.Adj (s.p.1.getVert n) s.w := by
+  have h_last_vertex : s.p.1.getVert (n + 1) = s.w := by
+    have h_getVert : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, p.length = n + 1 → p.getVert (n + 1) = w := by
+      intros v w p hp_length; induction p <;> aesop;
+    exact h_getVert s.l;
+  convert s.p.1.adj_getVert_succ _;
+  · exact h_last_vertex.symm;
+  · linarith [ s.l ]
+
+/-
+PROBLEM
+The last vertex of an (n+1)-step SAW is not in the support of its truncation.
+
+PROVIDED SOLUTION
+By getVert_succ_not_in_take_support, s.p.1.getVert (n+1) ∉ (s.p.1.take n).support. Since s.w = s.p.1.getVert (n+1) (the walk has length n+1, so getVert at length = endpoint) and (truncSAW n s).p.1 = s.p.1.take n (by definition of truncSAW), the result follows.
+-/
+private lemma saw_last_not_in_trunc (n : ℕ) (s : SAW hexOrigin (n + 1)) :
+    s.w ∉ (truncSAW n s).p.1.support := by
+  have h_last_vertex : s.w = s.p.1.getVert (n + 1) := by
+    convert rfl using 1;
+    convert s.p.1.getVert_length using 1
+    simp [s.l];
+  convert getVert_succ_not_in_take_support s.p.1 s.p.2 n _ using 1 ; aesop;
+  linarith [ s.l ]
+
+private instance SAW.instDecidableEq (v : HexVertex) (n : ℕ) : DecidableEq (SAW v n) := by
+  intro ⟨w₁, ⟨p₁, hp₁⟩, hl₁⟩ ⟨w₂, ⟨p₂, hp₂⟩, hl₂⟩
+  by_cases hw : w₁ = w₂
+  · subst hw
+    by_cases hp : p₁ = p₂
+    · subst hp; exact isTrue rfl
+    · exact isFalse (fun h => hp (by cases h; rfl))
+  · exact isFalse (fun h => hw (by cases h; rfl))
+
 lemma saw_count_step_le_mul_two (n : ℕ) (hn : 1 ≤ n) : saw_count (n + 1) ≤ 2 * saw_count n := by
-  sorry
+  unfold saw_count
+  apply card_le_mul_of_fiber_le (truncSAW n) 2
+  intro b
+  -- Define the map from the fiber to the filtered neighbor set
+  -- Each element of the fiber is determined by its last vertex
+  -- The last vertex must be a neighbor of b.w not in b.p.1.support
+  have h_map : ∀ s : SAW hexOrigin (n + 1), truncSAW n s = b →
+      s.w ∈ (hexGraph.neighborFinset b.w).filter (fun u => u ∉ b.p.1.support) := by
+    intro s hs
+    rw [Finset.mem_filter, SimpleGraph.mem_neighborFinset]
+    refine ⟨?_, ?_⟩
+    · have h_adj := saw_last_adj n s
+      have h_w : (truncSAW n s).w = s.p.1.getVert n := rfl
+      rw [← hs, h_w]
+      exact h_adj
+    · have := saw_last_not_in_trunc n s
+      rwa [← hs]
+  have h_inj : ∀ s₁ s₂ : SAW hexOrigin (n + 1),
+      truncSAW n s₁ = b → truncSAW n s₂ = b → s₁.w = s₂.w → s₁ = s₂ := by
+    intro s₁ s₂ h1 h2 hw
+    exact saw_eq_of_trunc_and_last n s₁ s₂ (h1.trans h2.symm) hw
+  -- The fiber injects into the filtered neighbor set (via last vertex)
+  calc (Finset.univ.filter (fun a => truncSAW n a = b)).card
+      ≤ ((hexGraph.neighborFinset b.w).filter (fun u => u ∉ b.p.1.support)).card := by
+        apply Finset.card_le_card_of_injOn (fun s => s.w) (by
+          intro s hs; exact h_map s (Finset.mem_filter.mp hs).2) (by
+          intro s₁ hs₁ s₂ hs₂ hw
+          exact h_inj s₁ s₂ (Finset.mem_filter.mp hs₁).2 (Finset.mem_filter.mp hs₂).2 hw)
+    _ ≤ 2 := path_extension_bound b.p.1 b.p.2 (by rw [b.l]; omega)
 
 /-
 PROBLEM
