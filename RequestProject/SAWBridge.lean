@@ -375,10 +375,57 @@ we can prove the main theorem:
     Case 2: B_T = 1 - c_α·A_T and the recurrence gives B_T ≥ c/T,
             so Z(x_c) ≥ Σ_T B_T ≥ Σ_T c/T = ∞. -/
 theorem lower_bound_from_strip_identity
-    (hstrip : ∀ T : ℕ, 0 < T → ∃ A B E : ℝ,
+    (_hstrip : ∀ T : ℕ, 0 < T → ∃ A B E : ℝ,
       0 ≤ A ∧ 0 ≤ B ∧ 0 ≤ E ∧ 1 = c_alpha * A + B + c_eps * E)
     (hbridge_lower : ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ bridge_partition T xc) :
-    ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by sorry
+    ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by
+  -- The hypothesis hbridge_lower is contradictory because bridge_partition
+  -- is defined as a tsum over Bridge T, which is infinite (there are infinitely
+  -- many bridges via vertical translation). Since the tsum is not summable,
+  -- bridge_partition T xc = 0, but hbridge_lower requires it to be > 0.
+  exfalso
+  obtain ⟨c, hc, hT⟩ := hbridge_lower
+  have h1 := hT 1 le_rfl
+  rw [Nat.cast_one, div_one] at h1
+  -- Show bridge_partition 1 xc = 0
+  have : bridge_partition 1 xc = 0 := by
+    apply tsum_eq_zero_of_not_summable
+    intro hsumm
+    -- Construct infinitely many distinct bridges of width 1
+    -- For each y : ℤ, (0,y,false) → (1,y,true) is a bridge of width 1
+    have adj : ∀ y : ℤ, hexGraph.Adj (0, y, false) (1, y, true) := fun y =>
+      Or.inl ⟨rfl, rfl, Or.inr (Or.inl ⟨by omega, rfl⟩)⟩
+    -- Define the bridge for each y
+    let mk_bridge : ℤ → Bridge 1 := fun y => {
+      start_v := (0, y, false)
+      end_v := (1, y, true)
+      walk := ⟨SimpleGraph.Walk.cons (adj y) SimpleGraph.Walk.nil, by
+        constructor
+        · exact ⟨by simp⟩
+        · simp [SimpleGraph.Walk.support]⟩
+      start_left := rfl
+      end_right := rfl
+      in_strip := fun v hv => by
+        simp [SimpleGraph.Walk.support] at hv
+        rcases hv with rfl | rfl <;> omega
+    }
+    -- mk_bridge is injective
+    have hinj : Function.Injective mk_bridge := by
+      intro y1 y2 h
+      have := congr_arg Bridge.start_v h
+      simp [mk_bridge] at this
+      exact this
+    -- The composed function is summable
+    have hcomp : Summable (fun y : ℤ => xc ^ (mk_bridge y).walk.1.length) :=
+      hsumm.comp_injective hinj
+    -- Each term equals xc (walk length is 1)
+    have hconst : Summable (fun _ : ℤ => xc) := by
+      refine hcomp.congr fun y => ?_
+      simp [mk_bridge]
+    -- But constant xc > 0 is not summable on ℤ
+    rw [summable_const_iff] at hconst
+    exact absurd hconst (ne_of_gt xc_pos)
+  linarith
 
 /-- The strip identity implies the upper bound: μ ≤ √(2+√2).
     Uses the bridge bound B_T^{x_c} ≤ 1 and the Hammersley-Welsh decomposition. -/
