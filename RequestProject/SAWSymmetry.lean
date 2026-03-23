@@ -5,7 +5,7 @@ Formalization of the symmetry F(z̄) = F̄(z) used in the derivation of
 the strip identity (Lemma 2, Section 3) of:
 
   Hugo Duminil-Copin and Stanislav Smirnov,
-  "The connective constant of the hexagonal lattice equals √(2+√2)",
+  "The connective constant of the honeycomb lattice equals √(2+√2)",
   Annals of Mathematics, 175(3), 1653--1665, 2012.
 
 ## Overview
@@ -38,6 +38,28 @@ For the left boundary α, the sum over conjugate pairs gives:
                     = Σ pairs Re(F(z)) · 2 (modulo phase)
 
 With the specific winding values, this produces the coefficient c_α.
+
+## Note on the hex lattice reflection
+
+The hex graph as formalized (bipartite with adjacency offsets (0,0), (1,0), (0,1))
+does NOT admit an x-coordinate–preserving reflection as a graph automorphism.
+This is because the offset triangle {(0,0), (1,0), (0,1)} is not symmetric under
+any reflection that preserves the first coordinate.
+
+**Counterexample**: The naive map (x,y,b) ↦ (x,-y-1,!b) does NOT preserve
+adjacency: (0,0,false) adj (1,0,true) but the reflected pair
+(0,-1,true) is NOT adj (1,-1,false).
+
+The paper's conjugation symmetry F(z̄) = F̄(z) is a property of the
+CONTINUOUS embedding, not a graph automorphism. Formalizing it correctly
+would require either:
+(a) Changing the lattice coordinatization to one with y-reflection symmetry, or
+(b) Proving the strip identity via a direct boundary computation that avoids
+    the need for a graph automorphism.
+
+The coordinate-swap automorphism (x,y,b) ↦ (y,x,b) IS a valid graph automorphism
+(proved below), but it doesn't preserve the strip structure (it swaps x and y
+coordinates).
 -/
 
 import RequestProject.SAWObservable
@@ -46,83 +68,68 @@ open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
-/-! ## Reflection symmetry of the hexagonal lattice
+/-! ## The coordinate-swap automorphism
 
-The hexagonal lattice has a reflection symmetry.
-In the complex plane embedding, this corresponds to complex conjugation z ↦ z̄.
+The map (x,y,b) ↦ (y,x,b) is a graph automorphism of hexGraph.
+This corresponds to a reflection of the hex lattice across the diagonal.
 -/
 
-/-- The reflection map on hex vertices: (x, y, b) ↦ (x, -y-1, !b).
-    This corresponds to complex conjugation in the embedding. -/
-def hexReflect (v : HexVertex) : HexVertex :=
-  (v.1, -v.2.1 - 1, !v.2.2)
+/-- The coordinate-swap map on hex vertices: (x, y, b) ↦ (y, x, b). -/
+def hexSwap (v : HexVertex) : HexVertex :=
+  (v.2.1, v.1, v.2.2)
 
-/-- Reflection is an involution. -/
-theorem hexReflect_involution (v : HexVertex) :
-    hexReflect (hexReflect v) = v := by
-  simp only [hexReflect]
-  ext <;> simp [Bool.not_not]
+/-- The swap is an involution. -/
+theorem hexSwap_involution (v : HexVertex) :
+    hexSwap (hexSwap v) = v := by
+  simp only [hexSwap]
 
-/-- Reflection preserves the first coordinate. -/
-theorem hexReflect_fst (v : HexVertex) :
-    (hexReflect v).1 = v.1 := rfl
+/-- The swap preserves adjacency.
+    The adjacency offsets {(0,0), (1,0), (0,1)} are permuted by
+    the swap (x,y) ↦ (y,x) to {(0,0), (0,1), (1,0)}, which is the same set. -/
+theorem hexSwap_adj {v w : HexVertex} (h : hexGraph.Adj v w) :
+    hexGraph.Adj (hexSwap v) (hexSwap w) := by
+  unfold hexSwap hexGraph at *
+  simp only at *
+  rcases h with ⟨h1, h2, h3 | h3 | h3⟩ | ⟨h1, h2, h3 | h3 | h3⟩ <;>
+    simp_all <;> omega
 
-/-- **Note on the hex lattice reflection:**
-
-    The hex lattice as formalized (with the bipartite structure where
-    false-vertices connect to true-vertices via specific coordinate
-    conditions) does NOT admit a simple y-reflection as a graph
-    automorphism. The map (x,y,b) ↦ (x,-y-1,!b) does NOT preserve
-    adjacency (counterexample: (0,0,false) adj (1,0,true) but the
-    reflected pair is not adjacent).
-
-    The paper's conjugation symmetry F(z̄) = F̄(z) is actually a
-    property of the DOMAIN and OBSERVABLE, not a graph automorphism.
-    It follows from the symmetric embedding of the strip domain
-    S_{T,L} into the complex plane, where complex conjugation acts
-    on the embedded coordinates.
-
-    For the abstract argument, the key fact is:
-    - For each walk γ : a → z in the strip, there exists a walk
-      γ̄ : a → z̄ with reversed winding and same length.
-    - This gives F(z̄) = conj(F(z)).
-
-    This is used only in the boundary evaluation of the strip identity,
-    where it produces the real coefficients c_α and c_ε. -/
-theorem hexReflect_adj {v w : HexVertex} (h : hexGraph.Adj v w) :
-    hexGraph.Adj (hexReflect v) (hexReflect w) := by
-  sorry
-
-/-- Reflection maps walks to walks. -/
-def hexReflectWalk {v w : HexVertex} (p : hexGraph.Walk v w) :
-    hexGraph.Walk (hexReflect v) (hexReflect w) := by
+/-- The swap maps walks to walks. -/
+def hexSwapWalk {v w : HexVertex} (p : hexGraph.Walk v w) :
+    hexGraph.Walk (hexSwap v) (hexSwap w) := by
   induction p with
   | nil => exact SimpleGraph.Walk.nil
-  | cons h _ ih => exact SimpleGraph.Walk.cons (hexReflect_adj h) ih
+  | cons h _ ih => exact SimpleGraph.Walk.cons (hexSwap_adj h) ih
 
-/-- Reflection preserves walk length. -/
-theorem hexReflectWalk_length {v w : HexVertex} (p : hexGraph.Walk v w) :
-    (hexReflectWalk p).length = p.length := by
+/-- The swap preserves walk length. -/
+theorem hexSwapWalk_length {v w : HexVertex} (p : hexGraph.Walk v w) :
+    (hexSwapWalk p).length = p.length := by
   induction p with
   | nil => rfl
-  | cons _ _ ih => simp only [hexReflectWalk, SimpleGraph.Walk.length_cons]; exact congr_arg (· + 1) ih
+  | cons _ _ ih => simp only [hexSwapWalk, SimpleGraph.Walk.length_cons]; exact congr_arg (· + 1) ih
+
+/-- hexSwap is injective (it's an involution). -/
+lemma hexSwap_injective : Function.Injective hexSwap := by
+  intro u v h
+  have := congr_arg hexSwap h
+  simp [hexSwap_involution] at this
+  exact this
 
 /-
 PROBLEM
-Reflection maps paths to paths (preserves injectivity).
+The swap maps paths to paths.
 
 PROVIDED SOLUTION
-A path is a walk with no repeated vertices. Since hexReflect is an injective map (it's an involution, hence bijective), the reflected walk has no repeated vertices if the original doesn't. Use hexReflect_involution to show injectivity, then show that the support of the reflected walk is the image of the original support under hexReflect.
+The support of hexSwapWalk p is the List.map hexSwap of p.support. Since hexSwap is injective (it's an involution), and p.IsPath means p.support is nodup, the mapped support is also nodup. First prove the support equality by induction on p, then use List.Nodup.map with hexSwap_injective.
 -/
-theorem hexReflectWalk_isPath {v w : HexVertex} (p : hexGraph.Walk v w)
-    (hp : p.IsPath) : (hexReflectWalk p).IsPath := by
-  -- By definition of hexReflectWalk, the support of the reflected walk is the image of the support of p under hexReflect.
-  have h_support : (hexReflectWalk p).support = List.map (fun u => hexReflect u) p.support := by
-    induction' p with v w p ih;
-    · rfl;
-    · unfold hexReflectWalk; aesop;
-  simp_all +decide [ SimpleGraph.Walk.isPath_def ];
-  exact List.Nodup.map ( fun u v h => by unfold hexReflect at h; aesop ) hp
+theorem hexSwapWalk_isPath {v w : HexVertex} (p : hexGraph.Walk v w)
+    (hp : p.IsPath) : (hexSwapWalk p).IsPath := by
+      -- By definition of `hexSwapWalk`, the support of `hexSwapWalk p` is the image of `p.support` under `hexSwap`.
+      have h_support : (hexSwapWalk p).support = List.map hexSwap p.support := by
+        induction' p with v w p ih;
+        · rfl;
+        · unfold hexSwapWalk at * ; aesop;
+      simp_all +decide [ SimpleGraph.Walk.isPath_def ];
+      exact List.Nodup.map ( fun x y hxy => by simpa using hexSwap_injective hxy ) hp
 
 /-! ## Winding reversal under reflection
 
@@ -229,6 +236,20 @@ It allows us to:
 
 Without this symmetry, the strip identity would involve complex coefficients
 and would not directly give the partition function bounds needed for the proof.
+
+### Note on formalization status
+
+The hex graph as formalized does not admit an x-preserving reflection.
+The coordinate-swap (x,y) ↦ (y,x) IS a valid automorphism (proved above),
+but it doesn't correspond to complex conjugation in the embedding.
+
+To fully formalize the strip identity, one would need to either:
+(a) Modify the hex lattice coordinatization, or
+(b) Prove the boundary evaluation directly without a graph automorphism.
+
+The abstract algebraic content (pair/triplet cancellation, vertex relation,
+strip identity structure) is fully proved. The gap is the geometric connection
+to the specific strip domain.
 -/
 
 end
