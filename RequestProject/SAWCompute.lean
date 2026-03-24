@@ -59,7 +59,7 @@ lemma hexOrigin_neighbor_x1 {w : HexVertex} (h : hexGraph.Adj hexOrigin w) (hw :
   simp only at h
   rcases w with ⟨wx, wy, wb⟩
   rcases h with ⟨h1, h2, h3 | h3 | h3⟩ | ⟨h1, h2, h3 | h3 | h3⟩ <;>
-    simp_all <;> omega
+    simp_all
 
 /-- The neighbors of hexOrigin with x-coordinate 0 are (0,0,true) and (0,1,true). -/
 lemma hexOrigin_neighbor_x0 {w : HexVertex} (h : hexGraph.Adj hexOrigin w) (hw : w.1 = 0) :
@@ -68,7 +68,7 @@ lemma hexOrigin_neighbor_x0 {w : HexVertex} (h : hexGraph.Adj hexOrigin w) (hw :
   simp only at h
   rcases w with ⟨wx, wy, wb⟩
   rcases h with ⟨h1, h2, h3 | h3 | h3⟩ | ⟨h1, h2, h3 | h3 | h3⟩ <;>
-    simp_all <;> omega
+    simp_all ; omega
 
 /-! ## Numerical bounds on √(2+√2) and x_c -/
 

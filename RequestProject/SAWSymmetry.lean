@@ -91,7 +91,7 @@ theorem hexSwap_adj {v w : HexVertex} (h : hexGraph.Adj v w) :
   unfold hexSwap hexGraph at *
   simp only at *
   rcases h with ⟨h1, h2, h3 | h3 | h3⟩ | ⟨h1, h2, h3 | h3 | h3⟩ <;>
-    simp_all <;> omega
+    simp_all
 
 /-- The swap maps walks to walks. -/
 def hexSwapWalk {v w : HexVertex} (p : hexGraph.Walk v w) :

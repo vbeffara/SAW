@@ -226,7 +226,7 @@ theorem bridge_partition_scaling {T : ℕ} {x : ℝ} (hx : 0 < x) (hxc : x < xc)
   have h_pointwise_bound : ∀ b : OriginBridge T, x ^ b.1.walk.1.length ≤ (x / xc) ^ T * xc ^ b.1.walk.1.length := by
     intros b
     have h_length : b.1.walk.1.length ≥ T := by
-      have := b.1.end_right; ( have := b.1.in_strip; ( rcases b with ⟨ ⟨ v, w, p, hv, hw, hh ⟩, h ⟩ ; simp_all +decide [ SimpleGraph.Walk.length ] ; ) );
+      have := b.1.end_right; ( have := b.1.in_strip; ( rcases b with ⟨ ⟨ v, w, p, hv, hw, hh ⟩, h ⟩ ; simp_all ) );
       have h_length : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, p.IsPath → w.1 - v.1 ≤ p.length := by
         intros v w p hp; exact (by
         have := hexGraph_walk_bound p; aesop;);
