@@ -40,7 +40,7 @@ Combined with the Riemann BVP boundary conditions, this would determine F
 and imply convergence to SLE(8/3).
 -/
 
-import RequestProject.SAW
+import RequestProject.SAWMain
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -249,19 +249,15 @@ from the predictions. The derivation of these exponents remains one of
 the most challenging open problems in probability theory.
 -/
 
-/-- The critical exponent γ = 43/32 for the number of SAWs. -/
-def gamma_exponent : ℚ := 43 / 32
-
-/-- The Flory exponent ν = 3/4 for the mean-square displacement. -/
-def nu_exponent : ℚ := 3 / 4
+-- Critical exponents are defined in SAWMain.lean as gamma_SAW and nu_SAW.
 
 /-- The exponent relation: γ = 43/32 implies γ - 1 = 11/32. -/
-lemma gamma_minus_one : gamma_exponent - 1 = 11 / 32 := by
-  unfold gamma_exponent; norm_num
+lemma gamma_minus_one : gamma_SAW - 1 = 11 / 32 := by
+  unfold gamma_SAW; norm_num
 
 /-- The displacement exponent: 2ν = 3/2. -/
-lemma two_nu : 2 * nu_exponent = 3 / 2 := by
-  unfold nu_exponent; norm_num
+lemma two_nu : 2 * nu_SAW = 3 / 2 := by
+  unfold nu_SAW; norm_num
 
 /-! ## Remark: Bridge decay exponent
 

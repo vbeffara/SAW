@@ -441,28 +441,9 @@ Conjecture 1 from the paper: the scaling limit of self-avoiding walks
 at x = x_c converges to SLE(8/3).
 -/
 
-/-- **Conjecture 1** (Lawler-Schramm-Werner):
-    The scaling limit of the self-avoiding walk at x = x_c on the honeycomb
-    lattice converges to SLE(8/3).
-
-    More precisely, for any simply connected domain Ω with boundary points
-    a, b, the probability measure on SAWs from a to b in the discrete
-    approximation Ω_δ (with weight x_c^{ℓ(γ)}) converges as δ → 0 to
-    chordal SLE(8/3) in Ω from a to b. -/
-def SLE_convergence_conjecture : Prop :=
-  True -- Placeholder: the precise formulation requires SLE theory
-
-/-- **Conjecture 2**: The parafermionic observable has a conformally
-    invariant scaling limit.
-
-    For a simply connected domain Ω with boundary points a, b:
-      lim_{δ→0} F_δ(z_δ) / F_δ(b_δ) = (Φ'(z)/Φ'(b))^{5/8}
-    where Φ is a conformal map from Ω to the upper half-plane mapping
-    a to ∞ and b to 0.
-
-    This conjecture, if proved, would imply Conjecture 1. -/
-def observable_scaling_limit_conjecture : Prop :=
-  True -- Placeholder: requires conformal map theory
+-- Conjectures 1 and 2 (SLE convergence, observable convergence) are
+-- formalized in SAWConjectures.lean as `sle_convergence_conjecture` and
+-- `observable_convergence_conjecture`.
 
 /-! ## Riemann boundary value problem (Equation (6))
 

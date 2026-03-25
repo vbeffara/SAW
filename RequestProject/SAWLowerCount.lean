@@ -132,8 +132,15 @@ lemma saw_count_two : saw_count 2 = 6 := by
   have h_ge := saw_count_two_ge
   omega
 
-/-- The connective constant satisfies μ ≥ √2. -/
+/-- For n ≥ 1, 2^n ≤ c_n^2. This is used to show c_n^{1/n} ≥ √2.
+    The proof uses c_2 = 6 ≥ 4 = 2^2 and submultiplicativity. -/
+lemma saw_count_sq_ge_two_pow (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 := by
+  sorry
+
+/-- The connective constant satisfies μ ≥ √2.
+    This uses the infimum definition and the bound c_n^{1/n} ≥ √2 for all n ≥ 1. -/
 theorem connective_constant_ge_sqrt_two :
-    Real.sqrt 2 ≤ connective_constant := by sorry
+    Real.sqrt 2 ≤ connective_constant := by
+  sorry
 
 end
