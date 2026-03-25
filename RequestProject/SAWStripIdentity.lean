@@ -156,7 +156,8 @@ theorem epsilon_coefficient :
   rw [epsilon_angle]; rfl
 
 /-- c_ε = cos(π/4) = √2/2. -/
-theorem c_eps_value : c_eps = Real.sqrt 2 / 2 := Real.cos_pi_div_four
+-- c_eps = √2/2 is available as `c_eps_eq` from SAW.lean
+theorem c_eps_value : c_eps = Real.sqrt 2 / 2 := c_eps_eq
 
 /-! ## Step 3: Assembling the strip identity (Lemma 2)
 

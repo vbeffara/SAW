@@ -54,9 +54,8 @@ lemma angle_difference :
     2 * Real.pi / 3 - sigma * (2 * Real.pi / 3) = Real.pi / 4 := by
   unfold sigma; ring
 
-/-- c_ε = √2/2. -/
-lemma c_eps_eq_sqrt2_div2 : c_eps = Real.sqrt 2 / 2 := by
-  unfold c_eps; exact Real.cos_pi_div_four
+/-- c_ε = √2/2. Uses `c_eps_eq` from SAW.lean. -/
+lemma c_eps_eq_sqrt2_div2 : c_eps = Real.sqrt 2 / 2 := c_eps_eq
 
 /-! ## Derivation of Equation (3) from Equation (2) -/
 

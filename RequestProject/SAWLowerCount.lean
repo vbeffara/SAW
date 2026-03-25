@@ -137,10 +137,42 @@ lemma saw_count_two : saw_count 2 = 6 := by
 lemma saw_count_sq_ge_two_pow (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 := by
   sorry
 
-/-- The connective constant satisfies μ ≥ √2.
-    This uses the infimum definition and the bound c_n^{1/n} ≥ √2 for all n ≥ 1. -/
+/-
+PROBLEM
+The connective constant satisfies μ ≥ √2.
+    This uses the infimum definition and the bound c_n^{1/n} ≥ √2 for all n ≥ 1.
+
+PROVIDED SOLUTION
+Use le_csInf to show that √2 is a lower bound of the set { c_n^{1/n} | n ≥ 1 }.
+
+For this, we need: the set is nonempty (take n=1), and for all n ≥ 1, √2 ≤ c_n^{1/n}, i.e., c_n ≥ (√2)^n, i.e., c_n^2 ≥ 2^n.
+
+Use saw_count_sq_ge_two_pow for the bound c_n^2 ≥ 2^n.
+
+Then √2 ≤ c_n^{1/n} follows from: (√2)^n ≤ c_n, i.e., 2^{n/2} ≤ c_n.
+
+Actually, since saw_count_sq_ge_two_pow gives 2^n ≤ c_n^2, we get c_n ≥ √(2^n) = (√2)^n. Then c_n^{1/n} ≥ √2.
+
+In terms of Real.rpow: (saw_count n : ℝ) ^ (1/(n:ℝ)) ≥ √2.
+
+For the connective_constant definition: connective_constant = sInf ((fun n => (saw_count n : ℝ) ^ (1/(n:ℝ))) '' Set.Ici 1).
+
+Use le_csInf with:
+- nonempty: ⟨(saw_count 1 : ℝ)^(1/1), 1, le_refl 1, rfl⟩
+- bound: for x in the image set, x = c_n^{1/n} for some n ≥ 1, and c_n^{1/n} ≥ √2.
+-/
 theorem connective_constant_ge_sqrt_two :
     Real.sqrt 2 ≤ connective_constant := by
-  sorry
+  refine' le_csInf _ _ <;> norm_num;
+  -- Use the lemma saw_count_sq_ge_two_pow to show that saw_count a ^ 2 ≥ 2 ^ a.
+  have h_sq : ∀ a : ℕ, 1 ≤ a → (saw_count a : ℝ) ^ 2 ≥ 2 ^ a := by
+    exact_mod_cast saw_count_sq_ge_two_pow;
+  -- Taking the a-th root of both sides of the inequality (saw_count a : ℝ) ^ 2 ≥ 2 ^ a, we get (saw_count a : ℝ) ^ (2/a) ≥ 2.
+  have h_root : ∀ a : ℕ, 1 ≤ a → (saw_count a : ℝ) ^ (2 / a : ℝ) ≥ 2 := by
+    intros a ha
+    have h_root : ((saw_count a : ℝ) ^ 2) ^ (1 / a : ℝ) ≥ 2 := by
+      exact le_trans ( by rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( by positivity ), mul_one_div_cancel ( by positivity ), Real.rpow_one ] ) ( Real.rpow_le_rpow ( by positivity ) ( h_sq a ha ) ( by positivity ) );
+    convert h_root using 1 ; rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( Nat.cast_nonneg _ ) ] ; ring_nf;
+  intro a ha; specialize h_root a ha; rw [ Real.sqrt_eq_rpow ] ; convert Real.rpow_le_rpow ( by positivity ) h_root ( by positivity : ( 0 : ℝ ) ≤ 1 / 2 ) using 1 ; rw [ ← Real.rpow_mul ( by positivity ) ] ; ring_nf;
 
 end
