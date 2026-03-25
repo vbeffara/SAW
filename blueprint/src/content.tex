@@ -1,0 +1,808 @@
+% Blueprint for: The connective constant of the honeycomb lattice equals √(2+√2)
+% Based on: Duminil-Copin and Smirnov, Annals of Mathematics, 175(3), 2012.
+%
+% This blueprint uses standard leanblueprint macros:
+%   \lean{LeanName}     — links to the Lean declaration
+%   \leanok             — marks the statement as fully formalized (no sorry)
+%   \uses{label,...}    — declares which labeled items this depends on
+%   \proves{label}      — declares which labeled theorem this proof establishes
+
+\chapter{Introduction}\label{chap:intro}
+
+A famous chemist P.~Flory proposed to consider self-avoiding (\emph{i.e.}\ visiting
+every vertex at most once) walks on a lattice as a model for polymer chains.
+Denote by $c_n$ the number of $n$-step self-avoiding walks on the hexagonal lattice
+$\mathbb{H}$ started from some fixed vertex. Since a $(n{+}m)$-step self-avoiding
+walk can be uniquely cut into an $n$-step and (a translation of) an $m$-step walk,
+$c_{n+m} \leq c_n c_m$, from which it follows that
+$\mu := \lim_{n \to \infty} c_n^{1/n}$ exists and is positive.
+The positive real number $\mu$ is called the \emph{connective constant} of the
+hexagonal lattice.
+
+\section{Self-avoiding walks and the connective constant}
+
+\begin{definition}[Hexagonal lattice]\label{def:hex_lattice}
+\lean{hexGraph}
+\leanok
+  The hexagonal (honeycomb) lattice $\mathbb{H}$ is the unique $3$-regular infinite
+  planar bipartite graph. We model it with vertices
+  $\texttt{HexVertex} = \mathbb{Z} \times \mathbb{Z} \times \texttt{Bool}$,
+  where the Bool component distinguishes the two sublattices.
+  Adjacency is defined by explicit coordinate conditions in \texttt{hexGraph}.
+\end{definition}
+
+\begin{definition}[Origin vertex]\label{def:hex_origin}
+\lean{hexOrigin}
+\leanok
+\uses{def:hex_lattice}
+  The origin $a = (0, 0, \mathit{false})$ of the hexagonal lattice.
+\end{definition}
+
+\begin{definition}[Self-avoiding walk]\label{def:saw}
+\lean{SAW}
+\leanok
+\uses{def:hex_lattice}
+  An $n$-step \emph{self-avoiding walk} (SAW) from vertex $v$ is an injective
+  path $\gamma : \{0,\ldots,n\} \to V(\mathbb{H})$ with $\gamma(0) = v$ and
+  consecutive vertices adjacent. Formally, \texttt{SAW v n} consists of a
+  vertex $w$, a path $\texttt{hexGraph.Path}~v~w$ of length $n$.
+\end{definition}
+
+\begin{lemma}[Decidable adjacency]\label{lem:decidable_adj}
+\lean{hexGraph_decidableAdj'}
+\leanok
+\uses{def:hex_lattice}
+  Adjacency in \texttt{hexGraph} is decidable.
+\end{lemma}
+
+\begin{lemma}[Local finiteness]\label{lem:locally_finite}
+\lean{hexGraph_locallyFinite'}
+\leanok
+\uses{def:hex_lattice}
+  The graph \texttt{hexGraph} is locally finite (each vertex has finitely many neighbors).
+\end{lemma}
+
+\begin{lemma}[Finiteness of SAW]\label{lem:saw_finite}
+\leanok
+\uses{def:saw, lem:decidable_adj, lem:locally_finite}
+  For any vertex $v$ and $n \in \mathbb{N}$, the type $\mathrm{SAW}(v, n)$ is finite
+  (\texttt{Fintype}).
+\end{lemma}
+
+\begin{definition}[SAW count]\label{def:saw_count}
+\lean{saw_count}
+\leanok
+\uses{def:saw, def:hex_origin, lem:saw_finite}
+  Let $c_n = |\mathrm{SAW}(\texttt{hexOrigin}, n)|$ be the number of $n$-step
+  self-avoiding walks from the origin.
+\end{definition}
+
+\begin{lemma}[SAW count is positive]\label{lem:saw_count_pos}
+\lean{saw_count_pos}
+\leanok
+\uses{def:saw_count}
+  For all $n$, $c_n > 0$.
+\end{lemma}
+
+\begin{lemma}[SAW count $c_1 = 3$]\label{lem:saw_count_one}
+\lean{saw_count_one}
+\leanok
+\uses{def:saw_count}
+  $c_1 = 3$: there are exactly $3$ one-step SAWs from the origin.
+\end{lemma}
+
+\begin{lemma}[SAW count $c_2 = 6$]\label{lem:saw_count_two}
+\lean{saw_count_two}
+\leanok
+\uses{def:saw_count, lem:saw_count_one}
+  $c_2 = 6$: there are exactly $6$ two-step SAWs from the origin.
+\end{lemma}
+
+
+\section{Graph automorphisms and submultiplicativity}
+
+\begin{definition}[Translation]\label{def:hex_translate}
+\lean{hexTranslate}
+\leanok
+\uses{def:hex_lattice}
+  Translation of a hex vertex by $(dx, dy)$: a graph automorphism.
+\end{definition}
+
+\begin{definition}[Sublattice flip]\label{def:hex_flip}
+\lean{hexFlip}
+\leanok
+\uses{def:hex_lattice}
+  The flip $v \mapsto (-v_1, -v_2, \lnot v_3)$ swaps sublattices and is an
+  involutive graph automorphism.
+\end{definition}
+
+\begin{lemma}[SAW count is vertex-independent]\label{lem:saw_count_vertex_indep}
+\lean{saw_count_vertex_independent}
+\leanok
+\uses{def:saw_count, def:hex_translate, def:hex_flip}
+  The number of $n$-step SAWs is the same from any vertex:
+  $|\mathrm{SAW}(v, n)| = c_n$ for all $v$.
+\end{lemma}
+
+\begin{theorem}[Submultiplicativity]\label{thm:submult}
+\lean{saw_count_submult'}
+\leanok
+\uses{def:saw_count, lem:saw_count_vertex_indep}
+  For all $n, m \in \mathbb{N}$,
+  \[ c_{n+m} \leq c_n \cdot c_m. \]
+  The proof splits an $(n{+}m)$-step SAW at step $n$, yielding an $n$-step SAW
+  and (via translation) an $m$-step SAW. The splitting map is injective.
+\end{theorem}
+
+
+\section{Connective constant}
+
+\begin{theorem}[Fekete's lemma]\label{thm:fekete}
+\lean{fekete_submultiplicative}
+\leanok
+  If $(a_n)_{n \geq 1}$ is a positive submultiplicative sequence, then
+  $a_n^{1/n}$ converges and the limit equals $\inf_{n \geq 1} a_n^{1/n}$.
+\end{theorem}
+
+\begin{definition}[Connective constant]\label{def:connective_constant}
+\lean{connective_constant}
+\leanok
+\uses{def:saw_count}
+  The \emph{connective constant} of the hexagonal lattice is
+  \[ \mu = \inf_{n \geq 1} c_n^{1/n}. \]
+\end{definition}
+
+\begin{theorem}[Connective constant is a limit]\label{thm:cc_is_limit}
+\lean{connective_constant_is_limit'}
+\leanok
+\uses{def:connective_constant, thm:fekete, thm:submult, lem:saw_count_pos}
+  The sequence $c_n^{1/n}$ converges to $\mu$:
+  \[ \mu = \lim_{n \to \infty} c_n^{1/n}. \]
+\end{theorem}
+
+\begin{theorem}[Connective constant is positive]\label{thm:cc_pos}
+\lean{connective_constant_pos'}
+\leanok
+\uses{thm:cc_is_limit, lem:saw_count_pos}
+  $\mu > 0$.
+\end{theorem}
+
+
+\chapter{Key constants and algebraic identities}\label{chap:constants}
+
+We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
+
+\section{Constants}
+
+\begin{definition}[Critical fugacity]\label{def:xc}
+\lean{xc}
+\leanok
+  $x_c = 1/\sqrt{2+\sqrt{2}}$.
+\end{definition}
+
+\begin{definition}[Phase parameter]\label{def:lam}
+\lean{lam}
+\leanok
+  $\lambda = \exp(-i \cdot 5\pi/24)$, encoding the weight per turn at $\sigma = 5/8$.
+\end{definition}
+
+\begin{definition}[Cube root of unity]\label{def:j}
+\lean{j}
+\leanok
+  $j = \exp(i \cdot 2\pi/3)$, encoding the $120^\circ$ rotation between
+  mid-edges around a vertex of the hexagonal lattice.
+\end{definition}
+
+\begin{definition}[Spin parameter]\label{def:sigma}
+\lean{sigma}
+\leanok
+  $\sigma = 5/8$.
+\end{definition}
+
+\begin{definition}[Boundary coefficients]\label{def:boundary_coeffs}
+\lean{c_alpha, c_eps}
+\leanok
+  $c_\alpha = \cos(3\pi/8)$, \quad $c_\varepsilon = \cos(\pi/4) = \sqrt{2}/2$.
+\end{definition}
+
+\begin{lemma}[Positivity of $x_c$]\label{lem:xc_pos}
+\lean{xc_pos}
+\leanok
+\uses{def:xc}
+  $x_c > 0$.
+\end{lemma}
+
+\begin{lemma}[Inverse of $x_c$]\label{lem:xc_inv}
+\lean{xc_inv}
+\leanok
+\uses{def:xc}
+  $x_c^{-1} = \sqrt{2+\sqrt{2}}$.
+\end{lemma}
+
+\begin{lemma}[$\sqrt{2+\sqrt{2}} = 2\cos(\pi/8)$]\label{lem:sqrt_eq_cos}
+\lean{sqrt_two_add_sqrt_two_eq}
+\leanok
+\uses{def:xc}
+  $\sqrt{2+\sqrt{2}} = 2\cos(\pi/8)$.
+  This identity follows from the half-angle formula for cosine.
+\end{lemma}
+
+\begin{lemma}[Positivity of $c_\alpha$]\label{lem:c_alpha_pos}
+\lean{c_alpha_pos}
+\leanok
+\uses{def:boundary_coeffs}
+  $c_\alpha > 0$.
+\end{lemma}
+
+\begin{lemma}[Positivity of $c_\varepsilon$]\label{lem:c_eps_pos}
+\lean{c_eps_pos}
+\leanok
+\uses{def:boundary_coeffs}
+  $c_\varepsilon > 0$.
+\end{lemma}
+
+
+\section{Algebraic identities (core of Lemma~1)}
+
+\begin{lemma}[$j \bar{\lambda}^4 = -i$]\label{lem:j_conj_lam_4}
+\lean{j_mul_conj_lam_pow_four}
+\leanok
+\uses{def:j, def:lam}
+  $j \cdot \bar{\lambda}^4 = -i$.
+\end{lemma}
+
+\begin{lemma}[$\bar{j} \lambda^4 = i$]\label{lem:conj_j_lam_4}
+\lean{conj_j_mul_lam_pow_four}
+\leanok
+\uses{def:j, def:lam}
+  $\bar{j} \cdot \lambda^4 = i$.
+\end{lemma}
+
+\begin{theorem}[Pair cancellation]\label{thm:pair_cancel}
+\lean{pair_cancellation}
+\leanok
+\uses{lem:j_conj_lam_4, lem:conj_j_lam_4}
+  $j \cdot \bar{\lambda}^4 + \bar{j} \cdot \lambda^4 = 0$.
+  This is the algebraic identity underlying the pair cancellation in Lemma~1.
+\end{theorem}
+
+\begin{lemma}[$\mathrm{Re}(j \bar{\lambda}) = -\cos(\pi/8)$]\label{lem:re_j_conj_lam}
+\lean{re_j_conj_lam}
+\leanok
+\uses{def:j, def:lam}
+  $\mathrm{Re}(j \cdot \bar{\lambda}) = -\cos(\pi/8)$.
+\end{lemma}
+
+\begin{theorem}[Triplet cancellation]\label{thm:triplet_cancel}
+\lean{triplet_cancellation}
+\leanok
+\uses{def:j, def:lam, def:xc, lem:re_j_conj_lam, lem:sqrt_eq_cos}
+  $1 + x_c \cdot j \cdot \bar{\lambda} + x_c \cdot \bar{j} \cdot \lambda = 0$.
+  This is the \emph{only} place where the critical value $x_c$ is used.
+\end{theorem}
+
+
+\chapter{Parafermionic observable}\label{chap:observable}
+
+\section{Hexagonal lattice geometry}
+
+\begin{definition}[Hex embedding]\label{def:hex_embed}
+\lean{hexEmbed}
+\leanok
+\uses{def:hex_lattice}
+  The embedding of hex vertices into $\mathbb{C}$.
+\end{definition}
+
+\begin{definition}[Mid-edge]\label{def:mid_edge}
+\lean{MidEdge}
+\leanok
+\uses{def:hex_lattice}
+  A mid-edge is the center of an edge of $\mathbb{H}$, specified by its two endpoint vertices.
+\end{definition}
+
+\begin{definition}[Hexagonal domain]\label{def:hex_domain}
+\lean{HexDomain}
+\leanok
+\uses{def:hex_lattice}
+  A \emph{domain} $\Omega \subset H$ is a simply connected union of mid-edges
+  emanating from a given collection of vertices $V(\Omega)$.
+\end{definition}
+
+
+\section{Winding and the observable}
+
+\begin{definition}[Walk winding]\label{def:winding}
+\lean{walkWinding}
+\leanok
+\uses{def:hex_lattice}
+  The \emph{winding} $W_\gamma(a,b)$ is the total rotation of direction (in radians)
+  when $\gamma$ is traversed from $a$ to $b$.
+\end{definition}
+
+\begin{definition}[Parafermionic observable]\label{def:observable}
+\lean{parafermionicObservable}
+\leanok
+\uses{def:hex_domain, def:winding, def:xc, def:sigma}
+  For $a \in \partial\Omega$, $z \in \Omega$:
+  \[ F(z) = F(a,z,x,\sigma) = \sum_{\gamma \subset \Omega:\ a \to z}
+     e^{-i\sigma W_\gamma(a,z)} x^{\ell(\gamma)}. \]
+\end{definition}
+
+
+\section{Vertex relation (Lemma~1 of the paper)}
+
+\begin{definition}[Walk pair]\label{def:walk_pair}
+\lean{WalkPair}
+\leanok
+\uses{def:hex_domain, def:saw}
+  A pair of walks visiting all three mid-edges around a vertex $v$, differing by
+  the direction of the loop through $v$.
+\end{definition}
+
+\begin{definition}[Walk triplet]\label{def:walk_triplet}
+\lean{WalkTriplet}
+\leanok
+\uses{def:hex_domain, def:saw}
+  A triplet: one walk $\gamma_1$ visiting only one mid-edge $p$,
+  paired with its two one-step extensions $\gamma_2$ (to $q$) and $\gamma_3$ (to $r$).
+\end{definition}
+
+\begin{theorem}[Pair contribution vanishes]\label{thm:pair_contrib}
+\lean{pair_contribution_vanishes}
+\leanok
+\uses{thm:pair_cancel, def:walk_pair}
+  The sum of contributions of a pair of walks vanishes:
+  \[c(\gamma_1) + c(\gamma_2)
+    = (p-v)\, e^{-i\sigma W_{\gamma_1}(a,p)}\, x_c^{\ell(\gamma_1)}
+      \bigl(j\bar{\lambda}^4 + \bar{j}\lambda^4\bigr) = 0.\]
+\end{theorem}
+
+\begin{theorem}[Triplet contribution vanishes]\label{thm:triplet_contrib}
+\lean{triplet_contribution_vanishes}
+\leanok
+\uses{thm:triplet_cancel, def:walk_triplet}
+  The sum of contributions of a triplet vanishes:
+  \[c(\gamma_1) + c(\gamma_2) + c(\gamma_3)
+    = (p-v)\, e^{-i\sigma W_{\gamma_1}(a,p)}\, x_c^{\ell(\gamma_1)}
+      \bigl(1 + x_c\, j\bar{\lambda} + x_c\, \bar{j}\lambda\bigr) = 0.\]
+\end{theorem}
+
+\begin{theorem}[Vertex relation (Lemma~1)]\label{thm:vertex_relation}
+\lean{vertex_relation}
+\leanok
+\uses{thm:pair_contrib, thm:triplet_contrib, def:observable}
+  If $x = x_c$ and $\sigma = 5/8$, then for every vertex $v \in V(\Omega)$:
+  \[ (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0 \]
+  where $p, q, r$ are the mid-edges of the three edges adjacent to $v$.
+\end{theorem}
+
+
+\chapter{Strip domain and boundary identity}\label{chap:strip}
+
+\section{Strip domains}
+
+\begin{definition}[Strip $S_T$ and $S_{T,L}$]\label{def:strip}
+\lean{stripDomain, finStripDomain}
+\leanok
+\uses{def:hex_domain}
+  The infinite strip $S_T$ and finite strip $S_{T,L}$ with their boundary
+  decomposition into $\alpha$ (left), $\beta$ (right), $\varepsilon$ (top),
+  $\bar{\varepsilon}$ (bottom).
+  \begin{align*}
+    V(S_T) &= \{z \in V(\mathbb{H}) : 0 \leq \mathrm{Re}(z) \leq (3T+1)/2\}, \\
+    V(S_{T,L}) &= \{z \in V(S_T) : |\sqrt{3}\,\mathrm{Im}(z) - \mathrm{Re}(z)| \leq 3L\}.
+  \end{align*}
+\end{definition}
+
+\begin{definition}[Finite strip predicates]\label{def:finite_strip}
+\lean{InfiniteStrip, FiniteStrip}
+\leanok
+\uses{def:hex_lattice}
+  Predicates for whether a vertex belongs to the infinite strip $S_T$ or
+  the finite strip $S_{T,L}$, along with boundary predicates for
+  left ($\alpha$), right ($\beta$), top ($\varepsilon$), and
+  bottom ($\bar{\varepsilon}$) boundaries.
+\end{definition}
+
+
+\section{Boundary winding values}
+
+\begin{lemma}[Left boundary coefficient]\label{lem:left_coeff}
+\lean{left_boundary_coeff}
+\leanok
+\uses{def:sigma, def:boundary_coeffs}
+  $\cos(\sigma \pi) = -c_\alpha = -\cos(3\pi/8)$.
+\end{lemma}
+
+\begin{lemma}[Right boundary coefficient]\label{lem:right_coeff}
+\lean{right_boundary_coeff}
+\leanok
+\uses{def:sigma}
+  $\cos(\sigma \cdot 0) = 1$.
+\end{lemma}
+
+\begin{lemma}[Top/bottom coefficient]\label{lem:top_bottom_coeff}
+\lean{top_bottom_boundary_coeff}
+\leanok
+\uses{def:sigma, def:boundary_coeffs}
+  The combined top/bottom contribution yields $c_\varepsilon = \cos(\pi/4)$.
+\end{lemma}
+
+
+\section{Partition functions}
+
+\begin{definition}[Strip SAW structures]\label{def:strip_saws}
+\lean{StripSAW_A, StripSAW_B, StripSAW_E}
+\leanok
+\uses{def:saw, def:finite_strip}
+  Self-avoiding walks in $S_{T,L}$ ending on the left boundary ($\alpha \setminus \{a\}$),
+  the right boundary ($\beta$), or the top/bottom boundaries ($\varepsilon \cup \bar\varepsilon$),
+  respectively.
+\end{definition}
+
+\begin{definition}[Partition functions $A$, $B$, $E$]\label{def:ABE}
+\lean{A_TL, B_TL, E_TL}
+\leanok
+\uses{def:strip_saws}
+  The partition functions for walks in $S_{T,L}$ ending on each boundary component:
+  \begin{align*}
+    A_{T,L}^x &= \sum_{\gamma \subset S_{T,L}:\ a \to \alpha\setminus\{a\}} x^{\ell(\gamma)}, \\
+    B_{T,L}^x &= \sum_{\gamma \subset S_{T,L}:\ a \to \beta} x^{\ell(\gamma)}, \\
+    E_{T,L}^x &= \sum_{\gamma \subset S_{T,L}:\ a \to \varepsilon\cup\bar\varepsilon} x^{\ell(\gamma)}.
+  \end{align*}
+\end{definition}
+
+
+\section{Strip identity (Lemma~2 of the paper)}
+
+\begin{theorem}[Strip identity, abstract form]\label{thm:strip_identity_abs}
+\lean{strip_identity_abstract}
+\leanok
+\uses{thm:vertex_relation, def:strip, lem:left_coeff, lem:right_coeff, lem:top_bottom_coeff}
+  For $x = x_c$, summing the vertex relation over all vertices of $S_{T,L}$,
+  boundary contributions simplify to:
+  \[ 1 = c_\alpha A_{T,L}^{x_c} + B_{T,L}^{x_c} + c_\varepsilon E_{T,L}^{x_c}. \]
+\end{theorem}
+
+\begin{theorem}[Strip identity, concrete form]\label{thm:strip_identity_concrete}
+\lean{strip_identity_concrete}
+\uses{thm:strip_identity_abs, def:ABE}
+  The strip identity holds for the concrete partition functions
+  $A_{T,L}$, $B_{T,L}$, $E_{T,L}$. \textbf{Status: sorry.}
+\end{theorem}
+
+\begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}
+\lean{finiteStrip_finite}
+\leanok
+\uses{def:finite_strip}
+  The set of vertices in $S_{T,L}$ is finite.
+\end{lemma}
+
+\begin{lemma}[Summability of partition functions]\label{lem:partition_summable}
+\lean{B_TL_summable, A_TL_summable, E_TL_summable}
+\leanok
+\uses{def:ABE, lem:finite_strip_finite}
+  The partition functions $A_{T,L}$, $B_{T,L}$, $E_{T,L}$ are well-defined
+  (the underlying sums are summable) because the strip is finite.
+\end{lemma}
+
+\begin{lemma}[Monotonicity of $A_{T,L}$ and $B_{T,L}$ in $L$]\label{lem:AB_monotone}
+\lean{A_TL_mono, B_TL_mono}
+\leanok
+\uses{def:ABE}
+  The sequences $(A_{T,L}^x)_{L>0}$ and $(B_{T,L}^x)_{L>0}$ are increasing in $L$.
+\end{lemma}
+
+\begin{definition}[Infinite strip partition functions]\label{def:ABE_inf}
+\lean{A_T_inf, B_T_inf}
+\leanok
+\uses{def:ABE}
+  The infinite strip partition functions $A_T^x := \lim_{L \to \infty} A_{T,L}^x$
+  and $B_T^x := \lim_{L \to \infty} B_{T,L}^x$, defined as suprema.
+\end{definition}
+
+\begin{theorem}[Strip identity in the limit]\label{thm:strip_identity_limit}
+\lean{strip_identity_limit}
+\leanok
+\uses{thm:strip_identity_abs}
+  Passing $L \to \infty$ (using monotonicity and boundedness):
+  \[ 1 = c_\alpha A_T^{x_c} + B_T^{x_c} + c_\varepsilon E_T^{x_c}. \]
+\end{theorem}
+
+
+\chapter{Proof of the main theorem}\label{chap:proof}
+
+\section{Bridge bound}
+
+\begin{theorem}[Bridge bound $B_T \leq 1$]\label{thm:bridge_bound}
+\lean{bridge_bound_of_strip_identity}
+\leanok
+\uses{thm:strip_identity_abs, def:boundary_coeffs, lem:c_alpha_pos, lem:c_eps_pos}
+  From the strip identity with non-negative terms:
+  $B_T^{x_c} \leq 1$ for all $T$.
+\end{theorem}
+
+
+\section{Lower bound: $\mu \geq \sqrt{2+\sqrt{2}}$}
+
+The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
+
+\begin{theorem}[Case~1: $E_T > 0 \Rightarrow Z = \infty$]\label{thm:case1}
+\lean{case1_divergence}
+\leanok
+\uses{thm:strip_identity_abs}
+  If $E_T^{x_c} > 0$ for some $T$, then $Z(x_c) = \infty$.
+\end{theorem}
+
+\begin{theorem}[Recurrence inequality]\label{thm:recurrence}
+\lean{recurrence_inequality_abstract}
+\leanok
+\uses{thm:strip_identity_abs, thm:bridge_bound}
+  If $E_T = 0$: $A_{T+1} - A_T \leq x_c \cdot (B_{T+1})^2$.
+  This follows from cutting a walk at the first vertex adjacent to the right edge of $S_{T+1}$.
+\end{theorem}
+
+\begin{theorem}[Bridge lower bound $B_T \geq c/T$]\label{thm:bridge_lower}
+\lean{bridge_lower_bound}
+\leanok
+\uses{thm:recurrence, thm:bridge_bound, lem:xc_pos}
+  From the recurrence: $B_T^{x_c} \geq \min(B_1, 1/(c_\alpha x_c)) / T$.
+  This is proved by induction on $T$ using the quadratic recurrence
+  $c_\alpha x_c B_{T+1}^2 + B_{T+1} \geq B_T$.
+\end{theorem}
+
+\begin{theorem}[Case~2: $E_T = 0$ for all $T$]\label{thm:case2}
+\lean{case2_divergence}
+\leanok
+\uses{thm:bridge_lower}
+  If $E_T^{x_c} = 0$ for all $T$, then $B_T \geq c/T$ and
+  $Z(x_c) \geq \sum_T B_T = \infty$ (harmonic divergence).
+\end{theorem}
+
+\begin{theorem}[Lower bound (abstract)]\label{thm:lower_bound}
+\lean{lower_bound_abstract}
+\leanok
+\uses{thm:case1, thm:case2}
+  $Z(x_c) = \infty$. Hence $\mu \geq x_c^{-1} = \sqrt{2+\sqrt{2}}$.
+\end{theorem}
+
+
+\section{Upper bound: $\mu \leq \sqrt{2+\sqrt{2}}$}
+
+\begin{definition}[Bridge]\label{def:bridge}
+\lean{Bridge}
+\leanok
+\uses{def:hex_lattice, def:strip}
+  A \emph{bridge} of width $T$ is a self-avoiding walk in $S_T$ from
+  one side to the opposite side, defined up to vertical translation.
+\end{definition}
+
+\begin{definition}[Bridge partition function]\label{def:bridge_partition}
+\lean{bridge_partition}
+\leanok
+\uses{def:bridge}
+  $B_T^x = \sum_{\gamma\ \text{bridge of width } T} x^{\ell(\gamma)}$.
+\end{definition}
+
+\begin{theorem}[Bridge length $\geq$ width]\label{thm:bridge_length_ge_width}
+\lean{bridge_length_ge_width}
+\leanok
+\uses{def:bridge}
+  A bridge of width $T$ visits at least $T$ vertices.
+\end{theorem}
+
+\begin{theorem}[Bridge exponential decay]\label{thm:bridge_decay}
+\lean{bridge_exponential_decay}
+\leanok
+\uses{thm:bridge_bound, def:bridge_partition}
+  For $x < x_c$: $B_T^x \leq (x/x_c)^T$.
+\end{theorem}
+
+\begin{theorem}[Product convergence]\label{thm:prod_conv}
+\lean{prod_one_add_geometric_converges}
+\leanok
+  $\prod_{T \geq 1}(1 + r^T)$ converges for $0 \leq r < 1$.
+\end{theorem}
+
+\begin{definition}[Bridge decomposition]\label{def:bridge_decomp}
+\lean{BridgeDecomposition, FullBridgeDecomposition}
+\leanok
+\uses{def:bridge}
+  Any self-avoiding walk can be canonically decomposed into a sequence
+  of bridges with monotonically changing widths. Fixing the starting
+  mid-edge and first vertex, the decomposition uniquely determines the walk.
+  This is the Hammersley--Welsh decomposition.
+\end{definition}
+
+\begin{theorem}[Upper bound via product]\label{thm:hw_upper_abstract}
+\lean{hw_upper_bound_abstract}
+\leanok
+\uses{thm:bridge_decay}
+  If $B_T \leq r^T$ for some $0 \leq r < 1$, then
+  $\prod_{T \geq 1}(1 + B_T)^2$ is bounded above.
+\end{theorem}
+
+\begin{theorem}[Hammersley--Welsh bound]\label{thm:hw_bound}
+\lean{hammersley_welsh_bound}
+\uses{thm:hw_upper_abstract, thm:prod_conv, def:bridge_partition, def:bridge_decomp}
+  By the bridge decomposition:
+  $Z(x) \leq 2 \prod_{T>0} (1 + B_T^x)^2 < \infty$ for $x < x_c$.
+  \textbf{Status: sorry.}
+\end{theorem}
+
+\begin{theorem}[Upper bound]\label{thm:upper_bound}
+\lean{upper_bound_from_bridge_bound}
+\uses{thm:hw_bound}
+  $Z(x) < \infty$ for $x < x_c$, hence $\mu \leq x_c^{-1} = \sqrt{2+\sqrt{2}}$.
+  \textbf{Status: sorry} (depends on Hammersley--Welsh).
+\end{theorem}
+
+
+\section{Assembly}
+
+\begin{definition}[Partition function]\label{def:Z}
+\lean{Z}
+\leanok
+\uses{def:saw_count}
+  $Z(x) = \sum_{n=0}^\infty c_n x^n$.
+\end{definition}
+
+\begin{theorem}[Partition function characterization]\label{thm:partition_char}
+\lean{cc_eq_inv_of_partition_radius}
+\leanok
+\uses{def:connective_constant, def:Z}
+  If $Z(x_0) = \infty$ and $Z(x) < \infty$ for $0 < x < x_0$, then $\mu = x_0^{-1}$.
+\end{theorem}
+
+\begin{theorem}[Partition function diverges above $1/\mu$]\label{thm:partition_diverges}
+\lean{partition_diverges_above_inv_cc}
+\leanok
+\uses{def:Z, def:connective_constant}
+  For $x > 1/\mu$, the partition function $Z(x)$ diverges.
+\end{theorem}
+
+\begin{theorem}[Partition function converges below $1/\mu$]\label{thm:partition_converges}
+\lean{partition_converges_below_inv_cc}
+\leanok
+\uses{def:Z, def:connective_constant}
+  For $0 < x < 1/\mu$, the partition function $Z(x)$ converges.
+\end{theorem}
+
+\begin{theorem}[Main Theorem]\label{thm:main}
+\lean{connective_constant_eq}
+\uses{thm:lower_bound, thm:upper_bound, thm:partition_char, lem:xc_inv}
+  The connective constant of the hexagonal lattice equals $\sqrt{2+\sqrt{2}}$:
+  \[ \mu = \sqrt{2+\sqrt{2}}. \]
+  \textbf{Status: sorry} (depends on upper bound).
+\end{theorem}
+
+
+\chapter{Elementary bounds}\label{chap:elementary}
+
+The paper states: ``Elementary bounds on $c_n$ (for instance $\sqrt{2}^n \leq c_n \leq 3 \cdot 2^{n-1}$)
+guarantee that $c_n$ grows exponentially fast.''
+
+\begin{lemma}[Degree bound]\label{lem:hex_degree}
+\lean{hexGraph_degree}
+\leanok
+\uses{def:hex_lattice}
+  Every vertex of \texttt{hexGraph} has exactly $3$ neighbors.
+\end{lemma}
+
+\begin{lemma}[Upper bound $c_{n+1} \leq 3 c_n$]\label{lem:saw_step_le_three}
+\lean{saw_count_step_le_mul_three}
+\leanok
+\uses{def:saw_count, lem:hex_degree}
+  Each SAW can be extended in at most $3$ ways (degree $= 3$).
+\end{lemma}
+
+\begin{lemma}[Upper bound $c_{n+1} \leq 2 c_n$ for $n \geq 1$]\label{lem:saw_step_le_two}
+\lean{saw_count_step_le_mul_two}
+\leanok
+\uses{def:saw_count}
+  After the first step, a SAW can be extended in at most $2$ ways
+  ($3$ neighbors minus the one we came from).
+\end{lemma}
+
+\begin{lemma}[Upper bound $c_n \leq 3 \cdot 2^{n-1}$]\label{lem:saw_upper}
+\lean{saw_count_upper_bound}
+\leanok
+\uses{lem:saw_count_one, lem:saw_step_le_two}
+  $c_n \leq 3 \cdot 2^{n-1}$ for $n \geq 1$.
+\end{lemma}
+
+\begin{theorem}[Connective constant $\geq 1$]\label{thm:cc_ge_one}
+\lean{connective_constant_ge_one}
+\leanok
+\uses{def:connective_constant, lem:saw_count_pos}
+  $\mu \geq 1$, since $c_n \geq 1$ for all $n$.
+\end{theorem}
+
+\begin{theorem}[Connective constant $\leq 2$]\label{thm:cc_le_two}
+\lean{connective_constant_le_two'}
+\uses{def:connective_constant, lem:saw_upper}
+  $\mu \leq 2$.
+  Uses the main theorem $\mu = \sqrt{2+\sqrt{2}}$; sorry-free once the main theorem is proved.
+\end{theorem}
+
+\begin{lemma}[Even lower bound $c_{2k} \geq 2^k$]\label{lem:saw_even_lower}
+\lean{saw_count_even_lower}
+\uses{def:saw_count}
+  For each binary string of length $k$, we construct a distinct $(2k)$-step SAW
+  from the origin using a ``zigzag'' pattern (alternating same-cell F$\to$T steps
+  with binary-choice T$\to$F steps). This gives $c_{2k} \geq 2^k$.
+  \textbf{Status: sorry.}
+\end{lemma}
+
+\begin{lemma}[Odd lower bound $c_{2k+1} \geq 3 \cdot 2^k$]\label{lem:saw_odd_lower}
+\lean{saw_count_odd_lower}
+\uses{def:saw_count}
+  Using three starting directions for the zigzag walk,
+  $c_{2k+1} \geq 3 \cdot 2^k$.
+  \textbf{Status: sorry.}
+\end{lemma}
+
+\begin{lemma}[$2^n \leq c_n^2$]\label{lem:saw_sq_lower}
+\lean{saw_count_sq_ge_two_pow}
+\uses{lem:saw_even_lower, lem:saw_odd_lower, lem:saw_count_one}
+  For $n \geq 1$, $2^n \leq c_n^2$.
+  \textbf{Status: sorry.}
+\end{lemma}
+
+\begin{theorem}[Connective constant $\geq \sqrt{2}$]\label{thm:cc_ge_sqrt2}
+\lean{connective_constant_ge_sqrt_two}
+\uses{def:connective_constant, lem:saw_sq_lower}
+  $\mu \geq \sqrt{2}$ (from the elementary lower bound $c_n \geq \sqrt{2}^n$).
+  Proved modulo \texttt{saw\_count\_sq\_ge\_two\_pow}.
+\end{theorem}
+
+
+\chapter{Conjectures}\label{chap:conjectures}
+
+The following conjectures are stated in Section~4 of the paper.
+They concern the precise asymptotic behavior of self-avoiding walks
+and their conjectured conformal invariance in the scaling limit.
+
+\begin{definition}[Critical exponents]\label{def:exponents}
+\lean{gamma_SAW, nu_SAW}
+\leanok
+\uses{def:connective_constant}
+  The conjectured critical exponents: $\gamma = 43/32$ and $\nu = 3/4$.
+\end{definition}
+
+\begin{conjecture}[Nienhuis asymptotic formula]\label{conj:nienhuis}
+\lean{nienhuis_asymptotic_conjecture}
+\leanok
+\uses{def:exponents, def:connective_constant}
+  $c_n \sim A \cdot n^{\gamma-1} \cdot \mu^n$ with $\gamma = 43/32$.
+\end{conjecture}
+
+\begin{conjecture}[Flory exponent]\label{conj:flory}
+\lean{flory_exponent_conjecture}
+\leanok
+\uses{def:exponents}
+  $\langle |\gamma(n)|^2 \rangle = n^{2\nu + o(1)}$ with $\nu = 3/4$.
+\end{conjecture}
+
+\begin{conjecture}[SLE convergence]\label{conj:sle}
+\lean{sle_convergence_conjecture}
+\leanok
+\uses{def:observable, def:connective_constant}
+  The scaling limit of SAW at $x = x_c$ converges to $\mathrm{SLE}(8/3)$.
+\end{conjecture}
+
+\begin{conjecture}[Observable convergence]\label{conj:observable}
+\lean{observable_convergence_conjecture}
+\leanok
+\uses{def:observable, conj:sle}
+  The parafermionic observable converges to a conformally covariant limit:
+  \[ \lim_{\delta \to 0} \frac{F_\delta(z_\delta)}{F_\delta(b_\delta)}
+     = \left(\frac{\Phi'(z)}{\Phi'(b)}\right)^{5/8}. \]
+\end{conjecture}
+
+\begin{conjecture}[Bridge decay]\label{conj:bridge_decay}
+\lean{bridge_decay_conjecture}
+\leanok
+\uses{thm:bridge_bound, thm:bridge_lower}
+  The bridge partition function should decay as $B_T^{x_c} \sim T^{-1/4}$.
+\end{conjecture}

@@ -1,0 +1,27 @@
+\documentclass[a4paper]{report}
+
+\usepackage{amssymb, amsthm, amsmath}
+\usepackage{hyperref}
+\usepackage[showmore, dep_graph]{blueprint}
+
+\newcommand{\He}{\mathbb{H}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\title{Blueprint: The connective constant of the honeycomb lattice equals $\sqrt{2+\sqrt{2}}$}
+\author{Formalization of Duminil-Copin \& Smirnov (2012)}
+
+\begin{document}
+\maketitle
+\input{content}
+\end{document}

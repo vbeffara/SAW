@@ -54,7 +54,13 @@ where
 def zigzag_positions (choices : List Bool) : List (ℤ × ℤ) :=
   choices.scanl (fun pos c => zigzag_step pos c) (0, 0)
 
-/-- The sum x + y at position i equals -i. -/
+/-
+PROBLEM
+The sum x + y at position i equals -i.
+
+PROVIDED SOLUTION
+By induction on choices. Base case: when choices = [], zigzag_positions has length 1, so i = 0, pos = (0,0), sum = 0. Inductive step: when choices = c :: cs, zigzag_positions (c :: cs) = (0,0) :: List.scanl zigzag_step (zigzag_step (0,0) c) cs. For i = 0, pos = (0,0), sum = 0. For i > 0, we need to track through the scanl. The key observation is that zigzag_step always decreases x+y by 1 (either x-1 or y-1), so after i steps the sum is -i.
+-/
 lemma zigzag_sum_eq_neg (choices : List Bool) (i : ℕ) (hi : i < (zigzag_positions choices).length) :
     let pos := (zigzag_positions choices).get ⟨i, hi⟩
     pos.1 + pos.2 = -(i : ℤ) := by
@@ -65,12 +71,34 @@ lemma zigzag_sum_eq_neg (choices : List Bool) (i : ℕ) (hi : i < (zigzag_positi
     subst this; simp [zigzag_positions, List.scanl]
   | cons c cs ih =>
     simp [zigzag_positions, List.scanl] at hi ⊢
-    sorry
+    rcases i with ( _ | i ) <;> simp_all +decide [ add_comm ];
+    convert congr_arg ( · + -1 ) ( ih i _ ) using 1;
+    all_goals norm_num [ zigzag_positions ] at *;
+    · have h_scanl : ∀ (l : List Bool) (pos : ℤ × ℤ) (i : ℕ), i < List.length (List.scanl (fun x1 x2 => zigzag_step x1 x2) pos l) → (List.scanl (fun x1 x2 => zigzag_step x1 x2) pos l)[i]! = List.foldl (fun pos c => zigzag_step pos c) pos (List.take i l) := by
+        grind;
+      convert congr_arg ( fun x : ℤ × ℤ => x.1 + x.2 ) ( h_scanl cs ( zigzag_step ( 0, 0 ) c ) i hi ) using 1;
+      · simp +decide [ List.scanlM, List.scanl ];
+        rw [ List.getElem?_reverse ];
+        · rw [ List.getElem?_eq_getElem ];
+          rw [ Option.getD_some ];
+        · convert hi using 1;
+          simp +decide [ List.scanlM ];
+      · induction' ( List.take i cs ) using List.reverseRecOn with c cs ih <;> simp_all +decide [ zigzag_step ];
+        · split_ifs <;> norm_num;
+        · lia;
+    · linarith
 
-/-- All positions in the zigzag are distinct (since x+y is strictly decreasing). -/
+/-
+PROBLEM
+All positions in the zigzag are distinct (since x+y is strictly decreasing).
+
+PROVIDED SOLUTION
+All positions in zigzag_positions are distinct because their x+y values are strictly decreasing. By zigzag_sum_eq_neg, position i has x+y = -i, so different indices give different x+y sums, hence different positions. Use List.nodup_iff_injective_get or similar, showing that if positions at indices i and j are equal, then -i = -j so i = j.
+-/
 lemma zigzag_positions_nodup (choices : List Bool) :
     (zigzag_positions choices).Nodup := by
-  sorry
+  rw [ List.nodup_iff_injective_get ];
+  intros i j hij; have := zigzag_sum_eq_neg choices i ( by simp ) ; have := zigzag_sum_eq_neg choices j ( by simp ) ; aesop;
 
 /-! ## Building the walk
 
@@ -110,13 +138,24 @@ lemma saw_count_even_lower (k : ℕ) : 2 ^ k ≤ saw_count (2 * k) := by
 lemma saw_count_odd_lower (k : ℕ) : 3 * 2 ^ k ≤ saw_count (2 * k + 1) := by
   sorry
 
-/-- Main bound: 2^n ≤ c_n^2 for n ≥ 1.
+/-
+PROBLEM
+Main bound: 2^n ≤ c_n^2 for n ≥ 1.
 
     Proof by cases on n even/odd:
     - n = 2k (k ≥ 1): c_{2k} ≥ 2^k, so c_{2k}^2 ≥ 4^k = 2^{2k} = 2^n.
     - n = 2k+1 (k ≥ 0): c_{2k+1} ≥ 3 · 2^k, so c_{2k+1}^2 ≥ 9 · 4^k ≥ 2 · 4^k = 2^{2k+1} = 2^n.
-    - n = 1: c_1 = 3, 3^2 = 9 ≥ 2. -/
+    - n = 1: c_1 = 3, 3^2 = 9 ≥ 2.
+
+PROVIDED SOLUTION
+Split on n even/odd. For n = 2k with k ≥ 1: by saw_count_even_lower, c_{2k} ≥ 2^k, so c_{2k}^2 ≥ 2^{2k} = 2^n. For n = 2k+1: by saw_count_odd_lower, c_{2k+1} ≥ 3·2^k, so c_{2k+1}^2 ≥ 9·4^k ≥ 2·4^k = 2^{2k+1} = 2^n. For k=0 (n=1): c_1 = 3, 3^2 = 9 ≥ 2^1 = 2. Use Nat.even_or_odd n to split, then compute with pow_mul, pow_succ etc. The comparison 9·4^k ≥ 2·4^k holds since 9 ≥ 2, so just use nlinarith.
+-/
 theorem saw_count_sq_ge_two_pow' (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 := by
-  sorry
+  rcases Nat.even_or_odd' n with ⟨ k, rfl | rfl ⟩;
+  · convert pow_le_pow_left₀ ( by positivity ) ( saw_count_even_lower k ) 2 using 1 ; ring;
+  · -- By the lemma saw_count_odd_lower, we have saw_count (2 * k + 1) ≥ 3 * 2 ^ k.
+    have h_odd_lower : saw_count (2 * k + 1) ≥ 3 * 2 ^ k := by
+      exact saw_count_odd_lower k;
+    rw [ pow_add, pow_mul' ] ; nlinarith [ pow_pos ( zero_lt_two' ℕ ) k ]
 
 end

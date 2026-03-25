@@ -18,7 +18,7 @@ This file proves:
 3. The connective constant is at least √2
 -/
 
-import RequestProject.SAWBridge
+import RequestProject.SAWZigzag
 
 open Real
 
@@ -134,8 +134,8 @@ lemma saw_count_two : saw_count 2 = 6 := by
 
 /-- For n ≥ 1, 2^n ≤ c_n^2. This is used to show c_n^{1/n} ≥ √2.
     The proof uses c_2 = 6 ≥ 4 = 2^2 and submultiplicativity. -/
-lemma saw_count_sq_ge_two_pow (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 := by
-  sorry
+lemma saw_count_sq_ge_two_pow (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 :=
+  saw_count_sq_ge_two_pow' n hn
 
 /-
 PROBLEM
