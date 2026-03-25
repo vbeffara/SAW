@@ -54,6 +54,9 @@ hexagonal lattice.
 \uses{def:hex_lattice}
   Adjacency in \texttt{hexGraph} is decidable.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Local finiteness]\label{lem:locally_finite}
 \lean{hexGraph_locallyFinite'}
@@ -61,13 +64,20 @@ hexagonal lattice.
 \uses{def:hex_lattice}
   The graph \texttt{hexGraph} is locally finite (each vertex has finitely many neighbors).
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Finiteness of SAW]\label{lem:saw_finite}
+\lean{instFintypeSAW}
 \leanok
 \uses{def:saw, lem:decidable_adj, lem:locally_finite}
   For any vertex $v$ and $n \in \mathbb{N}$, the type $\mathrm{SAW}(v, n)$ is finite
   (\texttt{Fintype}).
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{definition}[SAW count]\label{def:saw_count}
 \lean{saw_count}
@@ -83,6 +93,9 @@ hexagonal lattice.
 \uses{def:saw_count}
   For all $n$, $c_n > 0$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[SAW count $c_1 = 3$]\label{lem:saw_count_one}
 \lean{saw_count_one}
@@ -90,6 +103,9 @@ hexagonal lattice.
 \uses{def:saw_count}
   $c_1 = 3$: there are exactly $3$ one-step SAWs from the origin.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[SAW count $c_2 = 6$]\label{lem:saw_count_two}
 \lean{saw_count_two}
@@ -97,6 +113,9 @@ hexagonal lattice.
 \uses{def:saw_count, lem:saw_count_one}
   $c_2 = 6$: there are exactly $6$ two-step SAWs from the origin.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Graph automorphisms and submultiplicativity}
@@ -123,6 +142,9 @@ hexagonal lattice.
   The number of $n$-step SAWs is the same from any vertex:
   $|\mathrm{SAW}(v, n)| = c_n$ for all $v$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Submultiplicativity]\label{thm:submult}
 \lean{saw_count_submult'}
@@ -133,6 +155,9 @@ hexagonal lattice.
   The proof splits an $(n{+}m)$-step SAW at step $n$, yielding an $n$-step SAW
   and (via translation) an $m$-step SAW. The splitting map is injective.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Connective constant}
@@ -143,6 +168,9 @@ hexagonal lattice.
   If $(a_n)_{n \geq 1}$ is a positive submultiplicative sequence, then
   $a_n^{1/n}$ converges and the limit equals $\inf_{n \geq 1} a_n^{1/n}$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{definition}[Connective constant]\label{def:connective_constant}
 \lean{connective_constant}
@@ -159,6 +187,9 @@ hexagonal lattice.
   The sequence $c_n^{1/n}$ converges to $\mu$:
   \[ \mu = \lim_{n \to \infty} c_n^{1/n}. \]
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Connective constant is positive]\label{thm:cc_pos}
 \lean{connective_constant_pos'}
@@ -166,6 +197,9 @@ hexagonal lattice.
 \uses{thm:cc_is_limit, lem:saw_count_pos}
   $\mu > 0$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Key constants and algebraic identities}\label{chap:constants}
@@ -211,6 +245,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:xc}
   $x_c > 0$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Inverse of $x_c$]\label{lem:xc_inv}
 \lean{xc_inv}
@@ -218,6 +255,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:xc}
   $x_c^{-1} = \sqrt{2+\sqrt{2}}$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[$\sqrt{2+\sqrt{2}} = 2\cos(\pi/8)$]\label{lem:sqrt_eq_cos}
 \lean{sqrt_two_add_sqrt_two_eq}
@@ -226,6 +266,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   $\sqrt{2+\sqrt{2}} = 2\cos(\pi/8)$.
   This identity follows from the half-angle formula for cosine.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Positivity of $c_\alpha$]\label{lem:c_alpha_pos}
 \lean{c_alpha_pos}
@@ -233,6 +276,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:boundary_coeffs}
   $c_\alpha > 0$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Positivity of $c_\varepsilon$]\label{lem:c_eps_pos}
 \lean{c_eps_pos}
@@ -240,6 +286,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:boundary_coeffs}
   $c_\varepsilon > 0$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Algebraic identities (core of Lemma~1)}
@@ -250,6 +299,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:j, def:lam}
   $j \cdot \bar{\lambda}^4 = -i$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[$\bar{j} \lambda^4 = i$]\label{lem:conj_j_lam_4}
 \lean{conj_j_mul_lam_pow_four}
@@ -257,6 +309,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:j, def:lam}
   $\bar{j} \cdot \lambda^4 = i$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Pair cancellation]\label{thm:pair_cancel}
 \lean{pair_cancellation}
@@ -265,6 +320,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   $j \cdot \bar{\lambda}^4 + \bar{j} \cdot \lambda^4 = 0$.
   This is the algebraic identity underlying the pair cancellation in Lemma~1.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[$\mathrm{Re}(j \bar{\lambda}) = -\cos(\pi/8)$]\label{lem:re_j_conj_lam}
 \lean{re_j_conj_lam}
@@ -272,6 +330,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:j, def:lam}
   $\mathrm{Re}(j \cdot \bar{\lambda}) = -\cos(\pi/8)$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Triplet cancellation]\label{thm:triplet_cancel}
 \lean{triplet_cancellation}
@@ -280,6 +341,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   $1 + x_c \cdot j \cdot \bar{\lambda} + x_c \cdot \bar{j} \cdot \lambda = 0$.
   This is the \emph{only} place where the critical value $x_c$ is used.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Parafermionic observable}\label{chap:observable}
@@ -356,6 +420,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
     = (p-v)\, e^{-i\sigma W_{\gamma_1}(a,p)}\, x_c^{\ell(\gamma_1)}
       \bigl(j\bar{\lambda}^4 + \bar{j}\lambda^4\bigr) = 0.\]
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Triplet contribution vanishes]\label{thm:triplet_contrib}
 \lean{triplet_contribution_vanishes}
@@ -366,6 +433,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
     = (p-v)\, e^{-i\sigma W_{\gamma_1}(a,p)}\, x_c^{\ell(\gamma_1)}
       \bigl(1 + x_c\, j\bar{\lambda} + x_c\, \bar{j}\lambda\bigr) = 0.\]
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Vertex relation (Lemma~1)]\label{thm:vertex_relation}
 \lean{vertex_relation}
@@ -375,6 +445,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   \[ (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0 \]
   where $p, q, r$ are the mid-edges of the three edges adjacent to $v$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Strip domain and boundary identity}\label{chap:strip}
@@ -413,6 +486,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:sigma, def:boundary_coeffs}
   $\cos(\sigma \pi) = -c_\alpha = -\cos(3\pi/8)$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Right boundary coefficient]\label{lem:right_coeff}
 \lean{right_boundary_coeff}
@@ -420,6 +496,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:sigma}
   $\cos(\sigma \cdot 0) = 1$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Top/bottom coefficient]\label{lem:top_bottom_coeff}
 \lean{top_bottom_boundary_coeff}
@@ -427,6 +506,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:sigma, def:boundary_coeffs}
   The combined top/bottom contribution yields $c_\varepsilon = \cos(\pi/4)$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Partition functions}
@@ -463,9 +545,13 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   boundary contributions simplify to:
   \[ 1 = c_\alpha A_{T,L}^{x_c} + B_{T,L}^{x_c} + c_\varepsilon E_{T,L}^{x_c}. \]
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Strip identity, concrete form]\label{thm:strip_identity_concrete}
 \lean{strip_identity_concrete}
+\leanok
 \uses{thm:strip_identity_abs, def:ABE}
   The strip identity holds for the concrete partition functions
   $A_{T,L}$, $B_{T,L}$, $E_{T,L}$. \textbf{Status: sorry.}
@@ -477,6 +563,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:finite_strip}
   The set of vertices in $S_{T,L}$ is finite.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Summability of partition functions]\label{lem:partition_summable}
 \lean{B_TL_summable, A_TL_summable, E_TL_summable}
@@ -485,6 +574,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   The partition functions $A_{T,L}$, $B_{T,L}$, $E_{T,L}$ are well-defined
   (the underlying sums are summable) because the strip is finite.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Monotonicity of $A_{T,L}$ and $B_{T,L}$ in $L$]\label{lem:AB_monotone}
 \lean{A_TL_mono, B_TL_mono}
@@ -492,6 +584,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \uses{def:ABE}
   The sequences $(A_{T,L}^x)_{L>0}$ and $(B_{T,L}^x)_{L>0}$ are increasing in $L$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{definition}[Infinite strip partition functions]\label{def:ABE_inf}
 \lean{A_T_inf, B_T_inf}
@@ -508,6 +603,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   Passing $L \to \infty$ (using monotonicity and boundedness):
   \[ 1 = c_\alpha A_T^{x_c} + B_T^{x_c} + c_\varepsilon E_T^{x_c}. \]
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Proof of the main theorem}\label{chap:proof}
@@ -521,6 +619,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   From the strip identity with non-negative terms:
   $B_T^{x_c} \leq 1$ for all $T$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Lower bound: $\mu \geq \sqrt{2+\sqrt{2}}$}
@@ -533,6 +634,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{thm:strip_identity_abs}
   If $E_T^{x_c} > 0$ for some $T$, then $Z(x_c) = \infty$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Recurrence inequality]\label{thm:recurrence}
 \lean{recurrence_inequality_abstract}
@@ -541,6 +645,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   If $E_T = 0$: $A_{T+1} - A_T \leq x_c \cdot (B_{T+1})^2$.
   This follows from cutting a walk at the first vertex adjacent to the right edge of $S_{T+1}$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Bridge lower bound $B_T \geq c/T$]\label{thm:bridge_lower}
 \lean{bridge_lower_bound}
@@ -550,6 +657,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   This is proved by induction on $T$ using the quadratic recurrence
   $c_\alpha x_c B_{T+1}^2 + B_{T+1} \geq B_T$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Case~2: $E_T = 0$ for all $T$]\label{thm:case2}
 \lean{case2_divergence}
@@ -558,6 +668,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   If $E_T^{x_c} = 0$ for all $T$, then $B_T \geq c/T$ and
   $Z(x_c) \geq \sum_T B_T = \infty$ (harmonic divergence).
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Lower bound (abstract)]\label{thm:lower_bound}
 \lean{lower_bound_abstract}
@@ -565,6 +678,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{thm:case1, thm:case2}
   $Z(x_c) = \infty$. Hence $\mu \geq x_c^{-1} = \sqrt{2+\sqrt{2}}$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Upper bound: $\mu \leq \sqrt{2+\sqrt{2}}$}
@@ -590,6 +706,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{def:bridge}
   A bridge of width $T$ visits at least $T$ vertices.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Bridge exponential decay]\label{thm:bridge_decay}
 \lean{bridge_exponential_decay}
@@ -597,12 +716,18 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{thm:bridge_bound, def:bridge_partition}
   For $x < x_c$: $B_T^x \leq (x/x_c)^T$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Product convergence]\label{thm:prod_conv}
 \lean{prod_one_add_geometric_converges}
 \leanok
   $\prod_{T \geq 1}(1 + r^T)$ converges for $0 \leq r < 1$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{definition}[Bridge decomposition]\label{def:bridge_decomp}
 \lean{BridgeDecomposition, FullBridgeDecomposition}
@@ -621,9 +746,13 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   If $B_T \leq r^T$ for some $0 \leq r < 1$, then
   $\prod_{T \geq 1}(1 + B_T)^2$ is bounded above.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Hammersley--Welsh bound]\label{thm:hw_bound}
 \lean{hammersley_welsh_bound}
+\leanok
 \uses{thm:hw_upper_abstract, thm:prod_conv, def:bridge_partition, def:bridge_decomp}
   By the bridge decomposition:
   $Z(x) \leq 2 \prod_{T>0} (1 + B_T^x)^2 < \infty$ for $x < x_c$.
@@ -632,10 +761,13 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \begin{theorem}[Upper bound]\label{thm:upper_bound}
 \lean{upper_bound_from_bridge_bound}
+\leanok
 \uses{thm:hw_bound}
   $Z(x) < \infty$ for $x < x_c$, hence $\mu \leq x_c^{-1} = \sqrt{2+\sqrt{2}}$.
-  \textbf{Status: sorry} (depends on Hammersley--Welsh).
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \section{Assembly}
@@ -653,6 +785,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{def:connective_constant, def:Z}
   If $Z(x_0) = \infty$ and $Z(x) < \infty$ for $0 < x < x_0$, then $\mu = x_0^{-1}$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Partition function diverges above $1/\mu$]\label{thm:partition_diverges}
 \lean{partition_diverges_above_inv_cc}
@@ -660,6 +795,9 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{def:Z, def:connective_constant}
   For $x > 1/\mu$, the partition function $Z(x)$ diverges.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Partition function converges below $1/\mu$]\label{thm:partition_converges}
 \lean{partition_converges_below_inv_cc}
@@ -667,14 +805,21 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \uses{def:Z, def:connective_constant}
   For $0 < x < 1/\mu$, the partition function $Z(x)$ converges.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Main Theorem]\label{thm:main}
 \lean{connective_constant_eq}
+\leanok
 \uses{thm:lower_bound, thm:upper_bound, thm:partition_char, lem:xc_inv}
   The connective constant of the hexagonal lattice equals $\sqrt{2+\sqrt{2}}$:
   \[ \mu = \sqrt{2+\sqrt{2}}. \]
-  \textbf{Status: sorry} (depends on upper bound).
+
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Elementary bounds}\label{chap:elementary}
@@ -688,6 +833,9 @@ guarantee that $c_n$ grows exponentially fast.''
 \uses{def:hex_lattice}
   Every vertex of \texttt{hexGraph} has exactly $3$ neighbors.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Upper bound $c_{n+1} \leq 3 c_n$]\label{lem:saw_step_le_three}
 \lean{saw_count_step_le_mul_three}
@@ -695,6 +843,9 @@ guarantee that $c_n$ grows exponentially fast.''
 \uses{def:saw_count, lem:hex_degree}
   Each SAW can be extended in at most $3$ ways (degree $= 3$).
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Upper bound $c_{n+1} \leq 2 c_n$ for $n \geq 1$]\label{lem:saw_step_le_two}
 \lean{saw_count_step_le_mul_two}
@@ -703,6 +854,9 @@ guarantee that $c_n$ grows exponentially fast.''
   After the first step, a SAW can be extended in at most $2$ ways
   ($3$ neighbors minus the one we came from).
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Upper bound $c_n \leq 3 \cdot 2^{n-1}$]\label{lem:saw_upper}
 \lean{saw_count_upper_bound}
@@ -710,6 +864,9 @@ guarantee that $c_n$ grows exponentially fast.''
 \uses{lem:saw_count_one, lem:saw_step_le_two}
   $c_n \leq 3 \cdot 2^{n-1}$ for $n \geq 1$.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Connective constant $\geq 1$]\label{thm:cc_ge_one}
 \lean{connective_constant_ge_one}
@@ -717,16 +874,23 @@ guarantee that $c_n$ grows exponentially fast.''
 \uses{def:connective_constant, lem:saw_count_pos}
   $\mu \geq 1$, since $c_n \geq 1$ for all $n$.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Connective constant $\leq 2$]\label{thm:cc_le_two}
 \lean{connective_constant_le_two'}
+\leanok
 \uses{def:connective_constant, lem:saw_upper}
   $\mu \leq 2$.
-  Uses the main theorem $\mu = \sqrt{2+\sqrt{2}}$; sorry-free once the main theorem is proved.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{lemma}[Even lower bound $c_{2k} \geq 2^k$]\label{lem:saw_even_lower}
 \lean{saw_count_even_lower}
+\leanok
 \uses{def:saw_count}
   For each binary string of length $k$, we construct a distinct $(2k)$-step SAW
   from the origin using a ``zigzag'' pattern (alternating same-cell F$\to$T steps
@@ -736,6 +900,7 @@ guarantee that $c_n$ grows exponentially fast.''
 
 \begin{lemma}[Odd lower bound $c_{2k+1} \geq 3 \cdot 2^k$]\label{lem:saw_odd_lower}
 \lean{saw_count_odd_lower}
+\leanok
 \uses{def:saw_count}
   Using three starting directions for the zigzag walk,
   $c_{2k+1} \geq 3 \cdot 2^k$.
@@ -744,17 +909,23 @@ guarantee that $c_n$ grows exponentially fast.''
 
 \begin{lemma}[$2^n \leq c_n^2$]\label{lem:saw_sq_lower}
 \lean{saw_count_sq_ge_two_pow}
+\leanok
 \uses{lem:saw_even_lower, lem:saw_odd_lower, lem:saw_count_one}
   For $n \geq 1$, $2^n \leq c_n^2$.
-  \textbf{Status: sorry.}
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Connective constant $\geq \sqrt{2}$]\label{thm:cc_ge_sqrt2}
 \lean{connective_constant_ge_sqrt_two}
+\leanok
 \uses{def:connective_constant, lem:saw_sq_lower}
   $\mu \geq \sqrt{2}$ (from the elementary lower bound $c_n \geq \sqrt{2}^n$).
-  Proved modulo \texttt{saw\_count\_sq\_ge\_two\_pow}.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 
 \chapter{Conjectures}\label{chap:conjectures}
