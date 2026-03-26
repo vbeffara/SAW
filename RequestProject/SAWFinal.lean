@@ -47,6 +47,7 @@ the main remaining infrastructure task.
 import RequestProject.SAWProof
 import RequestProject.SAWVertex
 import RequestProject.SAWBridgeFix
+import RequestProject.SAWHammersleyWelsh
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -94,9 +95,9 @@ theorem connective_constant_eq :
     -- The gap: connecting origin_bridge_partition to saw_count
     (Z_xc_diverges)
     -- Upper bound: Z(x) < ∞ for 0 < x < xc
-    -- The abstract proof gives: Hammersley-Welsh → Z(x) ≤ 2·∏(1+B_T^x)²
-    -- The gap: formalizing the decomposition injection
-    (hammersley_welsh_injection)
+    -- Uses Hammersley-Welsh bridge decomposition → Z(x) ≤ 2·∏(1+B_T^x)²
+    -- Proved in SAWHammersleyWelsh.lean modulo the partial-sum bound
+    (fun x hx hxc => hammersley_welsh_summable hx hxc)
 
 /-- Equivalent formulation: the connective constant equals 1/x_c. -/
 theorem connective_constant_eq_inv_xc :
@@ -136,7 +137,7 @@ theorem partition_function_diverges_above_xc' :
 theorem partition_function_converges_below_xc' :
     ∀ x, 0 < x → x < xc →
       Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
-  exact hammersley_welsh_injection
+  exact fun x hx hxc => hammersley_welsh_summable hx hxc
 
 /-! ## Summary of the full proof
 

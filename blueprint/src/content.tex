@@ -711,10 +711,12 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \end{proof}
 
 \begin{theorem}[Bridge exponential decay]\label{thm:bridge_decay}
-\lean{bridge_exponential_decay}
+\lean{bridge_partition_scaling}
 \leanok
-\uses{thm:bridge_bound, def:bridge_partition}
+\uses{thm:bridge_bound, thm:bridge_length_ge_width, def:bridge_partition}
   For $x < x_c$: $B_T^x \leq (x/x_c)^T$.
+  The proof uses bridge length $\geq$ width to bound
+  $x^\ell \leq (x/x_c)^T \cdot x_c^\ell$ for each bridge of length $\ell \geq T$.
 \end{theorem}
 \begin{proof}
 \leanok
@@ -729,14 +731,44 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
 \end{proof}
 
+\begin{definition}[Half-plane walk]\label{def:half_plane}
+\lean{HalfPlaneSAW}
+\leanok
+\uses{def:hex_lattice}
+  A \emph{half-plane walk} is a self-avoiding walk where the starting vertex
+  has the minimal $x$-coordinate among all visited vertices.
+\end{definition}
+
+\begin{theorem}[Subset product identity]\label{thm:subset_product}
+\lean{subset_product_identity}
+\leanok
+  $\sum_{S \subseteq \{0,\ldots,N-1\}} \prod_{T \in S} b(T+1)
+  = \prod_{T=0}^{N-1} (1 + b(T+1)).$
+  This standard combinatorial identity encodes the bijection between
+  subsets and products.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
 \begin{definition}[Bridge decomposition]\label{def:bridge_decomp}
 \lean{BridgeDecomposition, FullBridgeDecomposition}
 \leanok
-\uses{def:bridge}
+\uses{def:bridge, def:half_plane}
   Any self-avoiding walk can be canonically decomposed into a sequence
   of bridges with monotonically changing widths. Fixing the starting
   mid-edge and first vertex, the decomposition uniquely determines the walk.
   This is the Hammersley--Welsh decomposition.
+
+  The decomposition algorithm:
+  \begin{enumerate}
+    \item For a half-plane walk: find the last vertex with maximal $x$-coordinate
+      (step $n$). The first $n$ steps form a bridge of width $T_0$.
+      The remaining steps form a half-plane walk of width $T_1 < T_0$. Recurse.
+    \item For a general walk: split at the first vertex with maximal $x$-coordinate.
+      The left part is a reverse half-plane walk, the right part a half-plane walk.
+      Decompose each part separately.
+  \end{enumerate}
 \end{definition}
 
 \begin{theorem}[Upper bound via product]\label{thm:hw_upper_abstract}
@@ -750,25 +782,72 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
 \end{proof}
 
+\begin{theorem}[Bridge decomposition injection]\label{thm:bridge_decomp_inj}
+\lean{bridge_decomposition_injection}
+\uses{def:bridge_decomp, def:bridge_partition}
+  The bridge decomposition gives an injection from SAWs to pairs of
+  bridge sequences, yielding:
+  $\sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
+    \prod_{T \in S} B_{T+1}^x\right)^2$
+  \textbf{Status: sorry.} This is the key combinatorial gap.
+\end{theorem}
+
+\begin{theorem}[Bridge decomposition partial-sum bound]\label{thm:hw_partial_sum}
+\lean{hw_partial_sum_bound}
+\uses{thm:bridge_decomp_inj, thm:subset_product, thm:bridge_decay}
+  $\sum_{n=0}^{N} c_n x^n \leq 2 \prod_{T=1}^{N} \left(1 + \left(\frac{x}{x_c}\right)^T\right)^2$
+  Combines the injection, subset product identity, and bridge decay.
+  \textbf{Status: sorry (depends on bridge\_decomposition\_injection).}
+\end{theorem}
+
+\begin{theorem}[Hammersley--Welsh summability]\label{thm:hw_summable}
+\lean{hammersley_welsh_summable}
+\leanok
+\uses{thm:hw_partial_sum, thm:hw_upper_abstract}
+  For $0 < x < x_c$, $Z(x) = \sum c_n x^n$ converges.
+  The proof combines the partial-sum bound (Theorem~\ref{thm:hw_partial_sum})
+  with the uniform product bound (Theorem~\ref{thm:hw_upper_abstract})
+  and the criterion that non-negative series with bounded partial sums
+  are summable.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:hw_partial_sum, thm:hw_upper_abstract}
+  Apply \texttt{summable\_of\_sum\_range\_le} with bound $2C$
+  where $C$ comes from \texttt{hw\_upper\_bound\_abstract}.
+\end{proof}
+
 \begin{theorem}[Hammersley--Welsh bound]\label{thm:hw_bound}
 \lean{hammersley_welsh_bound}
 \leanok
-\uses{thm:hw_upper_abstract, thm:prod_conv, def:bridge_partition, def:bridge_decomp}
+\uses{thm:hw_summable}
   By the bridge decomposition:
   $Z(x) \leq 2 \prod_{T>0} (1 + B_T^x)^2 < \infty$ for $x < x_c$.
-  \textbf{Status: sorry.}
+  \textbf{Status: sorry (via hw\_partial\_sum\_bound).}
 \end{theorem}
 
 \begin{theorem}[Upper bound]\label{thm:upper_bound}
 \lean{upper_bound_from_bridge_bound}
 \leanok
-\uses{thm:hw_bound}
+\uses{thm:hw_summable}
   $Z(x) < \infty$ for $x < x_c$, hence $\mu \leq x_c^{-1} = \sqrt{2+\sqrt{2}}$.
+  Now proved via \texttt{hammersley\_welsh\_summable}.
 \end{theorem}
 \begin{proof}
 \leanok
 \end{proof}
 
+
+\begin{definition}[Hammersley--Welsh growth bound]\label{def:hw_growth}
+\lean{hammersley_welsh_bound_statement}
+\leanok
+\uses{def:saw_count, def:connective_constant}
+  A consequence of the bridge decomposition (Remark in the paper):
+  $c_n \leq \exp(\kappa \sqrt{n}) \mu^n$ for some constant $\kappa > 0$.
+  Together with $c_n \geq \mu^n$ (from submultiplicativity),
+  $\mu^n \leq c_n \leq \exp(\kappa \sqrt{n}) \mu^n$.
+  Deriving the precise critical exponent $\gamma = 43/32$ remains open.
+\end{definition}
 
 \section{Assembly}
 

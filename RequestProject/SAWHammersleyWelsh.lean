@@ -156,15 +156,9 @@ Z(x) ≤ 2 · ∏_{T≥1} (1 + B_T^x)²
 - The factor 2 comes from two choices of first vertex.
 -/
 
-/-
-PROBLEM
-**Key counting lemma**: The number of subsets of {1,...,N} times the
+/-- **Key counting lemma**: The number of subsets of {1,...,N} times the
     corresponding bridge products equals ∏_{T=1}^{N} (1 + b_T).
-    This is a standard combinatorial identity.
-
-PROVIDED SOLUTION
-This is Finset.sum_powerset_prod_one_add or similar. The identity ∑_{S ⊆ range N} ∏_{T ∈ S} b(T+1) = ∏_{T ∈ range N} (1 + b(T+1)) follows by induction on N. Base case N = 0: both sides are 1. Inductive step: split the powerset of range (N+1) into subsets containing N and those not containing N. Use Finset.prod_add to expand ∏(1+b_i).
--/
+    This is a standard combinatorial identity. -/
 theorem subset_product_identity (b : ℕ → ℝ) (_hb : ∀ T, 0 ≤ b T) (N : ℕ) :
     ∑ S ∈ (Finset.range N).powerset,
       ∏ T ∈ S, b (T + 1) = ∏ T ∈ Finset.range N, (1 + b (T + 1)) := by
@@ -184,19 +178,13 @@ lemma bridge_weight_split {x : ℝ} (_hx : 0 < x) (b : OriginBridge T) :
 
 /-- For 0 < x < xc and bridge of width T with length ≥ T:
     (x/xc)^length ≤ (x/xc)^T since x/xc < 1 and length ≥ T. -/
-lemma bridge_ratio_pow_le {x : ℝ} (hx : 0 < x) (hxc : x < xc)  -- hx used via div_nonneg
+lemma bridge_ratio_pow_le {x : ℝ} (hx : 0 < x) (hxc : x < xc)
     {n : ℕ} (hn : T ≤ n) :
     (x / xc) ^ n ≤ (x / xc) ^ T := by
   exact pow_le_pow_of_le_one (div_nonneg hx.le xc_pos.le)
     ((div_le_one xc_pos).mpr hxc.le) hn
 
-/-
-PROBLEM
-Pointwise bridge weight bound: x^n ≤ (x/xc)^T · xc^n when n ≥ T and x < xc.
-
-PROVIDED SOLUTION
-Write x^n = (x/xc)^n * xc^n (via div_mul_cancel with xc ≠ 0 from xc_pos). Then (x/xc)^n ≤ (x/xc)^T since x/xc ∈ [0,1) and n ≥ T (by bridge_ratio_pow_le or pow_le_pow_of_le_one). So x^n ≤ (x/xc)^T * xc^n.
--/
+/-- Pointwise bridge weight bound: x^n ≤ (x/xc)^T · xc^n when n ≥ T and x < xc. -/
 lemma bridge_weight_pointwise_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc)
     {n : ℕ} (hn : T ≤ n) :
     x ^ n ≤ (x / xc) ^ T * xc ^ n := by
@@ -204,23 +192,13 @@ lemma bridge_weight_pointwise_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc)
     rw [ ← mul_pow, div_mul_cancel₀ _ ( ne_of_gt ( show 0 < xc from by exact by unfold xc; positivity ) ) ];
   exact h_rewrite ▸ mul_le_mul_of_nonneg_right ( pow_le_pow_of_le_one ( by exact div_nonneg hx.le ( by linarith ) ) ( by rw [ div_le_iff₀ ( by linarith ) ] ; linarith ) hn ) ( pow_nonneg ( by linarith ) _ )
 
-/-
-PROBLEM
-Scaling the bridge partition function from x_c to x < x_c.
+/-- Scaling the bridge partition function from x_c to x < x_c.
     Since each bridge of width T has length ≥ T, the weight at x is
-    at most (x/x_c)^T times the weight at x_c.
-
-    We require summability at xc as an explicit hypothesis; this follows
-    from the strip identity but is hard to derive from the tsum convention.
-
-PROVIDED SOLUTION
-With h_summ, we have summability at xc. The bound function b ↦ (x/xc)^T * xc^length is summable via h_summ.mul_left. The x function is summable by Summable.of_nonneg_of_le (using bridge_weight_pointwise_bound and bridge_length_ge_width). Then tsum_le_tsum gives the pointwise bound summed. Factor out (x/xc)^T via tsum_mul_left. Then use hBxc and mul_le_of_le_one_right.
--/
+    at most (x/x_c)^T times the weight at x_c. -/
 theorem bridge_partition_scaling {T : ℕ} {x : ℝ} (hx : 0 < x) (hxc : x < xc)
     (hBxc : origin_bridge_partition T xc ≤ 1)
     (h_summ : Summable (fun b : OriginBridge T => xc ^ b.1.walk.1.length)) :
     origin_bridge_partition T x ≤ (x / xc) ^ T := by
-  -- By summing the pointwise bound over all bridges, we get the desired inequality.
   have h_summable : Summable (fun b : OriginBridge T => x ^ b.1.walk.1.length) := by
     exact Summable.of_nonneg_of_le ( fun _ => pow_nonneg hx.le _ ) ( fun _ => pow_le_pow_left₀ hx.le hxc.le _ ) h_summ;
   have h_pointwise_bound : ∀ b : OriginBridge T, x ^ b.1.walk.1.length ≤ (x / xc) ^ T * xc ^ b.1.walk.1.length := by
@@ -242,22 +220,15 @@ Combining the bridge decomposition injection with the bridge scaling,
 we get the upper bound on the partition function.
 -/
 
-/-
-PROBLEM
-**The Hammersley-Welsh upper bound** (abstract form):
+/-- **The Hammersley-Welsh upper bound** (abstract form):
     If bridge partition functions satisfy B_T ≤ r^T for some 0 ≤ r < 1,
     then the product ∏(1 + B_T)² converges, giving a finite upper bound
-    on Z(x).
-
-PROVIDED SOLUTION
-Since B T ≤ r^T with 0 ≤ r < 1, we have 1 + B(T+1) ≤ 1 + r^(T+1) ≤ exp(r^(T+1)). The product ∏_{T<N} (1+B(T+1))^2 ≤ exp(2·Σ r^(T+1)) ≤ exp(2·r/(1-r)) which is bounded. More directly: since Σ B(T+1) converges (comparison with geometric series), the product ∏(1+B(T+1)) converges absolutely, hence the partial products are bounded. Use hasSum_geometric_of_lt_one for the geometric sum, and the product convergence from summability.
--/
+    on Z(x). -/
 theorem hw_upper_bound_abstract {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1)
     {B : ℕ → ℝ} (hB : ∀ T, 0 ≤ B T) (hBr : ∀ T, B T ≤ r ^ T) :
     ∃ C : ℝ, 0 < C ∧ ∀ N, ∏ T ∈ Finset.range N, (1 + B (T + 1)) ^ 2 ≤ C := by
   use Real.exp ( 2 * ∑' ( T : ℕ ), r ^ ( T + 1 ) );
   refine ⟨ Real.exp_pos _, fun N ↦ le_trans ?_ ( Real.exp_le_exp.mpr <| mul_le_mul_of_nonneg_left ( Summable.sum_le_tsum ( Finset.range N ) ( fun _ _ ↦ by positivity ) <| by exact summable_nat_add_iff 1 |>.2 <| summable_geometric_of_lt_one hr0 hr1 ) <| by positivity ) ⟩;
-  -- Applying the inequality $1 + x \leq e^x$ to each term in the product.
   have h_exp : ∀ T, (1 + B (T + 1)) ^ 2 ≤ Real.exp (2 * r ^ (T + 1)) := by
     intro T; rw [ mul_comm, Real.exp_mul ] ; norm_num;
     exact pow_le_pow_left₀ ( by linarith [ hB ( T + 1 ) ] ) ( by linarith [ hBr ( T + 1 ), Real.add_one_le_exp ( r ^ ( T + 1 ) ) ] ) _;
@@ -285,20 +256,136 @@ At each step of the reverse procedure:
 This gives injectivity of the decomposition map.
 -/
 
+-- Note: bridge_length_ge_width is proved in SAWDecomp.lean
+-- (imported via SAWStripWalks → SAWBridgeFix → SAWBridge → SAWMain → ...)
+-- It is not directly accessible here due to import ordering,
+-- but the result is available transitively in files that import both.
+
+/-- **Product convergence**: ∏_{T≥1} (1 + r^T) converges for 0 ≤ r < 1.
+    More precisely, the partial products are uniformly bounded. -/
+theorem prod_one_add_geometric_converges' {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1) :
+    ∃ C : ℝ, 0 < C ∧ ∀ N, ∏ T ∈ Finset.range N, (1 + r ^ (T + 1)) ≤ C := by
+  obtain ⟨C, hC_pos, hC_bound⟩ := hw_upper_bound_abstract hr0 hr1
+    (fun T => pow_nonneg hr0 T) (fun T => le_refl _)
+  refine ⟨C, hC_pos, fun N => ?_⟩
+  calc ∏ T ∈ Finset.range N, (1 + r ^ (T + 1))
+      = ∏ T ∈ Finset.range N, ((1 + r ^ (T + 1)) ^ 1) := by simp
+    _ ≤ ∏ T ∈ Finset.range N, ((1 + r ^ (T + 1)) ^ 2) :=
+        Finset.prod_le_prod (fun _ _ => by positivity) (fun T _ => by
+          nlinarith [pow_nonneg hr0 (T + 1)])
+    _ ≤ C := hC_bound N
+
 /-- **Injectivity of the reverse procedure** (abstract statement):
     Given the same bridge sequence and starting configuration,
-    there is at most one walk that decomposes to this sequence.
-
-    This is formalized abstractly as: the decomposition map from
-    walks to bridge sequences is injective (when restricted to
-    walks with the same starting mid-edge and first vertex). -/
+    there is at most one walk that decomposes to this sequence. -/
 theorem decomposition_injective_abstract :
     ∀ (widths : List ℕ),
     widths.Pairwise (· > ·) →
-    -- If two half-plane walks have the same decomposition widths,
-    -- they are equal (after fixing the start)
     True := by
   intro _ _; trivial
+
+/-! ## Bridge decomposition: key partial-sum bound
+
+The bridge decomposition gives an injection from SAWs to pairs of bridge
+sequences. Combined with the subset product identity, this yields:
+
+  ∑_{n < N} c_n · x^n ≤ 2 · ∏_{T=1}^{N} (1 + (x/xc)^T)²
+
+The proof of this inequality requires:
+1. Every SAW from hexOrigin decomposes into a left (strictly increasing widths)
+   and right (strictly decreasing widths) bridge sequence
+2. The decomposition is injective (given the first vertex direction)
+3. There are 2 choices for the first vertex
+4. Bridge partition functions satisfy B_T^x ≤ (x/xc)^T for x < xc
+5. The subset product identity: ∑_S ∏_{T ∈ S} r^T = ∏_T (1 + r^T)
+
+The full combinatorial proof of the decomposition algorithm is deferred.
+-/
+
+/-! ## Bridge decomposition: decomposition into sub-lemmas
+
+The Hammersley-Welsh partial-sum bound decomposes into three pieces:
+
+1. **Decomposition injection** (sorry'd): every SAW from hexOrigin decomposes
+   into a pair of bridge sequences with monotone widths. This gives the bound:
+   Z(x) ≤ 2 · (∑_{S} ∏_{T∈S} B_T^x)²
+
+2. **Subset product identity** (proved): ∑_{S ⊆ range N} ∏_{T∈S} b(T+1)
+   = ∏_{T < N} (1 + b(T+1))
+
+3. **Bridge decay** (proved modulo strip identity): B_T^x ≤ (x/xc)^T
+
+Combining these three yields the partial-sum bound.
+-/
+
+/-- **Bridge decomposition injection** (Hammersley-Welsh, 1962):
+    The bridge decomposition gives an injection from SAWs to pairs of
+    bridge sequences, yielding the bound:
+
+    ∑_{n ≤ N} c_n x^n ≤ 2 · (∑_{S ⊆ range N} ∏_{T∈S} B_{T+1}^x)²
+
+    where B_T^x = origin_bridge_partition T x.
+
+    The proof requires formalizing the decomposition algorithm
+    (induction on width for half-plane walks, splitting at first
+    maximal x-coordinate for general walks) and the reverse procedure
+    (uniqueness/injectivity). -/
+theorem bridge_decomposition_injection {x : ℝ} (hx : 0 < x) (N : ℕ) :
+    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
+    2 * (∑ S ∈ (Finset.range N).powerset,
+      ∏ T ∈ S, origin_bridge_partition (T + 1) x) ^ 2 := by
+  sorry
+
+/-- **Bridge decomposition partial-sum bound** (Hammersley-Welsh, 1962):
+    The partial sums of Z(x) are bounded by the partial products of
+    (1 + (x/xc)^T)².
+
+    This follows from:
+    1. `bridge_decomposition_injection`: partial sums ≤ 2·(∑_S ∏ B_T^x)²
+    2. `subset_product_identity`: ∑_S ∏ b(T+1) = ∏(1+b(T+1))
+    3. `origin_bridge_upper_bound` + `bridge_partition_scaling`: B_T^x ≤ (x/xc)^T
+
+    Steps 2 and 3 are proved; step 1 is the remaining gap. -/
+theorem hw_partial_sum_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
+    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
+    2 * ∏ T ∈ Finset.range N, (1 + (x / xc) ^ (T + 1)) ^ 2 := by
+  sorry
+
+/-! ## Derivation of summability from the partial-sum bound
+
+Using `hw_partial_sum_bound` and `hw_upper_bound_abstract`, we prove
+that Z(x) is summable for x < xc. This is the Hammersley-Welsh upper bound.
+-/
+
+/-- **Hammersley-Welsh upper bound on Z(x)**: For 0 < x < x_c,
+    the partition function Z(x) = ∑ c_n x^n converges.
+
+    This follows from:
+    1. `hw_partial_sum_bound`: partial sums ≤ 2·∏(1+(x/xc)^T)²
+    2. `hw_upper_bound_abstract`: the products are uniformly bounded
+    3. `summable_of_sum_range_le`: bounded non-negative partial sums → summable -/
+theorem hammersley_welsh_summable {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
+    Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
+  -- Step 1: Get the uniform bound on products
+  have hr : x / xc < 1 := (div_lt_one xc_pos).mpr hxc
+  have hr0 : 0 ≤ x / xc := div_nonneg hx.le xc_pos.le
+  obtain ⟨C, hC_pos, hC_bound⟩ := hw_upper_bound_abstract hr0 hr
+    (fun T => pow_nonneg hr0 T) (fun T => le_refl _)
+  -- Step 2: Combine with partial sum bound to get uniform bound
+  have hbound : ∀ N, ∑ n ∈ Finset.range N, (saw_count n : ℝ) * x ^ n ≤ 2 * C := by
+    intro N
+    match N with
+    | 0 => simp; linarith
+    | N + 1 =>
+      calc ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n
+          ≤ 2 * ∏ T ∈ Finset.range N, (1 + (x / xc) ^ (T + 1)) ^ 2 :=
+            hw_partial_sum_bound hx hxc N
+        _ ≤ 2 * C := by
+            exact mul_le_mul_of_nonneg_left (hC_bound N) (by norm_num)
+  -- Step 3: Summability from bounded partial sums
+  exact summable_of_sum_range_le
+    (fun n => mul_nonneg (Nat.cast_nonneg _) (pow_nonneg hx.le n))
+    hbound
 
 /-! ## Summary: The full upper bound argument
 
