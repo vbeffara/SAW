@@ -3,3 +3,4 @@ blueprint/src/web/*.html
 blueprint/web/*.html
 blueprint/web/web/*.html
 blueprint/lean_decls
+blueprint/src/web.paux

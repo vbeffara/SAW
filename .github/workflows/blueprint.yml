@@ -1,0 +1,56 @@
+name: Compile blueprint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build_blueprint:
+    runs-on: ubuntu-latest
+    name: Build blueprint
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Build blueprint
+        uses: xu-cheng/texlive-action@v2
+        with:
+          docker_image: ghcr.io/xu-cheng/texlive-full:20250401
+          run: |
+            apk update
+            apk add --update make py3-pip git pkgconfig graphviz graphviz-dev gcc musl-dev
+            git config --global --add safe.directory $GITHUB_WORKSPACE
+            git config --global --add safe.directory `pwd`
+            python3 -m venv env
+            source env/bin/activate
+            pip install --upgrade pip requests wheel
+            pip install pygraphviz --config-settings="--global-option=build_ext" --config-settings="--global-option=-L/usr/lib/graphviz/" --config-settings="--global-option=-R/usr/lib/graphviz/"
+            pip install leanblueprint
+            leanblueprint pdf
+            mkdir -p _site
+            cp blueprint/print/print.pdf _site/blueprint.pdf
+            leanblueprint web
+            cp -r blueprint/web _site/blueprint
+
+      - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
