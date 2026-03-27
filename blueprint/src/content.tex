@@ -861,6 +861,41 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
 \end{proof}
 
+\begin{theorem}[Origin bridge fits in finite strip]\label{thm:bridge_in_strip}
+\lean{origin_bridge_in_finite_strip}
+\leanok
+\uses{def:bridge, def:finite_strip}
+  Every origin bridge of width $T$ fits in the finite strip $S_{T,L}$
+  for $L = 2 \cdot \text{length}$. This uses the walk bound from
+  \texttt{hexGraph\_walk\_bound} to bound the $y$-coordinates.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Bridge partial sum bound]\label{thm:bridge_partial_sum}
+\lean{origin_bridge_partial_sum_le_one}
+\uses{thm:bridge_in_strip, thm:strip_identity_abs, def:bridge_partition}
+  For any finite set $F$ of origin bridges of width $T$:
+  $\sum_{b \in F} x_c^{\ell(b)} \leq 1$.
+  The proof maps $F$ injectively to $\text{StripSAW\_B}(T,L)$ via
+  \texttt{originBridgeToStripB}, then uses $B_{T,L} \leq 1$.
+  \textbf{Status: sorry.} Requires formalizing the injection and the
+  sum-vs-tsum inequality.
+\end{theorem}
+
+\begin{theorem}[Origin bridge upper bound from strip]\label{thm:bridge_upper_from_strip}
+\lean{origin_bridge_upper_bound_from_strip}
+\leanok
+\uses{thm:bridge_partial_sum}
+  $B_T^{x_c} \leq 1$ for all $T \geq 1$.
+  Follows from the partial sum bound via \texttt{Real.tsum\_le\_of\_sum\_le}.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_partial_sum}
+\end{proof}
+
 \begin{theorem}[Bridge decomposition injection]\label{thm:bridge_decomp_inj}
 \lean{bridge_decomposition_injection}
 \uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
