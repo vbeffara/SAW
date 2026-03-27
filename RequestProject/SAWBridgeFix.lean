@@ -212,15 +212,17 @@ length ≥ T, for x < xc:
 The product converges since x/xc < 1.
 -/
 
-/-- **Hammersley-Welsh injection (abstract)**: Every SAW from hexOrigin
-    decomposes uniquely into a sequence of bridges with monotone widths.
-    This gives Z(x) ≤ 2 · ∏(1 + B_T^x)².
-
-    This is the deepest combinatorial fact in the proof and requires
-    formalizing the full decomposition algorithm from Section 3. -/
+/-- The Hammersley-Welsh upper bound Z(x) < ∞ for x < xc is now
+    proved as `hammersley_welsh_summable` in SAWHammersleyWelsh.lean.
+    It depends on `bridge_decomposition_injection` (sorry'd there)
+    and `origin_bridge_decay` (proved from origin_bridge_upper_bound
+    and origin_bridge_summable_at_xc). -/
 theorem hammersley_welsh_injection :
     ∀ x, 0 < x → x < xc →
       Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
   sorry
+  -- Note: This sorry is superseded by hammersley_welsh_summable
+  -- in SAWHammersleyWelsh.lean, which imports this file.
+  -- It cannot be proved here due to the import ordering.
 
 end

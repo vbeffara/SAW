@@ -694,10 +694,12 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \end{definition}
 
 \begin{definition}[Bridge partition function]\label{def:bridge_partition}
-\lean{bridge_partition}
+\lean{origin_bridge_partition}
 \leanok
 \uses{def:bridge}
-  $B_T^x = \sum_{\gamma\ \text{bridge of width } T} x^{\ell(\gamma)}$.
+  $B_T^x = \sum_{\gamma\ \text{bridge of width } T} x^{\ell(\gamma)}$,
+  where the sum is over bridges from the fixed starting vertex (hexOrigin).
+  This is \texttt{origin\_bridge\_partition} from SAWBridgeFix.lean.
 \end{definition}
 
 \begin{theorem}[Bridge length $\geq$ width]\label{thm:bridge_length_ge_width}
@@ -710,16 +712,30 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
 \end{proof}
 
-\begin{theorem}[Bridge exponential decay]\label{thm:bridge_decay}
-\lean{bridge_partition_scaling}
+\begin{theorem}[Bridge summability at $x_c$]\label{thm:bridge_summable}
+\lean{origin_bridge_summable_at_xc}
 \leanok
-\uses{thm:bridge_bound, thm:bridge_length_ge_width, def:bridge_partition}
-  For $x < x_c$: $B_T^x \leq (x/x_c)^T$.
-  The proof uses bridge length $\geq$ width to bound
-  $x^\ell \leq (x/x_c)^T \cdot x_c^\ell$ for each bridge of length $\ell \geq T$.
+\uses{def:bridge_partition, thm:bridge_bound}
+  The bridge partition function $B_T^{x_c}$ is summable (as a series over
+  bridges), for $T \geq 1$.
 \end{theorem}
 \begin{proof}
 \leanok
+\uses{thm:bridge_bound}
+\end{proof}
+
+\begin{theorem}[Bridge exponential decay]\label{thm:bridge_decay}
+\lean{origin_bridge_decay}
+\leanok
+\uses{thm:bridge_bound, thm:bridge_length_ge_width, def:bridge_partition, thm:bridge_summable}
+  For $x < x_c$ and $T \geq 1$: $B_T^x \leq (x/x_c)^T$.
+  The proof uses bridge length $\geq$ width to bound
+  $x^\ell \leq (x/x_c)^T \cdot x_c^\ell$ for each bridge of length $\ell \geq T$,
+  then sums using \texttt{origin\_bridge\_summable\_at\_xc}.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_summable, thm:bridge_bound, thm:bridge_length_ge_width}
 \end{proof}
 
 \begin{theorem}[Product convergence]\label{thm:prod_conv}
@@ -744,11 +760,11 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
   $\sum_{S \subseteq \{0,\ldots,N-1\}} \prod_{T \in S} b(T+1)
   = \prod_{T=0}^{N-1} (1 + b(T+1)).$
-  This standard combinatorial identity encodes the bijection between
-  subsets and products.
+  This is \texttt{Finset.prod\_one\_add} in Mathlib.
 \end{theorem}
 \begin{proof}
 \leanok
+  Immediate from \texttt{Finset.prod\_one\_add}.
 \end{proof}
 
 \begin{definition}[Bridge decomposition]\label{def:bridge_decomp}
@@ -789,16 +805,32 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   bridge sequences, yielding:
   $\sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
     \prod_{T \in S} B_{T+1}^x\right)^2$
-  \textbf{Status: sorry.} This is the key combinatorial gap.
+
+  \textbf{Status: sorry.} This is the key remaining combinatorial gap.
+  The proof requires formalizing:
+  (a) The Hammersley--Welsh decomposition algorithm (induction on width
+  for half-plane walks, splitting at first maximal $x$-coordinate for
+  general walks);
+  (b) the reverse procedure establishing injectivity;
+  (c) weight accounting showing $x^n \leq \prod x^{\ell(\beta_i)}$
+  (valid for $x \leq 1$, which holds since $x < x_c < 1$).
 \end{theorem}
 
 \begin{theorem}[Bridge decomposition partial-sum bound]\label{thm:hw_partial_sum}
 \lean{hw_partial_sum_bound}
+\leanok
 \uses{thm:bridge_decomp_inj, thm:subset_product, thm:bridge_decay}
   $\sum_{n=0}^{N} c_n x^n \leq 2 \prod_{T=1}^{N} \left(1 + \left(\frac{x}{x_c}\right)^T\right)^2$
   Combines the injection, subset product identity, and bridge decay.
-  \textbf{Status: sorry (depends on bridge\_decomposition\_injection).}
 \end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_decomp_inj, thm:subset_product, thm:bridge_decay}
+  Apply \texttt{bridge\_decomposition\_injection}, bound each
+  $B_{T+1}^x \leq (x/x_c)^{T+1}$ via \texttt{origin\_bridge\_decay},
+  then apply \texttt{subset\_product\_identity} and
+  \texttt{Finset.prod\_pow}.
+\end{proof}
 
 \begin{theorem}[Hammersley--Welsh summability]\label{thm:hw_summable}
 \lean{hammersley_welsh_summable}
@@ -818,13 +850,18 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \end{proof}
 
 \begin{theorem}[Hammersley--Welsh bound]\label{thm:hw_bound}
-\lean{hammersley_welsh_bound}
+\lean{hammersley_welsh_summable}
 \leanok
-\uses{thm:hw_summable}
+\uses{thm:hw_partial_sum, thm:hw_upper_abstract}
   By the bridge decomposition:
   $Z(x) \leq 2 \prod_{T>0} (1 + B_T^x)^2 < \infty$ for $x < x_c$.
-  \textbf{Status: sorry (via hw\_partial\_sum\_bound).}
 \end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:hw_partial_sum, thm:hw_upper_abstract}
+  Apply \texttt{summable\_of\_sum\_range\_le} with
+  bound $2C$ from \texttt{hw\_upper\_bound\_abstract}.
+\end{proof}
 
 \begin{theorem}[Upper bound]\label{thm:upper_bound}
 \lean{upper_bound_from_bridge_bound}
