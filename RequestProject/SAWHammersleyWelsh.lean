@@ -101,45 +101,10 @@ This combines:
 3. The scaling argument: each bridge of width T has length ≥ T
 -/
 
-/-
-PROBLEM
-**Summability of bridge weights at xc** (from the strip identity).
-    In each finite strip S_{T,L}, the bridge partition B_{T,L} ≤ 1.
-    Since the bridges in S_{T,L} are a subset of all origin bridges,
-    every finite partial sum of bridge weights is ≤ 1, giving summability.
-
-PROVIDED SOLUTION
-The summability follows from the fact that every finite collection of origin bridges of width T fits inside some finite strip S_{T,L}, and the bridge partition function B_{T,L} ≤ 1 (from the strip identity via B_TL_le_one).
-
-More precisely: if origin_bridge_partition T xc > 0, the series must be summable (since tsum > 0 for nonneg functions implies summability). If it equals 0, we need to show the series is summable with sum 0, but this can't happen for T ≥ 1 since there exist bridges of width T ≥ 1 and xc > 0.
-
-Actually, the simplest approach: for OriginBridge T, each bridge stays in the infinite strip of width T (vertices have x-coordinate in [0,T]). Each bridge is a self-avoiding walk starting from hexOrigin = (0,0,false). The set of SAWs from hexOrigin of length n that stay in the strip is finite (Fintype). So origin_bridge_partition T xc = ∑_{n ≥ 0} (count_n) · xc^n where count_n is finite.
-
-For summability: count_n ≤ number of SAWs of length n from hexOrigin ≤ 3·2^{n-1} (from saw_count_upper_bound). Since xc < 1/√2 < 1/1 = 1... wait, xc = 1/√(2+√2) ≈ 0.541. And 2 · xc ≈ 1.08 > 1. So the geometric bound 3 · (2xc)^n doesn't converge.
-
-Hmm, this approach doesn't work directly. The bound c_n ≤ 3·2^{n-1} gives a ratio 2xc > 1, so the series might not converge from this bound alone.
-
-But we KNOW the series converges because B_T(xc) ≤ 1 from the strip identity. The strip identity says B_{T,L} ≤ 1 for all L (finite strip). Since B_{T,L} is increasing in L and bounded, the supremum exists and is ≤ 1.
-
-For the formal proof: origin_bridge_partition T xc = sup_L B_{T,L} (or equivalently, tsum over all origin bridges = sup over finite partial sums). Since each finite partial sum ≤ 1, the nonneg series with bounded partial sums is summable.
-
-The key: summable_of_sum_range_le or summable_of_nonneg_of_le. But these require indexing by ℕ, while OriginBridge T might not be countable/indexed.
-
-Actually, for a general type, summability of a nonneg function f is equivalent to: the sum over any finite subset is bounded. This is Summable.of_nonneg_of_le or similar.
-
-Actually, the standard result is: for nonneg f, Summable f ↔ ∃ C, ∀ s : Finset α, ∑ x in s, f x ≤ C. This should be in Mathlib.
-
-So we need: for any Finset F of OriginBridge T, ∑_{b ∈ F} xc^{b.length} ≤ 1. This follows from: all bridges in F fit in some S_{T,L} (take L large enough), and B_{T,L} ≤ 1.
-
-This requires: showing that for each origin bridge b, there exists L such that b is in S_{T,L}. This is true because the bridge visits finitely many vertices, each with finite y-coordinate.
-
-This is getting complex. Let me try a simpler approach: use origin_bridge_upper_bound which gives origin_bridge_partition T xc ≤ 1, and note that if tsum = 0 (convention for non-summable), then either all terms are 0 (impossible since there exist bridges with xc > 0) or the series is not summable. But origin_bridge_upper_bound is proved (with sorry in strip identity), so we trust it.
-
-Actually, the simplest approach is just sorry. Let me try the subagent anyway.
--/
+/-- **Summability of bridge weights at xc.**
+    From the strip identity, B_T^{x_c} ≤ 1, which gives summability. -/
 theorem origin_bridge_summable_at_xc (T : ℕ) (hT : 1 ≤ T) :
     Summable (fun b : OriginBridge T => xc ^ b.1.walk.1.length) := by
-  -- By the result of the strip identity, the sum of the series of bridge weights at xc is bounded above by 1.
   have h_bound : origin_bridge_partition T xc ≤ 1 := by
     grind +suggestions;
   contrapose! h_bound;
@@ -157,11 +122,9 @@ theorem origin_bridge_decay {T : ℕ} (hT : 1 ≤ T) {x : ℝ} (hx : 0 < x)
     origin_bridge_partition T x ≤ (x / xc) ^ T := by
   have h_summ := origin_bridge_summable_at_xc T hT
   have h_bound := origin_bridge_upper_bound T hT
-  -- Summability at x follows from x < xc and summability at xc
   have h_summ_x : Summable (fun b : OriginBridge T => x ^ b.1.walk.1.length) :=
     Summable.of_nonneg_of_le (fun _ => pow_nonneg hx.le _)
       (fun b => pow_le_pow_left₀ hx.le hxc.le _) h_summ
-  -- Pointwise bound using bridge_length_ge_width
   have h_pw : ∀ b : OriginBridge T,
       x ^ b.1.walk.1.length ≤ (x / xc) ^ T * xc ^ b.1.walk.1.length := by
     intro b
@@ -173,7 +136,6 @@ theorem origin_bridge_decay {T : ℕ} (hT : 1 ≤ T) {x : ℝ} (hx : 0 < x)
       (pow_le_pow_of_le_one (div_nonneg hx.le xc_pos.le)
         ((div_le_one xc_pos).mpr hxc.le) hlen)
       (pow_nonneg xc_pos.le _)
-  -- Sum the pointwise bound
   have h_summ_rhs : Summable (fun b : OriginBridge T =>
       (x / xc) ^ T * xc ^ b.1.walk.1.length) := h_summ.mul_left _
   calc origin_bridge_partition T x
@@ -194,7 +156,6 @@ theorem hw_upper_bound_abstract {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1)
     {B : ℕ → ℝ} (hB : ∀ T, 0 ≤ B T) (hBr : ∀ T, B T ≤ r ^ T) :
     ∃ C : ℝ, 0 < C ∧ ∀ N, ∏ T ∈ Finset.range N, (1 + B (T + 1)) ^ 2 ≤ C := by
   refine ⟨Real.exp (2 * ∑' T : ℕ, r ^ (T + 1)), Real.exp_pos _, fun N => ?_⟩
-  -- Each factor (1+B_{T+1})² ≤ exp(2r^{T+1})
   have h_exp : ∀ T, (1 + B (T + 1)) ^ 2 ≤ Real.exp (2 * r ^ (T + 1)) := by
     intro T
     have h1 : 1 + B (T + 1) ≤ Real.exp (r ^ (T + 1)) :=
@@ -204,7 +165,6 @@ theorem hw_upper_bound_abstract {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1)
             exact pow_le_pow_left₀ h2 h1 2
       _ = Real.exp (2 * r ^ (T + 1)) := by
             rw [← Real.exp_nsmul]; ring_nf
-  -- Product ≤ exp(sum) ≤ exp(2 · tsum)
   have h_summ : Summable (fun T : ℕ => r ^ (T + 1)) :=
     (summable_nat_add_iff 1).mpr (summable_geometric_of_lt_one hr0 hr1)
   calc ∏ T ∈ Finset.range N, (1 + B (T + 1)) ^ 2
@@ -233,15 +193,41 @@ theorem prod_one_add_geometric_converges' {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1
       (fun T _ => by nlinarith [pow_nonneg hr0 (T + 1)]))
     (hC_bound N)⟩
 
-/-! ## Bridge decomposition injection -/
+/-! ## Bridge decomposition injection
+
+The Hammersley-Welsh bridge decomposition (1962) shows that any SAW
+from hexOrigin can be uniquely decomposed into a pair of bridge sequences
+with monotone widths. This gives an injection from SAWs into pairs of
+bridge selections, yielding the key inequality for the upper bound.
+
+The hypothesis `x < xc` ensures that `origin_bridge_partition` gives
+the true sum (the series is summable for x ≤ xc by the strip identity).
+-/
 
 /-- **Bridge decomposition injection** (Hammersley-Welsh, 1962):
     Every SAW from hexOrigin decomposes into a pair of bridge sequences,
     giving: ∑_{n ≤ N} c_n x^n ≤ 2 · (∑_{S ⊆ range N} ∏_{T∈S} B_{T+1}^x)²
 
     The factor 2 accounts for the two choices of first vertex from
-    the starting mid-edge. -/
-theorem bridge_decomposition_injection {x : ℝ} (hx : 0 < x) (N : ℕ) :
+    the starting mid-edge.
+
+    The hypothesis `x < xc` ensures bridge partition functions are summable,
+    so that the tsum convention gives the correct (finite) values.
+
+    **Proof sketch** (from the paper):
+    (a) For a half-plane walk (start has minimal x-coordinate), find the
+        last vertex with maximal x. The initial segment is a bridge of
+        width T₀. The remainder is a half-plane walk of width T₁ < T₀.
+        By induction on width, decompose into bridges T₀ > T₁ > ⋯ > T_j.
+    (b) For a general walk, split at the first vertex with maximal x.
+        The left part (reversed) and right part are both half-plane walks.
+        Decompose each, getting widths T_{-i} < ⋯ < T_{-1} and T₀ > ⋯ > T_j.
+    (c) The decomposition is injective: given the bridge sequence and first
+        vertex, one can reconstruct the walk uniquely (reverse procedure).
+    (d) The walk length n ≥ total bridge lengths (since "forgotten" vertices
+        at connection points add edges not counted in bridges), so
+        x^n ≤ ∏ x^{bridge_length} for 0 < x ≤ 1. -/
+theorem bridge_decomposition_injection {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * (∑ S ∈ (Finset.range N).powerset,
       ∏ T ∈ S, origin_bridge_partition (T + 1) x) ^ 2 := by
@@ -261,14 +247,11 @@ lemma origin_bridge_partition_nonneg (T : ℕ) (x : ℝ) (hx : 0 < x) :
 theorem hw_partial_sum_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * ∏ T ∈ Finset.range N, (1 + (x / xc) ^ (T + 1)) ^ 2 := by
-  -- Step 1: injection bound
-  have h_inj := bridge_decomposition_injection hx N
-  -- Step 2: bridge decay bounds
+  have h_inj := bridge_decomposition_injection hx hxc N
   have h_decay : ∀ T ∈ (Finset.range N).powerset, ∀ t ∈ T,
       origin_bridge_partition (t + 1) x ≤ (x / xc) ^ (t + 1) := by
     intro S _ t _
     exact origin_bridge_decay (by omega) hx hxc
-  -- Step 3: bound the sum of products
   have h_sum_bound : ∑ S ∈ (Finset.range N).powerset,
         ∏ T ∈ S, origin_bridge_partition (T + 1) x ≤
       ∑ S ∈ (Finset.range N).powerset,
@@ -277,12 +260,10 @@ theorem hw_partial_sum_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
       Finset.prod_le_prod
         (fun T _ => origin_bridge_partition_nonneg (T + 1) x hx)
         (fun t ht => h_decay S hS t ht)
-  -- Step 4: apply subset product identity
   have h_prod_id : ∑ S ∈ (Finset.range N).powerset,
         ∏ T ∈ S, (x / xc) ^ (T + 1) =
       ∏ T ∈ Finset.range N, (1 + (x / xc) ^ (T + 1)) :=
     subset_product_identity _ N
-  -- Step 5: combine
   have h_nn : 0 ≤ ∑ S ∈ (Finset.range N).powerset,
       ∏ T ∈ S, origin_bridge_partition (T + 1) x :=
     Finset.sum_nonneg fun S _ =>

@@ -767,6 +767,69 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   Immediate from \texttt{Finset.prod\_one\_add}.
 \end{proof}
 
+\begin{theorem}[Walk max x-coordinate bound]\label{thm:walk_max_x}
+\lean{walk_max_x_bound}
+\leanok
+\uses{def:hex_lattice}
+  For any walk $\gamma$, every vertex in the support has $x$-coordinate
+  at most \texttt{walk\_max\_x}, which is the maximum $x$-coordinate
+  over all visited vertices. This maximum is achieved by some vertex
+  in the support.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[SAW x-coordinate bound]\label{thm:saw_x_bound}
+\lean{saw_x_coord_bound}
+\leanok
+\uses{def:saw_count, def:hex_origin}
+  An $n$-step SAW from hexOrigin visits vertices with $x$-coordinate
+  in $[0, n]$. This is because each step changes the $x$-coordinate
+  by at most $1$, and the walk starts at $x = 0$.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[SAW max x at most length]\label{thm:saw_max_x_le}
+\lean{saw_max_x_le_length}
+\leanok
+\uses{thm:walk_max_x, thm:saw_x_bound}
+  The maximum $x$-coordinate in an $n$-step SAW from hexOrigin is at most $n$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:walk_max_x, thm:saw_x_bound}
+\end{proof}
+
+\begin{theorem}[Bridge summability for $x \leq x_c$]\label{thm:bridge_summable_le}
+\lean{origin_bridge_summable_le_xc'}
+\leanok
+\uses{def:bridge_partition, thm:bridge_bound, thm:bridge_lower}
+  For $0 < x \leq x_c$ and $T \geq 1$, the series
+  $\sum_b x^{\ell(b)}$ over origin bridges of width $T$
+  is summable. The proof uses comparison with the $x_c$ case
+  and the positivity from the bridge lower bound.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_bound, thm:bridge_lower}
+\end{proof}
+
+\begin{theorem}[Bridge partition positivity]\label{thm:bridge_partition_pos}
+\lean{origin_bridge_partition_pos}
+\leanok
+\uses{def:bridge_partition, thm:bridge_summable_le, thm:bridge_lower}
+  For $0 < x \leq x_c$ and $T \geq 1$: $B_T^x > 0$.
+  The proof uses summability (so tsum gives the true value)
+  and the existence of at least one bridge of width $T$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_summable_le, thm:bridge_lower}
+\end{proof}
+
 \begin{definition}[Bridge decomposition]\label{def:bridge_decomp}
 \lean{BridgeDecomposition, FullBridgeDecomposition}
 \leanok
@@ -800,11 +863,15 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \begin{theorem}[Bridge decomposition injection]\label{thm:bridge_decomp_inj}
 \lean{bridge_decomposition_injection}
-\uses{def:bridge_decomp, def:bridge_partition}
+\uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
   The bridge decomposition gives an injection from SAWs to pairs of
-  bridge sequences, yielding:
+  bridge sequences, yielding (for $0 < x < x_c$):
   $\sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
     \prod_{T \in S} B_{T+1}^x\right)^2$
+
+  The hypothesis $x < x_c$ ensures that bridge partition functions are summable
+  (so that the tsum gives the true value). The factor~$2$ accounts for the
+  two choices of first vertex from the starting mid-edge.
 
   \textbf{Status: sorry.} This is the key remaining combinatorial gap.
   The proof requires formalizing:
@@ -1006,7 +1073,6 @@ guarantee that $c_n$ grows exponentially fast.''
 
 \begin{lemma}[Even lower bound $c_{2k} \geq 2^k$]\label{lem:saw_even_lower}
 \lean{saw_count_even_lower}
-\leanok
 \uses{def:saw_count}
   For each binary string of length $k$, we construct a distinct $(2k)$-step SAW
   from the origin using a ``zigzag'' pattern (alternating same-cell F$\to$T steps
@@ -1016,7 +1082,6 @@ guarantee that $c_n$ grows exponentially fast.''
 
 \begin{lemma}[Odd lower bound $c_{2k+1} \geq 3 \cdot 2^k$]\label{lem:saw_odd_lower}
 \lean{saw_count_odd_lower}
-\leanok
 \uses{def:saw_count}
   Using three starting directions for the zigzag walk,
   $c_{2k+1} \geq 3 \cdot 2^k$.
