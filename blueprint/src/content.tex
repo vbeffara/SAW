@@ -922,7 +922,7 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \begin{theorem}[Bridge decomposition injection (core)]\label{thm:bridge_decomp_inj_proof}
 \lean{bridge_decomposition_injection_proof}
-\uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
+\uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound, lem:hex_shift_adj, lem:shift_walk_path, lem:bridge_to_origin, lem:path_split_length, lem:takeUntil_x_bound, lem:dropUntil_x_bound}
   Core proof of the bridge decomposition counting inequality.
   \textbf{Status: sorry.} This is the key remaining combinatorial gap.
   The proof requires formalizing:
@@ -933,6 +933,132 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   (c) weight accounting showing $x^n \leq \prod x^{\ell(\beta_i)}$
   (valid for $x \leq 1$, which holds since $x < x_c < 1$).
 \end{theorem}
+
+\begin{lemma}[Hexagonal lattice bipartiteness]\label{lem:hex_bipartite}
+\lean{hexGraph_bipartite}
+\leanok
+\uses{def:hex_lattice}
+  The hexagonal lattice is bipartite: every edge connects a
+  false-sublattice vertex to a true-sublattice vertex.
+  This follows directly from the definition of \texttt{hexGraph.Adj}.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Walk sublattice parity]\label{lem:walk_parity}
+\lean{walk_sublattice_parity}
+\leanok
+\uses{def:hex_lattice, def:hex_origin, lem:hex_bipartite}
+  In any walk from hexOrigin, the vertex at step $i$ has sublattice
+  type $\texttt{decide}(i \bmod 2 = 1)$. In particular, even-step
+  vertices have false sublattice (same as hexOrigin) and odd-step
+  vertices have true sublattice. This follows from bipartiteness
+  by induction on the walk length.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:hex_bipartite}
+\end{proof}
+
+\begin{lemma}[Even-length SAW ends at false sublattice]\label{lem:saw_even_false}
+\lean{saw_even_end_false}
+\leanok
+\uses{lem:walk_parity, def:saw}
+  A SAW from hexOrigin of even length ends at a false-sublattice vertex.
+  This is immediate from the walk sublattice parity lemma.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:walk_parity}
+\end{proof}
+
+\begin{lemma}[Translation preserves adjacency]\label{lem:hex_shift_adj}
+\lean{hexShift_adj}
+\leanok
+\uses{def:hex_lattice}
+  Translating a hex vertex by $(dx, dy)$ preserves \texttt{hexGraph} adjacency.
+  This is because the adjacency relation is defined in terms of coordinate
+  differences, which are translation-invariant.
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[Translation is injective]\label{lem:hex_shift_inj}
+\lean{hexShift_injective}
+\leanok
+\uses{def:hex_lattice}
+  The translation map $\texttt{hexShift}(dx, dy)$ on \texttt{HexVertex}
+  is injective.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Shifted walk is a path]\label{lem:shift_walk_path}
+\lean{shiftWalk_isPath}
+\leanok
+\uses{lem:hex_shift_adj, lem:hex_shift_inj}
+  Translating a path (self-avoiding walk) by $(dx, dy)$ gives another path.
+  The support of the shifted walk is the image of the original support
+  under the injective translation map, so it remains duplicate-free.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:hex_shift_inj}
+  Use \texttt{List.Nodup.map} with \texttt{hexShift\_injective}.
+\end{proof}
+
+\begin{lemma}[Bridge translation to origin bridge]\label{lem:bridge_to_origin}
+\lean{bridgeToOriginBridge_false}
+\leanok
+\uses{def:bridge, lem:shift_walk_path}
+  A bridge starting from a false-sublattice vertex at $x = 0$ can be
+  translated vertically to start from \texttt{hexOrigin}, yielding an
+  origin bridge of the same width and length.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:shift_walk_path}
+\end{proof}
+
+\begin{lemma}[Path splitting preserves total length]\label{lem:path_split_length}
+\lean{path_split_length}
+\leanok
+  For a walk $p$ from $v$ to $w$ passing through $u$, the sum of
+  lengths of $\texttt{takeUntil}(u)$ and $\texttt{dropUntil}(u)$
+  equals the original walk length.
+\end{lemma}
+\begin{proof}
+\leanok
+  By \texttt{SimpleGraph.Walk.take\_spec} and \texttt{length\_append}.
+\end{proof}
+
+\begin{lemma}[takeUntil x-coordinate bound]\label{lem:takeUntil_x_bound}
+\lean{takeUntil_x_le_max}
+\leanok
+\uses{thm:walk_max_x}
+  Every vertex in \texttt{takeUntil} has $x$-coordinate $\leq$ the max
+  $x$-coordinate of the full walk.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{thm:walk_max_x}
+\end{proof}
+
+\begin{lemma}[dropUntil x-coordinate bound]\label{lem:dropUntil_x_bound}
+\lean{dropUntil_x_le_max}
+\leanok
+\uses{thm:walk_max_x}
+  Every vertex in \texttt{dropUntil} has $x$-coordinate $\leq$ the max
+  $x$-coordinate of the full walk.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{thm:walk_max_x}
+\end{proof}
 
 \begin{lemma}[Walk endpoint x-coordinate bound]\label{lem:walk_endpoint_x}
 \lean{walk_endpoint_x_le_length}
