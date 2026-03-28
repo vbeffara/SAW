@@ -551,10 +551,11 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 
 \begin{theorem}[Strip identity, concrete form]\label{thm:strip_identity_concrete}
 \lean{strip_identity_concrete}
-\leanok
 \uses{thm:strip_identity_abs, def:ABE}
   The strip identity holds for the concrete partition functions
   $A_{T,L}$, $B_{T,L}$, $E_{T,L}$. \textbf{Status: sorry.}
+  Requires connecting the abstract vertex relation sum
+  to the concrete partition functions on the strip $S_{T,L}$.
 \end{theorem}
 
 \begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}
@@ -875,14 +876,17 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \begin{theorem}[Bridge partial sum bound]\label{thm:bridge_partial_sum}
 \lean{origin_bridge_partial_sum_le_one}
-\uses{thm:bridge_in_strip, thm:strip_identity_abs, def:bridge_partition}
+\leanok
+\uses{thm:bridge_in_strip, thm:bridge_bound, def:bridge_partition}
   For any finite set $F$ of origin bridges of width $T$:
   $\sum_{b \in F} x_c^{\ell(b)} \leq 1$.
-  The proof maps $F$ injectively to $\text{StripSAW\_B}(T,L)$ via
-  \texttt{originBridgeToStripB}, then uses $B_{T,L} \leq 1$.
-  \textbf{Status: sorry.} Requires formalizing the injection and the
-  sum-vs-tsum inequality.
+  The proof establishes summability from \texttt{origin\_bridge\_lower\_bound},
+  then uses \texttt{Summable.sum\_le\_tsum} and \texttt{origin\_bridge\_upper\_bound}.
 \end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_bound}
+\end{proof}
 
 \begin{theorem}[Origin bridge upper bound from strip]\label{thm:bridge_upper_from_strip}
 \lean{origin_bridge_upper_bound_from_strip}
@@ -898,16 +902,28 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \begin{theorem}[Bridge decomposition injection]\label{thm:bridge_decomp_inj}
 \lean{bridge_decomposition_injection}
-\uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
+\leanok
+\uses{thm:bridge_decomp_inj_proof, def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
   The bridge decomposition gives an injection from SAWs to pairs of
   bridge sequences, yielding (for $0 < x < x_c$):
-  $\sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
-    \prod_{T \in S} B_{T+1}^x\right)^2$
+  \[\sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
+    \prod_{T \in S} B_{T+1}^x\right)^2\]
 
-  The hypothesis $x < x_c$ ensures that bridge partition functions are summable
-  (so that the tsum gives the true value). The factor~$2$ accounts for the
-  two choices of first vertex from the starting mid-edge.
+  The hypothesis $x < x_c$ ensures that bridge partition functions are summable.
+  The factor~$2$ accounts for the two choices of first vertex from the
+  starting mid-edge.
 
+  Proved via \texttt{bridge\_decomposition\_injection\_proof} from SAWHWDecomp.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_decomp_inj_proof}
+\end{proof}
+
+\begin{theorem}[Bridge decomposition injection (core)]\label{thm:bridge_decomp_inj_proof}
+\lean{bridge_decomposition_injection_proof}
+\uses{def:bridge_decomp, def:bridge_partition, thm:walk_max_x, thm:saw_x_bound}
+  Core proof of the bridge decomposition counting inequality.
   \textbf{Status: sorry.} This is the key remaining combinatorial gap.
   The proof requires formalizing:
   (a) The Hammersley--Welsh decomposition algorithm (induction on width
@@ -917,6 +933,38 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   (c) weight accounting showing $x^n \leq \prod x^{\ell(\beta_i)}$
   (valid for $x \leq 1$, which holds since $x < x_c < 1$).
 \end{theorem}
+
+\begin{lemma}[Walk endpoint x-coordinate bound]\label{lem:walk_endpoint_x}
+\lean{walk_endpoint_x_le_length}
+\leanok
+\uses{def:hex_lattice}
+  If a walk starts at $x = 0$, then the endpoint's $x$-coordinate
+  is at most the walk length.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Adjacency x-coordinate difference]\label{lem:adj_x_diff}
+\lean{hexGraph_adj_x_diff}
+\leanok
+\uses{def:hex_lattice}
+  Each step in \texttt{hexGraph} changes the $x$-coordinate by at most~$1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Half-plane non-negative x]\label{lem:halfplane_nonneg}
+\lean{halfplane_nonneg_x}
+\leanok
+\uses{def:hex_origin}
+  For a half-plane walk starting from hexOrigin, every vertex
+  has non-negative $x$-coordinate.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[Bridge decomposition partial-sum bound]\label{thm:hw_partial_sum}
 \lean{hw_partial_sum_bound}

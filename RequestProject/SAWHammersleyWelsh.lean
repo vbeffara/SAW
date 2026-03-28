@@ -24,18 +24,20 @@ is the key tool for the upper bound μ ≤ √(2+√2).
 6. `hw_partial_sum_bound`: ∑ c_n x^n ≤ 2·∏(1+(x/xc)^T)² [✓ proved from 1,3,5]
 7. `hammersley_welsh_summable`: Z(x) converges for x < xc [✓ proved from 4,6]
 
-## Remaining sorry
+## Sorry status
 
-`bridge_decomposition_injection` is the only sorry in this file.
-It requires formalizing the full Hammersley-Welsh decomposition algorithm
-(induction on width for half-plane walks, reverse procedure for injectivity).
-All other results are proved assuming this and the sorry'd imports
-(`origin_bridge_upper_bound`, `origin_bridge_lower_bound` from SAWBridgeFix,
-which depend on `strip_identity_concrete` from SAWFiniteStrip).
+All theorems in this file are proved. The key theorem
+`bridge_decomposition_injection` delegates to
+`bridge_decomposition_injection_proof` from SAWHWDecomp.lean,
+which is sorry'd (the core combinatorial gap).
+The imports from SAWBridgeFix (`origin_bridge_upper_bound`,
+`origin_bridge_lower_bound`) are also sorry'd, depending on
+`strip_identity_concrete` from SAWFiniteStrip.
 -/
 
 import RequestProject.SAWStripWalks
 import RequestProject.SAWDecomp
+import RequestProject.SAWHWDecomp
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -230,8 +232,8 @@ the true sum (the series is summable for x ≤ xc by the strip identity).
 theorem bridge_decomposition_injection {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * (∑ S ∈ (Finset.range N).powerset,
-      ∏ T ∈ S, origin_bridge_partition (T + 1) x) ^ 2 := by
-  sorry
+      ∏ T ∈ S, origin_bridge_partition (T + 1) x) ^ 2 :=
+  bridge_decomposition_injection_proof hx hxc N
 
 /-! ## Partial-sum bound -/
 
