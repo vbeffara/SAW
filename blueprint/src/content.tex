@@ -1292,27 +1292,18 @@ infrastructure for the bridge decomposition algorithm.
 \leanok
 \end{proof}
 
-\subsection{Bridge-to-SAW injection (new)}
+\subsection{Bridge-to-SAW injection}
 
-The following infrastructure was added in SAWStripIdentity.lean to
-connect bridge partition functions to SAW counts.
-
-\begin{lemma}[Bridge path rewriting]\label{lem:path_cast}
-\lean{pathCastStart}
-\leanok
-  A path starting from $v_1 = v_2$ can be recast as a path from $v_2$.
-  The length is preserved.
-\end{lemma}
-\begin{proof}
-\leanok
-\end{proof}
+The following infrastructure connects bridge partition functions to SAW counts.
+The key results are in SAWHWBridge.lean.
 
 \begin{lemma}[Bridge to SAW conversion]\label{lem:bridge_to_saw}
 \lean{bridgeToSAW}
 \leanok
-\uses{lem:path_cast}
+\uses{def:bridge}
   An origin bridge of width $T$ determines a SAW from hexOrigin of the
-  same length.
+  same length. The definition uses pattern matching on the OriginBridge
+  subtype to rewrite the start vertex.
 \end{lemma}
 \begin{proof}
 \leanok
@@ -1323,10 +1314,11 @@ connect bridge partition functions to SAW counts.
 \leanok
 \uses{lem:bridge_to_saw}
   The bridge-to-SAW conversion is injective: different origin bridges
-  give different SAWs.
+  give different SAWs (packaged as sigma types).
 \end{lemma}
 \begin{proof}
 \leanok
+\uses{lem:bridge_to_saw}
 \end{proof}
 
 \begin{lemma}[Bridge count bounded by SAW count]\label{lem:bridge_count_le}
@@ -1341,67 +1333,124 @@ connect bridge partition functions to SAW counts.
 \uses{lem:bridge_saw_inj}
 \end{proof}
 
-\begin{lemma}[Bridge partial sum bounded by $Z(x)$]\label{lem:bridge_sum_le_Z}
-\lean{origin_bridge_finite_sum_le_Z}
+\begin{lemma}[$x_c < 1$]\label{lem:xc_lt_one}
+\lean{xc_lt_one}
+\leanok
+\uses{def:xc}
+  $x_c = 1/\sqrt{2+\sqrt{2}} < 1$ since $\sqrt{2+\sqrt{2}} > 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Bridge finite sum bounded by SAW sum]\label{lem:bridge_sum_le_saw}
+\lean{origin_bridge_finite_sum_le_saw}
 \leanok
 \uses{lem:bridge_count_le}
-  For any finite set of origin bridges, the total weight
-  $\sum_{b \in F} x^{\ell(b)}$ is at most $Z(x)$.
+  For any finite set $F$ of origin bridges, the total weight
+  $\sum_{b \in F} x^{\ell(b)} \leq \sum_n c_n x^n$ (finite sum).
+  Groups bridges by length and bounds each group by $c_n \cdot x^n$.
 \end{lemma}
 \begin{proof}
 \leanok
 \uses{lem:bridge_count_le}
-  Group bridges by length, bound each group by $c_n \cdot x^n$, then
-  bound the finite sum by the tsum $Z(x)$.
 \end{proof}
 
 \begin{lemma}[$B_T^x \leq Z(x)$]\label{lem:BT_le_Z}
 \lean{origin_bridge_partition_le_Z}
 \leanok
-\uses{lem:bridge_sum_le_Z}
+\uses{lem:bridge_sum_le_saw}
   For each $T$ and $x > 0$, if $Z(x)$ is summable then
   $B_T^x \leq Z(x)$.
+  Apply \texttt{tsum\_le\_of\_sum\_le} with the partial sum bound.
 \end{lemma}
 \begin{proof}
 \leanok
-\uses{lem:bridge_sum_le_Z}
-  Apply \texttt{Real.tsum\_le\_of\_sum\_le} with the partial sum bound.
+\uses{lem:bridge_sum_le_saw}
 \end{proof}
 
+\begin{lemma}[Disjoint bridge endpoints]\label{lem:disjoint_bridge}
+\lean{disjoint_bridge_widths}
+\leanok
+\uses{def:bridge}
+  Bridges of different widths $T_1 \neq T_2$ give SAW endpoints
+  at different $x$-coordinates ($T_1$ vs $T_2$).
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Bridge sum bounded by $Z(x)$]\label{lem:bridge_sum_le_Z}
+\lean{bridge_sum_le_Z}
+\uses{lem:disjoint_bridge, lem:BT_le_Z}
+  For finitely many widths, $\sum_T B_{T+1}^x \leq Z(x)$.
+  Uses the disjoint bridge injection.
+  \textbf{Status: sorry.} Requires showing the disjoint
+  injection across widths.
+\end{lemma}
+
 \begin{theorem}[$Z(x_c)$ diverges (from bridge lower bound)]\label{thm:Z_div_from_lower}
-\lean{Z_xc_diverges_from_lower_bound}
-\uses{lem:BT_le_Z, thm:bridge_lower, thm:harmonic_lower}
+\uses{lem:bridge_sum_le_Z, thm:bridge_lower, thm:harmonic_lower}
   If $B_T^{x_c} \geq c/T$ for some $c > 0$ (origin\_bridge\_lower\_bound),
   then $Z(x_c) = \infty$.
-  The proof reduces to showing $\sum_T B_{T+1}$ is summable (given $Z$
-  summable), which requires the disjoint injection of bridges of different
-  widths into SAWs.
-  \textbf{Status: one sorry} (the disjoint bridge summability).
+  \textbf{Status: sorry.} Depends on bridge\_sum\_le\_Z and
+  origin\_bridge\_lower\_bound.  
 \end{theorem}
 
 \subsection{Remaining sorry gaps}
 
 The following sorry-containing declarations are the key remaining gaps
-in the complete formalization of the Hammersley--Welsh argument:
+in the complete formalization.
 
-\begin{enumerate}
-  \item \texttt{strip\_identity\_concrete} (Lemma~2, SAWFiniteStrip.lean):
-    The concrete strip identity $1 = c_\alpha A + B + c_\varepsilon E$.
-    Requires formalizing the summing argument for the vertex relation
-    over vertices in $S_{T,L}$.
+\paragraph{Strip identity (Lemma~2 of the paper).}
+\texttt{strip\_identity\_concrete} (SAWFiniteStrip.lean):
+The concrete strip identity $1 = c_\alpha A_{T,L} + B_{T,L} + c_\varepsilon E_{T,L}$.
+Requires formalizing the summation of the vertex relation over all vertices
+in the finite strip $S_{T,L}$, together with interior cancellation and
+boundary winding analysis. The algebraic core (pair/triplet cancellation)
+and boundary coefficients ($c_\alpha$, $c_\varepsilon$) are fully proved.
+
+\paragraph{Bridge partition bounds (consequences of strip identity).}
+\begin{itemize}
   \item \texttt{origin\_bridge\_upper\_bound} (SAWBridgeFix.lean):
-    $B_T^{x_c} \leq 1$. Follows from the strip identity.
+    $B_T^{x_c} \leq 1$. Follows from the strip identity via
+    $B_{T,L} \leq 1$ and monotone convergence.
   \item \texttt{origin\_bridge\_lower\_bound} (SAWBridgeFix.lean):
-    $\exists c > 0, B_T^{x_c} \geq c/T$. Follows from the strip identity
-    combined with the quadratic recurrence.
-  \item \texttt{bridge\_decomposition\_injection\_proof} (SAWHWDecomp.lean):
-    The core counting inequality from the Hammersley--Welsh bridge
-    decomposition. Requires formalizing the recursive bridge extraction
-    algorithm, its injectivity, and the weight bound.
-  \item Disjoint bridge summability in
-    \texttt{Z\_xc\_diverges\_from\_lower\_bound} (SAWStripIdentity.lean):
-    Bridges of different widths are disjoint SAWs, so $\sum_T B_T \leq Z(x_c)$.
-\end{enumerate}
+    $\exists c > 0,\, B_T^{x_c} \geq c/T$. Follows from the strip identity
+    combined with the quadratic recurrence (fully proved in SAWDecomp.lean).
+  \item \texttt{B\_T\_inf\_eq\_origin\_bridge} (SAWFiniteStrip.lean):
+    Connecting $\sup_L B_{T,L}$ to \texttt{origin\_bridge\_partition}.
+\end{itemize}
+
+\paragraph{Bridge decomposition injection (Hammersley--Welsh).}
+\texttt{bridge\_decomposition\_injection\_proof} (SAWHWDecomp.lean):
+The core counting inequality from the Hammersley--Welsh bridge
+decomposition:
+$\sum_{n \leq N} c_n x^n \leq 2 \big(\sum_{S \subseteq \{0,\ldots,N-1\}}
+\prod_{T \in S} B_{T+1}^x\big)^2$.
+Requires formalizing the recursive half-plane walk decomposition into
+bridges (by induction on width), splitting general SAWs at the first
+max-$x$ vertex, injectivity of the reverse procedure, and the weight
+accounting argument ($x^n \leq \prod x^{\ell_i}$ for $0 < x \leq 1$).
+
+\paragraph{Lower bound assembly.}
+\begin{itemize}
+  \item \texttt{Z\_xc\_diverges} (SAWBridgeFix.lean): $Z(x_c) = \infty$.
+    Requires \texttt{origin\_bridge\_lower\_bound} and the disjoint
+    bridge injection (\texttt{bridge\_sum\_le\_Z} in SAWHWBridge.lean).
+  \item \texttt{bridge\_sum\_le\_Z} (SAWHWBridge.lean):
+    $\sum_T B_{T+1}^x \leq Z(x)$. Requires showing the disjoint injection
+    of bridges of different widths into SAWs preserves weights.
+\end{itemize}
+
+\paragraph{Elementary bounds (zigzag construction).}
+\begin{itemize}
+  \item \texttt{saw\_count\_even\_lower} (SAWZigzag.lean): $c_{2k} \geq 2^k$.
+  \item \texttt{saw\_count\_odd\_lower} (SAWZigzag.lean): $c_{2k+1} \geq 3 \cdot 2^k$.
+\end{itemize}
+The zigzag coordinate infrastructure (positions, adjacency, nodup) is
+fully proved; the missing step is constructing the walk as a
+\texttt{SimpleGraph.Walk} and proving it is a path.
 
 \section{Assembly}
 
