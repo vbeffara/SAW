@@ -926,12 +926,28 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   Core proof of the bridge decomposition counting inequality.
   \textbf{Status: sorry.} This is the key remaining combinatorial gap.
   The proof requires formalizing:
-  (a) The Hammersley--Welsh decomposition algorithm (induction on width
-  for half-plane walks, splitting at first maximal $x$-coordinate for
-  general walks);
-  (b) the reverse procedure establishing injectivity;
-  (c) weight accounting showing $x^n \leq \prod x^{\ell(\beta_i)}$
-  (valid for $x \leq 1$, which holds since $x < x_c < 1$).
+  \begin{enumerate}
+  \item \textbf{Half-plane walk decomposition} (by strong induction on width $T_0$):
+    \begin{itemize}
+    \item Find the last vertex with maximal $x$-coordinate, say at step $n$.
+    \item The first $n$ steps form a bridge $\tilde{\gamma}_1$ of width $T_0$.
+    \item Forget the $(n{+}1)$-th vertex (its position is unambiguous).
+    \item The remaining steps form a half-plane walk $\tilde{\gamma}_2$ of width $T_1 < T_0$.
+    \item By the induction hypothesis, $\tilde{\gamma}_2$ decomposes into bridges of widths $T_1 > \cdots > T_j$.
+    \item The decomposition of $\tilde{\gamma}$ is $\tilde{\gamma}_1$ followed by the decomposition of $\tilde{\gamma}_2$.
+    \end{itemize}
+  \item \textbf{General walk decomposition}:
+    \begin{itemize}
+    \item Find the first vertex with maximal $x$-coordinate, splitting $\gamma$ into $\gamma_1$ and $\gamma_2$.
+    \item $\gamma_1$ is a reverse half-plane walk; $\gamma_2$ is a half-plane walk.
+    \item Decompose each part, giving widths $T_{-i} < \cdots < T_{-1}$ and $T_0 > \cdots > T_j$.
+    \end{itemize}
+  \item \textbf{Injectivity}: The reverse procedure uniquely reconstructs the walk from the bridge
+    sequence and the first vertex choice.
+  \item \textbf{Weight accounting}: Walk length $n \geq$ sum of bridge lengths (due to forgotten
+    vertices between consecutive bridges). Since $0 < x \leq 1$ (as $x < x_c < 1$),
+    $x^n \leq \prod x^{\ell(\beta_i)}$.
+  \end{enumerate}
 \end{theorem}
 
 \begin{lemma}[Hexagonal lattice bipartiteness]\label{lem:hex_bipartite}
@@ -1151,6 +1167,71 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \end{proof}
 
 
+\subsection{Hammersley--Welsh abstract decomposition results}
+
+The following results from SAWDecomp.lean provide the abstract framework
+for the Hammersley--Welsh argument, independent of the specific strip
+identity or bridge decomposition algorithm.
+
+\begin{theorem}[Recurrence from strip identity]\label{thm:hw_recurrence}
+\lean{recurrence_from_strip}
+\leanok
+\uses{thm:strip_identity_abs}
+  From the strip identity for consecutive widths $T$ and $T{+}1$,
+  together with monotonicity $E_{T+1} \leq E_T$ and the cutting bound
+  $A_{T+1} - A_T \leq x_c \cdot B_{T+1}^2$:
+  $B_T \leq c_\alpha \cdot x_c \cdot B_{T+1}^2 + B_{T+1}$.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Quadratic recurrence lower bound]\label{thm:quadratic_lower}
+\lean{quadratic_recurrence_lower_bound}
+\leanok
+  If a sequence $B$ satisfies $B_T \leq \alpha B_{T+1}^2 + B_{T+1}$
+  with $\alpha > 0$, $B_T \geq 0$, and $B_1 > 0$, then
+  $B_T \geq \min(B_1, 1/\alpha) / T$ for all $T \geq 1$.
+  Proved by induction: if $B_{T+1} < c/(T{+}1)$ with
+  $c = \min(B_1, 1/\alpha)$ then $\alpha c \leq 1$ gives
+  $\alpha b^2 + b < c/T \leq B_T$, contradicting the recurrence.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Harmonic series diverges]\label{thm:harmonic}
+\lean{harmonic_not_summable}
+\leanok
+  $\sum_{n \geq 1} 1/n = \infty$.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Lower bound from harmonic divergence]\label{thm:harmonic_lower}
+\lean{not_summable_of_lower_bound}
+\leanok
+\uses{thm:harmonic}
+  If $a_n \geq c/(n{+}1)$ for some $c > 0$, then $\sum a_n$ diverges.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:harmonic}
+\end{proof}
+
+\begin{theorem}[Case 2 divergence (abstract)]\label{thm:case2_abstract}
+\lean{case2_divergence}
+\leanok
+\uses{thm:quadratic_lower, thm:harmonic_lower}
+  If $B_T \leq c_\alpha x_c B_{T+1}^2 + B_{T+1}$ with $B_T \geq 0$
+  and $B_1 > 0$, then $\sum B_{T+1}$ diverges.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:quadratic_lower, thm:harmonic_lower}
+\end{proof}
+
 \begin{definition}[Hammersley--Welsh growth bound]\label{def:hw_growth}
 \lean{hammersley_welsh_bound_statement}
 \leanok
@@ -1280,9 +1361,59 @@ guarantee that $c_n$ grows exponentially fast.''
 \leanok
 \end{proof}
 
+\begin{lemma}[Zigzag sum invariant]\label{lem:zigzag_sum}
+\lean{scanl_zigzag_sum}
+\leanok
+  For the zigzag coordinate sequence starting from position $\mathit{pos}$,
+  the sum $x + y$ at position $i$ equals $\mathit{pos}.1 + \mathit{pos}.2 - i$.
+  This is proved by induction on the choice list using the key fact that
+  \texttt{zigzag\_step} decreases $x+y$ by exactly $1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Zigzag positions are distinct]\label{lem:zigzag_nodup}
+\lean{zigzag_positions_nodup}
+\leanok
+\uses{lem:zigzag_sum}
+  All positions in the zigzag sequence are distinct, since $x+y$ is
+  strictly decreasing (by the sum invariant, different indices give
+  different $x+y$ sums).
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:zigzag_sum}
+\end{proof}
+
+\begin{lemma}[Zigzag walk is self-avoiding]\label{lem:zigzag_isPath}
+\lean{buildZigzagWalk_isPath}
+\leanok
+\uses{lem:zigzag_sum, lem:zigzag_nodup}
+  The zigzag walk constructed from \texttt{buildZigzagWalk} is a path
+  (self-avoiding). The proof uses the support structure lemma and
+  the fact that different positions have different $x+y$ sums.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Zigzag scanl injectivity]\label{lem:zigzag_scanl_inj}
+\lean{zigzag_scanl_injective}
+\leanok
+  The \texttt{scanl} of \texttt{zigzag\_step} is injective in the
+  choice list: if two choice lists produce the same position sequence,
+  they must be equal. The proof extracts the first choice from the
+  second element, uses \texttt{zigzag\_foldl\_injective} to show the
+  first choices match, and recurses.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
 \begin{lemma}[Even lower bound $c_{2k} \geq 2^k$]\label{lem:saw_even_lower}
 \lean{saw_count_even_lower}
-\uses{def:saw_count}
+\uses{def:saw_count, lem:zigzag_nodup}
   For each binary string of length $k$, we construct a distinct $(2k)$-step SAW
   from the origin using a ``zigzag'' pattern (alternating same-cell F$\to$T steps
   with binary-choice T$\to$F steps). This gives $c_{2k} \geq 2^k$.

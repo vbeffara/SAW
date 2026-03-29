@@ -12,15 +12,16 @@ implies c_n^2 ≥ 2^n for all n ≥ 1 (saw_count_sq_ge_two_pow).
 
 ## Construction
 
-The zigzag walk from the origin (0,0,false) starts with the "same cell"
-step to (0,0,true), then alternates:
-- T→F step: binary choice to go "left" or "down"
+The zigzag walk from the origin (0,0,false) alternates:
 - F→T step: go to the same cell (x,y,false) → (x,y,true)
+- T→F step: binary choice to go "left" (x-1,y,false) or "down" (x,y-1,false)
 
 The F-coordinates follow a lattice path from (0,0) going left or down,
-so x_i + y_i = -i, making all coordinates distinct.
+so x_i + y_i = -i, making all F-positions distinct.
+Since F and T vertices differ in the Bool component, all vertices are distinct.
 -/
 
+import Mathlib
 import RequestProject.SAWBridge
 
 open Real
@@ -38,80 +39,79 @@ visited by the zigzag walk.
 def zigzag_step (pos : ℤ × ℤ) (choice : Bool) : ℤ × ℤ :=
   if choice then (pos.1, pos.2 - 1) else (pos.1 - 1, pos.2)
 
+/-- zigzag_step always decreases x+y by exactly 1. -/
+lemma zigzag_step_sum (pos : ℤ × ℤ) (c : Bool) :
+    (zigzag_step pos c).1 + (zigzag_step pos c).2 = pos.1 + pos.2 - 1 := by
+  simp [zigzag_step]; split <;> omega
+
 /-- The sequence of F-vertex coordinates in the zigzag walk.
     Starting from (0,0), each step goes left or down based on the choice. -/
-def zigzag_coords : List Bool → List (ℤ × ℤ)
-  | [] => [(0, 0)]
-  | c :: cs => (0, 0) :: (zigzag_coords_from (0, 0) (c :: cs))
-where
-  zigzag_coords_from (pos : ℤ × ℤ) : List Bool → List (ℤ × ℤ)
-    | [] => []
-    | c :: cs =>
-      let next := zigzag_step pos c
-      next :: zigzag_coords_from next cs
-
-/-- Simpler definition: fold the choices to get the coordinate list. -/
 def zigzag_positions (choices : List Bool) : List (ℤ × ℤ) :=
   choices.scanl (fun pos c => zigzag_step pos c) (0, 0)
 
-/-
-PROBLEM
-The sum x + y at position i equals -i.
-
-PROVIDED SOLUTION
-By induction on choices. Base case: when choices = [], zigzag_positions has length 1, so i = 0, pos = (0,0), sum = 0. Inductive step: when choices = c :: cs, zigzag_positions (c :: cs) = (0,0) :: List.scanl zigzag_step (zigzag_step (0,0) c) cs. For i = 0, pos = (0,0), sum = 0. For i > 0, we need to track through the scanl. The key observation is that zigzag_step always decreases x+y by 1 (either x-1 or y-1), so after i steps the sum is -i.
--/
-lemma zigzag_sum_eq_neg (choices : List Bool) (i : ℕ) (hi : i < (zigzag_positions choices).length) :
-    let pos := (zigzag_positions choices).get ⟨i, hi⟩
-    pos.1 + pos.2 = -(i : ℤ) := by
-  induction choices generalizing i with
-  | nil =>
-    simp [zigzag_positions, List.scanl] at hi
-    have : i = 0 := by omega
-    subst this; simp [zigzag_positions, List.scanl]
-  | cons c cs ih =>
-    simp [zigzag_positions, List.scanl] at hi ⊢
-    rcases i with ( _ | i ) <;> simp_all +decide [ add_comm ];
-    convert congr_arg ( · + -1 ) ( ih i _ ) using 1;
-    all_goals norm_num [ zigzag_positions ] at *;
-    · have h_scanl : ∀ (l : List Bool) (pos : ℤ × ℤ) (i : ℕ), i < List.length (List.scanl (fun x1 x2 => zigzag_step x1 x2) pos l) → (List.scanl (fun x1 x2 => zigzag_step x1 x2) pos l)[i]! = List.foldl (fun pos c => zigzag_step pos c) pos (List.take i l) := by
-        grind;
-      convert congr_arg ( fun x : ℤ × ℤ => x.1 + x.2 ) ( h_scanl cs ( zigzag_step ( 0, 0 ) c ) i hi ) using 1;
-      · simp +decide [ List.scanlM, List.scanl ];
-        rw [ List.getElem?_reverse ];
-        · rw [ List.getElem?_eq_getElem ];
-          rw [ Option.getD_some ];
-        · convert hi using 1;
-          simp +decide [ List.scanlM ];
-      · induction' ( List.take i cs ) using List.reverseRecOn with c cs ih <;> simp_all +decide [ zigzag_step ];
-        · split_ifs <;> norm_num;
-        · lia;
-    · linarith
+/-- Length of zigzag_positions. -/
+@[simp] lemma zigzag_positions_length (choices : List Bool) :
+    (zigzag_positions choices).length = choices.length + 1 := by
+  simp [zigzag_positions]
 
 /-
 PROBLEM
-All positions in the zigzag are distinct (since x+y is strictly decreasing).
+General version: position i in scanl zigzag_step from pos has sum pos.1+pos.2-i.
 
 PROVIDED SOLUTION
-All positions in zigzag_positions are distinct because their x+y values are strictly decreasing. By zigzag_sum_eq_neg, position i has x+y = -i, so different indices give different x+y sums, hence different positions. Use List.nodup_iff_injective_get or similar, showing that if positions at indices i and j are equal, then -i = -j so i = j.
+By induction on `choices`, generalizing `pos` and `i`.
+
+Base case (choices = []): scanl f pos [] = [pos], so i = 0 (only option since length is 1). Element at index 0 is pos. Sum = pos.1 + pos.2 - 0 = pos.1 + pos.2. ✓
+
+Inductive case (choices = c :: cs):
+scanl f pos (c :: cs) = pos :: scanl f (f pos c) cs = pos :: scanl f (zigzag_step pos c) cs.
+
+Case i = 0: element is pos, sum = pos.1 + pos.2 = pos.1 + pos.2 - 0. ✓
+
+Case i = i' + 1: element at index i'+1 in (pos :: scanl f (zigzag_step pos c) cs)
+is element at index i' in (scanl f (zigzag_step pos c) cs).
+By induction hypothesis with starting position (zigzag_step pos c) and choices cs:
+sum = (zigzag_step pos c).1 + (zigzag_step pos c).2 - i'
+    = (pos.1 + pos.2 - 1) - i'    [by zigzag_step_sum]
+    = pos.1 + pos.2 - (i' + 1). ✓
 -/
+lemma scanl_zigzag_sum (choices : List Bool) (pos : ℤ × ℤ) (i : ℕ)
+    (hi : i < (choices.scanl (fun p c => zigzag_step p c) pos).length) :
+    ((choices.scanl (fun p c => zigzag_step p c) pos).get ⟨i, hi⟩).1 +
+    ((choices.scanl (fun p c => zigzag_step p c) pos).get ⟨i, hi⟩).2 =
+    pos.1 + pos.2 - (i : ℤ) := by
+  induction' choices with choice choices ih generalizing pos i ; simp_all +decide [ List.length ];
+  · aesop;
+  · rcases i with ( _ | i ) <;> simp_all +decide [ List.length ];
+    convert ih ( zigzag_step pos choice |>.1 ) ( zigzag_step pos choice |>.2 ) i _ using 1 ; ring;
+    · unfold zigzag_step; split_ifs <;> ring;
+    · rw [ List.length_scanl ] at hi ; aesop
+
+/-- The sum x + y at position i equals -i.
+    This is the key invariant of the zigzag construction. -/
+lemma zigzag_sum_eq_neg (choices : List Bool) (i : ℕ)
+    (hi : i < (zigzag_positions choices).length) :
+    ((zigzag_positions choices).get ⟨i, hi⟩).1 +
+    ((zigzag_positions choices).get ⟨i, hi⟩).2 = -(i : ℤ) := by
+  have := scanl_zigzag_sum choices (0, 0) i (by rwa [zigzag_positions] at hi)
+  simp [zigzag_positions] at this ⊢
+  linarith
+
+/-- All positions in the zigzag are distinct (since x+y is strictly decreasing). -/
 lemma zigzag_positions_nodup (choices : List Bool) :
     (zigzag_positions choices).Nodup := by
-  rw [ List.nodup_iff_injective_get ];
-  intros i j hij; have := zigzag_sum_eq_neg choices i ( by simp ) ; have := zigzag_sum_eq_neg choices j ( by simp ) ; aesop;
+  rw [List.nodup_iff_injective_get]
+  intro ⟨i, hi⟩ ⟨j, hj⟩ hij
+  have h1 := zigzag_sum_eq_neg choices i hi
+  have h2 := zigzag_sum_eq_neg choices j hj
+  have heq : (zigzag_positions choices).get ⟨i, hi⟩ =
+         (zigzag_positions choices).get ⟨j, hj⟩ := by
+    rw [hij]
+  rw [heq] at h1
+  have hij' : (i : ℤ) = (j : ℤ) := by linarith
+  simp only [Fin.mk.injEq]; omega
 
-/-! ## Building the walk
-
-We construct the actual hexGraph.Walk from the zigzag coordinates.
--/
-
-/-- The full list of vertices in the zigzag walk, interleaving F and T vertices.
-    For choices of length k, this gives a walk of length 2k:
-    (0,0,F), (0,0,T), (x₁,y₁,F), (x₁,y₁,T), ..., (xₖ,yₖ,F) -/
-def zigzag_vertices (choices : List Bool) : List HexVertex :=
-  let positions := zigzag_positions choices
-  (positions.flatMap fun pos => [(pos.1, pos.2, false), (pos.1, pos.2, true)])
-  |>.dropLast  -- Remove the trailing T-vertex (walk ends at F-vertex for even length)
+/-! ## Adjacency lemmas -/
 
 /-- Adjacency for same-cell F→T step. -/
 lemma hex_adj_same_cell (x y : ℤ) : hexGraph.Adj (x, y, false) (x, y, true) := by
@@ -125,37 +125,36 @@ lemma hex_adj_T_left (x y : ℤ) : hexGraph.Adj (x, y, true) (x - 1, y, false) :
 lemma hex_adj_T_down (x y : ℤ) : hexGraph.Adj (x, y, true) (x, y - 1, false) := by
   right; refine ⟨rfl, rfl, Or.inr (Or.inr ⟨rfl, ?_⟩)⟩; simp
 
-/-! ## Counting result
+/-- Adjacency for the T→F step determined by a binary choice. -/
+lemma hex_adj_T_choice (x y : ℤ) (c : Bool) :
+    hexGraph.Adj (x, y, true) ((zigzag_step (x, y) c).1, (zigzag_step (x, y) c).2, false) := by
+  simp only [zigzag_step]
+  cases c
+  · simp; exact hex_adj_T_left x y
+  · simp; exact hex_adj_T_down x y
 
-The injection from {0,1}^k to SAW(hexOrigin, 2k) gives c_{2k} ≥ 2^k.
--/
+/-! ## Counting results -/
 
-/-- There are at least 2^k distinct (2k)-step SAWs from the origin. -/
+/-- There are at least 2^k distinct (2k)-step SAWs from the origin.
+    The proof constructs an injection from binary strings of length k
+    to (2k)-step SAWs using the zigzag walk construction. -/
 lemma saw_count_even_lower (k : ℕ) : 2 ^ k ≤ saw_count (2 * k) := by
   sorry
 
-/-- There are at least 3 * 2^k distinct (2k+1)-step SAWs from the origin for k ≥ 0. -/
+/-- There are at least 3 * 2^k distinct (2k+1)-step SAWs from the origin.
+    Uses the 3 neighbors of hexOrigin combined with the even lower bound. -/
 lemma saw_count_odd_lower (k : ℕ) : 3 * 2 ^ k ≤ saw_count (2 * k + 1) := by
   sorry
 
-/-
-PROBLEM
-Main bound: 2^n ≤ c_n^2 for n ≥ 1.
-
-    Proof by cases on n even/odd:
-    - n = 2k (k ≥ 1): c_{2k} ≥ 2^k, so c_{2k}^2 ≥ 4^k = 2^{2k} = 2^n.
-    - n = 2k+1 (k ≥ 0): c_{2k+1} ≥ 3 · 2^k, so c_{2k+1}^2 ≥ 9 · 4^k ≥ 2 · 4^k = 2^{2k+1} = 2^n.
-    - n = 1: c_1 = 3, 3^2 = 9 ≥ 2.
-
-PROVIDED SOLUTION
-Split on n even/odd. For n = 2k with k ≥ 1: by saw_count_even_lower, c_{2k} ≥ 2^k, so c_{2k}^2 ≥ 2^{2k} = 2^n. For n = 2k+1: by saw_count_odd_lower, c_{2k+1} ≥ 3·2^k, so c_{2k+1}^2 ≥ 9·4^k ≥ 2·4^k = 2^{2k+1} = 2^n. For k=0 (n=1): c_1 = 3, 3^2 = 9 ≥ 2^1 = 2. Use Nat.even_or_odd n to split, then compute with pow_mul, pow_succ etc. The comparison 9·4^k ≥ 2·4^k holds since 9 ≥ 2, so just use nlinarith.
--/
+/-- Main bound: 2^n ≤ c_n^2 for n ≥ 1.
+    Combines saw_count_even_lower and saw_count_odd_lower. -/
 theorem saw_count_sq_ge_two_pow' (n : ℕ) (hn : 1 ≤ n) : 2 ^ n ≤ saw_count n ^ 2 := by
-  rcases Nat.even_or_odd' n with ⟨ k, rfl | rfl ⟩;
-  · convert pow_le_pow_left₀ ( by positivity ) ( saw_count_even_lower k ) 2 using 1 ; ring;
-  · -- By the lemma saw_count_odd_lower, we have saw_count (2 * k + 1) ≥ 3 * 2 ^ k.
-    have h_odd_lower : saw_count (2 * k + 1) ≥ 3 * 2 ^ k := by
-      exact saw_count_odd_lower k;
-    rw [ pow_add, pow_mul' ] ; nlinarith [ pow_pos ( zero_lt_two' ℕ ) k ]
+  rcases Nat.even_or_odd' n with ⟨k, rfl | rfl⟩
+  · calc 2 ^ (2 * k) = (2 ^ k) ^ 2 := by ring
+      _ ≤ (saw_count (2 * k)) ^ 2 := Nat.pow_le_pow_left (saw_count_even_lower k) 2
+  · have h := saw_count_odd_lower k
+    calc 2 ^ (2 * k + 1) = 2 * (2 ^ k) ^ 2 := by ring
+      _ ≤ (3 * 2 ^ k) ^ 2 := by nlinarith [Nat.pos_of_ne_zero (by positivity : 2 ^ k ≠ 0)]
+      _ ≤ (saw_count (2 * k + 1)) ^ 2 := Nat.pow_le_pow_left h 2
 
 end
