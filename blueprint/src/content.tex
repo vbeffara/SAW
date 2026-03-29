@@ -1243,6 +1243,76 @@ identity or bridge decomposition algorithm.
   Deriving the precise critical exponent $\gamma = 43/32$ remains open.
 \end{definition}
 
+\subsection{Hammersley--Welsh algorithm infrastructure}
+
+The following results from SAWHWAlgorithm.lean and SAWHWInject.lean provide
+infrastructure for the bridge decomposition algorithm.
+
+\begin{lemma}[Walk max x achieved]\label{lem:walk_max_achieved}
+\lean{walk_max_x_achieved}
+\leanok
+\uses{def:hex_lattice}
+  The maximum $x$-coordinate in a walk's support is achieved by some vertex.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Bridge translation to origin]\label{lem:bridge_translate}
+\lean{bridgeToOriginBridge_false}
+\leanok
+\uses{def:bridge, lem:hex_shift_adj}
+  A bridge starting from a false-sublattice vertex at $x = 0$ can be
+  translated to an origin bridge of the same width and length.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Zigzag scanl injectivity]\label{lem:zigzag_scanl_inj}
+\lean{zigzag_scanl_injective}
+\leanok
+  If two choice sequences produce the same scanl under zigzag\_step
+  (from the same starting position), then the sequences are equal.
+  This follows by induction, using that zigzag\_step is injective
+  in the choice parameter.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Zigzag walk is self-avoiding]\label{lem:zigzag_isPath}
+\lean{buildZigzagWalk_isPath}
+\leanok
+  The zigzag walk constructed from a choice list is self-avoiding.
+  The proof uses the fact that zigzag\_step always decreases $x + y$
+  by exactly $1$, so no vertex is visited twice.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\subsection{Remaining sorry gaps}
+
+The following sorry-containing declarations are the key remaining gaps
+in the complete formalization of the Hammersley--Welsh argument:
+
+\begin{enumerate}
+  \item \texttt{strip\_identity\_concrete} (Lemma~2, SAWFiniteStrip.lean):
+    The concrete strip identity $1 = c_\alpha A + B + c_\varepsilon E$.
+    Requires formalizing the summing argument for the vertex relation
+    over vertices in $S_{T,L}$.
+  \item \texttt{origin\_bridge\_upper\_bound} (SAWBridgeFix.lean):
+    $B_T^{x_c} \leq 1$. Follows from the strip identity.
+  \item \texttt{origin\_bridge\_lower\_bound} (SAWBridgeFix.lean):
+    $\exists c > 0, B_T^{x_c} \geq c/T$. Follows from the strip identity
+    combined with the quadratic recurrence.
+  \item \texttt{bridge\_decomposition\_injection\_proof} (SAWHWDecomp.lean):
+    The core counting inequality from the Hammersley--Welsh bridge
+    decomposition. Requires formalizing the recursive bridge extraction
+    algorithm, its injectivity, and the weight bound.
+\end{enumerate}
+
 \section{Assembly}
 
 \begin{definition}[Partition function]\label{def:Z}
@@ -1412,20 +1482,30 @@ guarantee that $c_n$ grows exponentially fast.''
 \end{proof}
 
 \begin{lemma}[Even lower bound $c_{2k} \geq 2^k$]\label{lem:saw_even_lower}
-\lean{saw_count_even_lower}
-\uses{def:saw_count, lem:zigzag_nodup}
+\lean{saw_count_even_lower_proved}
+\leanok
+\uses{def:saw_count, lem:zigzag_nodup, lem:zigzag_isPath, lem:zigzag_scanl_inj}
   For each binary string of length $k$, we construct a distinct $(2k)$-step SAW
   from the origin using a ``zigzag'' pattern (alternating same-cell F$\to$T steps
   with binary-choice T$\to$F steps). This gives $c_{2k} \geq 2^k$.
-  \textbf{Status: sorry.}
+  Proved in SAWZigzagBuild.lean via an injection from \texttt{Fin k -> Bool}
+  to \texttt{SAW hexOrigin (2*k)}, using \texttt{zigzagToSAW} and
+  \texttt{zigzag\_scanl\_injective}.
 \end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:zigzag_isPath, lem:zigzag_scanl_inj}
+  Construct zigzag walk for each binary string. Injectivity follows from
+  \texttt{zigzag\_scanl\_injective}: equal walk supports imply equal
+  zigzag positions imply equal choice sequences.
+\end{proof}
 
 \begin{lemma}[Odd lower bound $c_{2k+1} \geq 3 \cdot 2^k$]\label{lem:saw_odd_lower}
 \lean{saw_count_odd_lower}
-\uses{def:saw_count}
+\uses{def:saw_count, lem:saw_even_lower}
   Using three starting directions for the zigzag walk,
   $c_{2k+1} \geq 3 \cdot 2^k$.
-  \textbf{Status: sorry.}
+  \textbf{Status: sorry} (in SAWZigzag.lean and SAWZigzagBuild.lean).
 \end{lemma}
 
 \begin{lemma}[$2^n \leq c_n^2$]\label{lem:saw_sq_lower}
