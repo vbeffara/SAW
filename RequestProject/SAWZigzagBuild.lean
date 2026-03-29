@@ -96,7 +96,7 @@ lemma buildZigzagWalk_support_structure (choices : List Bool) (x y : ℤ) :
           intro l pos; induction l generalizing pos <;> simp_all +decide [ List.scanl ] ;
           grind +ring;
         grind +splitIndPred;
-      · convert h₂ using 1 ; split_ifs <;> ring!;
+      · convert h₂ using 1 ; split_ifs <;> ring_nf;
 
 /-
 PROBLEM
@@ -128,7 +128,7 @@ This is the crucial self-avoidance argument. It relies on zigzag_step always dec
 -/
 lemma buildZigzagWalk_isPath (choices : List Bool) (x y : ℤ) :
     (buildZigzagWalk choices x y).1.IsPath := by
-  induction' choices with c choices ih generalizing x y ; simp_all +decide [ SimpleGraph.Walk.cons_isPath_iff ] ; aesop;
+  induction' choices with c choices ih generalizing x y ; simp_all ; aesop;
   -- By Lemma 2, the new walk is a path if the rest is a path and the new vertex is not in the support of the rest.
   have h_new_vertex : (x, y, true)∉((buildZigzagWalk choices (zigzag_step (x, y) c).1 (zigzag_step (x, y) c).2).1.support) := by
     -- By induction on the length of the choices list, we can show that the support of the walk is contained within the set of vertices with a generalized sum less than or equal to (zigzag_step (x, y) c).1 + (zigzag_step (x, y) c).2.
@@ -152,7 +152,7 @@ lemma buildZigzagWalk_isPath (choices : List Bool) (x y : ℤ) :
           generalize_proofs at *; (
           grind);
         · obtain ⟨ a, b, h₁, rfl ⟩ := hpos; simp_all +decide [ List.mem_iff_get ] ; ring_nf ; (
-          obtain ⟨ n, hn ⟩ := h₁; have := zigzag_sum_eq_neg ( List.take n choices ) n; simp_all +decide [ add_comm, add_left_comm, add_assoc ] ;
+          obtain ⟨ n, hn ⟩ := h₁; have := zigzag_sum_eq_neg ( List.take n choices ) n; simp_all +decide [ add_comm, add_left_comm ] ;
           have := this ( Nat.le_of_lt_succ ( by simpa using n.2 ) ) ; simp_all +decide [ zigzag_positions ] ; ring_nf ;
           grind))
       exact h_support v hv
@@ -166,10 +166,10 @@ lemma buildZigzagWalk_isPath (choices : List Bool) (x y : ℤ) :
   simp_all +decide [ SimpleGraph.Walk.isPath_def ];
   intro h; have := ih ( zigzag_step ( x, y ) c |> Prod.fst ) ( zigzag_step ( x, y ) c |> Prod.snd ) ; simp_all +decide [ List.nodup_iff_injective_get ] ;
   have := buildZigzagWalk_support_structure choices ( zigzag_step ( x, y ) c |> Prod.fst ) ( zigzag_step ( x, y ) c |> Prod.snd ) ( x, y, false ) h; simp_all +decide [ List.mem_map ] ;
-  obtain ⟨ a, b, h₁, h₂, h₃ ⟩ := this; unfold zigzag_step at *; split_ifs at * <;> simp_all +decide [ sub_eq_iff_eq_add ] ;
+  obtain ⟨ a, b, h₁, h₂, h₃ ⟩ := this; unfold zigzag_step at *; split_ifs at * <;> simp_all
   · have := zigzag_sum_eq_neg choices 0; simp_all +decide [ zigzag_positions ] ;
-    have := List.mem_iff_get.mp h₁; obtain ⟨ i, hi ⟩ := this; have := zigzag_sum_eq_neg choices i; simp_all +decide [ add_comm, add_left_comm, add_assoc ] ;
-    unfold zigzag_positions at this; simp_all +decide [ List.get ] ;
+    have := List.mem_iff_get.mp h₁; obtain ⟨ i, hi ⟩ := this; have := zigzag_sum_eq_neg choices i; simp_all
+    unfold zigzag_positions at this; simp_all
     linarith [ this ( Nat.le_of_lt_succ ( by linarith [ Fin.is_lt i, show List.length ( List.scanl ( fun pos c => zigzag_step pos c ) ( 0, 0 ) choices ) = choices.length + 1 from by simp +decide [ List.length_scanl ] ] ) ), show ( i : ℤ ) ≥ 0 from Nat.cast_nonneg _ ];
   · have h_contra : ∀ (choices : List Bool) (i : ℕ) (hi : i < (zigzag_positions choices).length), ((zigzag_positions choices).get ⟨i, hi⟩).1 + ((zigzag_positions choices).get ⟨i, hi⟩).2 = -(i : ℤ) := by
       grind +suggestions
@@ -181,7 +181,7 @@ lemma buildZigzagWalk_isPath (choices : List Bool) (x y : ℤ) :
 lemma zigzag_foldl_injective (x y : ℤ) (c₁ c₂ : Bool)
     (h : zigzag_step (x, y) c₁ = zigzag_step (x, y) c₂) : c₁ = c₂ := by
   simp [zigzag_step] at h
-  cases c₁ <;> cases c₂ <;> simp_all <;> omega
+  cases c₁ <;> cases c₂ <;> simp_all
 
 /-
 PROBLEM

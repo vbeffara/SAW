@@ -57,7 +57,7 @@ lemma bridge_filter_card_le (T n : ℕ) (F : Finset (OriginBridge T)) :
   exact Finset.filter ( fun b => ( b.1.walk.1.length : ℕ ) = n ) F;
   · aesop_cat;
   · have h_inj : Function.Injective (fun b : OriginBridge T => (⟨b.1.walk.1.length, bridgeToSAW b⟩ : Σ n, SAW hexOrigin n)) := by
-      exact?;
+      exact bridgeToSAW_injective T;
     have h_card_le : Finset.card (Finset.image (fun b : OriginBridge T => (⟨b.1.walk.1.length, bridgeToSAW b⟩ : Σ n, SAW hexOrigin n)) (Finset.filter (fun b : OriginBridge T => (b.1.walk.1.length : ℕ) = n) F)) ≤ Fintype.card (SAW hexOrigin n) := by
       refine' le_trans ( Finset.card_le_card _ ) _;
       exact Finset.image ( fun s : SAW hexOrigin n => ⟨ n, s ⟩ ) Finset.univ;
@@ -97,7 +97,7 @@ lemma origin_bridge_finite_sum_le_saw (T : ℕ) {x : ℝ} (hx : 0 < x)
     ∑ n ∈ Finset.range (F.sup (fun b => b.1.walk.1.length) + 1),
       (saw_count n : ℝ) * x ^ n := by
   have h_sum : ∑ b ∈ F, x ^ (b.1.walk.1.length : ℕ) = ∑ n ∈ Finset.image (fun b => b.1.walk.1.length) F, (∑ b ∈ F.filter (fun b => b.1.walk.1.length = n), x ^ n) := by
-    simp +decide [ Finset.sum_image' ];
+    simp
     rw [ Finset.sum_image' ];
     exact fun i hi => by rw [ Finset.sum_congr rfl fun j hj => by rw [ Finset.mem_filter.mp hj |>.2 ] ] ; simp +decide [ mul_comm ] ;
   have h_card : ∀ n ∈ Finset.image (fun b => b.1.walk.1.length) F, (∑ b ∈ F.filter (fun b => b.1.walk.1.length = n), x ^ n) ≤ (saw_count n : ℝ) * x ^ n := by
@@ -120,7 +120,7 @@ lemma origin_bridge_partition_le_Z (T : ℕ) {x : ℝ} (hx : 0 < x)
   have h_finite_sum : ∀ F : Finset (OriginBridge T), ∑ b ∈ F, x ^ (b.1.walk.1.length) ≤ ∑' n : ℕ, (saw_count n : ℝ) * x ^ n := by
     intro F
     have h_sum_le : ∑ b ∈ F, x ^ b.1.walk.1.length ≤ ∑ n ∈ Finset.range (F.sup (fun b => b.1.walk.1.length) + 1), (saw_count n : ℝ) * x ^ n := by
-      exact?;
+      exact origin_bridge_finite_sum_le_saw T hx F;
     exact h_sum_le.trans ( Summable.sum_le_tsum ( Finset.range _ ) ( fun _ _ => mul_nonneg ( Nat.cast_nonneg _ ) ( pow_nonneg hx.le _ ) ) hsum );
   convert tsum_le_of_sum_le _ _;
   · exact fun _ => pow_nonneg hx.le _;

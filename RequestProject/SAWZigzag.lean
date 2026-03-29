@@ -80,10 +80,10 @@ lemma scanl_zigzag_sum (choices : List Bool) (pos : ℤ × ℤ) (i : ℕ)
     ((choices.scanl (fun p c => zigzag_step p c) pos).get ⟨i, hi⟩).1 +
     ((choices.scanl (fun p c => zigzag_step p c) pos).get ⟨i, hi⟩).2 =
     pos.1 + pos.2 - (i : ℤ) := by
-  induction' choices with choice choices ih generalizing pos i ; simp_all +decide [ List.length ];
+  induction' choices with choice choices ih generalizing pos i ; simp_all
   · aesop;
-  · rcases i with ( _ | i ) <;> simp_all +decide [ List.length ];
-    convert ih ( zigzag_step pos choice |>.1 ) ( zigzag_step pos choice |>.2 ) i _ using 1 ; ring;
+  · rcases i with ( _ | i ) <;> simp_all
+    convert ih ( zigzag_step pos choice |>.1 ) ( zigzag_step pos choice |>.2 ) i _ using 1 ; ring_nf;
     · unfold zigzag_step; split_ifs <;> ring;
     · rw [ List.length_scanl ] at hi ; aesop
 

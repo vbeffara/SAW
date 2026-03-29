@@ -44,7 +44,7 @@ lemma bridgeToSAW_injective (T : ℕ) :
     Function.Injective (fun b : OriginBridge T =>
       (⟨b.1.walk.1.length, bridgeToSAW T b⟩ : (n : ℕ) × SAW hexOrigin n)) := by
   intro b₁ b₂ h_eq;
-  rcases b₁ with ⟨ ⟨ v₁, w₁, p₁, h₁, h₂, h₃ ⟩, hb₁ ⟩ ; rcases b₂ with ⟨ ⟨ v₂, w₂, p₂, h₄, h₅, h₆ ⟩, hb₂ ⟩ ; simp_all +decide [ Sigma.ext_iff, Function.Injective ] ;
+  rcases b₁ with ⟨ ⟨ v₁, w₁, p₁, h₁, h₂, h₃ ⟩, hb₁ ⟩ ; rcases b₂ with ⟨ ⟨ v₂, w₂, p₂, h₄, h₅, h₆ ⟩, hb₂ ⟩ ; simp_all +decide [ Sigma.ext_iff ] ;
   grind +locals
 
 /-
@@ -69,7 +69,7 @@ lemma bridge_filter_card_le (T : ℕ) (F : Finset (OriginBridge T)) (n : ℕ) :
   set F_n := F.filter (fun b => b.1.walk.1.length = n) with hF_n_def;
   -- Define an injection from the set of origin bridges of length $n$ to the set of SAWs of length $n$.
   have h_inj : Function.Injective (fun b : F_n => ⟨b.val.1.walk.1.length, bridgeToSAW T b.val⟩ : F_n → (n : ℕ) × SAW hexOrigin n) := by
-    intro b₁ b₂ h_eq; simp_all +decide [ bridgeToSAW_injective ] ;
+    intro b₁ b₂ h_eq; simp_all
     have := bridgeToSAW_injective T; aesop;
   have h_card_le : F_n.card ≤ Finset.card (Finset.image (fun b : F_n => ⟨b.val.1.walk.1.length, bridgeToSAW T b.val⟩ : F_n → (n : ℕ) × SAW hexOrigin n) Finset.univ) := by
     rw [ Finset.card_image_of_injective _ h_inj ] ; aesop;
