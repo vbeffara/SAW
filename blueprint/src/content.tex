@@ -553,29 +553,61 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \lean{strip_identity_concrete}
 \uses{thm:strip_identity_abs, def:ABE}
   The strip identity for the concrete partition functions.
-  \textbf{Status: sorry, and the current statement is known to be incorrect.}
+  \textbf{Status: sorry. The statement in SAWFiniteStrip.lean uses incorrect
+  boundary types and starting point. See below for the corrected version.}
 
   The boundary types \texttt{StripSAW\_A}, \texttt{StripSAW\_B}, \texttt{StripSAW\_E}
-  are non-disjoint: a walk ending at a vertex with $x = 0$ and $|2y - x| = 2L$
-  is counted in both $A_{T,L}$ and $E_{T,L}$. Additionally, \texttt{StripSAW\_B}
-  includes walks ending at interior vertices (true-sublattice vertices at $x = T$
-  have no right-boundary mid-edge).
-
-  In the hexagonal lattice as defined by \texttt{hexGraph}:
-  \begin{itemize}
-  \item Left boundary mid-edges connect $\mathrm{TRUE}(0,y)$ to
-    $\mathrm{FALSE}(-1,y)$ (outside the strip). So left-boundary walks
-    should end at TRUE vertices with $x = 0$.
-  \item Right boundary mid-edges connect $\mathrm{FALSE}(T,y)$ to
-    $\mathrm{TRUE}(T{+}1,y)$ (outside). So right-boundary walks should end
-    at FALSE vertices with $x = T$.
-  \end{itemize}
-  Corrected structures \texttt{StripSAW\_A'} and \texttt{StripSAW\_B'} have
-  been added with the correct sublattice conditions. A full proof also
-  requires handling the mid-edge weight convention (the paper counts
-  $x^{\ell}$ where $\ell$ is the number of vertices visited, not the
-  number of edges).
+  are non-disjoint and the starting point \texttt{hexOrigin} is in the interior
+  of the strip domain (not on the boundary as required by the paper).
 \end{theorem}
+
+\begin{theorem}[Strip identity, corrected form]\label{thm:paper_strip_identity}
+\lean{paper_strip_identity}
+\uses{thm:strip_identity_abs, def:ABE}
+  \textbf{Status: sorry.} The corrected strip identity using the paper-compatible
+  domain \texttt{PaperFinStrip} and starting vertex \texttt{paperStart = (0,0,true)}.
+  For critical $x = x_c$:
+  \[ 1 = c_\alpha \cdot A_{\text{paper}} + B_{\text{paper}} + c_\varepsilon \cdot E_{\text{paper}} \]
+  where the partition functions use the paper's boundary classification:
+  \begin{itemize}
+  \item $A_{\text{paper}}$: walks from \texttt{paperStart} to TRUE vertices
+    with $x+y = 0$ (left boundary), excluding the starting vertex.
+  \item $B_{\text{paper}}$: walks from \texttt{paperStart} to vertices
+    with $x+y = -T$ (right boundary).
+  \item $E_{\text{paper}}$: walks from \texttt{paperStart} to escape
+    boundary vertices (top/bottom cuts).
+  \end{itemize}
+
+  The paper-compatible domain \texttt{PaperFinStrip T L} is defined by:
+  \begin{itemize}
+  \item FALSE$(x,y)$: $-T \le x+y \le -1$ and $-L \le x \le L-1$.
+  \item TRUE$(x,y)$: $-T \le x+y \le 0$ and $-L+1 \le x \le L$.
+  \end{itemize}
+  In this domain, \texttt{hexOrigin = (0,0,false)} is outside the strip
+  (since FALSE requires $x+y \le -1$ but $0+0 = 0$), and
+  \texttt{paperStart = (0,0,true)} is inside (since TRUE allows $x+y = 0$).
+  The starting mid-edge $a$ connecting \texttt{hexOrigin} to
+  \texttt{paperStart} is a left boundary mid-edge.
+
+  The proof follows the paper: sum the vertex relation (proved via
+  \texttt{pair\_cancellation} and \texttt{triplet\_cancellation}) over all
+  vertices of $S_{T,L}$. Interior mid-edges cancel telescopically.
+  Boundary contributions yield the identity via symmetry $F(\bar z) = \bar{F}(z)$
+  and boundary winding analysis.
+\end{theorem}
+
+\begin{theorem}[$B_{\text{paper}} \le 1$]\label{thm:B_paper_le_one}
+\lean{B_paper_le_one}
+\leanok
+\uses{thm:paper_strip_identity}
+  From the corrected strip identity:
+  $B_{\text{paper}}(T,L,x_c) \le 1$ for all $T \ge 1$, $L \ge 1$.
+\end{theorem}
+\begin{proof}
+\leanok
+  Since $c_\alpha, c_\varepsilon > 0$ and $A, E \ge 0$, the identity
+  $1 = c_\alpha A + B + c_\varepsilon E$ implies $B \le 1$.
+\end{proof}
 
 \begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}
 \lean{finite_strip_finite}
