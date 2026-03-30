@@ -559,24 +559,47 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \end{theorem}
 
 \begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}
-\lean{finiteStrip_finite}
+\lean{finite_strip_finite}
 \leanok
 \uses{def:finite_strip}
   The set of vertices in $S_{T,L}$ is finite.
+  The vertex set is bounded: $x \in [0, T]$, $y \in [-(L+T), L+T]$,
+  $b \in \{\mathrm{true}, \mathrm{false}\}$.
 \end{lemma}
 \begin{proof}
 \leanok
+  The set is a subset of a finite product of bounded integer intervals
+  times Bool.
+\end{proof}
+
+\begin{lemma}[SAW length bound in strip]\label{lem:strip_saw_length}
+\lean{strip_saw_length_bound}
+\leanok
+\uses{lem:finite_strip_finite, def:ABE}
+  A SAW in the finite strip $S_{T,L}$ has length at most the number of
+  strip vertices (by the pigeonhole principle: a SAW visits each vertex
+  at most once).
+\end{lemma}
+\begin{proof}
+\leanok
+  The support has $n+1$ distinct vertices, all in the finite strip.
+  So $n + 1 \leq |V(S_{T,L})|$.
 \end{proof}
 
 \begin{lemma}[Summability of partition functions]\label{lem:partition_summable}
-\lean{B_TL_summable, A_TL_summable, E_TL_summable}
+\lean{B_TL_summable}
 \leanok
-\uses{def:ABE, lem:finite_strip_finite}
+\uses{def:ABE, lem:finite_strip_finite, lem:strip_saw_length}
   The partition functions $A_{T,L}$, $B_{T,L}$, $E_{T,L}$ are well-defined
   (the underlying sums are summable) because the strip is finite.
+  \texttt{StripSAW\_B T L} is a finite type: walk lengths are bounded
+  by the number of strip vertices, and for each bounded length
+  \texttt{SAW hexOrigin n} is a \texttt{Fintype}.
 \end{lemma}
 \begin{proof}
 \leanok
+  Show the type is Finite, then apply \texttt{Fintype.ofFinite} and
+  \texttt{hasSum\_fintype}.
 \end{proof}
 
 \begin{lemma}[Monotonicity of $A_{T,L}$ and $B_{T,L}$ in $L$]\label{lem:AB_monotone}
@@ -874,18 +897,32 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 \leanok
 \end{proof}
 
+\begin{lemma}[Origin-bridge-to-strip injection]\label{lem:bridge_strip_inj}
+\lean{originBridgeToStripB_injective}
+\leanok
+\uses{def:bridge, def:ABE, thm:bridge_in_strip}
+  The map from origin bridges to \texttt{StripSAW\_B} elements
+  (\texttt{originBridgeToStripB}) is injective: distinct bridges
+  give distinct strip SAW elements.
+\end{lemma}
+\begin{proof}
+\leanok
+  Unfold the definition; the SAW data determines the bridge.
+\end{proof}
+
 \begin{theorem}[Bridge partial sum bound]\label{thm:bridge_partial_sum}
 \lean{origin_bridge_partial_sum_le_one}
 \leanok
-\uses{thm:bridge_in_strip, thm:bridge_bound, def:bridge_partition}
+\uses{thm:bridge_in_strip, thm:strip_identity_concrete, lem:partition_summable, lem:bridge_strip_inj}
   For any finite set $F$ of origin bridges of width $T$:
   $\sum_{b \in F} x_c^{\ell(b)} \leq 1$.
-  The proof establishes summability from \texttt{origin\_bridge\_lower\_bound},
-  then uses \texttt{Summable.sum\_le\_tsum} and \texttt{origin\_bridge\_upper\_bound}.
+  Choose $L$ large enough that all bridges fit in $S_{T,L}$.
+  Map each bridge injectively to a \texttt{StripSAW\_B} element.
+  The partial sum is bounded by $B_{T,L} \leq 1$ (from the strip identity).
 \end{theorem}
 \begin{proof}
 \leanok
-\uses{thm:bridge_bound}
+\uses{thm:strip_identity_concrete, lem:partition_summable, lem:bridge_strip_inj}
 \end{proof}
 
 \begin{theorem}[Origin bridge upper bound from strip]\label{thm:bridge_upper_from_strip}
@@ -1442,15 +1479,34 @@ boundary winding analysis. The algebraic core (pair/triplet cancellation)
 and boundary coefficients ($c_\alpha$, $c_\varepsilon$) are fully proved.
 
 \paragraph{Bridge partition bounds (consequences of strip identity).}
+The following bounds are all \emph{proved modulo the strip identity}:
 \begin{itemize}
+  \item \texttt{origin\_bridge\_partial\_sum\_le\_one} (SAWFiniteStrip.lean):
+    For any finite set $F$ of origin bridges, $\sum_{b \in F} x_c^{\ell(b)} \leq 1$.
+    \textbf{Proved} from \texttt{B\_TL\_le\_one} via the injection
+    \texttt{originBridgeToStripB}.
+  \item \texttt{origin\_bridge\_upper\_bound\_from\_strip} (SAWFiniteStrip.lean):
+    $B_T^{x_c} \leq 1$. \textbf{Proved} from partial sum bounds via
+    \texttt{Real.tsum\_le\_of\_sum\_le}.
   \item \texttt{origin\_bridge\_upper\_bound} (SAWBridgeFix.lean):
-    $B_T^{x_c} \leq 1$. Follows from the strip identity via
-    $B_{T,L} \leq 1$ and monotone convergence.
+    Same statement, still sorry (earlier version; superseded by the above).
   \item \texttt{origin\_bridge\_lower\_bound} (SAWBridgeFix.lean):
-    $\exists c > 0,\, B_T^{x_c} \geq c/T$. Follows from the strip identity
-    combined with the quadratic recurrence (fully proved in SAWDecomp.lean).
+    $\exists c > 0,\, B_T^{x_c} \geq c/T$. Still sorry. Would follow from the
+    strip identity combined with the quadratic recurrence (proved in SAWDecomp.lean).
   \item \texttt{B\_T\_inf\_eq\_origin\_bridge} (SAWFiniteStrip.lean):
-    Connecting $\sup_L B_{T,L}$ to \texttt{origin\_bridge\_partition}.
+    Connecting $\sup_L B_{T,L}$ to \texttt{origin\_bridge\_partition}. Still sorry.
+\end{itemize}
+
+\paragraph{Newly proved infrastructure (this session).}
+\begin{itemize}
+  \item \texttt{finite\_strip\_finite}: The finite strip vertex set is finite.
+  \item \texttt{strip\_saw\_length\_bound}: SAW length in strip $\leq$ number of strip vertices.
+  \item \texttt{B\_TL\_summable}: Partition functions on finite strips are summable
+    (\texttt{StripSAW\_B T L} is a finite type).
+  \item \texttt{originBridgeToStripB\_injective}: The origin-bridge-to-strip map is injective.
+  \item \texttt{originBridgeToStripB\_len}: The map preserves walk length.
+  \item \texttt{origin\_bridge\_partial\_sum\_le\_one}: Finite partial sums $\leq 1$.
+  \item \texttt{origin\_bridge\_upper\_bound\_from\_strip}: $B_T^{x_c} \leq 1$.
 \end{itemize}
 
 \paragraph{Bridge decomposition injection (Hammersley--Welsh).}
