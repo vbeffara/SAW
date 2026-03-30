@@ -137,14 +137,117 @@ lemma disjoint_bridge_widths {T₁ T₂ : ℕ} (hT : T₁ ≠ T₂)
   have h2 := b₂.1.end_right
   rw [h] at h1; omega
 
-/-- For finitely many widths, the sum of bridge partition values
+/-
+PROBLEM
+Bridges of different widths, when mapped to SAWs, give different
+    sigma-type elements. This combined with bridgeToSAW_injective gives
+    the full disjoint injection.
+
+PROVIDED SOLUTION
+Intro (T₁, b₁) (T₂, b₂) and assume their SAW images are equal as sigma types. The SAW image of (T, b) has endpoint b.1.end_v. Since b₁.1.end_right : b₁.1.end_v.1 = T₁ and b₂.1.end_right : b₂.1.end_v.1 = T₂, and the SAW endpoints must match, we get T₁ = T₂. Then subst and use bridgeToSAW_injective T₁ to conclude b₁ = b₂.
+-/
+lemma bridge_sigma_injective :
+    Function.Injective (fun (p : (T : ℕ) × OriginBridge T) =>
+      (⟨p.2.1.walk.1.length, bridgeToSAW p.2⟩ : (n : ℕ) × SAW hexOrigin n)) := by
+  intro p q h_eq; simp_all +decide [ Function.Injective ] ;
+  have h_eq' : p.1 = q.1 := by
+    have h_eq' : p.snd.1.end_v.1 = p.1 ∧ q.snd.1.end_v.1 = q.1 := by
+      exact ⟨ p.2.1.end_right, q.2.1.end_right ⟩
+    generalize_proofs at *; (
+    have h_eq'' : p.snd.1.end_v = q.snd.1.end_v := by
+      have h_eq'' : (bridgeToSAW p.snd).w = (bridgeToSAW q.snd).w := by
+        have := h_eq.right
+        grind
+      generalize_proofs at *; (
+      convert h_eq'' using 1 <;> unfold bridgeToSAW <;> aesop ( simp_config := { singlePass := true } ) ;)
+    generalize_proofs at *; (
+    grind +ring));
+  have := bridgeToSAW_injective p.1 ; aesop
+
+/-
+PROBLEM
+Combined finite sum of bridge weights across multiple widths
+    is bounded by Z(x). Key: bridges of different widths end at
+    different x-coordinates, so they give distinct SAWs.
+
+PROVIDED SOLUTION
+The LHS is a finite sum over Fin N of finite sums over F T. Combine everything into a single finite sum over the sigma type {(T, b) | T : Fin N, b ∈ F T}. Use bridge_sigma_injective to map each (T, b) to a SAW (b.1.walk.1.length, bridgeToSAW b). This is an injection into Σ n, SAW hexOrigin n. For each n, the number of bridges mapping to SAW hexOrigin n is at most saw_count n (by Finset.card_le_card into Finset.univ). So the total sum ≤ ∑' n, c_n * x^n by grouping by length and using saw_count as the bound, then sum_le_tsum.
+-/
+lemma combined_bridge_finite_sum_le_Z {x : ℝ} (hx : 0 < x)
+    (hZ : Summable (fun n => (saw_count n : ℝ) * x ^ n))
+    (N : ℕ) (F : (T : Fin N) → Finset (OriginBridge (T.1 + 1))) :
+    ∑ T : Fin N, ∑ b ∈ F T, x ^ b.1.walk.1.length ≤
+    ∑' n, (saw_count n : ℝ) * x ^ n := by
+  -- By definition of $bridgeToSAW$, we know that the bridges in $F$ are mapped injectively to SAWs.
+  have h_inj : Function.Injective (fun (p : (T : Fin N) × OriginBridge (T + 1)) =>
+    (⟨p.2.1.walk.1.length, bridgeToSAW p.2⟩ : (n : ℕ) × SAW hexOrigin n)) := by
+      convert bridge_sigma_injective using 1;
+      constructor <;> intro h <;> intro p₁ p₂ h_eq;
+      · have := @bridge_sigma_injective p₁ p₂ ; aesop;
+      · injection h_eq with h₁ h₂;
+        convert h _;
+        rotate_left;
+        exact ⟨ p₁.1 + 1, p₁.2 ⟩;
+        exact ⟨ p₂.1 + 1, p₂.2 ⟩;
+        · aesop;
+        · aesop;
+  have h_card_le : ∀ n : ℕ, (∑ T : Fin N, ∑ b ∈ F T, (if b.1.walk.1.length = n then 1 else 0)) ≤ saw_count n := by
+    intro n
+    have h_card_le : (∑ T : Fin N, ∑ b ∈ F T, (if b.1.walk.1.length = n then 1 else 0)) ≤ Finset.card (Finset.image (fun (p : (T : Fin N) × OriginBridge (T + 1)) => (⟨p.2.1.walk.1.length, bridgeToSAW p.2⟩ : (n : ℕ) × SAW hexOrigin n)) (Finset.filter (fun p => p.2.1.walk.1.length = n) (Finset.sigma Finset.univ F))) := by
+      rw [ Finset.card_image_of_injective _ h_inj ];
+      rw [ Finset.card_filter ];
+      rw [ Finset.sum_sigma ];
+    refine le_trans h_card_le ?_;
+    refine' le_trans ( Finset.card_le_card _ ) _;
+    exact Finset.image ( fun s : SAW hexOrigin n => ⟨ n, s ⟩ ) Finset.univ;
+    · grind;
+    · rw [ Finset.card_image_of_injective _ fun a b h => by injection h ] ; simp +decide [ saw_count ] ;
+  have h_sum_le : ∑ T : Fin N, ∑ b ∈ F T, x ^ (b.1.walk.1.length) ≤ ∑' n, (∑ T : Fin N, ∑ b ∈ F T, (if b.1.walk.1.length = n then 1 else 0)) * x ^ n := by
+    have h_sum_le : ∑ T : Fin N, ∑ b ∈ F T, x ^ (b.1.walk.1.length) = ∑' n, (∑ T : Fin N, ∑ b ∈ F T, (if b.1.walk.1.length = n then x ^ n else 0)) := by
+      rw [ tsum_eq_sum ];
+      any_goals exact Finset.biUnion ( Finset.univ : Finset ( Fin N ) ) fun T => Finset.image ( fun b : OriginBridge ( T + 1 ) => ( b.1.walk.1.length : ℕ ) ) ( F T );
+      · rw [ Finset.sum_comm, Finset.sum_congr rfl ];
+        intro T hT; rw [ Finset.sum_comm ] ; simp +decide [ Finset.sum_ite ] ;
+        rw [ Finset.sum_filter_of_ne ] ; aesop;
+      · simp +contextual [ Finset.sum_ite ];
+    simp_all +decide [ Finset.sum_ite, Finset.sum_mul ];
+  exact h_sum_le.trans ( Summable.tsum_le_tsum ( fun n => mul_le_mul_of_nonneg_right ( mod_cast h_card_le n ) ( pow_nonneg hx.le _ ) ) ( by exact Summable.of_nonneg_of_le ( fun n => mul_nonneg ( Finset.sum_nonneg fun _ _ => Finset.sum_nonneg fun _ _ => by positivity ) ( pow_nonneg hx.le _ ) ) ( fun n => mul_le_mul_of_nonneg_right ( mod_cast h_card_le n ) ( pow_nonneg hx.le _ ) ) hZ ) ( by exact hZ ) )
+
+/-
+PROBLEM
+For finitely many widths, the sum of bridge partition values
     is bounded by Z(x).
     Uses the disjoint injection: bridges of different widths give
-    different SAWs (they end at different x-coordinates). -/
+    different SAWs (they end at different x-coordinates).
+
+PROVIDED SOLUTION
+Each origin_bridge_partition (T+1) x is a tsum. The finite sum ∑ T ∈ range N, B_{T+1} can be bounded by: for any epsilon > 0, choose finite sets F_T such that B_{T+1} - epsilon/N ≤ ∑_{b ∈ F_T} x^{b.length}. Then the total finite sum ≤ combined_bridge_finite_sum_le_Z. Alternatively: use the approach of showing each finite partial sum is bounded by Z(x). Since origin_bridge_partition is a tsum of nonneg terms, and each partial sum (across all widths) is bounded by Z(x) via combined_bridge_finite_sum_le_Z, the sum of the tsums is bounded by Z(x). Use Finset.sum_le_sum with origin_bridge_partition_le_Z for each T individually... wait that gives N*Z(x). Instead, use the combined lemma: convert the sum of tsums into a tsum-like bound using combined_bridge_finite_sum_le_Z applied to all finite partial sums.
+-/
 lemma bridge_sum_le_Z (N : ℕ) {x : ℝ} (hx : 0 < x)
     (hsum : Summable (fun n => (saw_count n : ℝ) * x ^ n)) :
     ∑ T ∈ Finset.range N, origin_bridge_partition (T + 1) x ≤
     ∑' n, (saw_count n : ℝ) * x ^ n := by
-  sorry
+  by_contra h_contra;
+  -- Since the origin bridge partitions are non-negative, their sum up to N is bounded by the sum of the infinite series. Use this fact.
+  have h_sum_finite : ∀ ε > 0, ∃ F : (T : Fin N) → Finset (OriginBridge (T.1 + 1)), (∑ T : Fin N, ∑ b ∈ F T, x ^ b.1.walk.1.length) > (∑ T ∈ Finset.range N, origin_bridge_partition (T + 1) x) - ε := by
+    intro ε hε_pos
+    have h_sum_finite : ∀ T : Fin N, ∃ F : Finset (OriginBridge (T.1 + 1)), (∑ b ∈ F, x ^ b.1.walk.1.length) > origin_bridge_partition (T.1 + 1) x - ε / N := by
+      intro T
+      have h_sum_finite : Filter.Tendsto (fun F : Finset (OriginBridge (T.1 + 1)) => ∑ b ∈ F, x ^ b.1.walk.1.length) (Filter.atTop : Filter (Finset (OriginBridge (T.1 + 1)))) (nhds (origin_bridge_partition (T.1 + 1) x)) := by
+        convert Summable.hasSum _ |> fun h => h.comp _;
+        any_goals tauto;
+        · rfl;
+        · convert origin_bridge_summable_le_xc' ( T + 1 ) ( by linarith [ Fin.is_lt T ] ) hx ( show x ≤ xc from ?_ ) using 1;
+          by_cases hx_le_xc : x ≤ xc;
+          · exact hx_le_xc;
+          · have := @Z_xc_diverges;
+            exact False.elim <| this <| Summable.of_nonneg_of_le ( fun n => mul_nonneg ( Nat.cast_nonneg _ ) <| pow_nonneg ( by exact div_nonneg zero_le_one <| Real.sqrt_nonneg _ ) _ ) ( fun n => mul_le_mul_of_nonneg_left ( pow_le_pow_left₀ ( by exact div_nonneg zero_le_one <| Real.sqrt_nonneg _ ) ( le_of_not_ge hx_le_xc ) _ ) <| Nat.cast_nonneg _ ) hsum;
+      have := h_sum_finite.eventually ( lt_mem_nhds <| show origin_bridge_partition ( T + 1 ) x - ε / N < origin_bridge_partition ( T + 1 ) x from sub_lt_self _ <| div_pos hε_pos <| Nat.cast_pos.mpr <| pos_of_gt T.2 ) ; have := this.exists; aesop;
+    choose F hF using h_sum_finite;
+    use F; simp_all +decide [ Finset.sum_range ] ;
+    rcases N with ( _ | N ) <;> norm_num at *;
+    · linarith;
+    · exact lt_of_le_of_lt ( by simp +decide [ Finset.sum_sub_distrib, mul_div_cancel₀ _ ( by positivity : ( N : ℝ ) + 1 ≠ 0 ) ] ) ( Finset.sum_lt_sum_of_nonempty ( Finset.univ_nonempty ) fun i _ => hF i );
+  obtain ⟨ F, hF ⟩ := h_sum_finite ( ( ∑ T ∈ Finset.range N, origin_bridge_partition ( T + 1 ) x - ∑' n : ℕ, ( saw_count n : ℝ ) * x ^ n ) / 2 ) ( half_pos ( sub_pos.mpr ( lt_of_not_ge h_contra ) ) ) ; ( have := combined_bridge_finite_sum_le_Z hx hsum N F ; linarith; )
 
 end

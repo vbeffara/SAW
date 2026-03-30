@@ -48,6 +48,7 @@ import RequestProject.SAWProof
 import RequestProject.SAWVertex
 import RequestProject.SAWBridgeFix
 import RequestProject.SAWHammersleyWelsh
+import RequestProject.SAWStripIdentity
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -93,7 +94,7 @@ theorem connective_constant_eq :
     -- Lower bound: Z(xc) = ∞
     -- The abstract proof gives: strip identity → B_T ≥ c/T → Σ B_T = ∞
     -- The gap: connecting origin_bridge_partition to saw_count
-    (Z_xc_diverges)
+    (Z_xc_diverges_from_lower_bound)
     -- Upper bound: Z(x) < ∞ for 0 < x < xc
     -- Uses Hammersley-Welsh bridge decomposition → Z(x) ≤ 2·∏(1+B_T^x)²
     -- Proved in SAWHammersleyWelsh.lean modulo the partial-sum bound

@@ -1380,22 +1380,53 @@ The key results are in SAWHWBridge.lean.
 \leanok
 \end{proof}
 
+\begin{lemma}[Bridge sigma injection]\label{lem:bridge_sigma_inj}
+\lean{bridge_sigma_injective}
+\leanok
+\uses{def:bridge, def:bridge_partition}
+  The map sending a pair $(T, b)$ where $b$ is an origin bridge of width $T$
+  to the corresponding SAW (via \texttt{bridgeToSAW}) is injective.
+  The key point: bridges of different widths end at different $x$-coordinates,
+  so they give distinct SAWs.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Combined bridge finite sum]\label{lem:combined_bridge_sum}
+\lean{combined_bridge_finite_sum_le_Z}
+\leanok
+\uses{lem:bridge_sigma_inj}
+  For any finite collection of bridges from different widths $1, \ldots, N$,
+  their total weight is bounded by $Z(x)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
 \begin{lemma}[Bridge sum bounded by $Z(x)$]\label{lem:bridge_sum_le_Z}
 \lean{bridge_sum_le_Z}
-\uses{lem:disjoint_bridge, lem:BT_le_Z}
+\leanok
+\uses{lem:combined_bridge_sum}
   For finitely many widths, $\sum_T B_{T+1}^x \leq Z(x)$.
   Uses the disjoint bridge injection.
-  \textbf{Status: sorry.} Requires showing the disjoint
-  injection across widths.
 \end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
 
 \begin{theorem}[$Z(x_c)$ diverges (from bridge lower bound)]\label{thm:Z_div_from_lower}
+\lean{Z_xc_diverges_from_lower_bound}
+\leanok
 \uses{lem:bridge_sum_le_Z, thm:bridge_lower, thm:harmonic_lower}
   If $B_T^{x_c} \geq c/T$ for some $c > 0$ (origin\_bridge\_lower\_bound),
-  then $Z(x_c) = \infty$.
-  \textbf{Status: sorry.} Depends on bridge\_sum\_le\_Z and
-  origin\_bridge\_lower\_bound.  
+  then $Z(x_c) = \infty$. Proved by contradiction: assume $Z(x_c)$ converges,
+  then \texttt{bridge\_sum\_le\_Z} gives $\sum_T B_{T+1} \leq Z(x_c) < \infty$,
+  but $B_{T+1} \geq c/(T+1)$ contradicts harmonic series divergence.
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
 
 \subsection{Remaining sorry gaps}
 
@@ -1434,14 +1465,12 @@ max-$x$ vertex, injectivity of the reverse procedure, and the weight
 accounting argument ($x^n \leq \prod x^{\ell_i}$ for $0 < x \leq 1$).
 
 \paragraph{Lower bound assembly.}
-\begin{itemize}
-  \item \texttt{Z\_xc\_diverges} (SAWBridgeFix.lean): $Z(x_c) = \infty$.
-    Requires \texttt{origin\_bridge\_lower\_bound} and the disjoint
-    bridge injection (\texttt{bridge\_sum\_le\_Z} in SAWHWBridge.lean).
-  \item \texttt{bridge\_sum\_le\_Z} (SAWHWBridge.lean):
-    $\sum_T B_{T+1}^x \leq Z(x)$. Requires showing the disjoint injection
-    of bridges of different widths into SAWs preserves weights.
-\end{itemize}
+Now fully proved modulo the bridge partition bounds above.
+\texttt{Z\_xc\_diverges\_from\_lower\_bound} (SAWStripIdentity.lean): $Z(x_c) = \infty$.
+Proved from \texttt{origin\_bridge\_lower\_bound} and the now-proved
+\texttt{bridge\_sum\_le\_Z} (SAWHWBridge.lean), which establishes
+$\sum_T B_{T+1}^x \leq Z(x)$ via the disjoint bridge injection
+(\texttt{bridge\_sigma\_injective}, \texttt{combined\_bridge\_finite\_sum\_le\_Z}).
 
 \paragraph{Elementary bounds (zigzag construction).}
 \begin{itemize}
