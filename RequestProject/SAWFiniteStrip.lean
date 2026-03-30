@@ -162,7 +162,7 @@ B_TL is summable for 0 ≤ x ≤ 1: there are finitely many SAWs in a finite str
 PROVIDED SOLUTION
 By strip_saw_length_bound, every s : StripSAW_B T L has s.len ≤ N where N = (finite_strip_finite T L).toFinset.card. So StripSAW_B T L is finite: for each n ≤ N, the set {s : StripSAW_B T L | s.len = n} embeds into SAW hexOrigin n (which is a Fintype via instFintypeSAW). There are finitely many possible n values (0 to N) and each gives finitely many s. So StripSAW_B T L is finite. Use Finite.summable or show Finite (StripSAW_B T L) and apply tsum_coe_ne_top_iff_summable or similar. Alternatively, since the type is finite, any function on it is summable.
 -/
-lemma B_TL_summable (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) (hx1 : x ≤ 1) :
+lemma B_TL_summable (T L : ℕ) (x : ℝ) :
     Summable (fun s : StripSAW_B T L => x ^ s.len) := by
   have h_finite : Finite (StripSAW_B T L) := by
     -- By definition of `StripSAW_B`, the set of SAWs in a finite strip is finite.
@@ -174,7 +174,7 @@ lemma B_TL_summable (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) (hx1 : x ≤ 1) :
         intro s hs
         have h_support : s.2.p.1.support.toFinset ⊆ h_finite_strip.toFinset := by
           intro v hv; specialize hs v; aesop;
-        have := Finset.card_mono h_support; simp_all +decide [ SimpleGraph.Walk.length ] ;
+        have := Finset.card_mono h_support; simp_all
         have h_support_card : (s.snd.p.1.support.toFinset).card = s.snd.p.1.length + 1 := by
           rw [ List.toFinset_card_of_nodup ] <;> aesop;
         linarith [ s.2.l ];
@@ -311,7 +311,7 @@ lemma origin_bridge_partial_sum_le_one (T : ℕ) (hT : 1 ≤ T) (F : Finset (Ori
     rw [h_sum_le_BT_L];
     refine' Summable.sum_le_tsum _ _ _;
     · exact fun _ _ => pow_nonneg ( by unfold xc; positivity ) _;
-    · convert B_TL_summable T L xc ( show 0 ≤ xc by exact div_nonneg zero_le_one ( Real.sqrt_nonneg _ ) ) ( show xc ≤ 1 by exact div_le_one_of_le₀ ( Real.le_sqrt_of_sq_le ( by nlinarith [ Real.sqrt_nonneg 2, Real.sq_sqrt zero_le_two ] ) ) ( Real.sqrt_nonneg _ ) ) using 1;
+    · convert B_TL_summable T L xc using 1;
   exact h_contra <| h_sum_le_BT_L.trans <| B_TL_le_one T L hT hL.1
 
 /-- origin_bridge_partition T xc ≤ 1: proved from partial sum bounds.

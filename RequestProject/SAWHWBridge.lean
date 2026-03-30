@@ -149,7 +149,7 @@ Intro (T₁, b₁) (T₂, b₂) and assume their SAW images are equal as sigma t
 lemma bridge_sigma_injective :
     Function.Injective (fun (p : (T : ℕ) × OriginBridge T) =>
       (⟨p.2.1.walk.1.length, bridgeToSAW p.2⟩ : (n : ℕ) × SAW hexOrigin n)) := by
-  intro p q h_eq; simp_all +decide [ Function.Injective ] ;
+  intro p q h_eq; simp_all
   have h_eq' : p.1 = q.1 := by
     have h_eq' : p.snd.1.end_v.1 = p.1 ∧ q.snd.1.end_v.1 = q.1 := by
       exact ⟨ p.2.1.end_right, q.2.1.end_right ⟩
@@ -209,7 +209,7 @@ lemma combined_bridge_finite_sum_le_Z {x : ℝ} (hx : 0 < x)
       · rw [ Finset.sum_comm, Finset.sum_congr rfl ];
         intro T hT; rw [ Finset.sum_comm ] ; simp +decide [ Finset.sum_ite ] ;
         rw [ Finset.sum_filter_of_ne ] ; aesop;
-      · simp +contextual [ Finset.sum_ite ];
+      · simp +contextual
     simp_all +decide [ Finset.sum_ite, Finset.sum_mul ];
   exact h_sum_le.trans ( Summable.tsum_le_tsum ( fun n => mul_le_mul_of_nonneg_right ( mod_cast h_card_le n ) ( pow_nonneg hx.le _ ) ) ( by exact Summable.of_nonneg_of_le ( fun n => mul_nonneg ( Finset.sum_nonneg fun _ _ => Finset.sum_nonneg fun _ _ => by positivity ) ( pow_nonneg hx.le _ ) ) ( fun n => mul_le_mul_of_nonneg_right ( mod_cast h_card_le n ) ( pow_nonneg hx.le _ ) ) hZ ) ( by exact hZ ) )
 

@@ -64,27 +64,6 @@ lemma saw_length_bound_in_strip (T L : ℕ) {n : ℕ} (s : SAW hexOrigin n)
 
 /-
 PROBLEM
-The terms of B_TL are summable (each walk has bounded length).
-
-PROVIDED SOLUTION
-Show that StripSAW_B T L is a Finite type. The set of lengths is bounded above by the number of vertices in the strip (by saw_length_bound_in_strip). Then inject StripSAW_B T L into Σ n : Fin (M+1), {s : SAW hexOrigin n | ...conditions...}. Since SAW hexOrigin n is Fintype and the conditions are decidable, this sigma type is Finite. Then use the fact that any function on a Finite type is summable.
-
-Follow the exact same proof structure as A_TL_summable (which was proved): use h_finite_lengths with M = (finiteStrip_finite T L).toFinset.card, inject into a finite sigma type, then use the fact that any function on a Finite type is summable.
--/
-lemma B_TL_summable (T L : ℕ) (x : ℝ) :
-    Summable (fun s : StripSAW_B T L => x ^ s.len) := by
-  have h_finite : Finite (StripSAW_B T L) := by
-    have h_finite_lengths : ∃ M : ℕ, ∀ s : StripSAW_B T L, s.len ≤ M := by
-      exact ⟨ ( finiteStrip_finite T L ).toFinset.card, fun s => by have := saw_length_bound_in_strip T L s.saw s.in_strip; aesop ⟩
-    generalize_proofs at *; (
-    choose M hM using h_finite_lengths;
-    have h_finite_union : Finite (Σ n : Fin (M + 1), {s : SAW hexOrigin n | (∀ v ∈ s.p.1.support, FiniteStrip T L v) ∧ s.w.1 = T}) := by
-      exact Finite.instSigma
-    exact h_finite_union.of_injective (fun s => ⟨ ⟨ s.len, Nat.lt_succ_of_le ( hM s ) ⟩, ⟨ s.saw, s.in_strip, s.end_right ⟩ ⟩) (fun s t h => by cases s; cases t; aesop;));
-  haveI := Fintype.ofFinite ( StripSAW_B T L ) ; exact ⟨ _, hasSum_fintype _ ⟩ ;
-
-/-
-PROBLEM
 The terms of A_TL are summable.
 
 PROVIDED SOLUTION
