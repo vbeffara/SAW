@@ -552,10 +552,29 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \begin{theorem}[Strip identity, concrete form]\label{thm:strip_identity_concrete}
 \lean{strip_identity_concrete}
 \uses{thm:strip_identity_abs, def:ABE}
-  The strip identity holds for the concrete partition functions
-  $A_{T,L}$, $B_{T,L}$, $E_{T,L}$. \textbf{Status: sorry.}
-  Requires connecting the abstract vertex relation sum
-  to the concrete partition functions on the strip $S_{T,L}$.
+  The strip identity for the concrete partition functions.
+  \textbf{Status: sorry, and the current statement is known to be incorrect.}
+
+  The boundary types \texttt{StripSAW\_A}, \texttt{StripSAW\_B}, \texttt{StripSAW\_E}
+  are non-disjoint: a walk ending at a vertex with $x = 0$ and $|2y - x| = 2L$
+  is counted in both $A_{T,L}$ and $E_{T,L}$. Additionally, \texttt{StripSAW\_B}
+  includes walks ending at interior vertices (true-sublattice vertices at $x = T$
+  have no right-boundary mid-edge).
+
+  In the hexagonal lattice as defined by \texttt{hexGraph}:
+  \begin{itemize}
+  \item Left boundary mid-edges connect $\mathrm{TRUE}(0,y)$ to
+    $\mathrm{FALSE}(-1,y)$ (outside the strip). So left-boundary walks
+    should end at TRUE vertices with $x = 0$.
+  \item Right boundary mid-edges connect $\mathrm{FALSE}(T,y)$ to
+    $\mathrm{TRUE}(T{+}1,y)$ (outside). So right-boundary walks should end
+    at FALSE vertices with $x = T$.
+  \end{itemize}
+  Corrected structures \texttt{StripSAW\_A'} and \texttt{StripSAW\_B'} have
+  been added with the correct sublattice conditions. A full proof also
+  requires handling the mid-edge weight convention (the paper counts
+  $x^{\ell}$ where $\ell$ is the number of vertices visited, not the
+  number of edges).
 \end{theorem}
 
 \begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}

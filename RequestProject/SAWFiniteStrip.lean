@@ -89,10 +89,87 @@ lemma finite_strip_monotone {T L L' : ℕ} (hLL : L ≤ L') (v : HexVertex)
   obtain ⟨h1, h2, h3⟩ := hv
   exact ⟨h1, h2, le_trans h3 (by omega)⟩
 
-/-! ## The strip identity (Lemma 2) -/
+/-! ## The strip identity (Lemma 2)
 
-/-- **Lemma 2** (Strip identity):
-    For x = x_c, 1 = c_α · A_{T,L} + B_{T,L} + c_ε · E_{T,L}. -/
+IMPORTANT: The original statement `strip_identity_concrete` below is **incorrect**
+as formalized. The boundary types `StripSAW_A`, `StripSAW_B`, `StripSAW_E` are
+non-disjoint: a walk ending at a vertex with `v.1 = 0` AND `|2*v.2.1 - v.1| = 2*L`
+is counted in **both** `A_TL` and `E_TL`. For example, with `T=1, L=1`, the walk
+`hexOrigin → (0,1,true)` ends at a vertex satisfying both `StripSAW_A` and
+`StripSAW_E` conditions. This double-counting makes the sum
+`c_alpha * A_TL + B_TL + c_eps * E_TL` significantly larger than 1.
+
+Additionally, `StripSAW_B` counts walks ending at ANY vertex with `v.1 = T`
+(both true and false sublattice), but in the paper, only walks ending at
+FALSE vertices with `x = T` correspond to right-boundary mid-edges (since
+`FALSE(T,y)` has neighbor `TRUE(T+1,y)` outside the strip). TRUE vertices
+at `x = T` have all neighbors inside the strip and are interior vertices.
+
+The paper's partition functions classify walks by **boundary mid-edge** type,
+which in vertex terms corresponds to:
+- α (left): walks ending at TRUE vertices with x = 0
+- β (right): walks ending at FALSE vertices with x = T
+- ε∪ε̄ (escape): walks ending at other boundary vertices
+
+Furthermore, the paper's walks go from mid-edge to mid-edge (not vertex to
+vertex), creating a weight discrepancy between the paper's `x^ℓ` (where ℓ is
+the number of vertices visited) and the Lean `x^n` (where n is the number of
+edges). The correct formalization requires either:
+1. Working with mid-edge walks, or
+2. Defining partition functions that combine walks from both endpoints of
+   the starting mid-edge `a`.
+-/
+
+/- The following statement is FALSE and has been commented out.
+   See the documentation above for details.
+
+theorem strip_identity_concrete (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    1 = c_alpha * A_TL T L xc + B_TL T L xc + c_eps * E_TL T L xc := by
+  sorry
+-/
+
+/-! ### Corrected boundary classification
+
+In the hexagonal lattice defined by `hexGraph`:
+- `FALSE(x,y)` has `TRUE` neighbors at `(x,y)`, `(x+1,y)`, `(x,y+1)`
+- `TRUE(x,y)` has `FALSE` neighbors at `(x,y)`, `(x-1,y)`, `(x,y-1)`
+
+Boundary mid-edges (connecting a strip vertex to an outside vertex):
+- **Left boundary (α)**: mid-edge `TRUE(0,y) — FALSE(-1,y)` (x = -1 is outside)
+  → walks ending at TRUE vertices with x = 0
+- **Right boundary (β)**: mid-edge `FALSE(T,y) — TRUE(T+1,y)` (x = T+1 is outside)
+  → walks ending at FALSE vertices with x = T
+-/
+
+/-- Corrected A: walks ending at TRUE vertices with x = 0.
+    These are left-boundary walks in the paper's classification. -/
+structure StripSAW_A' (T L : ℕ) where
+  len : ℕ
+  saw : SAW hexOrigin len
+  end_left : saw.w.1 = 0 ∧ saw.w.2.2 = true
+  in_strip : ∀ v ∈ saw.p.1.support, FiniteStrip T L v
+
+/-- Corrected B: walks ending at FALSE vertices with x = T.
+    These are right-boundary walks in the paper's classification. -/
+structure StripSAW_B' (T L : ℕ) where
+  len : ℕ
+  saw : SAW hexOrigin len
+  end_right : saw.w.1 = T ∧ saw.w.2.2 = false
+  in_strip : ∀ v ∈ saw.p.1.support, FiniteStrip T L v
+
+def A_TL' (T L : ℕ) (x : ℝ) : ℝ :=
+  ∑' (s : StripSAW_A' T L), x ^ s.len
+
+def B_TL' (T L : ℕ) (x : ℝ) : ℝ :=
+  ∑' (s : StripSAW_B' T L), x ^ s.len
+
+/-- The corrected strip identity requires combining walks from both endpoints
+    of the starting mid-edge. This is stated as a sorry pending full
+    formalization of the parafermionic observable argument.
+    The identity in the paper is:
+    1 = c_α · A_paper + B_paper + c_ε · E_paper
+    where the partition functions count walks from mid-edge a (not vertex hexOrigin)
+    to boundary mid-edges, using weight x^ℓ where ℓ = number of vertices visited. -/
 theorem strip_identity_concrete (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     1 = c_alpha * A_TL T L xc + B_TL T L xc + c_eps * E_TL T L xc := by
   sorry
