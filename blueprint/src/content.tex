@@ -553,11 +553,21 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \lean{strip_identity_concrete}
 \uses{thm:paper_strip_identity}
   The strip identity for the concrete partition functions.
-  The original statement using \texttt{A\_TL}, \texttt{B\_TL}, \texttt{E\_TL}
-  was incorrect (non-disjoint boundary types, wrong domain).
-  The corrected \texttt{strip\_identity\_concrete} now re-exports
-  \texttt{paper\_strip\_identity}, using the paper-compatible partition
-  functions \texttt{A\_paper}, \texttt{B\_paper}, \texttt{E\_paper}.
+  The corrected \texttt{strip\_identity\_concrete} re-exports
+  \texttt{paper\_strip\_identity}, using the corrected partition
+  functions \texttt{A\_paper}, \texttt{B\_paper}, \texttt{E\_paper}
+  with the vertex-weight convention $x^{n+1}$ and the corrected
+  strip domain (TRUE at $x+y = -T$ excluded).
+
+  Key corrections made to previous versions:
+  \begin{enumerate}
+  \item \textbf{Strip domain}: TRUE vertices at $x+y = -T$ are now excluded.
+    This ensures right boundary mid-edges are horizontal (winding 0).
+  \item \textbf{Weight convention}: Uses $x^{n+1}$ (vertex count) instead of
+    $x^n$ (edge count), matching the paper's $x^{\ell(\gamma)}$.
+  \item \textbf{Right boundary}: Only FALSE vertices at $x+y = -T$ qualify
+    (not all vertices), matching the paper's horizontal exit mid-edges.
+  \end{enumerate}
 \end{theorem}
 \begin{proof}
   Follows immediately from \texttt{paper\_strip\_identity}.
@@ -570,26 +580,36 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   domain \texttt{PaperFinStrip} and starting vertex \texttt{paperStart = (0,0,true)}.
   For critical $x = x_c$:
   \[ 1 = c_\alpha \cdot A_{\text{paper}} + B_{\text{paper}} + c_\varepsilon \cdot E_{\text{paper}} \]
-  where the partition functions use the paper's boundary classification:
+  where the partition functions use the vertex-weight convention $x^{n+1}$
+  (where $n$ is the number of edges, so $n+1$ is the number of vertices visited)
+  and the paper's boundary classification:
   \begin{itemize}
   \item $A_{\text{paper}}$: walks from \texttt{paperStart} to TRUE vertices
     with $x+y = 0$ (left boundary), excluding the starting vertex.
-  \item $B_{\text{paper}}$: walks from \texttt{paperStart} to vertices
-    with $x+y = -T$ (right boundary).
+    Weighted by $x_c^{n+1}$.
+  \item $B_{\text{paper}}$: walks from \texttt{paperStart} to FALSE vertices
+    with $x+y = -T$ (right boundary). These exit through horizontal
+    mid-edges connecting to TRUE vertices at $x+y = -T$ outside the strip.
+    Weighted by $x_c^{n+1}$.
   \item $E_{\text{paper}}$: walks from \texttt{paperStart} to escape
-    boundary vertices (top/bottom cuts).
+    boundary vertices (top/bottom cuts). Weighted by $x_c^{n+1}$.
   \end{itemize}
 
-  The paper-compatible domain \texttt{PaperFinStrip T L} is defined by:
+  The corrected domain \texttt{PaperFinStrip T L} is defined by:
   \begin{itemize}
   \item FALSE$(x,y)$: $-T \le x+y \le -1$ and $-L \le x \le L-1$.
-  \item TRUE$(x,y)$: $-T \le x+y \le 0$ and $-L+1 \le x \le L$.
+  \item TRUE$(x,y)$: $-(T-1) \le x+y \le 0$ and $-L+1 \le x \le L$.
   \end{itemize}
-  In this domain, \texttt{hexOrigin = (0,0,false)} is outside the strip
-  (since FALSE requires $x+y \le -1$ but $0+0 = 0$), and
-  \texttt{paperStart = (0,0,true)} is inside (since TRUE allows $x+y = 0$).
-  The starting mid-edge $a$ connecting \texttt{hexOrigin} to
-  \texttt{paperStart} is a left boundary mid-edge.
+  The key correction from the previous version is that TRUE vertices
+  at $x+y = -T$ are \textbf{excluded} from the strip. This ensures the
+  right boundary mid-edges are horizontal (connecting FALSE at $x+y = -T$
+  inside to TRUE at $x+y = -T$ outside), giving winding 0 from the
+  starting mid-edge $a$. In the correct honeycomb embedding, TRUE$(x,y)$
+  has $\mathrm{Re} = -(3(x+y)-1)/2$, so TRUE at $x+y = -T$ has
+  $\mathrm{Re} = (3T+1)/2$, which is exactly on the right boundary of
+  the paper's strip $\{z : 0 \le \mathrm{Re}(z) \le (3T+1)/2\}$.
+  Using strict inequality $\mathrm{Re}(z) < (3T+1)/2$ for the right
+  boundary gives the corrected domain.
 
   The proof follows the paper: sum the vertex relation (proved via
   \texttt{pair\_cancellation} and \texttt{triplet\_cancellation}) over all
