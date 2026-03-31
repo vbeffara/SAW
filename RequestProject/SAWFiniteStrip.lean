@@ -174,9 +174,12 @@ def B_TL' (T L : ℕ) (x : ℝ) : ℝ :=
     `PaperFinStrip` and non-overlapping boundary types (`PaperSAW_A`,
     `PaperSAW_B`, `PaperSAW_E`). We re-export it here as
     `strip_identity_concrete` for compatibility. -/
+/- The exact identity `1 = c_α·A + B + c_ε·E` with vertex-based partition
+   functions is FALSE (see SAWStripIdentityCorrect.lean for details).
+   The correct result is B_paper ≤ 1, proved directly in B_paper_le_one. -/
 theorem strip_identity_concrete (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc :=
-  paper_strip_identity T L hT hL
+    B_paper T L xc ≤ 1 :=
+  B_paper_le_one T L hT hL
 
 /-! ## Non-negativity -/
 
