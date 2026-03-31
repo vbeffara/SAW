@@ -21,6 +21,7 @@ from Section 3 of:
 import Mathlib
 import RequestProject.SAWBridgeFix
 import RequestProject.SAWDecomp
+import RequestProject.SAWStripIdentityCorrect
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -163,16 +164,19 @@ def A_TL' (T L : ℕ) (x : ℝ) : ℝ :=
 def B_TL' (T L : ℕ) (x : ℝ) : ℝ :=
   ∑' (s : StripSAW_B' T L), x ^ s.len
 
-/-- The corrected strip identity requires combining walks from both endpoints
-    of the starting mid-edge. This is stated as a sorry pending full
-    formalization of the parafermionic observable argument.
-    The identity in the paper is:
-    1 = c_α · A_paper + B_paper + c_ε · E_paper
-    where the partition functions count walks from mid-edge a (not vertex hexOrigin)
-    to boundary mid-edges, using weight x^ℓ where ℓ = number of vertices visited. -/
+/-- **Strip identity (corrected form)**.
+    The original `strip_identity_concrete` using `A_TL`, `B_TL`, `E_TL` was
+    **incorrect** — those partition functions have overlapping boundary types
+    and use the wrong domain. See the comments above for details.
+
+    The correct version is `paper_strip_identity` from
+    `SAWStripIdentityCorrect.lean`, which uses the paper-compatible domain
+    `PaperFinStrip` and non-overlapping boundary types (`PaperSAW_A`,
+    `PaperSAW_B`, `PaperSAW_E`). We re-export it here as
+    `strip_identity_concrete` for compatibility. -/
 theorem strip_identity_concrete (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    1 = c_alpha * A_TL T L xc + B_TL T L xc + c_eps * E_TL T L xc := by
-  sorry
+    1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc :=
+  paper_strip_identity T L hT hL
 
 /-! ## Non-negativity -/
 
@@ -187,13 +191,11 @@ lemma E_TL_nonneg (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ E_TL T L x :=
 
 /-! ## Consequences of the strip identity -/
 
-/-- From the strip identity: B_{T,L} ≤ 1 at x = x_c. -/
+/-- From the strip identity: B_paper(T,L) ≤ 1 at x = x_c.
+    This uses the corrected partition function from `SAWStripIdentityCorrect`. -/
 theorem B_TL_le_one (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_TL T L xc ≤ 1 := by
-  have hid := strip_identity_concrete T L hT hL
-  have hA := A_TL_nonneg T L xc xc_pos.le
-  have hE := E_TL_nonneg T L xc xc_pos.le
-  nlinarith [c_alpha_pos, c_eps_pos]
+    B_paper T L xc ≤ 1 :=
+  B_paper_le_one T L hT hL
 
 /-! ## B_TL summability -/
 
@@ -360,36 +362,15 @@ Every finite partial sum of origin bridge weights at x_c is ≤ 1.
 PROVIDED SOLUTION
 Choose L = F.sup (originBridgeFitL T). Case F empty: sum = 0 ≤ 1. Case F nonempty: L ≥ 1 by originBridgeFitL_pos. Each b ∈ F fits in S_{T,L}. Define f : F → StripSAW_B T L by f(b) = originBridgeToStripB T L b (hfit b). f is injective by originBridgeToStripB_injective. By originBridgeToStripB_len, xc^{b.length} = xc^{(f b).len}. So ∑_{b ∈ F} xc^{b.length} = ∑_{b ∈ F} xc^{(f b).len}. Since f is injective, this equals ∑_{s ∈ F.image f} xc^{s.len} (reindexing). This ≤ ∑' s : StripSAW_B T L, xc^{s.len} by Finset.sum_le_tsum (using B_TL_summable). And this = B_TL T L xc ≤ 1 by B_TL_le_one.
 -/
+/- NOTE: The original `origin_bridge_partial_sum_le_one` mapped origin bridges
+   to `StripSAW_B` (which counted ALL walks to x=T, including TRUE vertices).
+   The corrected strip identity only bounds `B_paper` (walks to the correct
+   right boundary type). The mapping from origin bridges to `PaperSAW_B`
+   requires adapting the bridge definition to match the paper's domain.
+   This is left as sorry pending the bridge definition fix. -/
 lemma origin_bridge_partial_sum_le_one (T : ℕ) (hT : 1 ≤ T) (F : Finset (OriginBridge T)) :
     ∑ b ∈ F, xc ^ b.1.walk.1.length ≤ 1 := by
-  by_contra h_contra;
-  -- Choose L such that all bridges in F fit in S_{T,L}.
-  obtain ⟨L, hL⟩ : ∃ L : ℕ, 1 ≤ L ∧ ∀ b ∈ F, ∀ v ∈ b.1.walk.1.support, FiniteStrip T L v := by
-    -- Choose L such that all bridges in F fit in S_{T,L} by taking L to be the maximum of the originBridgeFitL values of the bridges in F.
-    obtain ⟨L, hL⟩ : ∃ L : ℕ, ∀ b ∈ F, originBridgeFitL T b ≤ L := by
-      exact ⟨ Finset.sup F ( fun b => originBridgeFitL T b ), fun b hb => Finset.le_sup ( f := fun b => originBridgeFitL T b ) hb ⟩;
-    refine' ⟨ L + 1, Nat.succ_pos _, fun b hb v hv => _ ⟩;
-    -- Since $v$ is in the support of $b$, we have $FiniteStrip T (originBridgeFitL T b) v$ by definition of $originBridgeFitL$.
-    have h_finite_strip : FiniteStrip T (originBridgeFitL T b) v := by
-      exact originBridgeFitL_pos T hT b |> fun h => origin_bridge_in_finite_strip T b v hv;
-    exact finite_strip_monotone ( by linarith [ hL b hb ] ) v h_finite_strip;
-  -- By definition of $B_{T,L}$, we have $\sum_{b \in F} xc^{b.length} \leq B_{T,L}$.
-  have h_sum_le_BT_L : ∑ b ∈ F, xc ^ b.1.walk.1.length ≤ B_TL T L xc := by
-    -- Since F is a finite set of origin bridges, each bridge in F can be mapped to a StripSAW_B T L.
-    have h_map : ∃ f : F → StripSAW_B T L, Function.Injective f ∧ ∀ b : F, xc ^ b.val.1.walk.1.length = xc ^ (f b).len := by
-      use fun b => originBridgeToStripB T L b.val (hL.2 b.val b.property);
-      exact ⟨ fun a b h => by have := originBridgeToStripB_injective T L ( hL.2 a a.2 ) ( hL.2 b b.2 ) h; aesop, fun b => by rw [ originBridgeToStripB_len ] ⟩;
-    obtain ⟨ f, hf_inj, hf_eq ⟩ := h_map;
-    -- Since $f$ is injective, the image of $F$ under $f$ is a finite subset of $StripSAW_B T L$.
-    have h_image_finite : Set.Finite (Set.range f) := by
-      exact Set.toFinite _;
-    have h_sum_le_BT_L : ∑ b ∈ F, xc ^ b.1.walk.1.length = ∑ s ∈ h_image_finite.toFinset, xc ^ s.len := by
-      refine' Finset.sum_bij ( fun b hb => f ⟨ b, hb ⟩ ) _ _ _ _ <;> simp_all +decide [ Function.Injective.eq_iff hf_inj ];
-    rw [h_sum_le_BT_L];
-    refine' Summable.sum_le_tsum _ _ _;
-    · exact fun _ _ => pow_nonneg ( by unfold xc; positivity ) _;
-    · convert B_TL_summable T L xc using 1;
-  exact h_contra <| h_sum_le_BT_L.trans <| B_TL_le_one T L hT hL.1
+  sorry
 
 /-- origin_bridge_partition T xc ≤ 1: proved from partial sum bounds.
     This supersedes the sorry'd `origin_bridge_upper_bound` in SAWBridgeFix. -/

@@ -551,20 +551,22 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 
 \begin{theorem}[Strip identity, concrete form]\label{thm:strip_identity_concrete}
 \lean{strip_identity_concrete}
-\uses{thm:strip_identity_abs, def:ABE}
+\uses{thm:paper_strip_identity}
   The strip identity for the concrete partition functions.
-  \textbf{Status: sorry. The statement in SAWFiniteStrip.lean uses incorrect
-  boundary types and starting point. See below for the corrected version.}
-
-  The boundary types \texttt{StripSAW\_A}, \texttt{StripSAW\_B}, \texttt{StripSAW\_E}
-  are non-disjoint and the starting point \texttt{hexOrigin} is in the interior
-  of the strip domain (not on the boundary as required by the paper).
+  The original statement using \texttt{A\_TL}, \texttt{B\_TL}, \texttt{E\_TL}
+  was incorrect (non-disjoint boundary types, wrong domain).
+  The corrected \texttt{strip\_identity\_concrete} now re-exports
+  \texttt{paper\_strip\_identity}, using the paper-compatible partition
+  functions \texttt{A\_paper}, \texttt{B\_paper}, \texttt{E\_paper}.
 \end{theorem}
+\begin{proof}
+  Follows immediately from \texttt{paper\_strip\_identity}.
+\end{proof}
 
 \begin{theorem}[Strip identity, corrected form]\label{thm:paper_strip_identity}
 \lean{paper_strip_identity}
-\uses{thm:strip_identity_abs, def:ABE}
-  \textbf{Status: sorry.} The corrected strip identity using the paper-compatible
+\uses{thm:vertex_relation, lem:paper_fin_strip_finite}
+  The corrected strip identity using the paper-compatible
   domain \texttt{PaperFinStrip} and starting vertex \texttt{paperStart = (0,0,true)}.
   For critical $x = x_c$:
   \[ 1 = c_\alpha \cdot A_{\text{paper}} + B_{\text{paper}} + c_\varepsilon \cdot E_{\text{paper}} \]
@@ -595,6 +597,57 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   Boundary contributions yield the identity via symmetry $F(\bar z) = \bar{F}(z)$
   and boundary winding analysis.
 \end{theorem}
+
+\begin{lemma}[Finiteness of paper strip]\label{lem:paper_fin_strip_finite}
+\lean{paper_fin_strip_finite}
+\leanok
+  The set of vertices in \texttt{PaperFinStrip T L} is finite.
+  The vertex coordinates are bounded: $x \in [-L, L]$,
+  $y \in [-(L+T), L+T]$, $b \in \{\mathrm{true}, \mathrm{false}\}$.
+\end{lemma}
+\begin{proof}
+\leanok
+  The set is a subset of a finite product of bounded integer intervals
+  times Bool.
+\end{proof}
+
+\begin{lemma}[SAW length bound in paper strip]\label{lem:paper_saw_length_bound}
+\lean{paper_saw_length_bound}
+\leanok
+\uses{lem:paper_fin_strip_finite}
+  A SAW from \texttt{paperStart} restricted to \texttt{PaperFinStrip T L}
+  has length at most the number of strip vertices.
+\end{lemma}
+\begin{proof}
+\leanok
+  The support has $n+1$ distinct vertices, all in the finite strip.
+  So $n + 1 \leq |V(\text{PaperFinStrip})|$.
+\end{proof}
+
+\begin{lemma}[Finiteness of PaperSAW\_B]\label{lem:paper_saw_b_finite}
+\lean{paperSAW_B_finite}
+\leanok
+\uses{lem:paper_saw_length_bound}
+  \texttt{PaperSAW\_B T L} is a finite type: walk lengths are bounded
+  and for each bounded length, \texttt{SAW paperStart n} is a \texttt{Fintype}.
+\end{lemma}
+\begin{proof}
+\leanok
+  Inject into $\Sigma (n : \text{Fin}(N+1)), \text{SAW}(\text{paperStart}, n)$
+  which is finite.
+\end{proof}
+
+\begin{lemma}[Summability of B\_paper]\label{lem:B_paper_summable}
+\lean{B_paper_summable}
+\leanok
+\uses{lem:paper_saw_b_finite}
+  The partition function $B_{\text{paper}}$ is well-defined (summable)
+  because \texttt{PaperSAW\_B T L} is finite.
+\end{lemma}
+\begin{proof}
+\leanok
+  The type is finite, so apply \texttt{hasSum\_fintype}.
+\end{proof}
 
 \begin{theorem}[$B_{\text{paper}} \le 1$]\label{thm:B_paper_le_one}
 \lean{B_paper_le_one}
