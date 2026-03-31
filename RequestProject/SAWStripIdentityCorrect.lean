@@ -230,6 +230,29 @@ lemma B_paper_nonneg (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ B_paper T L x 
 lemma E_paper_nonneg (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ E_paper T L x :=
   tsum_nonneg fun s => pow_nonneg hx (s.len + 1)
 
+/-! ## Boundary contribution positivity
+
+On the hexagonal lattice, every edge has a direction angle θ from the set
+{0, ±π/3, ±2π/3, π}. At the critical spin σ = 5/8, the combined
+direction-winding factor for a boundary mid-edge with exit angle θ is
+(1/2) · exp(i(1 - σ)θ) = (1/2) · exp(i(3/8)θ).
+
+Since |3θ/8| ≤ 3π/8 < π/2 for all θ ∈ [-π, π], we have
+cos(3θ/8) > 0, meaning every boundary contribution has positive
+real part. This is the key geometric ingredient. -/
+
+/-
+PROBLEM
+The boundary direction-winding factor cos(3θ/8) is positive
+    for all hex lattice edge angles θ ∈ [-π, π], since |3θ/8| < π/2.
+
+PROVIDED SOLUTION
+Since |θ| ≤ π, we have |3θ/8| ≤ 3π/8 < π/2. So 3θ/8 ∈ (-π/2, π/2), and cos is positive on this interval. Use Real.cos_pos_of_mem_Ioo with the interval (-π/2, π/2). The bound 3π/8 < π/2 follows from 3/8 < 1/2, i.e., 3 < 4.
+-/
+lemma boundary_cos_pos (θ : ℝ) (hθ : |θ| ≤ Real.pi) :
+    0 < Real.cos (3 * θ / 8) := by
+  exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ abs_le.mp hθ, Real.pi_pos ], by linarith [ abs_le.mp hθ, Real.pi_pos ] ⟩
+
 /-! ## The strip identity: B_paper ≤ 1
 
 The key result needed downstream. This replaces the incorrect exact identity
@@ -253,41 +276,43 @@ vertices of the finite strip PaperFinStrip T L:
 5. Right boundary mid-edges contribute B_paper/2 to the real part
    (since the exit angle is 0 and the direction factor is 1/2).
 
-6. All other boundary contributions have non-negative real parts:
-   - Left boundary: coefficient c_alpha ≥ 0 (from winding ±π and
-     symmetry of the domain)
-   - Escape boundary: coefficient c_eps ≥ 0 (from winding ±2π/3 and
-     symmetry)
+6. All other boundary contributions have non-negative real parts,
+   because cos(3θ/8) > 0 for all hex lattice exit angles θ.
+   Specifically:
+   - Left boundary (θ = π): cos(3π/8) = c_alpha > 0
+   - Escape boundary (θ ∈ {±π/3, ±2π/3, π, 0}): cos(3θ/8) > 0
 
 7. From Re(0) = -1/2 + B_paper/2 + (non-negative), we get B_paper ≤ 1.
 
-The formal proof requires formalizing the parafermionic observable,
-the discrete Stokes theorem (telescoping), and the boundary winding
-evaluation. The algebraic core (pair/triplet cancellation) is already
-proved in SAW.lean. -/
+### Why cos(3θ/8) > 0 for all boundary angles
 
-/-- **B_paper ≤ 1** (Consequence of Lemma 2 / the strip identity).
+The hex lattice has edge angles in {0, ±π/3, ±2π/3, π} ⊆ [-π, π].
+For θ ∈ [-π, π], |3θ/8| ≤ 3π/8 < π/2, so cos(3θ/8) > 0.
+This is proved as `boundary_cos_pos` above. -/
 
-    For the finite strip PaperFinStrip T L with T ≥ 1 and L ≥ 1,
-    the right-boundary partition function B_paper at x = x_c satisfies
-    B_paper(T, L, x_c) ≤ 1.
+/-- **The strip identity in existential form** (Lemma 2 of the paper).
 
-    This is the correct formulation of `strip_identity_concrete`.
-    The previous exact identity `1 = c_α·A + B + c_ε·E` using
-    vertex-based partition functions was incorrect (E_paper undercounts
-    at corner vertices). The bound B ≤ 1 is what matters for the
-    downstream proof of μ = √(2+√2).
+    There exist non-negative reals A_m and E_m (the left and escape boundary
+    partition functions in the mid-edge formulation) such that
+    1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m.
 
-    The proof uses the parafermionic observable theory: summing the
-    vertex relation over all strip vertices gives a boundary sum = 0,
-    from which B ≤ 1 follows since all other boundary terms have
-    non-negative real parts.
+    Note: A_m and E_m correspond to mid-edge-based partition functions,
+    not the vertex-based A_paper and E_paper. The mid-edge-based B equals
+    the vertex-based B_paper because each right-boundary vertex has exactly
+    one right-boundary mid-edge.
 
-    **Key algebraic facts used** (already proved):
-    - `pair_cancellation`: j · conj(λ)⁴ + conj(j) · λ⁴ = 0
-    - `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 -/
+    The proof follows from the parafermionic observable theory:
+    summing the vertex relation over all strip vertices, interior mid-edge
+    contributions cancel, and the boundary sum equals zero. Evaluating
+    boundary contributions using winding angles gives the identity. -/
+lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  sorry
+
 theorem B_paper_le_one (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  sorry
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_exists T L hT hL
+  exact bridge_bound_of_strip_identity hA hE hid
 
 end

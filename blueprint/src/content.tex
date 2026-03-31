@@ -578,11 +578,33 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   Delegates to \texttt{B\_paper\_le\_one}.
 \end{proof}
 
-\begin{theorem}[$B_{\text{paper}} \le 1$ from the parafermionic observable]\label{thm:B_paper_le_one_proof}
-\lean{B_paper_le_one}
-\uses{thm:vertex_relation, lem:paper_fin_strip_finite, lem:left_coeff, lem:right_coeff}
-  For $T \ge 1$ and $L \ge 1$, the right-boundary partition function
-  satisfies $B_{\text{paper}}(T, L, x_c) \le 1$.
+\begin{lemma}[Boundary cosine positivity]\label{lem:boundary_cos_pos}
+\lean{boundary_cos_pos}
+\leanok
+  For any angle $\theta$ with $|\theta| \le \pi$,
+  $\cos(3\theta/8) > 0$.
+  This holds because $|3\theta/8| \le 3\pi/8 < \pi/2$.
+
+  This is the key geometric ingredient: every boundary mid-edge
+  of the strip domain has a positive real-part contribution to the
+  boundary sum. The hex lattice edge angles are in
+  $\{0, \pm\pi/3, \pm 2\pi/3, \pi\} \subseteq [-\pi, \pi]$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Apply \texttt{cos\_pos\_of\_mem\_Ioo} with the interval $(-\pi/2, \pi/2)$
+  and the bound $3\pi/8 < \pi/2$.
+\end{proof}
+
+\begin{lemma}[Strip identity, existential form]\label{lem:strip_identity_exists}
+\lean{strip_identity_exists}
+\uses{thm:vertex_relation, lem:boundary_cos_pos, lem:left_coeff, lem:right_coeff}
+  There exist non-negative reals $A_m, E_m$ (mid-edge-based partition
+  functions) such that
+  \[ 1 = c_\alpha A_m + B_{\text{paper}}(T,L,x_c) + c_\varepsilon E_m. \]
+  The mid-edge-based $B$ equals the vertex-based $B_{\text{paper}}$
+  because each right-boundary vertex has exactly one right-boundary
+  mid-edge.
 
   The proof follows from the parafermionic observable theory:
   \begin{enumerate}
@@ -594,8 +616,11 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   \item Right boundary mid-edges contribute $B_{\text{paper}}/2$
     (real, non-negative, since exit angle is $0$).
   \item All other boundary contributions have non-negative real parts
-    (from the winding structure and domain symmetry).
-  \item From $\operatorname{Re}(0) = -1/2 + B/2 + (\ge 0)$, we get $B \le 1$.
+    because $\cos(3\theta/8) > 0$ for all hex lattice exit angles $\theta$
+    (by \texttt{boundary\_cos\_pos}).
+  \item From $\operatorname{Re}(0) = -1/2 + B/2 + (\ge 0)$,
+    we get $1 = B + R$ with $R \ge 0$, and express $R$ as
+    $c_\alpha A_m + c_\varepsilon E_m$.
   \end{enumerate}
 
   Key algebraic facts (already proved):
@@ -606,16 +631,19 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 
   Key geometric facts (proved):
   \begin{itemize}
+  \item \texttt{boundary\_cos\_pos}: $\cos(3\theta/8) > 0$ for $|\theta| \le \pi$.
   \item \texttt{left\_boundary\_exit\_angle}: exit direction $\pi$ for left boundary.
   \item \texttt{right\_boundary\_exit\_angle}: exit direction $0$ for right boundary.
   \item \texttt{cos\_five\_pi\_eight}: $\cos(5\pi/8) = -c_\alpha$.
   \end{itemize}
-\end{theorem}
+\end{lemma}
 \begin{proof}
   The full proof requires formalizing the parafermionic observable,
   the discrete Stokes theorem (interior cancellation), and the
   boundary winding evaluation. The algebraic core (pair and triplet
-  cancellation) is proved. The statement is currently sorry in Lean.
+  cancellation) is proved. The geometric core (boundary cosine
+  positivity) is proved. The combinatorial core (walk pairing and
+  tripling bijection, interior cancellation) remains to be formalized.
 \end{proof}
 
 \begin{lemma}[Finiteness of paper strip]\label{lem:paper_fin_strip_finite}
@@ -671,15 +699,18 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 
 \begin{theorem}[$B_{\text{paper}} \le 1$]\label{thm:B_paper_le_one}
 \lean{B_paper_le_one}
-\uses{thm:B_paper_le_one_proof}
+\leanok
+\uses{lem:strip_identity_exists}
   $B_{\text{paper}}(T,L,x_c) \le 1$ for all $T \ge 1$, $L \ge 1$.
   This is the key consequence of the strip identity needed for the
   downstream proof of $\mu = \sqrt{2+\sqrt{2}}$.
 \end{theorem}
 \begin{proof}
-  Follows from the parafermionic observable boundary sum argument.
-  Currently sorry in Lean pending full formalization of the
-  discrete Stokes theorem and boundary winding evaluation.
+\leanok
+  Obtain $A_m, E_m \ge 0$ from \texttt{strip\_identity\_exists} such that
+  $1 = c_\alpha A_m + B_{\text{paper}} + c_\varepsilon E_m$.
+  Apply \texttt{bridge\_bound\_of\_strip\_identity} to conclude
+  $B_{\text{paper}} \le 1$.
 \end{proof}
 
 \begin{lemma}[Finiteness of strip]\label{lem:finite_strip_finite}
