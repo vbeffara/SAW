@@ -145,28 +145,254 @@ def A_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_A T L), x ^ (s.len
 def B_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_B T L), x ^ (s.len + 1)
 def E_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_E T L), x ^ (s.len + 1)
 
-/-! ## The corrected strip identity -/
+/-! ## Correct hex lattice embedding
 
-/-- **Lemma 2 (corrected)**: The strip identity for the paper-compatible domain.
+The correct embedding assigns unit edge lengths and 120° angles:
+  FALSE(x,y) at position (-3(x+y)/2, (x-y)√3/2)
+  TRUE(x,y) at position (-3(x+y)/2 + 1, (x-y)√3/2)
 
-    For critical x = x_c, the following identity holds:
-    1 = c_α · A_paper + B_paper + c_ε · E_paper
+Edge directions from FALSE(x,y):
+  → TRUE(x,y): angle 0
+  → TRUE(x+1,y): angle 2π/3
+  → TRUE(x,y+1): angle -2π/3
 
-    Key changes from the previous version:
-    1. Strip domain excludes TRUE at x+y = -T (right boundary is horizontal)
-    2. Weight is x^{len+1} (vertex count convention)
-    3. Right boundary classification uses FALSE at x+y = -T (not all vertices)
+Edge directions from TRUE(x,y):
+  → FALSE(x,y): angle π
+  → FALSE(x-1,y): angle -π/3
+  → FALSE(x,y-1): angle π/3
+-/
 
-    The proof follows the paper:
-    1. At each vertex v in the strip, the vertex relation holds:
-       the complex sum of walk contributions at v's three mid-edges vanishes
-       (by pair_cancellation and triplet_cancellation).
-    2. Summing over all vertices: interior mid-edges cancel telescopically.
-    3. Boundary mid-edges survive. The starting mid-edge contributes 1.
-    4. Left boundary: winding ±π gives coefficient cos(5π/8) = -c_α.
-       Right boundary: winding 0 gives coefficient 1.
-       Escape boundary: combined coefficient c_ε.
-    5. Assembly gives 1 = c_α·A + B + c_ε·E. -/
+/-- Correct embedding of hex lattice vertices into ℂ with unit edge length.
+    This gives a regular honeycomb: all edges have length 1, and edges
+    from each vertex are at 120° intervals. -/
+def correctHexEmbed : HexVertex → ℂ
+  | (x, y, false) => ⟨(-3 * ((x : ℝ) + y)) / 2, ((x : ℝ) - y) * Real.sqrt 3 / 2⟩
+  | (x, y, true) =>  ⟨(-3 * ((x : ℝ) + y)) / 2 + 1, ((x : ℝ) - y) * Real.sqrt 3 / 2⟩
+
+/-- The direction angle of a hex edge, computed from the correct embedding.
+    This gives the standard hexagonal directions:
+    - FALSE→TRUE same cell: 0
+    - FALSE→TRUE(x+1,y): 2π/3
+    - FALSE→TRUE(x,y+1): -2π/3
+    - TRUE→FALSE same cell: π
+    - TRUE→FALSE(x-1,y): -π/3
+    - TRUE→FALSE(x,y-1): π/3 -/
+def hexEdgeAngle (v w : HexVertex) : ℝ :=
+  Complex.arg (correctHexEmbed w - correctHexEmbed v)
+
+/-! ## Combinatorial winding
+
+On the honeycomb lattice, every SAW from paperStart to vertex w has
+a well-defined winding that depends on the walk path. The winding
+telescopes: W = (final step direction) - (initial direction).
+
+Since the initial direction from mid-edge a to paperStart is 0,
+and each turn on the honeycomb is exactly ±π/3, the winding
+telescopes to just the final step direction.
+
+For the strip identity proof, we need:
+- The winding from a to a left boundary mid-edge is π
+- The winding from a to a right boundary mid-edge is 0
+- The winding from a to escape boundary mid-edges depends on the exit edge
+-/
+
+/-- The winding of a SAW from paperStart, measured as the accumulated
+    sum of turn angles. On the honeycomb, this telescopes to:
+    W = (direction of last step of the walk) -
+        (direction from hexOrigin to paperStart) = (last step dir) - 0. -/
+def combWinding (walk : List HexVertex) : ℝ :=
+  match walk with
+  | [] | [_] => 0
+  | [_, _] => 0  -- single step: the turn at the start
+  | _ => walkWinding walk  -- fallback to existing definition
+
+/-! ## The parafermionic observable (correct version)
+
+The observable at a boundary mid-edge (v_in, w_out) is:
+  F(v_in, w_out) = Σ_{γ: paperStart → v_in, γ ⊂ strip}
+                     exp(-iσ · W(γ → midedge)) · xc^{ℓ(γ)}
+
+where W(γ → midedge) is the winding from mid-edge a through the walk γ
+to the boundary mid-edge (v_in, w_out).
+
+The key property (from pair + triplet cancellation): at each vertex v,
+the sum of direction-weighted observables over v's three mid-edges is 0.
+-/
+
+/-- The complex weight of a SAW γ from paperStart of length n,
+    reaching boundary mid-edge (v_in, w_out), using the correct embedding.
+    weight = exp(-iσ · W) · xc^{n+1}
+    where W = winding from a to the boundary mid-edge.
+
+    By telescoping on the honeycomb, W = hexEdgeAngle(v_in, w_out).
+    That is, the winding depends only on the EXIT DIRECTION,
+    not on the full path. This is because every turn is ±π/3
+    and the sum telescopes. -/
+def correctSAWWeight (exit_angle : ℝ) (n : ℕ) : ℂ :=
+  Complex.exp (-Complex.I * ↑(sigma * exit_angle)) * (xc : ℂ) ^ (n + 1)
+
+/-! ## Classification of boundary mid-edges
+
+The boundary of PaperFinStrip T L consists of edges {v_in, w_out}
+where v_in ∈ PaperFinStrip and w_out ∉ PaperFinStrip.
+
+Boundary types:
+1. Starting mid-edge: {paperStart, hexOrigin}
+   - exit angle: π (TRUE→FALSE same cell)
+   - F(a) = xc^1 · exp(-iσ·0) = xc (for the trivial walk)
+     Actually F(a) = 1 · x^0 = 1 in mid-edge formulation.
+2. Left boundary (α\{a}): TRUE(x,-x) → FALSE(x,-x) for x ≠ 0
+   - exit angle: π
+3. Right boundary (β): FALSE(x,y) → TRUE(x,y) at x+y = -T
+   - exit angle: 0 (horizontal)
+4. Top escape: various exit angles
+5. Bottom escape: various exit angles (conjugate of top)
+-/
+
+/-! ## The corrected strip identity: proof decomposition
+
+The proof decomposes into:
+
+1. **Vertex relation** (from pair + triplet cancellation, already proved):
+   At each vertex v ∈ V(strip), the complex-weighted observable
+   satisfies (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0.
+
+2. **Discrete Stokes / Telescoping** (the main combinatorial step):
+   Summing the vertex relation over all v ∈ V(strip), interior
+   mid-edges cancel (each appears twice with opposite signs).
+   Only boundary mid-edges survive:
+   0 = Σ_{boundary (v_in, w_out)} ½(embed(w_out) - embed(v_in)) · F(v_in, w_out)
+
+3. **Boundary evaluation** (geometric computation):
+   - Starting mid-edge: contributes -½ (direction factor · F(a) = -½·1 = -½)
+   - Left α: direction angle π, winding π → coefficient exp(i·(1-σ)·π)
+     Combined with symmetry: real part gives -c_α
+   - Right β: direction angle 0, winding 0 → coefficient 1
+   - Escape: combined coefficient c_ε
+
+4. **Assembly**: Combining gives 0 = -½ + ½(-c_α·A + B + c_ε·E),
+   hence 1 = c_α·A + B + c_ε·E.
+-/
+
+/-! ## Helper lemmas for the strip identity -/
+
+/-- All SAWs in the strip of types A, B, E, together with the trivial walk,
+    account for every SAW from paperStart in PaperFinStrip T L.
+
+    More precisely: define the complex boundary sum
+      S = -1 + c_α · A_paper + B_paper + c_ε · E_paper
+    Then S = 0, equivalently 1 = c_α·A + B + c_ε·E.
+
+    The proof goes through the parafermionic observable. Define at each
+    boundary mid-edge e the observable F(e) and the direction factor d(e).
+    The vertex relation at each strip vertex gives Σ_e d(e)·F(e) = 0.
+    Summing over vertices and telescoping: boundary sum = 0.
+    Evaluating boundary contributions:
+    - Starting mid-edge: d·F = (-1/2)·1 = -1/2
+    - Left: d·F gives coefficient -c_α/2 per A walk pair
+    - Right: d·F gives coefficient 1/2 per B walk
+    - Escape: d·F gives coefficient c_ε/2 per E walk pair
+    Multiplying by -2: 1 = c_α·A + B + c_ε·E -/
+
+/-
+PROBLEM
+The winding to the left boundary is π.
+    This is the exit angle for edge TRUE(x,-x) → FALSE(x,-x), which
+    is angle π (horizontal left) in the correct embedding.
+
+PROVIDED SOLUTION
+hexEdgeAngle (x, -x, true) (x, -x, false) = Complex.arg(correctHexEmbed(x,-x,false) - correctHexEmbed(x,-x,true)). By definition:
+correctHexEmbed(x,-x,false) = ((-3*(x+(-x)))/2, (x-(-x))*√3/2) = (0, x*√3)
+correctHexEmbed(x,-x,true) = (0 + 1, x*√3) = (1, x*√3)
+Difference = (0-1, x√3 - x√3) = (-1, 0).
+Complex.arg(-1 : ℂ) = π.
+Use Complex.arg_neg_one or show that (-1 : ℂ) = -1 and Complex.arg_neg_one.
+-/
+lemma left_boundary_exit_angle (x : ℤ) (_hx : x ≠ 0) :
+    hexEdgeAngle (x, -x, true) (x, -x, false) = Real.pi := by
+  unfold hexEdgeAngle;
+  unfold correctHexEmbed; norm_num [ Complex.arg ] ;
+
+/-
+PROBLEM
+The winding to the right boundary is 0.
+    This is the exit angle for edge FALSE(x,y) → TRUE(x,y) at x+y = -T,
+    which is angle 0 (horizontal right) in the correct embedding.
+
+PROVIDED SOLUTION
+hexEdgeAngle (x, y, false) (x, y, true) = Complex.arg(correctHexEmbed(x,y,true) - correctHexEmbed(x,y,false)). By definition:
+correctHexEmbed(x,y,false) = ((-3*(x+y))/2, (x-y)*√3/2)
+correctHexEmbed(x,y,true) = ((-3*(x+y))/2 + 1, (x-y)*√3/2)
+Difference = (1, 0).
+This is the complex number 1.
+Complex.arg(1) = 0 by Complex.arg_one.
+Unfold hexEdgeAngle and correctHexEmbed, simplify the difference to get Complex.mk 1 0 = 1, then use Complex.arg_one.
+-/
+lemma right_boundary_exit_angle (x y : ℤ) :
+    hexEdgeAngle (x, y, false) (x, y, true) = 0 := by
+  unfold hexEdgeAngle; unfold correctHexEmbed; norm_num [ Complex.arg ] ;
+
+/-- cos(5π/8) = -cos(3π/8) = -c_alpha.
+    This is the real part of exp(-iσπ) where σ = 5/8. -/
+lemma cos_five_pi_eight : Real.cos (5 * Real.pi / 8) = -c_alpha := by
+  unfold c_alpha
+  rw [show 5 * Real.pi / 8 = Real.pi - 3 * Real.pi / 8 from by ring]
+  exact Real.cos_pi_sub _
+
+/-- The vertex relation at each strip vertex is exactly the combination
+    of pair_cancellation and triplet_cancellation.
+    This is the content of Lemma 1 (equation (2)) of the paper. -/
+lemma vertex_relation_pair_triplet :
+    j * conj lam ^ 4 + conj j * lam ^ 4 = 0 ∧
+    1 + (xc : ℂ) * j * conj lam + (xc : ℂ) * conj j * lam = 0 :=
+  ⟨pair_cancellation, triplet_cancellation⟩
+
+/-- **Key Lemma (Vertex Relation + Telescoping + Boundary Evaluation)**:
+    The real-valued strip identity follows from the parafermionic
+    observable theory.
+
+    This combines:
+    1. pair_cancellation: j * conj(λ)⁴ + conj(j) * λ⁴ = 0
+    2. triplet_cancellation: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
+    3. Telescoping of the vertex relation sum
+    4. Boundary winding evaluation
+    5. Symmetry F(z̄) = F̄(z)
+
+    The proof strategy:
+    - Define the observable F at each boundary mid-edge
+    - Sum vertex relations over all strip vertices → boundary sum = 0
+    - At left boundary: all walks have winding π (exit direction π)
+      Symmetry gives coefficient cos(σπ) = cos(5π/8) = -c_α
+    - At right boundary: all walks have winding 0 (exit direction 0)
+      Coefficient is 1
+    - At escape boundary: combined coefficient is c_ε = cos(π/4)
+    - Assembly: 0 = -(1 - c_α·A) + B + c_ε·E → 1 = c_α·A + B + c_ε·E -/
+/- IMPORTANT: The following statement is FALSE as written.
+   Verified numerically for T=1, L=1:
+     A_paper = xc^3 ≈ 0.159 (one walk of length 2)
+     B_paper = 2·xc^2 ≈ 0.586 (two walks of length 1)
+     E_paper = 0
+     c_alpha · A_paper + B_paper + c_eps · E_paper ≈ 0.646 ≠ 1
+
+   Root cause: The paper's partition functions count walks by EXIT MID-EDGE
+   boundary type, not by vertex boundary type. A walk ending at a corner
+   vertex (one that is adjacent to boundary mid-edges of MULTIPLE types)
+   should be counted in EACH partition function corresponding to its
+   boundary mid-edges. The vertex-based A_paper, B_paper, E_paper only
+   count each walk once.
+
+   Additionally, the x-bound for FALSE vertices in PaperFinStrip should be
+   x ≤ L (matching the paper's |3x| ≤ 3L), not x ≤ L-1.
+
+   The correct identity uses mid-edge-based partition functions:
+     A_mid = Σ_{left boundary mid-edges z} Σ_{γ to v_in(z)} xc^{n+1}
+     B_mid = Σ_{right boundary mid-edges z} Σ_{γ to v_in(z)} xc^{n+1}
+     E_mid = Σ_{escape boundary mid-edges z} Σ_{γ to v_in(z)} xc^{n+1}
+   where a walk to a corner vertex is counted in MULTIPLE partition functions.
+
+   With mid-edge partition functions and corrected strip:
+     1 = c_alpha · A_mid + B_mid + c_eps · E_mid   ✓ (verified for T=1, L=1)
+-/
 theorem paper_strip_identity (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc := by
   sorry
