@@ -400,6 +400,9 @@ PROBLEM
 3 · 2^k ≤ saw_count(2k+1). Each of the 3 neighbors of hexOrigin
     can start a zigzag walk of 2k additional steps.
 
+The endpoint's same-cell true vertex is not in the zigzag walk support.
+    This is the key fact for extending zigzag walks by one step.
+
 PROVIDED SOLUTION
 3 * 2^k ≤ saw_count(2k+1). The idea: hexOrigin = (0,0,false) has 3 neighbors in hexGraph: (0,0,true), (1,0,true), (0,1,true). For each neighbor v, a zigzag walk of 2k steps from v gives a (2k+1)-step SAW from hexOrigin.
 
@@ -952,31 +955,78 @@ For the factor 3: c_{2k+1} ≥ c_1 · c_{2k} is FALSE (submultiplicativity gives
 Hmm, try: c_{2k+1} ≥ 3 · c_{2k} / something? No.
 
 Let me try the saw_count_even_lower_proved approach combined with extensions from the 3 neighbors: just try sorry and let the subagent attempt it.
--/
-theorem saw_count_odd_lower_proved (k : ℕ) : 3 * 2 ^ k ≤ saw_count (2 * k + 1) := by
-  -- c_{2k+1} ≥ c_1 * c_{2k} / c_0 is not standard.
-  -- Direct approach: c_1 = 3, and c_{n+1} ≥ c_n (each SAW extends by at least 1 step
-  -- because the endpoint has at least 1 unvisited neighbor on the infinite hex lattice).
-  -- So c_{2k+1} ≥ c_{2k} ≥ 2^k. But we need 3 * 2^k.
-  -- Better: use saw_count_submult' in the other direction.
-  -- c_{2k+1} = c_{1 + 2k}, and we need c_{1+2k} ≥ 3 * 2^k.
-  -- By counting: each (2k+1)-step SAW starts with 1 step (3 choices) then 2k more steps.
-  -- From each neighbor, there are at least 2^k valid 2k-step continuations (by zigzag).
-  -- But these continuations must avoid hexOrigin.
-  -- TODO: requires building shifted zigzag walks from each neighbor
-  -- Apply the hypothesis `h` to conclude the proof.
-  apply saw_count_odd_lower k
 
-/-- 2^n ≤ c_n² for n ≥ 1, proved from saw_count_even_lower_proved
-    and saw_count_odd_lower_proved. -/
-theorem saw_count_sq_ge_two_pow_proved (n : ℕ) (hn : 1 ≤ n) :
+The endpoint of the zigzag walk is (ep.1, ep.2, false) where ep = choices.foldl zigzag_step (0,0). We need to show (ep.1, ep.2, true) is NOT in the walk support.
+
+By buildZigzagWalk_support_structure, every vertex v in the support has v = (pos.1, pos.2, false) or v = (pos.1, pos.2, true) for some pos in zigzag_positions choices (= choices.scanl zigzag_step (0,0)).
+
+If (ep.1, ep.2, true) were in the support, there would exist some pos in zigzag_positions with pos = (ep.1, ep.2). Now ep = choices.foldl zigzag_step (0,0), and zigzag_positions = choices.scanl zigzag_step (0,0). The last element of scanl is equal to foldl. But the TRUE vertices in the walk only correspond to the first k positions (indices 0 to k-1), not the last position (index k).
+
+More precisely: the walk visits (pos_i.1, pos_i.2, true) for i = 0, ..., k-1, and (pos_i.1, pos_i.2, false) for i = 0, ..., k. The endpoint corresponds to pos_k. We need (ep.1, ep.2) = (pos_k.1, pos_k.2) to NOT equal any pos_i for i < k.
+
+By zigzag_positions_nodup, all positions are distinct. The endpoint pos_k is the last element. So pos_k ≠ pos_i for all i < k. This means (ep.1, ep.2, true) ≠ (pos_i.1, pos_i.2, true) for all i < k, so it's not among the true vertices in the support.
+
+Key lemmas: buildZigzagWalk_support_structure, zigzag_positions_nodup, zigzag_sum_eq_neg (the sum x+y at position i is -i, so different indices give different sums).
+-/
+lemma zigzag_endpoint_true_not_in_support (choices : List Bool) :
+    let ep := choices.foldl zigzag_step (0, 0)
+    (ep.1, ep.2, true) ∉ (buildZigzagWalk choices 0 0).1.support := by
+  induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ List.foldl ];
+  -- By definition of `buildZigzagWalk`, the support of the new walk includes the support of the previous walk plus the new steps.
+  have h_support : (buildZigzagWalk (choices ++ [ih]) 0 0).val.support = (buildZigzagWalk choices 0 0).val.support ++ (buildZigzagWalk [ih] (List.foldl zigzag_step (0, 0) choices).1 (List.foldl zigzag_step (0, 0) choices).2).val.support.tail := by
+    induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ List.foldl ];
+    · cases ih <;> rfl;
+    · have h_support : ∀ (choices : List Bool) (x y : ℤ) (ih : Bool), (buildZigzagWalk (choices ++ [ih]) x y).val.support = (buildZigzagWalk choices x y).val.support ++ (buildZigzagWalk [ih] (List.foldl zigzag_step (x, y) choices).1 (List.foldl zigzag_step (x, y) choices).2).val.support.tail := by
+        intros choices x y ih; induction' choices with choices ih generalizing x y <;> simp_all +decide [ List.foldl ] ;
+        · cases ih <;> rfl;
+        · rename_i k hk₁ hk₂;
+          convert congr_arg ( fun l => [ ( x, y, false ) ] ++ [ ( x, y, true ) ] ++ l ) ( hk₂ ( zigzag_step ( x, y ) choices |>.1 ) ( zigzag_step ( x, y ) choices |>.2 ) ) using 1;
+      convert h_support ( choices ++ [ ih ] ) 0 0 _ using 1;
+  cases ih <;> simp_all +decide [ zigzag_step ];
+  · constructor;
+    · intro h
+      have h_support : ∀ v ∈ (buildZigzagWalk choices 0 0).val.support, ∃ pos ∈ zigzag_positions choices |>.map (fun p => (p.1 + 0, p.2 + 0)), v = (pos.1, pos.2, false) ∨ v = (pos.1, pos.2, true) := by
+        convert buildZigzagWalk_support_structure choices 0 0 using 1
+      generalize_proofs at *;
+      obtain ⟨ pos, hpos, hpos' ⟩ := h_support _ h; simp_all +decide [ zigzag_positions ] ;
+      have h_scanl : ∀ (choices : List Bool) (pos : ℤ × ℤ), (List.foldl zigzag_step pos choices).1 + (List.foldl zigzag_step pos choices).2 = pos.1 + pos.2 - choices.length := by
+        intro choices pos; induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ zigzag_step ] ; ring;
+        split_ifs <;> linarith! [ zigzag_step_sum ( List.foldl zigzag_step pos choices ) ih ] ;
+      generalize_proofs at *; simp_all +decide [ sub_eq_iff_eq_add ] ;
+      have := h_support _ _ |>.2 h; simp_all +decide [ List.mem_iff_get ] ;
+      obtain ⟨ n, hn ⟩ := this; have := h_scanl ( List.take n choices ) 0 0; simp_all +decide ;
+      grind;
+    · erw [ List.mem_cons, List.mem_singleton ] ; aesop ( simp_config := { decide := true } ) ;
+  · constructor;
+    · intro h;
+      have := buildZigzagWalk_support_structure choices 0 0 _ h; simp_all +decide [ zigzag_positions ] ;
+      have := zigzag_sum_eq_neg choices ( List.idxOf ( ( List.foldl zigzag_step ( 0, 0 ) choices ).1, ( List.foldl zigzag_step ( 0, 0 ) choices ).2 - 1 ) ( List.scanl ( fun pos c => zigzag_step pos c ) ( 0, 0 ) choices ) ) ?_ <;> simp_all +decide [ List.idxOf_lt_length_iff ];
+      any_goals exact Nat.le_of_lt_succ ( List.idxOf_lt_length_iff.mpr this |> Nat.lt_of_lt_of_le <| by simp +decide [ zigzag_positions ] );
+      have := zigzag_sum_eq_neg choices ( List.length choices ) ?_ <;> simp_all +decide [ zigzag_positions ];
+      grind;
+    · erw [ List.mem_cons, List.mem_singleton ] ; aesop ( simp_config := { decide := true } ) ;
+
+/-- Extend a zigzag SAW by one step to the same-cell true vertex. -/
+def extendZigzagSAW (choices : List Bool) : SAW hexOrigin (2 * choices.length + 1) :=
+  let w := buildZigzagWalk choices 0 0
+  let ep := choices.foldl zigzag_step (0, 0)
+  let adj : hexGraph.Adj _ _ := hex_adj_same_cell ep.1 ep.2
+  let hp := buildZigzagWalk_isPath choices 0 0
+  let hnin := zigzag_endpoint_true_not_in_support choices
+  ⟨(ep.1, ep.2, true),
+   ⟨w.1.concat adj, hp.concat hnin adj⟩,
+   by simp [SimpleGraph.Walk.length_concat, w.2]⟩
+
+/-- 2^n ≤ c_n² for all n.
+    By submultiplicativity: c_n² = c_n · c_n ≥ c_{n+n} = c_{2n} ≥ 2^n.
+    This bypasses the need for saw_count_odd_lower entirely. -/
+theorem saw_count_sq_ge_two_pow_proved (n : ℕ) (_hn : 1 ≤ n) :
     2 ^ n ≤ saw_count n ^ 2 := by
-  rcases Nat.even_or_odd' n with ⟨k, rfl | rfl⟩
-  · calc 2 ^ (2 * k) = (2 ^ k) ^ 2 := by ring
-      _ ≤ (saw_count (2 * k)) ^ 2 := Nat.pow_le_pow_left (saw_count_even_lower_proved k) 2
-  · have h := saw_count_odd_lower_proved k
-    calc 2 ^ (2 * k + 1) = 2 * (2 ^ k) ^ 2 := by ring
-      _ ≤ (3 * 2 ^ k) ^ 2 := by nlinarith [Nat.pos_of_ne_zero (by positivity : 2 ^ k ≠ 0)]
-      _ ≤ (saw_count (2 * k + 1)) ^ 2 := Nat.pow_le_pow_left h 2
+  have h_submult := saw_count_submult' n n
+  have h_even := saw_count_even_lower_proved n
+  calc 2 ^ n ≤ saw_count (2 * n) := h_even
+    _ = saw_count (n + n) := by ring_nf
+    _ ≤ saw_count n * saw_count n := h_submult
+    _ = saw_count n ^ 2 := by ring
 
 end

@@ -574,8 +574,9 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   \end{itemize}
 \end{theorem}
 \begin{proof}
-\leanok
-  Delegates to \texttt{B\_paper\_le\_one}.
+\uses{thm:B_paper_le_one}
+  Delegates to \texttt{B\_paper\_le\_one}, which in turn depends on
+  \texttt{strip\_identity\_exists} (still sorry).
 \end{proof}
 
 \begin{lemma}[Boundary cosine positivity]\label{lem:boundary_cos_pos}
@@ -1074,10 +1075,11 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   Choose $L$ large enough that all bridges fit in $S_{T,L}$.
   Map each bridge injectively to a \texttt{StripSAW\_B} element.
   The partial sum is bounded by $B_{T,L} \leq 1$ (from the strip identity).
+  \textbf{Status: sorry.} Depends on the strip identity.
 \end{theorem}
 \begin{proof}
-\leanok
 \uses{thm:strip_identity_concrete, lem:partition_summable, lem:bridge_strip_inj}
+  Outlined but not yet fully formalized. Depends on the strip identity.
 \end{proof}
 
 \begin{theorem}[Origin bridge upper bound from strip]\label{thm:bridge_upper_from_strip}
@@ -1105,11 +1107,12 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
   The factor~$2$ accounts for the two choices of first vertex from the
   starting mid-edge.
 
-  Proved via \texttt{bridge\_decomposition\_injection\_proof} from SAWHWDecomp.
+  Delegates to \texttt{bridge\_decomposition\_injection\_proof} from SAWHWDecomp
+  (which is still sorry).
 \end{theorem}
 \begin{proof}
-\leanok
 \uses{thm:bridge_decomp_inj_proof}
+  Delegates to \texttt{bridge\_decomposition\_injection\_proof} (sorry).
 \end{proof}
 
 \begin{theorem}[Bridge decomposition injection (core)]\label{thm:bridge_decomp_inj_proof}
@@ -1652,7 +1655,7 @@ The following bounds are all \emph{proved modulo the strip identity}:
     Connecting $\sup_L B_{T,L}$ to \texttt{origin\_bridge\_partition}. Still sorry.
 \end{itemize}
 
-\paragraph{Newly proved infrastructure (this session).}
+\paragraph{Proved infrastructure.}
 \begin{itemize}
   \item \texttt{finite\_strip\_finite}: The finite strip vertex set is finite.
   \item \texttt{strip\_saw\_length\_bound}: SAW length in strip $\leq$ number of strip vertices.
@@ -1660,8 +1663,12 @@ The following bounds are all \emph{proved modulo the strip identity}:
     (\texttt{StripSAW\_B T L} is a finite type).
   \item \texttt{originBridgeToStripB\_injective}: The origin-bridge-to-strip map is injective.
   \item \texttt{originBridgeToStripB\_len}: The map preserves walk length.
-  \item \texttt{origin\_bridge\_partial\_sum\_le\_one}: Finite partial sums $\leq 1$.
-  \item \texttt{origin\_bridge\_upper\_bound\_from\_strip}: $B_T^{x_c} \leq 1$.
+  \item \texttt{saw\_count\_sq\_ge\_two\_pow\_proved}: $2^n \leq c_n^2$ via
+    submultiplicativity, bypassing the odd lower bound entirely.
+  \item \texttt{connective\_constant\_ge\_sqrt\_two}: $\mu \geq \sqrt{2}$,
+    now fully proved (no sorry dependencies).
+  \item \texttt{zigzag\_endpoint\_true\_not\_in\_support}: Extension lemma
+    for zigzag walks.
 \end{itemize}
 
 \paragraph{Bridge decomposition injection (Hammersley--Welsh).}
@@ -1685,12 +1692,18 @@ $\sum_T B_{T+1}^x \leq Z(x)$ via the disjoint bridge injection
 
 \paragraph{Elementary bounds (zigzag construction).}
 \begin{itemize}
-  \item \texttt{saw\_count\_even\_lower} (SAWZigzag.lean): $c_{2k} \geq 2^k$.
+  \item \texttt{saw\_count\_even\_lower\_proved} (SAWZigzagBuild.lean): $c_{2k} \geq 2^k$.
+    \textbf{Proved.}
   \item \texttt{saw\_count\_odd\_lower} (SAWZigzag.lean): $c_{2k+1} \geq 3 \cdot 2^k$.
+    \textbf{Still sorry.} However, this is no longer needed:
+    $2^n \leq c_n^2$ is now proved directly via submultiplicativity
+    ($c_n^2 \geq c_{2n} \geq 2^n$), bypassing the odd lower bound.
 \end{itemize}
-The zigzag coordinate infrastructure (positions, adjacency, nodup) is
-fully proved; the missing step is constructing the walk as a
-\texttt{SimpleGraph.Walk} and proving it is a path.
+The zigzag walk construction, path verification, and injectivity
+are fully proved in SAWZigzagBuild.lean. The extension lemma
+\texttt{zigzag\_endpoint\_true\_not\_in\_support} (proving that
+the endpoint's same-cell true vertex is not visited by the zigzag)
+is also proved, enabling \texttt{extendZigzagSAW}.
 
 \section{Assembly}
 
@@ -1890,11 +1903,17 @@ guarantee that $c_n$ grows exponentially fast.''
 \begin{lemma}[$2^n \leq c_n^2$]\label{lem:saw_sq_lower}
 \lean{saw_count_sq_ge_two_pow}
 \leanok
-\uses{lem:saw_even_lower, lem:saw_odd_lower, lem:saw_count_one}
+\uses{lem:saw_even_lower, thm:submult}
   For $n \geq 1$, $2^n \leq c_n^2$.
+  By submultiplicativity $c_n^2 = c_n \cdot c_n \geq c_{n+n} = c_{2n}$,
+  and by the even lower bound $c_{2n} \geq 2^n$.
+  This proof does not require the odd lower bound.
 \end{lemma}
 \begin{proof}
 \leanok
+\uses{lem:saw_even_lower, thm:submult}
+  Apply \texttt{saw\_count\_submult'} to get $c_{2n} \leq c_n^2$,
+  and \texttt{saw\_count\_even\_lower\_proved} to get $2^n \leq c_{2n}$.
 \end{proof}
 
 \begin{theorem}[Connective constant $\geq \sqrt{2}$]\label{thm:cc_ge_sqrt2}
