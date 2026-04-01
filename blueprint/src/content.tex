@@ -639,12 +639,29 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
   \end{itemize}
 \end{lemma}
 \begin{proof}
+  \textbf{Status: sorry.}
   The full proof requires formalizing the parafermionic observable,
   the discrete Stokes theorem (interior cancellation), and the
-  boundary winding evaluation. The algebraic core (pair and triplet
-  cancellation) is proved. The geometric core (boundary cosine
-  positivity) is proved. The combinatorial core (walk pairing and
-  tripling bijection, interior cancellation) remains to be formalized.
+  boundary winding evaluation.
+
+  \textbf{What is proved:}
+  \begin{itemize}
+  \item Algebraic core: pair and triplet cancellation (\texttt{pair\_cancellation},
+    \texttt{triplet\_cancellation}).
+  \item Geometric core: boundary cosine positivity (\texttt{boundary\_cos\_pos}),
+    boundary exit angles (\texttt{left\_boundary\_exit\_angle},
+    \texttt{right\_boundary\_exit\_angle}).
+  \end{itemize}
+
+  \textbf{What remains:}
+  \begin{itemize}
+  \item Defining the parafermionic observable $F$ on mid-edges of the strip.
+  \item Proving interior mid-edge cancellation (discrete Stokes theorem).
+  \item Evaluating boundary mid-edge contributions.
+  \item Assembling the identity from the boundary sum equation.
+  \end{itemize}
+  This is the deepest remaining sorry in the formalization and blocks
+  both the upper and lower bound arguments.
 \end{proof}
 
 \begin{lemma}[Finiteness of paper strip]\label{lem:paper_fin_strip_finite}
@@ -865,29 +882,99 @@ The lower bound proceeds by showing $Z(x_c) = \infty$ in two cases.
 
 \section{Upper bound: $\mu \leq \sqrt{2+\sqrt{2}}$}
 
-\begin{definition}[Bridge]\label{def:bridge}
+\begin{remark}[Coordinate system for strips]\label{rem:coord_system}
+  \textbf{Important correction.}
+  The paper defines the strip $S_T$ using the real part of the embedding, which
+  corresponds to the \emph{diagonal coordinate} $x + y$ in our $(x, y, \mathrm{bool})$
+  representation. The original Lean definition \texttt{Bridge} uses the
+  \emph{column coordinate} $x$ instead. This mismatch is significant: the
+  strip identity $B_T^{x_c} \leq 1$ holds for diagonal strips but not for
+  column strips (the column-strip partition function can exceed $1$).
+
+  The corrected formalization uses \texttt{DiagBridge} (SAWDiagBridge.lean),
+  which defines bridges using the diagonal coordinate $x + y$, matching the paper.
+  The key property is that each hex step changes $x + y$ by at most $1$
+  (\texttt{hexGraph\_adj\_sum\_bound}), so diagonal bridges of width $T$
+  have length $\geq T$ (\texttt{diag\_bridge\_length\_ge\_width}).
+\end{remark}
+
+\begin{definition}[Bridge (column strip)]\label{def:bridge}
 \lean{Bridge}
 \leanok
 \uses{def:hex_lattice, def:strip}
-  A \emph{bridge} of width $T$ is a self-avoiding walk in $S_T$ from
-  one side to the opposite side, defined up to vertical translation.
+  A \emph{column bridge} of width $T$ is a SAW in the column strip
+  $\{v : 0 \leq v.x \leq T\}$, from $v.x = 0$ to $v.x = T$.
+  \textbf{Note:} This definition does not match the paper's strip orientation.
+  Use \texttt{DiagBridge} for the strip identity.
 \end{definition}
 
-\begin{definition}[Bridge partition function]\label{def:bridge_partition}
+\begin{definition}[Diagonal bridge]\label{def:diag_bridge}
+\lean{DiagBridge}
+\leanok
+\uses{def:hex_lattice}
+  A \emph{diagonal bridge} of width $T$ is a SAW in the diagonal strip
+  $\{v : 0 \leq v.x + v.y \leq T\}$, from $v.x + v.y = 0$ to $v.x + v.y = T$.
+  This matches the paper's definition of bridges.
+\end{definition}
+
+\begin{definition}[Diagonal bridge partition function]\label{def:diag_bridge_partition}
+\lean{diag_bridge_partition}
+\leanok
+\uses{def:diag_bridge}
+  $B_T^x = \sum_{\gamma\ \text{diagonal bridge of width } T} x^{\ell(\gamma)}$,
+  where the sum is over diagonal bridges starting from \texttt{paperStart} $= (0,0,\mathrm{true})$.
+\end{definition}
+
+\begin{definition}[Bridge partition function (column)]\label{def:bridge_partition}
 \lean{origin_bridge_partition}
 \leanok
 \uses{def:bridge}
   $B_T^x = \sum_{\gamma\ \text{bridge of width } T} x^{\ell(\gamma)}$,
-  where the sum is over bridges from the fixed starting vertex (hexOrigin).
-  This is \texttt{origin\_bridge\_partition} from SAWBridgeFix.lean.
+  where the sum is over column bridges from hexOrigin.
+  \textbf{Caution:} This uses column strips; see Remark~\ref{rem:coord_system}.
 \end{definition}
 
-\begin{theorem}[Bridge length $\geq$ width]\label{thm:bridge_length_ge_width}
+\begin{theorem}[Bridge length $\geq$ width (column)]\label{thm:bridge_length_ge_width}
 \lean{bridge_length_ge_width}
 \leanok
 \uses{def:bridge}
-  A bridge of width $T$ visits at least $T$ vertices.
+  A column bridge of width $T$ has length $\geq T$.
+  Each step changes $x$ by at most $1$ (\texttt{hexGraph\_walk\_bound}).
 \end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Diagonal bridge length $\geq$ width]\label{thm:diag_bridge_length}
+\lean{diag_bridge_length_ge_width}
+\leanok
+\uses{def:diag_bridge}
+  A diagonal bridge of width $T$ has length $\geq T$.
+  Each step changes $x+y$ by at most $1$ (\texttt{hexGraph\_adj\_sum\_bound}).
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Hex adjacency preserves $x+y$ bound]\label{lem:hex_sum_bound}
+\lean{hexGraph_adj_sum_bound}
+\leanok
+\uses{def:hex_lattice}
+  Each step in \texttt{hexGraph} changes $x + y$ by at most $1$.
+  This is verified by case analysis on the six adjacency types.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Walk $x+y$ bound]\label{lem:walk_sum_bound}
+\lean{hexGraph_walk_sum_bound_pos, hexGraph_walk_sum_bound_neg}
+\leanok
+\uses{lem:hex_sum_bound}
+  For any walk from $v$ to $w$:
+  $(w.x + w.y) - (v.x + v.y) \leq \text{length}$ and
+  $(v.x + v.y) - (w.x + w.y) \leq \text{length}$.
+\end{lemma}
 \begin{proof}
 \leanok
 \end{proof}
