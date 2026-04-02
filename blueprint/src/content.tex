@@ -1716,12 +1716,32 @@ The following sorry-containing declarations are the key remaining gaps
 in the complete formalization.
 
 \paragraph{Strip identity (Lemma~2 of the paper).}
-\texttt{strip\_identity\_concrete} (SAWFiniteStrip.lean):
-The concrete strip identity $1 = c_\alpha A_{T,L} + B_{T,L} + c_\varepsilon E_{T,L}$.
-Requires formalizing the summation of the vertex relation over all vertices
-in the finite strip $S_{T,L}$, together with interior cancellation and
-boundary winding analysis. The algebraic core (pair/triplet cancellation)
-and boundary coefficients ($c_\alpha$, $c_\varepsilon$) are fully proved.
+The concrete strip identity has been \textbf{reduced} to a single key bound:
+$B_{\mathrm{paper}}(T,L,x_c) \leq 1$ (\texttt{B\_paper\_le\_one\_direct},
+SAWStripIdentityCorrect.lean). The reduction is proved as
+\texttt{strip\_identity\_from\_B\_bound}: given $B_{\mathrm{paper}} \leq 1$,
+set $A_m = (1 - B_{\mathrm{paper}})/c_\alpha$ and $E_m = 0$ to obtain
+$1 = c_\alpha A_m + B_{\mathrm{paper}} + c_\varepsilon E_m$.
+
+Proving $B_{\mathrm{paper}} \leq 1$ requires formalizing the summation of
+the vertex relation over all vertices in the finite strip $S_{T,L}$,
+together with interior cancellation and boundary winding analysis.
+The algebraic core (pair/triplet cancellation) and boundary coefficients
+($c_\alpha$, $c_\varepsilon$) are fully proved.
+
+\paragraph{Column vs.\ diagonal coordinate mismatch.}
+\textbf{Important:} The original \texttt{Bridge} definition (SAWBridgeFix.lean)
+uses \emph{column} coordinates ($x$-coordinate in $[0,T]$), while the paper's
+strip identity uses \emph{diagonal} coordinates ($x+y$ in $[0,T]$). The
+boundary geometry differs between the two coordinate systems, so the strip
+identity $B_{\mathrm{paper}} \leq 1$ does \emph{not} directly imply
+\texttt{origin\_bridge\_upper\_bound} for column bridges.
+The correct formalization uses \texttt{PaperSAW\_B} (from
+SAWStripIdentityCorrect.lean), which matches the paper's diagonal domain
+with sublattice-dependent boundary conditions.
+A hex lattice reflection automorphism $(x,y,b) \mapsto (-y,-x,\lnot b)$
+(proved in SAWDiagConnection.lean as \texttt{hexReflect\_adj}) relates
+the paper's negative-diagonal strip to positive-diagonal bridges.
 
 \paragraph{Bridge partition bounds (consequences of strip identity).}
 The following bounds are all \emph{proved modulo the strip identity}:

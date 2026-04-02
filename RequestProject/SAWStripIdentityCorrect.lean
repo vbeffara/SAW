@@ -290,29 +290,33 @@ The hex lattice has edge angles in {0, ±π/3, ±2π/3, π} ⊆ [-π, π].
 For θ ∈ [-π, π], |3θ/8| ≤ 3π/8 < π/2, so cos(3θ/8) > 0.
 This is proved as `boundary_cos_pos` above. -/
 
-/-- **The strip identity in existential form** (Lemma 2 of the paper).
-
-    There exist non-negative reals A_m and E_m (the left and escape boundary
-    partition functions in the mid-edge formulation) such that
-    1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m.
-
-    Note: A_m and E_m correspond to mid-edge-based partition functions,
-    not the vertex-based A_paper and E_paper. The mid-edge-based B equals
-    the vertex-based B_paper because each right-boundary vertex has exactly
-    one right-boundary mid-edge.
-
-    The proof follows from the parafermionic observable theory:
-    summing the vertex relation over all strip vertices, interior mid-edge
-    contributions cancel, and the boundary sum equals zero. Evaluating
-    boundary contributions using winding angles gives the identity. -/
-lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+/-- Reducing the strip identity to B_paper ≤ 1. -/
+lemma strip_identity_from_B_bound (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L)
+    (hB : B_paper T L xc ≤ 1) :
     ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
+  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
+  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]
+    ring
+
+/-- **B_paper ≤ 1**: The key consequence of the parafermionic observable.
+    This is the essential bound needed for the upper estimate on the
+    connective constant. It follows from summing the vertex relation
+    (pair_cancellation + triplet_cancellation) over all strip vertices,
+    applying interior cancellation (discrete Stokes theorem), and
+    evaluating boundary contributions. -/
+theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    B_paper T L xc ≤ 1 := by
   sorry
 
+lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
+  strip_identity_from_B_bound T L hT hL (B_paper_le_one_direct T L hT hL)
+
 theorem B_paper_le_one (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_paper T L xc ≤ 1 := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_exists T L hT hL
-  exact bridge_bound_of_strip_identity hA hE hid
+    B_paper T L xc ≤ 1 :=
+  B_paper_le_one_direct T L hT hL
 
 end
