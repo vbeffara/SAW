@@ -2077,6 +2077,136 @@ and their conjectured conformal invariance in the scaling limit.
      = \left(\frac{\Phi'(z)}{\Phi'(b)}\right)^{5/8}. \]
 \end{conjecture}
 
+\section{Paper-compatible strip domain}
+
+\begin{definition}[Paper strip domain]\label{def:paper_strip}
+\lean{PaperInfStrip, PaperFinStrip, paperStart}
+\leanok
+\uses{def:hex_lattice}
+  The paper-compatible strip domains using diagonal coordinates ($x+y$).
+  The infinite strip $S_T$ has sublattice-dependent bounds:
+  \textsc{True} vertices: $-(T-1) \leq x+y \leq 0$;
+  \textsc{False} vertices: $-T \leq x+y \leq -1$.
+  The starting vertex is $\texttt{paperStart} = (0,0,\text{true})$.
+\end{definition}
+
+\begin{definition}[Paper partition functions]\label{def:paper_partition}
+\lean{PaperSAW_A, PaperSAW_B, PaperSAW_E, A_paper, B_paper, E_paper}
+\leanok
+\uses{def:paper_strip, def:saw}
+  The partition functions $A_{\text{paper}}$, $B_{\text{paper}}$, $E_{\text{paper}}$
+  counting SAWs from \texttt{paperStart} to the left, right, and escape
+  boundaries of $S_{T,L}$, weighted by $x^{\ell+1}$.
+\end{definition}
+
+\begin{lemma}[Boundary cosine positivity]\label{lem:boundary_cos}
+\lean{boundary_cos_pos}
+\leanok
+  For all hex lattice edge angles $\theta \in [-\pi, \pi]$,
+  $\cos(3\theta/8) > 0$ (since $|3\theta/8| \leq 3\pi/8 < \pi/2$).
+  This is the key geometric ingredient ensuring all boundary
+  contributions have positive real parts.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one}
+\lean{B_paper_le_one_direct}
+\uses{thm:pair_cancel, thm:triplet_cancel, lem:boundary_cos, def:paper_partition}
+  For $x = x_c$, $T \geq 1$, $L \geq 1$:
+  $B_{\text{paper}}(T, L, x_c) \leq 1$.
+  This is the key consequence of the parafermionic observable:
+  summing the vertex relation over all strip vertices, interior
+  mid-edges cancel (discrete Stokes), and boundary contributions
+  have non-negative real parts, giving $B \leq 1$.
+
+  \textbf{Status: sorry.} This is the fundamental gap.
+  Proving it requires formalizing the discrete Stokes theorem
+  (interior cancellation when summing vertex relations) and
+  the boundary winding analysis.
+\end{theorem}
+
+\section{Diagonal bridge infrastructure}
+
+The paper's strip identity uses diagonal coordinates ($x+y$), while the
+original Bridge definition uses column coordinates ($x$). The following
+results provide the diagonal bridge infrastructure needed to correctly
+connect the strip identity to the main theorem.
+
+\begin{definition}[Diagonal bridge]\label{def:diag_bridge}
+\lean{DiagBridge, NegDiagBridge}
+\leanok
+\uses{def:hex_lattice}
+  A \emph{diagonal bridge} of width $T$ is a SAW from a vertex with
+  $x+y = 0$ to a vertex with $x+y = T$ (or $x+y = -T$ for negative
+  diagonal bridges), staying within the strip $0 \leq x+y \leq T$
+  (resp.\ $-T \leq x+y \leq 0$).
+\end{definition}
+
+\begin{definition}[Diagonal bridge partition]\label{def:diag_partition}
+\lean{diag_bridge_partition, paper_bridge_partition}
+\leanok
+\uses{def:diag_bridge}
+  The diagonal bridge partition functions, summing $x^{\ell(\gamma)}$
+  over bridges from \texttt{paperStart}.
+\end{definition}
+
+\begin{lemma}[Diagonal bridge length $\geq$ width]\label{lem:diag_bridge_length}
+\lean{diag_bridge_length_ge_width, neg_diag_bridge_length_ge_width}
+\leanok
+\uses{def:diag_bridge}
+  A diagonal bridge of width $T$ has walk length $\geq T$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Diagonal bridge to SAW injection]\label{lem:diag_bridge_saw}
+\lean{negDiagBridgeToSAW_injective}
+\leanok
+\uses{def:diag_bridge}
+  The map from negative diagonal origin bridges to SAWs from
+  \texttt{paperStart} is injective.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Diagonal bridge endpoints differ]\label{lem:diag_endpoints}
+\lean{neg_diag_bridge_endpoints_differ}
+\leanok
+\uses{def:diag_bridge}
+  Diagonal bridges of different widths have different endpoints.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Hex lattice reflection]\label{lem:hex_reflect}
+\lean{hexReflect_adj}
+\leanok
+\uses{def:hex_lattice}
+  The reflection $(x,y,b) \mapsto (-y,-x,\lnot b)$ preserves
+  \texttt{hexGraph} adjacency. It maps \texttt{hexOrigin} to
+  \texttt{paperStart} and reverses the diagonal coordinate.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[PaperSAW\_B embeds into NegDiagOriginBridge]\label{lem:paper_b_embed}
+\lean{paperSAW_B_to_negDiagBridge_injective}
+\leanok
+\uses{def:diag_bridge}
+  The map from \texttt{PaperSAW\_B T L} to \texttt{NegDiagOriginBridge T}
+  is injective. This shows that the paper's B partition function counts
+  a \textbf{subset} of all negative diagonal bridges.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
 \begin{conjecture}[Bridge decay]\label{conj:bridge_decay}
 \lean{bridge_decay_conjecture}
 \leanok
