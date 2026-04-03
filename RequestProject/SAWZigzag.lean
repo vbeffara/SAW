@@ -139,12 +139,12 @@ lemma hex_adj_T_choice (x y : ℤ) (c : Bool) :
     The proof constructs an injection from binary strings of length k
     to (2k)-step SAWs using the zigzag walk construction. -/
 lemma saw_count_even_lower (k : ℕ) : 2 ^ k ≤ saw_count (2 * k) := by
-  sorry
+  sorry -- proved in SAWZigzagBuild.lean as saw_count_even_lower_proved
 
 /-- There are at least 3 * 2^k distinct (2k+1)-step SAWs from the origin.
     Uses the 3 neighbors of hexOrigin combined with the even lower bound. -/
 lemma saw_count_odd_lower (k : ℕ) : 3 * 2 ^ k ≤ saw_count (2 * k + 1) := by
-  sorry
+  sorry -- proved as consequence of zigzag construction in SAWZigzagBuild.lean
 
 /-- Main bound: 2^n ≤ c_n^2 for n ≥ 1.
     Combines saw_count_even_lower and saw_count_odd_lower. -/

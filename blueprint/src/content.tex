@@ -1863,6 +1863,77 @@ is also proved, enabling \texttt{extendZigzagSAW}.
 \leanok
 \end{proof}
 
+\section{Remaining gaps}
+
+The main theorem and its complete proof chain compile without error in Lean.
+All sorries ultimately reduce to two fundamental gaps:
+
+\begin{enumerate}
+\item \textbf{Strip identity consequence} (\texttt{B\_paper\_le\_one\_direct}, Theorem~\ref{thm:B_paper_le_one_direct}):
+  Proving $B_{\text{paper}}(T, L, x_c) \leq 1$ requires formalizing the discrete Stokes
+  theorem (interior cancellation when summing vertex relations across strip vertices)
+  and the boundary winding analysis. The algebraic ingredients (pair/triplet cancellation)
+  are proved; the combinatorial infrastructure (walk partitioning into pairs/triplets,
+  interior cancellation, boundary evaluation) remains.
+
+  Proving this unlocks both \texttt{origin\_bridge\_upper\_bound}
+  ($B_T^{x_c} \leq 1$) and \texttt{origin\_bridge\_lower\_bound}
+  ($B_T^{x_c} \geq c/T$).
+  The lower bound follows via the quadratic recurrence argument,
+  which is fully formalized in SAWQuadRecurrence.lean and SAWProof.lean.
+
+\item \textbf{Hammersley--Welsh bridge decomposition injection}
+  (\texttt{bridge\_decomposition\_injection\_proof}, Theorem~\ref{thm:bridge_decomp_inj_proof}):
+  Every self-avoiding walk decomposes into a unique sequence of bridges with
+  monotone widths. Formalizing this requires the half-plane walk decomposition
+  algorithm (induction on width), general walk splitting, injectivity of the
+  reverse procedure, and the weight accounting argument.
+\end{enumerate}
+
+All other sorry'd declarations in the project are either:
+\begin{itemize}
+  \item Direct consequences of gap~(1) (e.g., \texttt{origin\_bridge\_upper\_bound},
+    \texttt{origin\_bridge\_lower\_bound}, \texttt{origin\_bridge\_partial\_sum\_le\_one});
+  \item Superseded by proved versions (e.g., \texttt{saw\_count\_even\_lower} is
+    proved as \texttt{saw\_count\_even\_lower\_proved} in SAWZigzagBuild.lean);
+  \item Redundant alternative versions (e.g., \texttt{hammersley\_welsh\_injection}
+    is superseded by \texttt{hammersley\_welsh\_summable}).
+\end{itemize}
+
+\subsection{Column vs.\ diagonal bridge coordinate issue}
+
+The original \texttt{Bridge} definition (in SAWBridge.lean) uses
+\emph{column} coordinates: the strip $S_T$ is defined by $0 \leq x \leq T$,
+and bridges go from $x=0$ to $x=T$.
+The partition function \texttt{origin\_bridge\_partition} sums over such
+column bridges from \texttt{hexOrigin}.
+
+However, the paper's strip identity (Lemma~2) uses \emph{diagonal}
+coordinates: $S_T$ has $0 \leq \mathrm{Re}(z) \leq (3T{+}1)/2$, which
+in integer coordinates corresponds to $-T \leq x+y \leq 0$ (with
+sublattice-dependent bounds encoded in \texttt{PaperInfStrip}).
+
+The paper's construction ensures that right-boundary mid-edges have
+winding~0 from the starting mid-edge~$a$, making the right-boundary
+contribution to the boundary sum purely real. This is \emph{specific to
+the diagonal strip direction} and does not hold for column strips.
+
+Consequently, $B_{\mathrm{paper}} \leq 1$ (Theorem~\ref{thm:B_paper_le_one_direct})
+applies to the \emph{diagonal} partition function, not directly to
+\texttt{origin\_bridge\_partition}. Resolving this requires either:
+\begin{enumerate}
+  \item[(a)] Restructuring the proof chain to use diagonal bridges
+    (\texttt{NegDiagOriginBridge}) throughout; or
+  \item[(b)] Establishing a connection between column and diagonal bridge
+    partition functions (e.g., via a lattice automorphism).
+\end{enumerate}
+
+The diagonal bridge infrastructure in SAWDiagBridge.lean and
+SAWDiagConnection.lean provides definitions and basic properties
+for approach~(a), including the injection from \texttt{PaperSAW\_B}
+into \texttt{NegDiagOriginBridge} and the hex lattice reflection
+\texttt{hexReflect}.
+
 
 \chapter{Elementary bounds}\label{chap:elementary}
 
@@ -2111,7 +2182,7 @@ and their conjectured conformal invariance in the scaling limit.
 \leanok
 \end{proof}
 
-\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one}
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence, direct)]\label{thm:B_paper_le_one_direct}
 \lean{B_paper_le_one_direct}
 \uses{thm:pair_cancel, thm:triplet_cancel, lem:boundary_cos, def:paper_partition}
   For $x = x_c$, $T \geq 1$, $L \geq 1$:
@@ -2213,3 +2284,115 @@ connect the strip identity to the main theorem.
 \uses{thm:bridge_bound, thm:bridge_lower}
   The bridge partition function should decay as $B_T^{x_c} \sim T^{-1/4}$.
 \end{conjecture}
+
+\section{Quadratic recurrence (lower bound infrastructure)}
+
+The following results formalize the abstract quadratic recurrence argument
+from Case~2 of the proof of Theorem~\ref{thm:main}, Section~3 of the paper.
+
+\begin{lemma}[Quadratic step]\label{lem:quad_step}
+\lean{quadratic_lower_step}
+\leanok
+  If $x > 0$, $x \leq 1$, $y > 0$, and $\alpha x^2 + x \geq y$,
+  then $x \geq y / (1 + \alpha y)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Quadratic recurrence lower bound]\label{thm:quad_lower}
+\lean{quadratic_recurrence_lower_bound}
+\leanok
+\uses{lem:quad_step}
+  If $(B_T)_{T \geq 1}$ satisfies $0 < B_T \leq 1$ and
+  $\alpha B_{T+1}^2 + B_{T+1} \geq B_T$ with $\alpha > 0$,
+  then $B_T \geq \min(B_1, 1/\alpha) / T$ for all $T \geq 1$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{lem:quad_step}
+  By induction on $T$. The base case is trivial. The inductive step
+  uses the quadratic step lemma with $\alpha c \leq 1$ (since $c \leq 1/\alpha$),
+  giving $T + \alpha c \leq T + 1$.
+\end{proof}
+
+\begin{theorem}[Quadratic recurrence: existence of lower bound]\label{thm:quad_exist}
+\lean{quadratic_recurrence_exists_lower}
+\leanok
+\uses{thm:quad_lower}
+  Under the same hypotheses, $\exists c > 0$ such that
+  $B_T \geq c/T$ for all $T \geq 1$.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Case~2: $B_T \geq c/T$ from strip identity]\label{thm:case2_lower}
+\lean{case2_B_lower_bound}
+\leanok
+\uses{thm:quad_exist}
+  If $1 = c_\alpha A_T + B_T$ (i.e., $E_T = 0$), $A_T \geq 0$, $B_T > 0$,
+  and $A_{T+1} - A_T \leq \alpha B_{T+1}^2$, then
+  $\exists c > 0$ with $B_T \geq c/T$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:quad_exist}
+  From the strip identity and the recursion: $c_\alpha \alpha B_{T+1}^2 + B_{T+1} \geq B_T$.
+  Apply \texttt{quadratic\_recurrence\_exists\_lower}.
+\end{proof}
+
+\begin{theorem}[Case~2: bridge sum diverges]\label{thm:case2_diverge}
+\lean{case2_bridge_sum_diverges}
+\leanok
+\uses{thm:case2_lower}
+  Under Case~2 hypotheses, $\sum B_T = \infty$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:case2_lower}
+  Apply \texttt{case2\_B\_lower\_bound} to get $B_T \geq c/T$,
+  then \texttt{not\_summable\_harmonic\_lower}.
+\end{proof}
+
+\begin{lemma}[Harmonic lower bound divergence]\label{lem:harmonic_div}
+\lean{not_summable_harmonic_lower}
+\leanok
+  If $b(n) \geq c/(n+1)$ with $c > 0$, then $\sum b(n) = \infty$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\section{Observable infrastructure}
+
+\begin{lemma}[PaperFinStrip is finite]\label{lem:paper_strip_finite}
+\lean{paper_fin_strip_finite}
+\leanok
+\uses{def:paper_strip}
+  The set of vertices in $S_{T,L}$ is finite.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[PaperSAW\_B is finite]\label{lem:paper_saw_b_finite}
+\lean{paper_saw_b_finite}
+\leanok
+\uses{def:paper_partition, lem:paper_strip_finite}
+  The type \texttt{PaperSAW\_B T L} is a finite type.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}}$ is a finite sum]\label{lem:B_paper_finsum}
+\lean{B_paper_eq_finsum}
+\leanok
+\uses{def:paper_partition, lem:paper_saw_b_finite}
+  $B_{\text{paper}}(T, L, x) = \sum_{s \in \text{PaperSAW\_B}} x^{s.\text{len}+1}$
+  (a finite sum since the type is finite).
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}

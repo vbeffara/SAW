@@ -195,7 +195,9 @@ Hence Z(xc) = ∞.
 -/
 
 /-- The lower bound on the partition function: Z(xc) diverges.
-    Uses the corrected bridge partition. -/
+    Uses the corrected bridge partition.
+    **Note**: This is superseded by `Z_xc_diverges_from_lower_bound`
+    in SAWStripIdentity.lean, which is used by the main theorem. -/
 theorem Z_xc_diverges :
     ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by
   sorry
@@ -212,17 +214,13 @@ length ≥ T, for x < xc:
 The product converges since x/xc < 1.
 -/
 
-/-- The Hammersley-Welsh upper bound Z(x) < ∞ for x < xc is now
-    proved as `hammersley_welsh_summable` in SAWHammersleyWelsh.lean.
-    It depends on `bridge_decomposition_injection` (sorry'd there)
-    and `origin_bridge_decay` (proved from origin_bridge_upper_bound
-    and origin_bridge_summable_at_xc). -/
+/-- The Hammersley-Welsh upper bound Z(x) < ∞ for x < xc.
+    **Note**: This sorry is superseded by `hammersley_welsh_summable`
+    in SAWHammersleyWelsh.lean, which is used by the main theorem.
+    It cannot be proved here due to the import ordering. -/
 theorem hammersley_welsh_injection :
     ∀ x, 0 < x → x < xc →
       Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
   sorry
-  -- Note: This sorry is superseded by hammersley_welsh_summable
-  -- in SAWHammersleyWelsh.lean, which imports this file.
-  -- It cannot be proved here due to the import ordering.
 
 end
