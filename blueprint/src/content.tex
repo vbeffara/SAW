@@ -1866,74 +1866,110 @@ is also proved, enabling \texttt{extendZigzagSAW}.
 \section{Remaining gaps}
 
 The main theorem and its complete proof chain compile without error in Lean.
-All sorries ultimately reduce to two fundamental gaps:
+All sorries ultimately reduce to two fundamental gaps.
+
+\subsection{Gap~1: Strip identity (discrete Stokes theorem)}
+
+\texttt{B\_paper\_le\_one\_direct} (Theorem~\ref{thm:B_paper_le_one_direct}):
+Proving $B_{\text{paper}}(T, L, x_c) \leq 1$ requires formalizing the
+discrete Stokes theorem:
 
 \begin{enumerate}
-\item \textbf{Strip identity consequence} (\texttt{B\_paper\_le\_one\_direct}, Theorem~\ref{thm:B_paper_le_one_direct}):
-  Proving $B_{\text{paper}}(T, L, x_c) \leq 1$ requires formalizing the discrete Stokes
-  theorem (interior cancellation when summing vertex relations across strip vertices)
-  and the boundary winding analysis. The algebraic ingredients (pair/triplet cancellation)
-  are proved; the combinatorial infrastructure (walk partitioning into pairs/triplets,
-  interior cancellation, boundary evaluation) remains.
-
-  Proving this unlocks both \texttt{origin\_bridge\_upper\_bound}
-  ($B_T^{x_c} \leq 1$) and \texttt{origin\_bridge\_lower\_bound}
-  ($B_T^{x_c} \geq c/T$).
-  The lower bound follows via the quadratic recurrence argument,
-  which is fully formalized in SAWQuadRecurrence.lean and SAWProof.lean.
-
-\item \textbf{Hammersley--Welsh bridge decomposition injection}
-  (\texttt{bridge\_decomposition\_injection\_proof}, Theorem~\ref{thm:bridge_decomp_inj_proof}):
-  Every self-avoiding walk decomposes into a unique sequence of bridges with
-  monotone widths. Formalizing this requires the half-plane walk decomposition
-  algorithm (induction on width), general walk splitting, injectivity of the
-  reverse procedure, and the weight accounting argument.
+  \item \textbf{Interior cancellation}: When summing the vertex relation
+    $(p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0$ over all strip vertices,
+    each interior mid-edge $z$ appears from exactly two vertices $v_1, v_2$
+    with coefficients $(z-v_1) + (z-v_2) = 0$, since $z$ is the midpoint
+    of the edge $(v_1, v_2)$.
+  \item \textbf{Boundary evaluation}: Boundary mid-edges contribute once.
+    The starting mid-edge $a$ contributes $-1/2$. Right boundary mid-edges
+    contribute $B_{\text{paper}}/2$ (winding $= 0$ for the paper's diagonal
+    strip). All other contributions have non-negative real parts by
+    \texttt{boundary\_cos\_pos}.
+  \item \textbf{Assembly}: $\operatorname{Re}(0) = -1/2 + B/2 + (\geq 0)$
+    gives $B \leq 1$.
 \end{enumerate}
 
-All other sorry'd declarations in the project are either:
+The algebraic ingredients (pair/triplet cancellation) are fully proved.
+The missing infrastructure is the combinatorial bookkeeping: defining
+mid-edges of the strip, the interior/boundary classification, and the
+formal telescoping argument.
+
+Proving this unlocks both \texttt{origin\_bridge\_upper\_bound}
+($B_T^{x_c} \leq 1$) and \texttt{origin\_bridge\_lower\_bound}
+($B_T^{x_c} \geq c/T$) via the quadratic recurrence argument
+(fully formalized in SAWQuadRecurrence.lean).
+
+\subsection{Gap~2: Hammersley--Welsh bridge decomposition}
+
+\texttt{bridge\_decomposition\_injection\_proof}
+(Theorem~\ref{thm:bridge_decomp_inj_proof}):
+Every self-avoiding walk decomposes into a unique sequence of bridges
+with monotone widths. The proof requires:
+\begin{enumerate}
+  \item Half-plane walk decomposition by strong induction on width.
+  \item General walk splitting at the first max-$x$ vertex.
+  \item Injectivity of the reverse procedure.
+  \item Weight accounting: walk length $\geq$ sum of bridge lengths.
+\end{enumerate}
+
+\subsection{Architectural issue: column vs.\ diagonal coordinates}
+
+\textbf{Important:} The formalization uses two coordinate systems that are
+not equivalent:
 \begin{itemize}
-  \item Direct consequences of gap~(1) (e.g., \texttt{origin\_bridge\_upper\_bound},
-    \texttt{origin\_bridge\_lower\_bound}, \texttt{origin\_bridge\_partial\_sum\_le\_one});
-  \item Superseded by proved versions (e.g., \texttt{saw\_count\_even\_lower} is
-    proved as \texttt{saw\_count\_even\_lower\_proved} in SAWZigzagBuild.lean);
-  \item Redundant alternative versions (e.g., \texttt{hammersley\_welsh\_injection}
-    is superseded by \texttt{hammersley\_welsh\_summable}).
+  \item \textbf{Column bridges} (\texttt{OriginBridge} in SAWBridgeFix.lean):
+    defined by the $x$-coordinate constraint $0 \leq x \leq T$.
+  \item \textbf{Diagonal bridges} (\texttt{PaperSAW\_B} in
+    SAWStripIdentityCorrect.lean): defined by the diagonal constraint
+    $-T \leq x+y \leq 0$.
 \end{itemize}
 
-\subsection{Column vs.\ diagonal bridge coordinate issue}
+The strip identity $B_{\text{paper}} \leq 1$ holds for \emph{diagonal}
+bridges because the right boundary mid-edges have winding $0$ from the
+starting mid-edge (they are horizontal in the paper's embedding).
+For column strips, the right boundary mid-edges have direction $2\pi/3$,
+giving a weaker bound $B \leq 1/\cos(5\pi/12)$.
 
-The original \texttt{Bridge} definition (in SAWBridge.lean) uses
-\emph{column} coordinates: the strip $S_T$ is defined by $0 \leq x \leq T$,
-and bridges go from $x=0$ to $x=T$.
-The partition function \texttt{origin\_bridge\_partition} sums over such
-column bridges from \texttt{hexOrigin}.
-
-However, the paper's strip identity (Lemma~2) uses \emph{diagonal}
-coordinates: $S_T$ has $0 \leq \mathrm{Re}(z) \leq (3T{+}1)/2$, which
-in integer coordinates corresponds to $-T \leq x+y \leq 0$ (with
-sublattice-dependent bounds encoded in \texttt{PaperInfStrip}).
-
-The paper's construction ensures that right-boundary mid-edges have
-winding~0 from the starting mid-edge~$a$, making the right-boundary
-contribution to the boundary sum purely real. This is \emph{specific to
-the diagonal strip direction} and does not hold for column strips.
-
-Consequently, $B_{\mathrm{paper}} \leq 1$ (Theorem~\ref{thm:B_paper_le_one_direct})
-applies to the \emph{diagonal} partition function, not directly to
-\texttt{origin\_bridge\_partition}. Resolving this requires either:
+The proof chain (SAWHammersleyWelsh, SAWHWDecomp, SAWBridgeFix) uses
+column bridges throughout. Closing Gap~1 therefore requires either:
 \begin{enumerate}
-  \item[(a)] Restructuring the proof chain to use diagonal bridges
-    (\texttt{NegDiagOriginBridge}) throughout; or
-  \item[(b)] Establishing a connection between column and diagonal bridge
-    partition functions (e.g., via a lattice automorphism).
+  \item[(a)] Restructuring the proof chain to use diagonal bridges; or
+  \item[(b)] Proving a column strip identity with different coefficients
+    (which gives $B \leq C$ for some $C > 1$, then adjusting downstream
+    constants); or
+  \item[(c)] Finding a lattice automorphism relating column and diagonal
+    bridges (no simple automorphism exists in the current coordinate system);
+    or
+  \item[(d)] Using \texttt{PaperBridge} (defined in SAWDiagProof.lean) which
+    matches \texttt{PaperInfStrip} exactly. The bound
+    $\texttt{paper\_bridge\_partition}(T, x_c) \leq 1/x_c$ follows from
+    $B_{\text{paper}} \leq 1$ with the edge-count convention.
+    The Hammersley--Welsh decomposition can be adapted to split at
+    the vertex with minimal $x+y$ (instead of maximal $x$), producing
+    diagonal bridges. The product convergence still works with the
+    weaker bound $B \leq 1/x_c$ (any finite constant suffices).
 \end{enumerate}
 
-The diagonal bridge infrastructure in SAWDiagBridge.lean and
-SAWDiagConnection.lean provides definitions and basic properties
-for approach~(a), including the injection from \texttt{PaperSAW\_B}
-into \texttt{NegDiagOriginBridge} and the hex lattice reflection
-\texttt{hexReflect}.
+Option (d), using \texttt{PaperBridge} from SAWDiagProof.lean, is the
+recommended approach. The definitions and key lemmas (bridge length $\geq T$,
+fit in finite strip) are proved. The remaining sorry is
+\texttt{paper\_bridge\_partial\_sum\_le}, which depends on
+\texttt{B\_paper\_le\_one\_direct} (Gap~1).
 
+\subsection{Superseded and non-critical sorries}
+
+All other sorry'd declarations are either:
+\begin{itemize}
+  \item Direct consequences of Gap~1 (e.g., \texttt{origin\_bridge\_upper\_bound},
+    \texttt{origin\_bridge\_lower\_bound}, \texttt{origin\_bridge\_partial\_sum\_le\_one});
+  \item Superseded by proved versions (e.g., \texttt{saw\_count\_even\_lower} is
+    proved as \texttt{saw\_count\_even\_lower\_proved} in SAWZigzagBuild.lean;
+    \texttt{Z\_xc\_diverges} is superseded by \texttt{Z\_xc\_diverges\_from\_lower\_bound};
+    \texttt{hammersley\_welsh\_injection} is superseded by \texttt{hammersley\_welsh\_summable});
+  \item Documented as false (\texttt{strip\_identity\_concrete} for column strips).  
+\end{itemize}
+
+% The column vs diagonal issue is documented in the "Remaining gaps" section above.
 
 \chapter{Elementary bounds}\label{chap:elementary}
 
@@ -2284,6 +2320,76 @@ connect the strip identity to the main theorem.
 \uses{thm:bridge_bound, thm:bridge_lower}
   The bridge partition function should decay as $B_T^{x_c} \sim T^{-1/4}$.
 \end{conjecture}
+
+\section{Paper-compatible bridge partition}
+
+The paper's bridge partition function $B_T^x$ uses diagonal strips
+(defined by the $x+y$ coordinate in our encoding). The original
+\texttt{origin\_bridge\_partition} used column strips (the $x$-coordinate),
+creating a mismatch. The following definitions provide a bridge partition
+that exactly matches the paper's diagonal strip, using the tighter
+\texttt{PaperInfStrip} constraints.
+
+\begin{definition}[Paper bridge]\label{def:paper_bridge}
+\lean{PaperBridge}
+\leanok
+\uses{def:paper_strip}
+  A \emph{paper bridge} of width $T$ is a SAW from \texttt{paperStart}
+  to a FALSE vertex with $x+y = -T$, staying in \texttt{PaperInfStrip T}
+  (TRUE: $-(T{-}1) \leq x{+}y \leq 0$; FALSE: $-T \leq x{+}y \leq -1$).
+  This matches the paper's bridge definition exactly.
+\end{definition}
+
+\begin{definition}[Paper bridge partition]\label{def:paper_bridge_partition}
+\lean{paper_bridge_partition}
+\leanok
+\uses{def:paper_bridge}
+  $\texttt{paper\_bridge\_partition}(T, x) = \sum_{b : \texttt{PaperBridge T}} x^{|b|}$
+  (using edge-count convention, i.e., $x^{\text{walk length}}$).
+\end{definition}
+
+\begin{lemma}[Paper bridge length $\geq$ width]\label{lem:paper_bridge_length}
+\lean{paper_bridge_length_ge}
+\leanok
+\uses{def:paper_bridge}
+  A paper bridge of width $T$ has walk length $\geq T$
+  (since $x+y$ changes by $T$ and each step changes $x+y$ by at most $1$).
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Paper bridge fits in finite strip]\label{lem:paper_bridge_fin_strip}
+\lean{paper_bridge_in_fin_strip}
+\leanok
+\uses{def:paper_bridge, def:paper_strip}
+  Each paper bridge fits in $\texttt{PaperFinStrip T L}$ for
+  $L = \text{walk\_length} + 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Paper bridge partial sum $\leq 1/x_c$]\label{lem:paper_bridge_partial_sum}
+\lean{paper_bridge_partial_sum_le}
+\uses{def:paper_bridge_partition, lem:paper_bridge_fin_strip, thm:B_paper_le_one_direct}
+  For any finite set $F$ of paper bridges,
+  $\sum_{b \in F} x_c^{|b|} \leq 1/x_c$.
+  Follows from $B_{\text{paper}}(T,L,x_c) = \sum x_c^{|b|+1} \leq 1$.
+
+  \textbf{Status: sorry.} Depends on \texttt{B\_paper\_le\_one\_direct}.
+\end{lemma}
+
+\begin{theorem}[Paper bridge partition $\leq 1/x_c$]\label{thm:paper_bridge_upper}
+\lean{paper_bridge_upper_bound}
+\leanok
+\uses{lem:paper_bridge_partial_sum}
+  $\texttt{paper\_bridge\_partition}(T, x_c) \leq 1/x_c$ for $T \geq 1$.
+\end{theorem}
+\begin{proof}
+\uses{lem:paper_bridge_partial_sum}
+  Apply \texttt{Real.tsum\_le\_of\_sum\_le} with the partial sum bound.
+\end{proof}
 
 \section{Quadratic recurrence (lower bound infrastructure)}
 
