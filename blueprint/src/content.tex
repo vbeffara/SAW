@@ -2854,3 +2854,117 @@ the strip identity to the main theorem:
 \begin{proof}
 \leanok
 \end{proof}
+
+\section{Corrected bridge chain (diagonal bridges)}
+
+\textbf{Critical architectural fix:}
+The original \texttt{OriginBridge} and \texttt{origin\_bridge\_partition}
+use x-coordinate strips (Bridge $T$: start at $x=0$, end at $x=T$).
+The paper's strip identity $B \leq 1$ uses diagonal strips
+(strips defined by $x+y$ coordinates, aligned with $\operatorname{Re}(z)$
+in the embedding).
+
+The statement $\texttt{origin\_bridge\_partition}(T, x_c) \leq 1$ is
+\textbf{false} for x-coordinate bridges. For $T=1$, there are $1$ bridge
+of length $1$ and $4$ bridges of length $3$, giving
+$x_c + 4x_c^3 \approx 1.18 > 1$.
+
+The corrected chain uses \texttt{PaperBridge} (diagonal bridges matching
+the paper's convention).
+
+\begin{definition}[Paper bridge]\label{def:paper_bridge}
+\lean{PaperBridge}
+\leanok
+\uses{def:paper_strip}
+  A paper-compatible bridge of width $T$ from \texttt{paperStart}:
+  a SAW path from \texttt{paperStart} to a FALSE vertex with
+  $x+y = -T$, staying in \texttt{PaperInfStrip T}.
+\end{definition}
+
+\begin{definition}[Paper bridge partition]\label{def:paper_bridge_partition}
+\lean{paper_bridge_partition}
+\leanok
+\uses{def:paper_bridge}
+  $\texttt{paper\_bridge\_partition}(T, x) = \sum_{b : \text{PaperBridge}(T)} x^{|b|}$.
+\end{definition}
+
+\begin{lemma}[Paper bridge length $\geq T$]\label{lem:paper_bridge_length}
+\lean{paper_bridge_length_ge}
+\leanok
+\uses{def:paper_bridge}
+  Each paper bridge of width $T$ has length $\geq T$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Paper bridge upper bound]\label{thm:paper_bridge_upper}
+\lean{paper_bridge_upper_bound}
+\uses{thm:B_paper_le_one_direct, def:paper_bridge_partition}
+  $\texttt{paper\_bridge\_partition}(T, x_c) \leq 1/x_c$ for $T \geq 1$.
+  \textbf{Status: depends on B\_paper\_le\_one\_direct (sorry).}
+\end{theorem}
+\begin{proof}
+\uses{thm:B_paper_le_one_direct}
+  Map each paper bridge to a PaperSAW\_B; bound partial sums;
+  divide by $x_c$.
+\end{proof}
+
+\begin{lemma}[Paper bridge to SAW injection]\label{lem:paper_bridge_SAW}
+\lean{paperBridge_toSAW_sigma_injective}
+\leanok
+\uses{def:paper_bridge}
+  The map from paper bridges to SAWs from \texttt{paperStart}
+  (as sigma types) is injective.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Paper bridge filter card]\label{lem:paper_bridge_filter}
+\lean{paper_bridge_filter_card_le}
+\leanok
+\uses{lem:paper_bridge_SAW, lem:saw_count_vertex_indep}
+  For any finite set $F$ of paper bridges of width $T$,
+  $|\{b \in F : |b| = n\}| \leq c_n$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Paper bridge decay]\label{thm:paper_bridge_decay}
+\lean{paper_bridge_decay_corrected}
+\uses{thm:paper_bridge_upper, lem:paper_bridge_length}
+  For $0 < x < x_c$ and $T \geq 1$:
+  $\texttt{paper\_bridge\_partition}(T, x) \leq (x/x_c)^T / x_c$.
+  \textbf{Status: proved (modulo B\_paper\_le\_one\_direct).}
+\end{theorem}
+\begin{proof}
+\uses{thm:paper_bridge_upper, lem:paper_bridge_length}
+  Each bridge has length $\geq T$. Scale from $x_c$ to $x$
+  to get $(x/x_c)^T$ factor.
+\end{proof}
+
+\begin{theorem}[Paper bridge lower bound]\label{thm:paper_bridge_lower}
+\lean{paper_bridge_lower_bound}
+\uses{thm:B_paper_le_one_direct, thm:quad_lower}
+  $\exists c > 0$ such that
+  $\texttt{paper\_bridge\_partition}(T, x_c) \geq c/T$ for all $T \geq 1$.
+  \textbf{Status: sorry.} Depends on the strip identity.
+\end{theorem}
+
+\begin{theorem}[Paper bridge decomposition injection]\label{thm:paper_bridge_decomp}
+\lean{paper_bridge_decomp_injection}
+\uses{def:paper_bridge_partition}
+  $\sum_{n \leq N} c_n x^n \leq 2 \cdot
+   \left(\sum_{S \subseteq \{1,\ldots,N\}} \prod_{T \in S}
+   \texttt{paper\_bridge\_partition}(T{+}1, x)\right)^2$.
+  \textbf{Status: sorry.} This is the Hammersley--Welsh decomposition.
+\end{theorem}
+
+\begin{theorem}[Main theorem (corrected)]\label{thm:main_corrected}
+\lean{connective_constant_eq_corrected}
+\uses{thm:paper_bridge_lower, thm:paper_bridge_decomp, thm:paper_bridge_decay}
+  $\mu = \sqrt{2+\sqrt{2}}$.
+  \textbf{Status: depends on sorry'd lemmas (see above).}
+\end{theorem}
