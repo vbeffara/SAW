@@ -2502,3 +2502,185 @@ from Case~2 of the proof of Theorem~\ref{thm:main}, Section~3 of the paper.
 \begin{proof}
 \leanok
 \end{proof}
+
+
+\section{Discrete Stokes infrastructure}
+
+The proof of $B_{\text{paper}} \leq 1$ requires the discrete Stokes theorem
+for the hexagonal lattice. The following results provide the necessary
+geometric infrastructure.
+
+\begin{definition}[Hex embedding]\label{def:hex_embed}
+\lean{correctHexEmbed}
+\leanok
+\uses{def:hex_lattice}
+  The embedding of the hexagonal lattice into $\mathbb{C}$ with unit edge length:
+  \textsc{False}$(x,y) \mapsto (-3(x+y)/2, (x-y)\sqrt{3}/2)$,
+  \textsc{True}$(x,y) \mapsto (-3(x+y)/2 + 1, (x-y)\sqrt{3}/2)$.
+\end{definition}
+
+\begin{lemma}[Direction factors]\label{lem:hex_dirs}
+\lean{hex_dir_false_true_same, hex_dir_true_false_same}
+\leanok
+\uses{def:hex_embed}
+  The direction vector from \textsc{False}$(x,y)$ to \textsc{True}$(x,y)$ is $(1,0)$.
+  The direction vector from \textsc{True}$(x,y)$ to \textsc{False}$(x,y)$ is $(-1,0)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Interior cancellation]\label{thm:interior_cancel}
+\lean{interior_cancellation}
+\leanok
+\uses{def:hex_embed}
+  For any edge $\{u, w\}$, the sum of direction factors from both endpoints
+  cancels: $(w - u) + (u - w) = 0$. This is the algebraic core of the
+  discrete Stokes theorem.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Right boundary direction]\label{lem:right_boundary_dir}
+\lean{right_boundary_dir}
+\leanok
+\uses{lem:hex_dirs}
+  The direction factor for right boundary edges (connecting
+  \textsc{False}$(x,y)$ inside to \textsc{True}$(x,y)$ outside) is $(1,0)$.
+  This is a \emph{positive real number}, which ensures the right-boundary
+  contribution to the real part of the boundary sum is proportional to $B_{\text{paper}}$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Starting direction]\label{lem:starting_dir}
+\lean{starting_dir}
+\leanok
+\uses{lem:hex_dirs}
+  The direction factor for the starting mid-edge (connecting
+  \texttt{paperStart} to \textsc{False}$(0,0)$ outside) is $(-1,0)$.
+  This contributes $-1$ (or $-1/2$ per the paper's conventions) to the
+  real part of the boundary sum.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+
+\chapter{Main theorem}\label{chap:main}
+
+\begin{theorem}[Main theorem]\label{thm:main}
+\lean{connective_constant_eq}
+\uses{thm:Z_xc_diverges, thm:hw_summable}
+  The connective constant of the hexagonal lattice equals $\sqrt{2+\sqrt{2}}$:
+  \[ \mu = \sqrt{2+\sqrt{2}}. \]
+\end{theorem}
+\begin{proof}
+\uses{thm:Z_xc_diverges, thm:hw_summable}
+  Combine the lower bound ($Z(x_c) = \infty \Rightarrow \mu \geq 1/x_c$)
+  with the upper bound ($Z(x) < \infty$ for $x < x_c \Rightarrow \mu \leq 1/x_c$)
+  via \texttt{connective\_constant\_eq\_from\_bounds}.
+  \textbf{Status: depends on sorry'd lemmas.}
+\end{proof}
+
+\section{Lower bound: $Z(x_c) = \infty$}
+
+\begin{theorem}[$Z(x_c)$ diverges]\label{thm:Z_xc_diverges}
+\lean{Z_xc_diverges_from_lower_bound}
+\uses{thm:bridge_lower, lem:bridge_sum_le_Z}
+  The partition function $Z(x_c) = \sum c_n x_c^n = \infty$.
+  From the bridge lower bound $B_T \geq c/T$, bridges inject into SAWs,
+  and the harmonic series diverges.
+  \textbf{Status: depends on \texttt{origin\_bridge\_lower\_bound} (sorry).}
+\end{theorem}
+
+\begin{theorem}[Bridge lower bound]\label{thm:bridge_lower}
+\lean{origin_bridge_lower_bound}
+\uses{thm:B_paper_le_one_direct, thm:case2_lower}
+  $\exists c > 0$ such that $B_T^{x_c} \geq c/T$ for all $T \geq 1$.
+  \textbf{Status: sorry.} Depends on the strip identity.
+\end{theorem}
+
+\section{Upper bound: $Z(x) < \infty$ for $x < x_c$}
+
+\begin{theorem}[Hammersley--Welsh summability]\label{thm:hw_summable}
+\lean{hammersley_welsh_summable}
+\uses{thm:hw_injection, thm:bridge_decay}
+  For $0 < x < x_c$, $Z(x) = \sum c_n x^n < \infty$.
+  Combines the bridge decomposition injection with the bridge decay bound.
+  \textbf{Status: depends on sorry'd lemmas.}
+\end{theorem}
+
+\begin{theorem}[Bridge decomposition injection]\label{thm:hw_injection}
+\lean{bridge_decomposition_injection_proof}
+\uses{def:bridge}
+  Every SAW decomposes into bridges with strictly monotone widths:
+  \[ \sum_{n \leq N} c_n x^n \leq 2 \cdot
+     \left(\sum_{S \subseteq \{1,\ldots,N\}} \prod_{T \in S} B_{T}^x\right)^2. \]
+  \textbf{Status: sorry.} This is the Hammersley--Welsh (1962) decomposition.
+\end{theorem}
+
+\begin{theorem}[Bridge decay]\label{thm:bridge_decay}
+\lean{origin_bridge_decay}
+\leanok
+\uses{thm:bridge_bound}
+  For $0 < x < x_c$ and $T \geq 1$: $B_T^x \leq (x/x_c)^T$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_bound}
+  Each bridge of width $T$ has length $\geq T$. Scale the weight by $(x/x_c)^T$.
+\end{proof}
+
+\begin{theorem}[Bridge upper bound]\label{thm:bridge_bound}
+\lean{origin_bridge_upper_bound}
+\uses{thm:B_paper_le_one_direct}
+  $B_T^{x_c} \leq 1$ for all $T \geq 1$.
+  \textbf{Status: sorry.} Depends on the strip identity.
+\end{theorem}
+
+\section{Abstract proof chain (proved)}
+
+The following abstract results are fully proved and connect
+the strip identity to the main theorem:
+
+\begin{theorem}[Bridge product convergence]\label{thm:bridge_prod}
+\lean{hw_upper_bound_abstract}
+\leanok
+  If $B_T \leq r^T$ for $0 \leq r < 1$, then $\prod(1 + B_T)^2$ is bounded.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Subset product identity]\label{thm:subset_prod}
+\lean{subset_product_identity}
+\leanok
+  $\sum_{S \subseteq \text{range}(N)} \prod_{T \in S} b(T+1)
+  = \prod_{T < N} (1 + b(T+1))$.
+\end{theorem}
+\begin{proof}
+\leanok
+  This is \texttt{Finset.prod\_one\_add} in Mathlib.
+\end{proof}
+
+\begin{theorem}[Strip identity limit]\label{thm:strip_limit}
+\lean{strip_identity_limit}
+\leanok
+  The strip identity passes to the limit by continuity of
+  addition and multiplication.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Monotone bounded convergence]\label{thm:mono_conv}
+\lean{monotone_bounded_converges}
+\leanok
+  A monotone increasing sequence bounded above converges.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
