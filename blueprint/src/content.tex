@@ -2370,15 +2370,36 @@ that exactly matches the paper's diagonal strip, using the tighter
 \leanok
 \end{proof}
 
+\begin{lemma}[Paper bridge partial sum (shifted) $\leq 1$]\label{lem:paper_bridge_shifted}
+\lean{paper_bridge_partial_sum_shifted_le}
+\leanok
+\uses{def:paper_bridge_partition, lem:paper_bridge_fin_strip, thm:B_paper_le_one_direct}
+  For any finite set $F$ of paper bridges fitting in $S_{T,L}$,
+  $\sum_{b \in F} x_c^{|b|+1} \leq 1$.
+  Maps bridges injectively to \texttt{PaperSAW\_B} and uses $B \leq 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{thm:B_paper_le_one_direct}
+  Map each bridge to a PaperSAW\_B via \texttt{paperBridgeToSAWB}.
+  The image sum $\leq$ full sum $= B_{\text{paper}} \leq 1$.
+\end{proof}
+
 \begin{lemma}[Paper bridge partial sum $\leq 1/x_c$]\label{lem:paper_bridge_partial_sum}
 \lean{paper_bridge_partial_sum_le}
-\uses{def:paper_bridge_partition, lem:paper_bridge_fin_strip, thm:B_paper_le_one_direct}
+\leanok
+\uses{lem:paper_bridge_shifted, lem:paper_bridge_fin_strip}
   For any finite set $F$ of paper bridges,
   $\sum_{b \in F} x_c^{|b|} \leq 1/x_c$.
-  Follows from $B_{\text{paper}}(T,L,x_c) = \sum x_c^{|b|+1} \leq 1$.
-
-  \textbf{Status: sorry.} Depends on \texttt{B\_paper\_le\_one\_direct}.
+  Factor out $x_c$ from the shifted sum bound.
 \end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:paper_bridge_shifted, lem:paper_bridge_fin_strip}
+  Choose $L$ large enough for all bridges in $F$.
+  Apply \texttt{paper\_bridge\_partial\_sum\_shifted\_le},
+  then divide by $x_c$.
+\end{proof}
 
 \begin{theorem}[Paper bridge partition $\leq 1/x_c$]\label{thm:paper_bridge_upper}
 \lean{paper_bridge_upper_bound}
@@ -2582,7 +2603,15 @@ geometric infrastructure.
   Combine the lower bound ($Z(x_c) = \infty \Rightarrow \mu \geq 1/x_c$)
   with the upper bound ($Z(x) < \infty$ for $x < x_c \Rightarrow \mu \leq 1/x_c$)
   via \texttt{connective\_constant\_eq\_from\_bounds}.
-  \textbf{Status: depends on sorry'd lemmas.}
+
+  \textbf{Status: depends on three sorry'd lemmas:}
+  \begin{enumerate}
+  \item \texttt{B\_paper\_le\_one\_direct} (Lemma~2 --- the fundamental gap),
+  \item \texttt{origin\_bridge\_upper\_bound} and
+        \texttt{origin\_bridge\_lower\_bound} (following from~1), and
+  \item \texttt{bridge\_decomposition\_injection\_proof}
+        (the Hammersley--Welsh decomposition, independent of~1).
+  \end{enumerate}
 \end{proof}
 
 \section{Lower bound: $Z(x_c) = \infty$}
@@ -2639,6 +2668,147 @@ geometric infrastructure.
 \uses{thm:B_paper_le_one_direct}
   $B_T^{x_c} \leq 1$ for all $T \geq 1$.
   \textbf{Status: sorry.} Depends on the strip identity.
+\end{theorem}
+
+\section{Parafermionic observable (Lemma~1)}
+
+The proof of the strip identity $B \leq 1$ requires the parafermionic
+observable and its vertex relation.  The algebraic core of the vertex
+relation is fully proved; the combinatorial application to the strip
+domain (discrete Stokes theorem) is the main remaining gap.
+
+\begin{definition}[Hex embedding]\label{def:hex_embed_correct}
+\lean{correctHexEmbed}
+\leanok
+\uses{def:hex_lattice}
+  The embedding of the hexagonal lattice into $\mathbb{C}$ with unit edge length:
+  $\textsc{False}(x,y) \mapsto (-3(x{+}y)/2,\; (x{-}y)\sqrt{3}/2)$,
+  $\textsc{True}(x,y) \mapsto (-3(x{+}y)/2 + 1,\; (x{-}y)\sqrt{3}/2)$.
+\end{definition}
+
+\begin{theorem}[Pair cancellation]\label{thm:pair_cancel}
+\lean{pair_cancellation}
+\leanok
+  $j\,\overline{\lambda}^{\,4} + \bar{j}\,\lambda^4 = 0$.
+  This ensures that pairs of walks visiting all three mid-edges of a vertex
+  cancel in the vertex relation.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Triplet cancellation]\label{thm:triplet_cancel}
+\lean{triplet_cancellation}
+\leanok
+  $1 + x_c\,j\,\overline{\lambda} + x_c\,\bar{j}\,\lambda = 0$.
+  This ensures that triplets of walks (visiting one or two mid-edges)
+  cancel in the vertex relation.  This is the \emph{only} place where
+  the critical value $x_c = 1/\sqrt{2+\sqrt{2}}$ is used.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Interior cancellation]\label{thm:interior_cancel}
+\lean{interior_cancellation}
+\leanok
+\uses{def:hex_embed_correct}
+  For any edge $\{u,w\}$, the sum of direction factors from both endpoints
+  cancels: $(w-u)/2 + (u-w)/2 = 0$.  This is the algebraic core of the
+  discrete Stokes theorem: interior mid-edges contribute zero to the
+  vertex-relation sum.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Boundary $\cos$ positivity]\label{lem:boundary_cos}
+\lean{boundary_cos_pos}
+\leanok
+  For all $\theta \in [-\pi,\pi]$, $\cos(3\theta/8) > 0$.
+  Since $|3\theta/8| \le 3\pi/8 < \pi/2$, this follows from
+  $\cos$ being positive on $(-\pi/2,\pi/2)$.
+  This is the key geometric ingredient ensuring all boundary
+  contributions have positive real parts.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[PaperSAW\_B length $\geq T$]\label{lem:paper_saw_b_length}
+\lean{paperSAW_B_length_ge}
+\leanok
+\uses{def:paper_partition, def:paper_strip}
+  Each walk in $\texttt{PaperSAW\_B}(T,L)$ has length $\geq T$.
+  Since the walk traverses from $\texttt{paperStart}$ (with $x+y=0$) to
+  a vertex with $x+y = -T$, and each hex-lattice step changes $x+y$
+  by at most~$1$, the walk must take at least~$T$ steps.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{def:paper_partition, def:paper_strip}
+  Apply \texttt{hexGraph\_walk\_sum\_bound\_neg} to the walk path,
+  compare with the starting and ending diagonal coordinates,
+  and use \texttt{s.saw.l} to relate walk length to \texttt{s.len}.
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}}$ as a finite sum]\label{lem:B_paper_fintype}
+\lean{B_paper_fintype_sum}
+\leanok
+\uses{def:paper_partition, lem:paper_saw_b_finite}
+  For any Fintype instance on $\texttt{PaperSAW\_B}(T,L)$,
+  $B_{\text{paper}}(T,L,x_c) = \sum_s x_c^{s.\text{len}+1}$ (a finite sum).
+\end{lemma}
+\begin{proof}
+\leanok
+  Unfold $B_{\text{paper}}$ and apply \texttt{tsum\_fintype}.
+\end{proof}
+
+\begin{theorem}[$B_{\text{paper}} \leq 1$ from partial sum bound]\label{thm:B_paper_from_partial}
+\lean{B_paper_le_one_from_partial_bound}
+\leanok
+\uses{lem:B_paper_fintype}
+  If every finite partial sum $\sum_{s \in S} x_c^{s.\text{len}+1} \leq 1$
+  for $S \subseteq \texttt{PaperSAW\_B}(T,L)$, then $B_{\text{paper}}(T,L,x_c) \leq 1$.
+  This reduces the fundamental gap to proving partial sum bounds.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{lem:B_paper_fintype}
+  Rewrite $B_{\text{paper}}$ as a finite sum via \texttt{B\_paper\_fintype\_sum},
+  then apply the hypothesis with $S = \texttt{Finset.univ}$.
+\end{proof}
+
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (fundamental gap)]\label{thm:B_paper_le_one_direct}
+\lean{B_paper_le_one_direct}
+\uses{thm:pair_cancel, thm:triplet_cancel, thm:interior_cancel,
+       lem:boundary_cos, def:paper_partition, def:paper_strip}
+  For $x = x_c$, $T \geq 1$, $L \geq 1$:
+  $B_{\text{paper}}(T, L, x_c) \leq 1$.
+  \textbf{Status: sorry --- the fundamental gap.}
+
+  \medskip
+  \textbf{Proof outline} (from Lemma~2 of the paper).
+  Sum the vertex relation over all vertices of $S_{T,L}$.
+  Interior mid-edges cancel (discrete Stokes); only boundary terms survive.
+  The starting mid-edge $a$ contributes $-1/2$ to the real part;
+  the right-boundary mid-edges contribute $(1/2)\cdot B_{T,L}$;
+  all other boundary contributions have $\operatorname{Re} \geq 0$
+  (because $\cos(3\theta/8) > 0$ for every hex-lattice edge angle $\theta$).
+  Hence $0 \geq -1/2 + B_{T,L}/2$, giving $B_{T,L} \leq 1$.
+
+  \medskip
+  \textbf{Infrastructure still needed:}
+  \begin{enumerate}
+  \item Define the parafermionic observable $F(z)$ for mid-edges of the strip.
+  \item Prove the vertex relation at each strip vertex (via pair/triplet
+        grouping of walks).
+  \item Formalize the discrete Stokes theorem (sum of vertex relations = 0
+        implies boundary sum = 0).
+  \item Evaluate the winding from the starting mid-edge to each boundary
+        type (telescoping: $W = \theta_{\text{exit}} - \theta_{\text{entry}}$).
+  \item Separate the boundary sum by type and extract the $B \leq 1$ bound.
+  \end{enumerate}
 \end{theorem}
 
 \section{Abstract proof chain (proved)}
