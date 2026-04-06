@@ -173,14 +173,16 @@ This requires defining walks restricted to strip domains,
 which is the main remaining formalization task.
 -/
 
-/-- **Corrected bridge upper bound**: origin_bridge_partition T xc ≤ 1.
-    This follows from the strip identity with corrected definitions. -/
+/- SUPERSEDED: origin_bridge_upper_bound is FALSE for x-coordinate bridges.
+   For T=1, origin_bridge_partition 1 xc ≈ 1.76 > 1.
+   The correct bound uses diagonal bridges (paper_bridge_partition T xc ≤ 1/xc)
+   in SAWDiagProof.lean. -/
 theorem origin_bridge_upper_bound (T : ℕ) (hT : 1 ≤ T) :
     origin_bridge_partition T xc ≤ 1 := by
-  sorry
+  sorry -- FALSE for x-coordinate bridges, see SAWPaperChain.lean
 
-/-- **Corrected bridge lower bound**: origin_bridge_partition T xc ≥ c/T.
-    This follows from the Case 2 analysis with corrected definitions. -/
+/- SUPERSEDED by paper_bridge_lower_bound in SAWPaperChain.lean,
+   which uses diagonal bridges matching the paper's convention. -/
 theorem origin_bridge_lower_bound :
     ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ origin_bridge_partition T xc := by
   sorry
@@ -194,10 +196,7 @@ Using the corrected bridge partition:
 Hence Z(xc) = ∞.
 -/
 
-/-- The lower bound on the partition function: Z(xc) diverges.
-    Uses the corrected bridge partition.
-    **Note**: This is superseded by `Z_xc_diverges_from_lower_bound`
-    in SAWStripIdentity.lean, which is used by the main theorem. -/
+/- SUPERSEDED by Z_xc_diverges_corrected in SAWPaperChain.lean. -/
 theorem Z_xc_diverges :
     ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by
   sorry
@@ -214,10 +213,8 @@ length ≥ T, for x < xc:
 The product converges since x/xc < 1.
 -/
 
-/-- The Hammersley-Welsh upper bound Z(x) < ∞ for x < xc.
-    **Note**: This sorry is superseded by `hammersley_welsh_summable`
-    in SAWHammersleyWelsh.lean, which is used by the main theorem.
-    It cannot be proved here due to the import ordering. -/
+/- SUPERSEDED by hw_summable_corrected in SAWPaperChain.lean.
+   Uses paper bridges (diagonal strips) instead of x-coordinate bridges. -/
 theorem hammersley_welsh_injection :
     ∀ x, 0 < x → x < xc →
       Summable (fun n => (saw_count n : ℝ) * x ^ n) := by

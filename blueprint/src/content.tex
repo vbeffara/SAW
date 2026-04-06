@@ -2933,16 +2933,17 @@ the paper's convention).
 \end{proof}
 
 \begin{theorem}[Paper bridge decay]\label{thm:paper_bridge_decay}
-\lean{paper_bridge_decay_corrected}
+\lean{paper_bridge_decay}
 \uses{thm:paper_bridge_upper, lem:paper_bridge_length}
   For $0 < x < x_c$ and $T \geq 1$:
   $\texttt{paper\_bridge\_partition}(T, x) \leq (x/x_c)^T / x_c$.
-  \textbf{Status: proved (modulo B\_paper\_le\_one\_direct).}
+  Proved via partial sum bounds (no circular dependency).
 \end{theorem}
 \begin{proof}
 \uses{thm:paper_bridge_upper, lem:paper_bridge_length}
   Each bridge has length $\geq T$. Scale from $x_c$ to $x$
-  to get $(x/x_c)^T$ factor.
+  using the pointwise bound $x^{\ell} \leq (x/x_c)^T \cdot x_c^{\ell}$.
+  Apply \texttt{Real.tsum\_le\_of\_sum\_le} with the partial sum bound.
 \end{proof}
 
 \begin{theorem}[Paper bridge lower bound]\label{thm:paper_bridge_lower}
@@ -2962,9 +2963,30 @@ the paper's convention).
   \textbf{Status: sorry.} This is the Hammersley--Welsh decomposition.
 \end{theorem}
 
+\begin{theorem}[Hammersley--Welsh summability]\label{thm:hw_summable}
+\lean{hw_summable_corrected}
+\uses{thm:paper_bridge_decomp, thm:paper_bridge_decay}
+  For $0 < x < x_c$, $Z(x) = \sum c_n x^n < \infty$.
+  Proved from the decomposition injection + bridge decay +
+  geometric product convergence. No circular dependency.
+  \textbf{Status: proved (modulo paper\_bridge\_decomp\_injection).}
+\end{theorem}
+\begin{proof}
+\uses{thm:paper_bridge_decomp, thm:paper_bridge_decay}
+  Use the HW partial sum bound: $\sum c_n x^n \leq 2 \cdot (\sum_S \prod B_{T+1})^2$.
+  Bound each $B_{T+1} \leq (1/x_c) \cdot (x/x_c)^{T+1}$.
+  Convert to products: $\prod (1 + (1/x_c) \cdot r^{T+1})$.
+  Use $1+a \leq e^a$ and geometric series convergence for $r = x/x_c < 1$.
+\end{proof}
+
 \begin{theorem}[Main theorem (corrected)]\label{thm:main_corrected}
 \lean{connective_constant_eq_corrected}
-\uses{thm:paper_bridge_lower, thm:paper_bridge_decomp, thm:paper_bridge_decay}
+\uses{thm:paper_bridge_lower, thm:hw_summable}
   $\mu = \sqrt{2+\sqrt{2}}$.
-  \textbf{Status: depends on sorry'd lemmas (see above).}
+  \textbf{Status: depends on 3 sorry'd lemmas:}
+  \begin{enumerate}
+  \item \texttt{B\_paper\_le\_one\_direct} (strip identity),
+  \item \texttt{paper\_bridge\_lower\_bound} (bridge lower bound $c/T$),
+  \item \texttt{paper\_bridge\_decomp\_injection} (HW decomposition).
+  \end{enumerate}
 \end{theorem}
