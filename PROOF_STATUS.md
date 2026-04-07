@@ -1,56 +1,94 @@
-# Proof Status: The Connective Constant of the Honeycomb Lattice
+# Proof Status: The connective constant of the honeycomb lattice equals √(2+√2)
 
-## Main Theorem
-`connective_constant_eq_corrected`: μ = √(2+√2)
+## Main theorem
 
-Located in: `RequestProject/SAWPaperChain.lean`
+`connective_constant_eq` in `SAWFinal.lean`:
+```
+μ = √(2+√2)
+```
 
-## Proof Chain Summary
+**Status: 3 sorry's remaining on the critical path.**
 
-The corrected proof chain uses **diagonal bridges** (PaperBridge, matching the paper's convention) rather than x-coordinate bridges (which give FALSE bounds).
+## Critical path
 
-### Fully Proved (no sorry)
+The main theorem follows the corrected diagonal bridge chain:
 
-1. **Core definitions** (SAW.lean): hexGraph, SAW, saw_count, connective_constant, xc, λ, j
-2. **Algebraic identities** (SAW.lean): pair_cancellation, triplet_cancellation
-3. **Finiteness** (SAW.lean): SAW is Fintype for each n, saw_count_pos
-4. **Submultiplicativity** (SAWSubmult.lean): c_{n+m} ≤ c_n · c_m
-5. **Fekete's lemma** (SAWMain.lean): connective_constant_is_limit', connective_constant_pos'
-6. **Bridge decay** (SAWPaperChain.lean): paper_bridge_partition T x ≤ (x/xc)^T / xc
-   - Uses partial sum bounds directly (NO circular dependency on hammersley_welsh_injection)
-7. **HW summability** (SAWPaperChain.lean): hw_summable_corrected
-   - Proved from paper_bridge_decomp_injection + paper_bridge_decay
-   - No circular dependency
-8. **Abstract infrastructure**: bridge_bound_of_strip_identity, bridge_lower_bound,
-   prod_one_add_geometric_converges, strip_identity_limit, monotone_bounded_converges
-9. **Embedding & directions**: correctHexEmbed, hex directions, interior_cancellation
-10. **Boundary positivity**: boundary_cos_pos
-11. **Paper bridge infrastructure**: paper_bridge_length_ge, paperBridge_toSAW_sigma_injective,
-    paper_bridge_partial_sum_le, paper_bridge_upper_bound
+```
+SAW.lean (constants, algebraic identities) ✓
+├── SAWSubmult.lean (submultiplicativity: c_{n+m} ≤ c_n·c_m) ✓
+│   └── SAWMain.lean (Fekete's lemma → connective constant is a limit) ✓
+│       └── SAWBridge.lean (Bridge defs, connective_constant_eq_from_bounds) ✓
+│           └── SAWBridgeFix.lean (OriginBridge definition) ✓
+│               └── SAWStripIdentityCorrect.lean (PaperBridge, B_paper_le_one_direct) ⚠️ [1 sorry]
+│                   └── SAWDiagBridge.lean → SAWDiagConnection.lean → SAWDiagProof.lean ✓
+│                       └── SAWPaperChain.lean (main theorem assembly) ⚠️ [2 sorry's]
+└── SAWDecomp.lean (quadratic recurrence, abstract bridge bounds) ✓
+```
 
-### Remaining Sorry's (3 on critical path)
+## Remaining sorry's (critical path)
 
-1. **`B_paper_le_one_direct`** (SAWStripIdentityCorrect.lean)
-   - The fundamental gap: B_paper(T, L, xc) ≤ 1
-   - Requires: parafermionic observable vertex relation → discrete Stokes → boundary evaluation
-   - All algebraic ingredients proved (pair/triplet cancellation, boundary_cos_pos)
-   - Missing: combinatorial grouping of walks into pairs/triplets at each vertex
+### 1. `B_paper_le_one_direct` (SAWStripIdentityCorrect.lean:311)
+**The fundamental gap.** For x = x_c, T ≥ 1, L ≥ 1: B_paper(T,L,xc) ≤ 1.
 
-2. **`paper_bridge_lower_bound`** (SAWPaperChain.lean)
-   - ∃ c > 0, paper_bridge_partition T xc ≥ c/T
-   - Depends on B_paper_le_one_direct
-   - Abstract quadratic recurrence infrastructure exists (bridge_lower_bound in SAW.lean)
-   - Needs: connecting the strip identity to the infinite-strip limit + quadratic recurrence
+This is Lemma 2 of the paper — the parafermionic observable argument.
+The proof requires:
+- Summing the vertex relation over all strip vertices
+- Interior cancellation (discrete Stokes theorem)
+- Boundary evaluation using winding = exit_angle - entry_angle
+- boundary_cos_pos ensures non-negative boundary contributions
 
-3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean)
-   - ∑ c_n x^n ≤ 2·(∑_S ∏ B_{T+1})²
-   - Independent of B_paper_le_one_direct
-   - Requires: formalizing the full Hammersley-Welsh bridge decomposition algorithm
-   - The algorithm: for half-plane walks, induction on width; for general walks, split at min diagonal
+**Infrastructure available:**
+- pair_cancellation ✓ (SAW.lean)
+- triplet_cancellation ✓ (SAW.lean)
+- interior_cancellation ✓ (SAWDiscreteStokes.lean)
+- boundary_cos_pos ✓ (SAWStripIdentityCorrect.lean)
+- right_boundary_winding_zero ✓ (SAWObservable.lean)
+- right_boundary_direction ✓ (SAWObservable.lean)
+- starting_midedge_direction ✓ (SAWObservable.lean)
+- paper_fin_strip_finite ✓ (SAWObservableProof.lean)
+- paper_saw_b_finite ✓ (SAWObservableProof.lean)
 
-### Superseded / False Theorems
+**Infrastructure still needed:**
+- Observable F(z) for mid-edges of the strip
+- Vertex relation at each strip vertex (pair/triplet grouping)
+- Discrete Stokes theorem (sum over vertices → boundary sum)
+- Full boundary evaluation
 
-- `origin_bridge_upper_bound` (SAWBridgeFix.lean): **FALSE** for x-coordinate bridges
-- `origin_bridge_lower_bound`, `Z_xc_diverges`, `hammersley_welsh_injection` (SAWBridgeFix.lean): superseded by corrected chain
-- `bridge_decomposition_injection_proof` (SAWHWDecomp.lean): superseded by paper_bridge_decomp_injection
-- `bridge_decomp_injection_from_algorithm` (SAWHWAlgorithm.lean): superseded
+### 2. `paper_bridge_lower_bound` (SAWPaperChain.lean:44)
+∃ c > 0, ∀ T ≥ 1, c/T ≤ paper_bridge_partition(T, xc).
+
+Depends on: B_paper_le_one_direct + passage to infinite strip + case analysis + quadratic recurrence.
+
+### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean:131)
+The Hammersley-Welsh decomposition: every SAW decomposes into bridges.
+Independent of the observable. Requires formalizing the bridge decomposition algorithm.
+
+## Fully proved components
+
+- Hexagonal lattice definition and basic properties ✓
+- Self-avoiding walk counting (c_n, finiteness, small values) ✓
+- Graph automorphisms and vertex independence ✓
+- Submultiplicativity: c_{n+m} ≤ c_n·c_m ✓
+- Fekete's lemma and connective constant as limit ✓
+- Connective constant positivity ✓
+- Algebraic identities (pair/triplet cancellation, x_c = 1/(2cos(π/8))) ✓
+- Interior cancellation (discrete Stokes core) ✓
+- Boundary cos positivity ✓
+- Paper strip domain (PaperInfStrip, PaperFinStrip) ✓
+- Paper-compatible partition functions (A_paper, B_paper, E_paper) ✓
+- Paper bridge definition and basic properties ✓
+- Paper bridge upper bound (≤ 1/xc, from B_paper_le_one) ✓
+- Paper bridge decay ((x/xc)^T / xc for x < xc) ✓
+- Bridge-to-SAW injection (paper_bridge_filter_card_le) ✓
+- Quadratic recurrence lower bound (abstract) ✓
+- Case 2 bridge sum divergence (abstract) ✓
+- Harmonic series divergence lemma ✓
+- Z(xc) diverges (from paper bridge lower bound) ✓ (modulo sorry)
+- HW summability (from paper bridge decomposition) ✓ (modulo sorry)
+- Main theorem assembly via connective_constant_eq_from_bounds ✓ (modulo sorry's)
+- Subset product identity ✓
+- Product convergence for geometric bounds ✓
+- Monotone/antitone bounded convergence ✓
+- Strip identity passage to limit (abstract) ✓
+- Winding telescoping on hex lattice ✓ (SAWObservable.lean)
+- Zigzag lower bound construction ✓ (SAWZigzagBuild.lean)
