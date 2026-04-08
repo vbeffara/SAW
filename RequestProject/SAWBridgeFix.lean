@@ -173,51 +173,19 @@ This requires defining walks restricted to strip domains,
 which is the main remaining formalization task.
 -/
 
-/- SUPERSEDED: origin_bridge_upper_bound is FALSE for x-coordinate bridges.
-   For T=1, origin_bridge_partition 1 xc ≈ 1.76 > 1.
-   The correct bound uses diagonal bridges (paper_bridge_partition T xc ≤ 1/xc)
-   in SAWDiagProof.lean. -/
-theorem origin_bridge_upper_bound (T : ℕ) (hT : 1 ≤ T) :
-    origin_bridge_partition T xc ≤ 1 := by
-  sorry -- FALSE for x-coordinate bridges, see SAWPaperChain.lean
+/-! ## Superseded theorems
 
-/- SUPERSEDED by paper_bridge_lower_bound in SAWPaperChain.lean,
-   which uses diagonal bridges matching the paper's convention. -/
-theorem origin_bridge_lower_bound :
-    ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ origin_bridge_partition T xc := by
-  sorry
+The following theorems have been superseded by the corrected paper-bridge
+infrastructure in SAWDiagProof.lean and SAWPaperChain.lean. They used
+x-coordinate bridges (origin_bridge_partition), which are incorrect:
+`origin_bridge_upper_bound` is FALSE for x-coordinate bridges (T=1 gives ≈ 1.76 > 1).
 
-/-! ## The lower bound: Z(xc) = ∞
-
-Using the corrected bridge partition:
-- origin_bridge_partition T xc ≥ c/T (for all T ≥ 1)
-- Z(xc) ≥ Σ_T origin_bridge_partition T xc (bridges inject into SAWs)
-- Σ c/T = ∞ (harmonic series)
-Hence Z(xc) = ∞.
+The correct versions use diagonal bridges (paper_bridge_partition) from
+SAWDiagProof.lean and SAWPaperChain.lean:
+- paper_bridge_upper_bound  (replaces origin_bridge_upper_bound)
+- paper_bridge_lower_bound  (replaces origin_bridge_lower_bound)
+- Z_xc_diverges_corrected   (replaces Z_xc_diverges)
+- hw_summable_corrected      (replaces hammersley_welsh_injection)
 -/
-
-/- SUPERSEDED by Z_xc_diverges_corrected in SAWPaperChain.lean. -/
-theorem Z_xc_diverges :
-    ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by
-  sorry
-
-/-! ## The upper bound: Z(x) < ∞ for x < xc
-
-The Hammersley-Welsh bridge decomposition gives:
-  Z(x) ≤ 2 · ∏_{T≥1} (1 + origin_bridge_partition T x)²
-
-Since origin_bridge_partition T xc ≤ 1 and bridges of width T have
-length ≥ T, for x < xc:
-  origin_bridge_partition T x ≤ (x/xc)^T
-
-The product converges since x/xc < 1.
--/
-
-/- SUPERSEDED by hw_summable_corrected in SAWPaperChain.lean.
-   Uses paper bridges (diagonal strips) instead of x-coordinate bridges. -/
-theorem hammersley_welsh_injection :
-    ∀ x, 0 < x → x < xc →
-      Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
-  sorry
 
 end

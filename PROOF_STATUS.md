@@ -18,7 +18,7 @@ SAW.lean (constants, algebraic identities) ✓
 ├── SAWSubmult.lean (submultiplicativity: c_{n+m} ≤ c_n·c_m) ✓
 │   └── SAWMain.lean (Fekete's lemma → connective constant is a limit) ✓
 │       └── SAWBridge.lean (Bridge defs, connective_constant_eq_from_bounds) ✓
-│           └── SAWBridgeFix.lean (OriginBridge definition) ✓
+│           └── SAWBridgeFix.lean (OriginBridge definition, superseded sorries removed) ✓
 │               └── SAWStripIdentityCorrect.lean (PaperBridge, B_paper_le_one_direct) ⚠️ [1 sorry]
 │                   └── SAWDiagBridge.lean → SAWDiagConnection.lean → SAWDiagProof.lean ✓
 │                       └── SAWPaperChain.lean (main theorem assembly) ⚠️ [2 sorry's]
@@ -37,11 +37,14 @@ The proof requires:
 - Boundary evaluation using winding = exit_angle - entry_angle
 - boundary_cos_pos ensures non-negative boundary contributions
 
-**Infrastructure available:**
+**Infrastructure available (proved):**
 - pair_cancellation ✓ (SAW.lean)
 - triplet_cancellation ✓ (SAW.lean)
 - interior_cancellation ✓ (SAWDiscreteStokes.lean)
 - boundary_cos_pos ✓ (SAWStripIdentityCorrect.lean)
+- boundary_weight_re_nonneg ✓ (SAWObservableProof2.lean) — **NEW**
+- right_boundary_weight_eq ✓ (SAWObservableProof2.lean) — **NEW**
+- starting_dir_factor_eq ✓ (SAWObservableProof2.lean) — **NEW**
 - right_boundary_winding_zero ✓ (SAWObservable.lean)
 - right_boundary_direction ✓ (SAWObservable.lean)
 - starting_midedge_direction ✓ (SAWObservable.lean)
@@ -49,19 +52,32 @@ The proof requires:
 - paper_saw_b_finite ✓ (SAWObservableProof.lean)
 
 **Infrastructure still needed:**
-- Observable F(z) for mid-edges of the strip
-- Vertex relation at each strip vertex (pair/triplet grouping)
-- Discrete Stokes theorem (sum over vertices → boundary sum)
-- Full boundary evaluation
+- Formal definition of the parafermionic observable F(z)
+- Vertex relation for F at each strip vertex (pair/triplet grouping of walks)
+- Discrete Stokes theorem (sum of vertex relations = boundary sum)
+- Full boundary evaluation connecting to B_paper
 
 ### 2. `paper_bridge_lower_bound` (SAWPaperChain.lean:44)
 ∃ c > 0, ∀ T ≥ 1, c/T ≤ paper_bridge_partition(T, xc).
 
 Depends on: B_paper_le_one_direct + passage to infinite strip + case analysis + quadratic recurrence.
 
-### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean:131)
+### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean:185)
 The Hammersley-Welsh decomposition: every SAW decomposes into bridges.
 Independent of the observable. Requires formalizing the bridge decomposition algorithm.
+
+## Recently proved (this session)
+
+- `paper_bridge_finite_sum_le` ✓ — Finite sets of bridges have total weight ≤ Z(xc)
+- `paper_bridge_summable` ✓ — Each bridge partition function is summable
+- `paper_bridge_sum_le_Z` ✓ — Sum of bridge partitions ≤ Z(xc)
+- `boundary_weight_re_nonneg` ✓ — Boundary weights have non-negative real part
+
+## Superseded code removed (this session)
+
+- SAWBridgeFix.lean: Removed 4 sorry'd theorems that were superseded by
+  paper-bridge versions (origin_bridge_upper_bound [FALSE],
+  origin_bridge_lower_bound, Z_xc_diverges, hammersley_welsh_injection)
 
 ## Fully proved components
 
@@ -74,9 +90,13 @@ Independent of the observable. Requires formalizing the bridge decomposition alg
 - Algebraic identities (pair/triplet cancellation, x_c = 1/(2cos(π/8))) ✓
 - Interior cancellation (discrete Stokes core) ✓
 - Boundary cos positivity ✓
+- Boundary weight non-negativity (all 6 edge types) ✓
 - Paper strip domain (PaperInfStrip, PaperFinStrip) ✓
 - Paper-compatible partition functions (A_paper, B_paper, E_paper) ✓
 - Paper bridge definition and basic properties ✓
+- Paper bridge summability ✓
+- Paper bridge finite sum bound ✓
+- Paper bridge sum ≤ Z(xc) ✓
 - Paper bridge upper bound (≤ 1/xc, from B_paper_le_one) ✓
 - Paper bridge decay ((x/xc)^T / xc for x < xc) ✓
 - Bridge-to-SAW injection (paper_bridge_filter_card_le) ✓

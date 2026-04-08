@@ -2802,6 +2802,26 @@ domain (discrete Stokes theorem) is the main remaining gap.
   then apply the hypothesis with $S = \texttt{Finset.univ}$.
 \end{proof}
 
+\begin{lemma}[Boundary weight non-negativity]\label{lem:boundary_weight_re_nonneg}
+\lean{boundary_weight_re_nonneg}
+\leanok
+\uses{def:hex_embed_correct}
+  For any hex edge $(v, w)$, the real part of the ``boundary weight''
+  $\mathrm{dir}(v,w) \cdot e^{-i\sigma\theta(v,w)}$ is non-negative.
+  This follows from the fact that on the hex lattice,
+  $|3\theta/8| < \pi/2$ for all edge angles $\theta$, so
+  $\cos(3\theta/8) > 0$.
+
+  This is the key geometric ingredient: every boundary mid-edge of the
+  strip domain contributes non-negatively to the real part of the
+  boundary sum.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case split on each of the six edge types of the hex lattice.
+  Each case reduces to showing $\cos(3\theta/8) > 0$ or similar.
+\end{proof}
+
 \begin{theorem}[$B_{\text{paper}} \leq 1$ (fundamental gap)]\label{thm:B_paper_le_one_direct}
 \lean{B_paper_le_one_direct}
 \uses{thm:pair_cancel, thm:triplet_cancel, thm:interior_cancel,
@@ -2963,6 +2983,50 @@ the paper's convention).
 \leanok
 \end{proof}
 
+\begin{lemma}[Paper bridge summability]\label{lem:paper_bridge_summable}
+\lean{paper_bridge_summable}
+\leanok
+\uses{thm:paper_bridge_upper, def:paper_bridge_partition}
+  For $T \geq 1$, the bridge weight function
+  $b \mapsto x_c^{|b|}$ is summable (partial sums bounded by $1/x_c$).
+\end{lemma}
+\begin{proof}
+\leanok
+  Use \texttt{summable\_of\_sum\_le} with the partial sum bound from
+  \texttt{paper\_bridge\_partial\_sum\_le}.
+\end{proof}
+
+\begin{lemma}[Paper bridge finite sum bound]\label{lem:paper_bridge_finite_sum}
+\lean{paper_bridge_finite_sum_le}
+\leanok
+\uses{lem:paper_bridge_SAW, lem:paper_bridge_filter}
+  For any finite set $F$ of bridges (across all widths),
+  $\sum_{b \in F} x_c^{|b|} \leq Z(x_c)$.
+  This uses the injection from bridges to SAWs.
+\end{lemma}
+\begin{proof}
+\leanok
+  Each bridge determines a unique SAW (via \texttt{paperBridge\_toSAW}).
+  Bridges of different widths give different SAWs (different endpoints).
+  Use \texttt{Summable.sum\_le\_tsum} to bound the finite sum.
+\end{proof}
+
+\begin{lemma}[Paper bridge sum $\leq Z$]\label{lem:paper_bridge_sum_le_Z}
+\lean{paper_bridge_sum_le_Z}
+\leanok
+\uses{lem:paper_bridge_finite_sum, lem:paper_bridge_summable}
+  For all $N$:
+  $\sum_{T < N} \texttt{paper\_bridge\_partition}(T{+}1, x_c) \leq Z(x_c)$.
+  Proved by $\varepsilon$-approximation: approximate each tsum by a finite
+  sum, combine, and bound by \texttt{paper\_bridge\_finite\_sum\_le}.
+\end{lemma}
+\begin{proof}
+\leanok
+  Use \texttt{le\_of\_tendsto} with finite-sum approximations
+  of each summable tsum, then apply
+  \texttt{paper\_bridge\_finite\_sum\_le} to the combined finite set.
+\end{proof}
+
 \begin{theorem}[Paper bridge decay]\label{thm:paper_bridge_decay}
 \lean{paper_bridge_decay}
 \uses{thm:paper_bridge_upper, lem:paper_bridge_length}
@@ -3014,10 +3078,17 @@ the paper's convention).
 \lean{connective_constant_eq_corrected}
 \uses{thm:paper_bridge_lower, thm:hw_summable}
   $\mu = \sqrt{2+\sqrt{2}}$.
-  \textbf{Status: depends on 3 sorry'd lemmas:}
+  \textbf{Status: depends on 3 remaining sorry'd lemmas:}
   \begin{enumerate}
-  \item \texttt{B\_paper\_le\_one\_direct} (strip identity),
-  \item \texttt{paper\_bridge\_lower\_bound} (bridge lower bound $c/T$),
-  \item \texttt{paper\_bridge\_decomp\_injection} (HW decomposition).
+  \item \texttt{B\_paper\_le\_one\_direct} (Lemma~2 of the paper: the strip identity
+        via the parafermionic observable),
+  \item \texttt{paper\_bridge\_lower\_bound} (bridge lower bound $c/T$, depends on \#1),
+  \item \texttt{paper\_bridge\_decomp\_injection} (Hammersley--Welsh decomposition,
+        independent of \#1).
   \end{enumerate}
+  All other parts of the proof are fully formalized, including:
+  the algebraic identities (pair/triplet cancellation), Fekete's lemma,
+  submultiplicativity, bridge infrastructure, quadratic recurrence,
+  bridge decay bounds, bridge--SAW injection, and the main
+  theorem assembly.
 \end{theorem}

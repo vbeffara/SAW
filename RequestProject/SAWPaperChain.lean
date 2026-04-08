@@ -59,11 +59,65 @@ lemma paper_bridge_filter_card_le (T n : ℕ) (F : Finset (PaperBridge T)) :
   · rw [Finset.card_image_of_injective _ fun a b h => by aesop]
     norm_num [saw_count, saw_count_paperStart]
 
+/-
+For a finite set of bridges, the total weight is at most Z(xc).
+-/
+lemma paper_bridge_finite_sum_le (F : Finset (Σ T : ℕ, PaperBridge (T + 1)))
+    (hsum : Summable (fun n => (saw_count n : ℝ) * xc ^ n)) :
+    ∑ b ∈ F, xc ^ (b.2.walk.1.length) ≤
+    ∑' n, (saw_count n : ℝ) * xc ^ n := by
+  -- Since each bridge in F useful for our purpose to our every path .1 gives an exact every variety that every path is exact every path that group That exact every path every count of each走上, ensure like was the overall would exactly sum
+  let f : (Σ T, PaperBridge (T + 1)) → Σ n, SAW paperStart n := fun p ↦
+    ⟨p.snd.walk.1.length, paperBridge_toSAW p.snd⟩;
+  -- By definition of $f$, we know that it is injective on $F$.
+  have h_inj : Function.Injective f := by
+    -- To prove injectivity, assume $f(p1) = f(p2)$ and show $p1 = p2$.
+    intro p1 p2 h_eq
+    have h_T : p1.fst = p2.fst := by
+      have h_endpoints : p1.snd.end_v.1 + p1.snd.end_v.2.1 = -(p1.fst + 1 : ℤ) ∧ p2.snd.end_v.1 + p2.snd.end_v.2.1 = -(p2.fst + 1 : ℤ) := by
+        exact ⟨ p1.snd.end_right.1, p2.snd.end_right.1 ⟩;
+      grind +locals;
+    have := paperBridge_toSAW_sigma_injective ( p1.fst + 1 ) ; aesop;
+  have h_sum_le : ∑ b ∈ F, xc ^ (b.snd.walk.1.length) ≤ ∑ n ∈ (Finset.image (fun b => b.snd.walk.1.length) F), (Finset.filter (fun b => b.snd.walk.1.length = n) F).card * xc ^ n := by
+    rw [ Finset.sum_image' ];
+    intro i hi; rw [ Finset.sum_congr rfl fun j hj => by rw [ Finset.mem_filter.mp hj |>.2 ] ] ; simp +decide [ mul_comm ] ;
+  have h_sum_le : ∑ n ∈ (Finset.image (fun b => b.snd.walk.1.length) F), (Finset.filter (fun b => b.snd.walk.1.length = n) F).card * xc ^ n ≤ ∑ n ∈ (Finset.image (fun b => b.snd.walk.1.length) F), (saw_count n : ℝ) * xc ^ n := by
+    gcongr;
+    · exact pow_nonneg ( by rw [ xc ] ; positivity ) _;
+    · have h_card_le : (Finset.filter (fun b => b.snd.walk.1.length = ‹_›) F).card ≤ (Finset.image (fun b => f b) (Finset.filter (fun b => b.snd.walk.1.length = ‹_›) F)).card := by
+        rw [ Finset.card_image_of_injective _ h_inj ];
+      refine le_trans h_card_le ?_;
+      refine' le_trans ( Finset.card_le_card _ ) _;
+      exact Finset.image ( fun s => ⟨ _, s ⟩ ) ( Finset.univ : Finset ( SAW paperStart ‹_› ) );
+      · grind;
+      · rw [ Finset.card_image_of_injective _ fun x y hxy => by injection hxy ] ; simp +decide [ saw_count_paperStart ];
+  exact le_trans ‹_› ( h_sum_le.trans ( Summable.sum_le_tsum _ ( fun _ _ => mul_nonneg ( Nat.cast_nonneg _ ) ( pow_nonneg ( show 0 ≤ xc by exact div_nonneg zero_le_one ( Real.sqrt_nonneg _ ) ) _ ) ) hsum ) )
+
+/-- Each individual paper_bridge_partition is summable (partial sums bounded by 1/xc). -/
+lemma paper_bridge_summable (T : ℕ) (hT : 1 ≤ T) :
+    Summable (fun b : PaperBridge T => xc ^ b.walk.1.length) := by
+  exact summable_of_sum_le (fun b => pow_nonneg xc_pos.le _)
+    (fun F => paper_bridge_partial_sum_le T hT F)
+
 lemma paper_bridge_sum_le_Z (N : ℕ) (_hx : 0 < xc)
     (hsum : Summable (fun n => (saw_count n : ℝ) * xc ^ n)) :
     ∑ T ∈ Finset.range N, paper_bridge_partition (T + 1) xc ≤
     ∑' n, (saw_count n : ℝ) * xc ^ n := by
-  grind +suggestions
+  have h_finite_sum : ∀ T ∈ Finset.range N, ∀ ε > 0, ∃ F : Finset (PaperBridge (T + 1)), ∑ b ∈ F, xc ^ (b.walk.1.length) ≥ paper_bridge_partition (T + 1) xc - ε / (N + 1) := by
+    intros T hT ε hε_pos
+    have h_finite_sum : Filter.Tendsto (fun F : Finset (PaperBridge (T + 1)) => ∑ b ∈ F, xc ^ (b.walk.1.length)) (Filter.atTop : Filter (Finset (PaperBridge (T + 1)))) (nhds (paper_bridge_partition (T + 1) xc)) := by
+      exact Summable.hasSum ( paper_bridge_summable _ <| Nat.succ_pos _ ) |> fun h => h.comp <| Filter.tendsto_atTop_atTop.mpr fun F => ⟨ F, fun G hG => Finset.le_iff_subset.mpr hG ⟩;
+    exact Filter.Eventually.exists ( h_finite_sum.eventually ( le_mem_nhds <| sub_lt_self _ <| by positivity ) );
+  choose! F hF using h_finite_sum;
+  have h_combined : ∀ ε > 0, ∑ T ∈ Finset.range N, (paper_bridge_partition (T + 1) xc - ε / (N + 1)) ≤ ∑' n, (saw_count n : ℝ) * xc ^ n := by
+    intros ε hε_pos
+    have h_combined : ∑ T ∈ Finset.range N, ∑ b ∈ F T ε, xc ^ (b.walk.1.length) ≤ ∑' n, (saw_count n : ℝ) * xc ^ n := by
+      convert paper_bridge_finite_sum_le _ hsum using 1;
+      rw [ Finset.sum_sigma' ];
+    exact le_trans ( Finset.sum_le_sum fun T hT => hF T hT ε hε_pos ) h_combined;
+  have h_combined : Filter.Tendsto (fun ε : ℝ => ∑ T ∈ Finset.range N, (paper_bridge_partition (T + 1) xc - ε / (N + 1))) (nhdsWithin 0 (Set.Ioi 0)) (nhds (∑ T ∈ Finset.range N, paper_bridge_partition (T + 1) xc)) := by
+    exact tendsto_nhdsWithin_of_tendsto_nhds ( Continuous.tendsto' ( by continuity ) _ _ <| by norm_num );
+  exact le_of_tendsto h_combined ( Filter.eventually_of_mem self_mem_nhdsWithin fun ε hε => by aesop )
 
 /-! ## Z(xc) diverges -/
 
