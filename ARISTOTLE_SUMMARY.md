@@ -1,3 +1,44 @@
+# Summary of changes for run 5a331b2a-28f5-45d8-9e6d-955b6babe243
+## Summary of Progress
+
+### New Formalized Results (on the path to the main theorem)
+
+1. **`paperBridge_width1`** — Explicit construction of a paper bridge of width 1: the path `paperStart = (0,0,true) → (-1,0,false)`. This is the base case for bridge existence.
+
+2. **`paper_bridge_partition_one_pos`** — Proved that `paper_bridge_partition 1 xc > 0`: the bridge partition function at width 1 is strictly positive. Uses the explicit bridge construction above.
+
+3. **`paper_bridge_partition_pos`** — Proved that `paper_bridge_partition T xc > 0` for all `T ≥ 1`: bridges exist for all widths. The proof constructs bridges by induction, extending a width-T bridge to width T+1 by appending two edges through an intermediate TRUE vertex. This is a key ingredient for the quadratic recurrence lower bound.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with:
+- New lemma entries for `paper_bridge_partition_pos` and `paper_bridge_partition_one_pos` with `\leanok` status
+- Updated description of `paper_bridge_lower_bound` to clarify its dependency on the infinite-strip quadratic recurrence
+
+### Updated `PROOF_STATUS.md`
+
+Updated to reflect the current state: 3 sorry's remain on the critical path:
+1. `B_paper_le_one_direct` (the parafermionic observable / strip identity — Lemma 2 of the paper)
+2. `paper_bridge_lower_bound` (bridge lower bound c/T, depends on #1)
+3. `paper_bridge_decomp_injection` (Hammersley-Welsh decomposition, independent of #1)
+
+### Code Cleanup
+
+- Removed orphaned proof code from `SAWPaperChain.lean` that was left from a previous subagent attempt
+- Reordered declarations in `SAWPaperChain.lean` to resolve forward-reference issues (moved positivity lemmas after `paper_bridge_summable`)
+
+### What Remains
+
+The three remaining sorry's represent the core mathematical content that needs formalization:
+
+1. **B_paper_le_one_direct**: This is the fundamental gap. The proof requires formalizing the parafermionic observable F(z), proving the vertex relation (via pair/triplet walk grouping), the discrete Stokes theorem (summing vertex relations over the strip), and boundary evaluation. The algebraic ingredients are fully proved (pair_cancellation, triplet_cancellation, interior_cancellation, boundary_weight_re_nonneg), but the combinatorial infrastructure connecting walks to the observable is missing.
+
+2. **paper_bridge_lower_bound**: Needs the passage from finite to infinite strip (defining A_T^inf, B_T^inf, E_T^inf, proving monotone convergence and the strip identity in the limit), plus the cutting argument (A_{T+1} - A_T ≤ xc · B_{T+1}²). The abstract quadratic recurrence bound is already proved in `SAWDecomp.lean`.
+
+3. **paper_bridge_decomp_injection**: The Hammersley-Welsh decomposition algorithm (split walk at first max-diagonal vertex, decompose each half into bridges by induction on width, prove injectivity). This is purely combinatorial and independent of the observable.
+
+All other components of the proof are fully formalized, including: Fekete's lemma, submultiplicativity, bridge infrastructure, bridge decay bounds, bridge-SAW injection, main theorem assembly, and all algebraic identities.
+
 # Summary: Continued Formalization of SAW.tex
 
 ## Session Overview

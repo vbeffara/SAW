@@ -35,10 +35,10 @@ lemma saw_count_paperStart (n : ℕ) :
     Fintype.card (SAW paperStart n) = saw_count n :=
   saw_count_vertex_independent paperStart n
 
-/-! ## Paper bridge lower bound -/
-
 /-- Paper bridge lower bound: ∃ c > 0, paper_bridge_partition T xc ≥ c/T.
-    **Status: sorry.** Depends on B_paper_le_one_direct. -/
+    **Status: sorry.** Depends on B_paper_le_one_direct and the strip identity
+    for the infinite strip. The proof uses the quadratic recurrence from
+    quadratic_recurrence_lower_bound in SAWDecomp.lean. -/
 theorem paper_bridge_lower_bound :
     ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ paper_bridge_partition T xc := by
   sorry
@@ -98,6 +98,51 @@ lemma paper_bridge_summable (T : ℕ) (hT : 1 ≤ T) :
     Summable (fun b : PaperBridge T => xc ^ b.walk.1.length) := by
   exact summable_of_sum_le (fun b => pow_nonneg xc_pos.le _)
     (fun F => paper_bridge_partial_sum_le T hT F)
+
+/-! ## Paper bridge positivity -/
+
+/-- An explicit bridge of width 1: paperStart → (-1, 0, false). -/
+noncomputable def paperBridge_width1 : PaperBridge 1 where
+  end_v := (-1, 0, false)
+  walk := ⟨SimpleGraph.Walk.cons (by decide : hexGraph.Adj paperStart (-1, 0, false)) .nil,
+           by simp [SimpleGraph.Walk.cons_isPath_iff, paperStart]⟩
+  end_right := by constructor <;> decide
+  in_strip := by intro v hv; simp at hv; rcases hv with rfl | rfl <;> decide
+
+/-- paper_bridge_partition 1 xc > 0: there exists at least one bridge of width 1. -/
+lemma paper_bridge_partition_one_pos : 0 < paper_bridge_partition 1 xc := by
+  exact lt_of_lt_of_le (pow_pos xc_pos _)
+    (Summable.le_tsum (paper_bridge_summable 1 (by norm_num))
+      paperBridge_width1 (fun b _ => pow_nonneg xc_pos.le _))
+
+/-
+paper_bridge_partition T xc > 0 for all T ≥ 1.
+    Bridges exist: constructed by extending a width-1 bridge step by step.
+-/
+lemma paper_bridge_partition_pos (T : ℕ) (hT : 1 ≤ T) :
+    0 < paper_bridge_partition T xc := by
+  -- By definition of $paper_bridge_partition$, there exists at least one bridge of width $T$.
+  obtain ⟨b, hb⟩ : ∃ b : PaperBridge T, True := by
+    induction' hT with T hT ih <;> norm_num at *;
+    · exact ⟨ paperBridge_width1 ⟩;
+    · obtain ⟨ b, hb ⟩ := ih;
+      refine' ⟨ ⟨ _, _, _, _ ⟩ ⟩ <;> norm_num [ PaperInfStrip ] at *;
+      exact ( b.1 - 1, b.2.1, false );
+      refine' ⟨ hb.1.append ( SimpleGraph.Walk.cons ( show hexGraph.Adj b ( b.1, b.2.1, true ) from _ ) ( SimpleGraph.Walk.cons ( show hexGraph.Adj ( b.1, b.2.1, true ) ( b.1 - 1, b.2.1, false ) from _ ) SimpleGraph.Walk.nil ) ), _ ⟩ <;> simp_all +decide [ hexGraph ];
+      all_goals norm_num [ SimpleGraph.Walk.isPath_def, SimpleGraph.Walk.support_append ] at *;
+      · simp_all +decide [ List.nodup_append, List.nodup_cons ];
+        intro a a_1; constructor <;> intro h₁ h₂ h₃ <;> simp_all +decide [ PaperInfStrip ] ;
+        · grind;
+        · grind +ring;
+      · linarith;
+      · intro a a_1; constructor <;> intro h <;> rcases h with ( h | ⟨ rfl, rfl ⟩ ) <;> simp_all +decide [ PaperInfStrip ] ;
+        · linarith [ ( ‹∀ a a_2 : ℤ, ( ( a, a_2, false ) ∈ ( hb : SimpleGraph.Walk hexGraph paperStart b ).support → -↑T ≤ a + a_2 ∧ a + a_2 ≤ -1 ) ∧ ( ( a, a_2, true ) ∈ ( hb : SimpleGraph.Walk hexGraph paperStart b ).support → 1 ≤ a + a_2 + ↑T ∧ a + a_2 ≤ 0 ) › a a_1 ) |>.1 h ];
+        · constructor <;> linarith;
+        · grind +ring;
+  refine' lt_of_lt_of_le _ ( Summable.le_tsum _ b _ );
+  · exact pow_pos ( by rw [ show xc = 1 / ( Real.sqrt ( 2 + Real.sqrt 2 ) ) by rfl ] ; positivity ) _;
+  · convert paper_bridge_summable T hT using 1;
+  · exact fun _ _ => pow_nonneg xc_pos.le _
 
 lemma paper_bridge_sum_le_Z (N : ℕ) (_hx : 0 < xc)
     (hsum : Summable (fun n => (saw_count n : ℝ) * xc ^ n)) :

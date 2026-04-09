@@ -3041,12 +3041,41 @@ the paper's convention).
   Apply \texttt{Real.tsum\_le\_of\_sum\_le} with the partial sum bound.
 \end{proof}
 
+\begin{lemma}[Paper bridge partition positivity]\label{lem:paper_bridge_pos}
+\lean{paper_bridge_partition_pos}
+\leanok
+\uses{def:paper_bridge_partition, lem:paper_bridge_summable}
+  For $T \geq 1$, $\texttt{paper\_bridge\_partition}(T, x_c) > 0$.
+  Bridges exist for all widths: constructed by extending the width-1 bridge
+  step by step.
+\end{lemma}
+\begin{proof}
+\leanok
+  By induction on $T$. For $T = 1$, the bridge
+  $(0,0,\text{true}) \to (-1,0,\text{false})$ has width~1.
+  For $T+1$, extend a width-$T$ bridge by two more edges
+  (through a TRUE vertex, then to a new FALSE vertex one diagonal
+  step further). The tsum has at least one positive term.
+\end{proof}
+
+\begin{lemma}[Paper bridge partition 1 is positive]\label{lem:paper_bridge_one_pos}
+\lean{paper_bridge_partition_one_pos}
+\leanok
+\uses{def:paper_bridge_partition, lem:paper_bridge_summable}
+  $\texttt{paper\_bridge\_partition}(1, x_c) > 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+  The explicit bridge \texttt{paperBridge\_width1} witnesses this.
+\end{proof}
+
 \begin{theorem}[Paper bridge lower bound]\label{thm:paper_bridge_lower}
 \lean{paper_bridge_lower_bound}
 \uses{thm:B_paper_le_one_direct, thm:quad_lower}
   $\exists c > 0$ such that
   $\texttt{paper\_bridge\_partition}(T, x_c) \geq c/T$ for all $T \geq 1$.
-  \textbf{Status: sorry.} Depends on the strip identity.
+  \textbf{Status: sorry.} Depends on the strip identity and the
+  infinite-strip quadratic recurrence.
 \end{theorem}
 
 \begin{theorem}[Paper bridge decomposition injection]\label{thm:paper_bridge_decomp}
