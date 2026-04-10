@@ -2218,20 +2218,24 @@ and their conjectured conformal invariance in the scaling limit.
 \leanok
 \end{proof}
 
-\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence, direct)]\label{thm:B_paper_le_one_direct}
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one_direct}
 \lean{B_paper_le_one_direct}
 \uses{thm:pair_cancel, thm:triplet_cancel, lem:boundary_cos, def:paper_partition}
   For $x = x_c$, $T \geq 1$, $L \geq 1$:
   $B_{\text{paper}}(T, L, x_c) \leq 1$.
-  This is the key consequence of the parafermionic observable:
-  summing the vertex relation over all strip vertices, interior
-  mid-edges cancel (discrete Stokes), and boundary contributions
-  have non-negative real parts, giving $B \leq 1$.
+
+  \textbf{Note:} The exact vertex-based identity
+  $1 = c_{\alpha} A_{\text{paper}} + B_{\text{paper}} + c_{\varepsilon} E_{\text{paper}}$
+  does \emph{not} hold. The paper's identity uses mid-edge-based partition
+  functions, which differ from vertex-based ones at corner vertices of the
+  strip. However, $B_{\text{paper}} = B_{\text{mid}}$ (each right boundary
+  vertex has exactly one right boundary mid-edge), so the bound
+  $B_{\text{paper}} \leq 1$ follows from the mid-edge identity.
 
   \textbf{Status: sorry.} This is the fundamental gap.
-  Proving it requires formalizing the discrete Stokes theorem
-  (interior cancellation when summing vertex relations) and
-  the boundary winding analysis.
+  Proving it requires formalizing the parafermionic observable,
+  the discrete Stokes theorem (interior cancellation when summing
+  vertex relations), and the boundary winding analysis.
 \end{theorem}
 
 \section{Diagonal bridge infrastructure}
@@ -2822,40 +2826,34 @@ domain (discrete Stokes theorem) is the main remaining gap.
   Each case reduces to showing $\cos(3\theta/8) > 0$ or similar.
 \end{proof}
 
-\begin{theorem}[Strip identity (Lemma~2)]\label{thm:strip_identity_paper}
-\lean{strip_identity_paper}
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2, corrected)]\label{thm:strip_identity_paper}
+\lean{B_paper_le_one_direct}
 \uses{thm:pair_cancel, thm:triplet_cancel, thm:interior_cancel,
        lem:boundary_cos, def:paper_partition, def:paper_strip}
   For $x = x_c$, $T \geq 1$, $L \geq 1$:
-  $1 = c_{\alpha} \cdot A_{\text{paper}}(T, L, x_c) + B_{\text{paper}}(T, L, x_c) + c_{\varepsilon} \cdot E_{\text{paper}}(T, L, x_c).$
+  $B_{\text{paper}}(T, L, x_c) \leq 1$.
   \textbf{Status: sorry --- the fundamental gap.}
 
   \medskip
-  \textbf{Proof outline} (from Lemma~2 of the paper).
+  \textbf{Note:} The paper states the identity
+  $1 = c_\alpha A + B + c_\varepsilon E$ using mid-edge-based partition
+  functions. The \emph{vertex-based} partition functions (PaperSAW\_A/B/E)
+  do \emph{not} satisfy this exact identity, because corner vertices have
+  boundary mid-edges of multiple types. However, $B_{\text{paper}}$
+  (vertex-based) equals $B_{\text{mid}}$ (mid-edge-based), since each
+  right boundary vertex has exactly one right boundary mid-edge.
+  So $B_{\text{paper}} \leq 1$ follows from the mid-edge identity.
+
+  \medskip
+  \textbf{Proof outline.}
+  Define $F(z) = \sum_{\gamma : a \to z} e^{-i\sigma W(\gamma)} x_c^{\ell(\gamma)}$.
   Sum the vertex relation over all vertices of $S_{T,L}$.
   Interior mid-edges cancel (discrete Stokes); only boundary terms survive.
-  The starting mid-edge $a$ contributes $-1/2$;
-  the right-boundary mid-edges contribute $(1/2)\cdot B$;
-  the left boundary contributes $(c_{\alpha}/2)\cdot A$;
-  the escape boundary contributes $(c_{\varepsilon}/2)\cdot E$.
-  Setting the total to zero: $-1/2 + c_{\alpha}/2 \cdot A + 1/2 \cdot B + c_{\varepsilon}/2 \cdot E = 0$,
-  hence $1 = c_{\alpha} A + B + c_{\varepsilon} E$.
+  Taking real parts: the starting mid-edge contributes $-1/2$;
+  right boundary contributes $(1/2) B_{\text{mid}}$;
+  all other boundary contributions are non-negative (since $\cos(3\theta/8) > 0$).
+  Hence $0 \geq -1/2 + (1/2) B_{\text{mid}}$, so $B_{\text{mid}} \leq 1$.
 \end{theorem}
-
-\begin{theorem}[$B_{\text{paper}} \leq 1$]\label{thm:B_paper_le_one_direct}
-\lean{B_paper_le_one_direct}
-\leanok
-\uses{thm:strip_identity_paper}
-  For $x = x_c$, $T \geq 1$, $L \geq 1$:
-  $B_{\text{paper}}(T, L, x_c) \leq 1$.
-  \textbf{Status: proved} (from the strip identity and non-negativity of $A$, $E$).
-\end{theorem}
-\begin{proof}
-\leanok
-\uses{thm:strip_identity_paper}
-  From $1 = c_{\alpha} A + B + c_{\varepsilon} E$ with $A, E \geq 0$
-  and $c_{\alpha}, c_{\varepsilon} > 0$, we get $B \leq 1$.
-\end{proof}
 
 \section{Abstract proof chain (proved)}
 

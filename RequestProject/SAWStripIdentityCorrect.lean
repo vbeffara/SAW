@@ -1,46 +1,45 @@
 /-
-# Corrected Strip Identity (Lemma 2)
+# Strip Identity Infrastructure (Lemma 2)
 
-Formalization of the strip identity from Section 3 of:
+Based on Section 3 of:
 
   Hugo Duminil-Copin and Stanislav Smirnov,
   "The connective constant of the honeycomb lattice equals √(2+√2)",
   Annals of Mathematics, 175(3), 1653--1665, 2012.
 
-## Key corrections from earlier versions
+## Vertex-based vs mid-edge-based partition functions
 
-The original `paper_strip_identity` stated the exact identity
-  `1 = c_α · A_paper + B_paper + c_ε · E_paper`
-using vertex-based partition functions. This is **incorrect** because:
+The paper's partition functions A, B, E classify walks by their EXIT
+MID-EDGE type. The exact identity `1 = c_α·A + B + c_ε·E` holds for
+mid-edge-based partition functions.
 
-1. The paper's partition functions count walks by EXIT MID-EDGE type,
-   not by vertex boundary type. A walk ending at a corner vertex
-   (adjacent to boundary mid-edges of multiple types) is counted in
-   each partition function corresponding to its boundary mid-edges.
+The vertex-based partition functions (PaperSAW_A, PaperSAW_B, PaperSAW_E)
+classify walks by their endpoint VERTEX. At corner vertices (adjacent to
+boundary mid-edges of multiple types), the vertex classification differs
+from the mid-edge classification. Consequently, the exact identity does
+NOT hold for vertex-based partition functions.
 
-2. The vertex-based E_paper undercounts escape boundary contributions
-   at corner vertices.
+However, the key consequence `B_paper ≤ 1` IS correct for vertex-based
+B_paper, because:
+- B_paper (vertex-based) = B_mid (mid-edge-based): each right boundary
+  vertex has exactly one right boundary mid-edge.
+- B_mid ≤ 1 from the mid-edge identity.
 
-The key consequence `B_paper ≤ 1` IS correct and is what matters for
-the downstream proof. We prove it directly from the parafermionic
-observable theory without going through the exact identity.
+## Proof architecture (for B_paper ≤ 1)
 
-## Proof architecture
+The proof of B_paper ≤ 1 follows from the parafermionic observable:
 
-The fundamental sorry is `strip_identity_paper` (Lemma 2 of the paper):
-  1 = c_α · A_paper + B_paper + c_ε · E_paper
-
-`B_paper_le_one_direct` is PROVED from strip_identity_paper:
-  Since A, E ≥ 0 and c_α, c_ε > 0, B ≤ 1.
-
-The strip identity proof requires:
-1. **Vertex relation**: pair_cancellation + triplet_cancellation
-2. **Discrete Stokes / Telescoping**: interior cancellation
-3. **Boundary evaluation**: starting mid-edge → -1/2;
-   right boundary → B/2; left boundary → c_α/2 · A;
-   escape boundary → c_ε/2 · E
-4. **Assembly**: 0 = -1/2 + c_α/2 · A + 1/2 · B + c_ε/2 · E,
-   hence 1 = c_α A + B + c_ε E.
+1. **Vertex relation** (Lemma 1): pair_cancellation + triplet_cancellation
+   give cancellation at each vertex of the strip.
+2. **Discrete Stokes**: summing over all vertices, interior mid-edges
+   cancel, only boundary mid-edges survive. Total boundary sum = 0.
+3. **Boundary evaluation**:
+   - Starting mid-edge a: contributes -1/2 to real part.
+   - Right boundary: contributes B_mid/2 to real part (winding = 0).
+   - All other boundary: positive real part (cos(3θ/8) > 0 for all
+     hex angles θ).
+4. **Conclusion**: Re(0) = -1/2 + B_mid/2 + (positive) → B_mid ≤ 1.
+   Since B_paper = B_mid, we get B_paper ≤ 1.
 -/
 
 import Mathlib
@@ -52,10 +51,10 @@ noncomputable section
 
 /-! ## Corrected paper-compatible strip domain
 
-The key change from the previous version: TRUE vertices with x+y = -T
-are **excluded** from the strip. This ensures right boundary mid-edges
-are horizontal (connecting FALSE inside to TRUE outside at x+y = -T),
-giving winding 0 from the starting mid-edge a. -/
+TRUE vertices with x+y = -T are **excluded** from the strip. This
+ensures right boundary mid-edges are horizontal (connecting FALSE inside
+to TRUE outside at x+y = -T), giving winding 0 from the starting
+mid-edge a. -/
 
 /-- The corrected infinite strip S_T.
     TRUE(x,y) in strip: -(T-1) ≤ x+y ≤ 0  (excludes x+y = -T)
@@ -144,22 +143,7 @@ def A_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_A T L), x ^ (s.len
 def B_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_B T L), x ^ (s.len + 1)
 def E_paper (T L : ℕ) (x : ℝ) : ℝ := ∑' (s : PaperSAW_E T L), x ^ (s.len + 1)
 
-/-! ## Correct hex lattice embedding
-
-The correct embedding assigns unit edge lengths and 120° angles:
-  FALSE(x,y) at position (-3(x+y)/2, (x-y)√3/2)
-  TRUE(x,y) at position (-3(x+y)/2 + 1, (x-y)√3/2)
-
-Edge directions from FALSE(x,y):
-  → TRUE(x,y): angle 0
-  → TRUE(x+1,y): angle 2π/3
-  → TRUE(x,y+1): angle -2π/3
-
-Edge directions from TRUE(x,y):
-  → FALSE(x,y): angle π
-  → FALSE(x-1,y): angle -π/3
-  → FALSE(x,y-1): angle π/3
--/
+/-! ## Correct hex lattice embedding -/
 
 /-- Correct embedding of hex lattice vertices into ℂ with unit edge length. -/
 def correctHexEmbed : HexVertex → ℂ
@@ -170,28 +154,7 @@ def correctHexEmbed : HexVertex → ℂ
 def hexEdgeAngle (v w : HexVertex) : ℝ :=
   Complex.arg (correctHexEmbed w - correctHexEmbed v)
 
-/-! ## Winding on the honeycomb lattice
-
-On the honeycomb lattice, SAWs (which never backtrack) have turns of
-exactly ±π/3 at each vertex. By telescoping, the total winding from
-mid-edge a to any boundary mid-edge equals the exit angle.
-
-Key property: Since all turns are ±π/3 ∈ (-π, π), the physical winding
-(using Complex.arg for each turn) agrees with the raw angle difference.
-This means W = exit_angle - entry_angle for all SAWs.
-
-**Important subtlety**: This telescoping uses RAW angle differences,
-not Complex.arg-normalized differences. At vertices where the raw turn
-is 5π/3 (= -π/3 + 2π), the Complex.arg gives -π/3 (the physical turn),
-but the raw computation gives 5π/3. The physical winding (sum of
-Complex.arg turns) does NOT telescope, while the raw winding does. -/
-
-/-! ## Boundary mid-edge exit angles
-
-Left boundary (α): TRUE(x,-x) → FALSE(x,-x), exit angle = π
-Right boundary (β): FALSE(x,y) → TRUE(x,y) at x+y=-T, exit angle = 0
-Escape top (ε): various angles (2π/3 or π/3)
-Escape bottom (ε̄): various angles (-2π/3 or -π/3) -/
+/-! ## Boundary mid-edge exit angles -/
 
 /-- The exit angle for left boundary mid-edges is π. -/
 lemma left_boundary_exit_angle (x : ℤ) (_hx : x ≠ 0) :
@@ -239,89 +202,62 @@ Since |3θ/8| ≤ 3π/8 < π/2 for all θ ∈ [-π, π], we have
 cos(3θ/8) > 0, meaning every boundary contribution has positive
 real part. This is the key geometric ingredient. -/
 
-/-
-PROBLEM
-The boundary direction-winding factor cos(3θ/8) is positive
-    for all hex lattice edge angles θ ∈ [-π, π], since |3θ/8| < π/2.
-
-PROVIDED SOLUTION
-Since |θ| ≤ π, we have |3θ/8| ≤ 3π/8 < π/2. So 3θ/8 ∈ (-π/2, π/2), and cos is positive on this interval. Use Real.cos_pos_of_mem_Ioo with the interval (-π/2, π/2). The bound 3π/8 < π/2 follows from 3/8 < 1/2, i.e., 3 < 4.
--/
 lemma boundary_cos_pos (θ : ℝ) (hθ : |θ| ≤ Real.pi) :
     0 < Real.cos (3 * θ / 8) := by
   exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ abs_le.mp hθ, Real.pi_pos ], by linarith [ abs_le.mp hθ, Real.pi_pos ] ⟩
 
-/-! ## The strip identity: B_paper ≤ 1
+/-! ## B_paper ≤ 1: The key bound
 
-The key result needed downstream. This replaces the incorrect exact identity
-`1 = c_α · A_paper + B_paper + c_ε · E_paper`.
+**B_paper(T,L,xc) ≤ 1** is the fundamental bound needed downstream.
 
-### Proof outline (from the paper)
+### Proof outline
 
-The proof follows from summing the vertex relation (Lemma 1) over all
-vertices of the finite strip PaperFinStrip T L:
+The proof uses the parafermionic observable. Define:
+  F(z) = Σ_{γ ⊂ S_{T,L} : a → z} e^{-iσW(γ)} · xc^{ℓ(γ)}
 
-1. At each vertex v, the vertex relation gives a complex equation
-   involving the parafermionic observable at v's three adjacent mid-edges.
+Sum the vertex relation (Lemma 1) over all vertices in V(S_{T,L}).
+Interior mid-edges cancel (each appears in two vertex sums with opposite
+direction factors). The surviving boundary sum equals 0:
 
-2. Summing over all vertices, interior mid-edge contributions cancel
-   (each appears twice with opposite direction factors).
+  0 = Σ_{boundary z} (direction factor at z) · F(z)
 
-3. Only boundary mid-edges survive. The boundary sum equals 0.
+Taking real parts:
+  0 = Re(starting contribution) + Re(left boundary) + Re(right boundary)
+    + Re(escape boundary)
 
-4. The starting mid-edge a contributes -1/2 to the real part.
+The starting mid-edge contributes -1/2. Each right boundary mid-edge
+contributes (1/2)·xc^{ℓ(γ)} (winding = 0, direction = +1/2). So the
+right boundary total is (1/2)·B_mid.
 
-5. Right boundary mid-edges contribute B_paper/2 to the real part
-   (since the exit angle is 0 and the direction factor is 1/2).
+All other boundary contributions have POSITIVE real part because
+cos(3θ/8) > 0 for all hex edge angles θ.
 
-6. All other boundary contributions have non-negative real parts,
-   because cos(3θ/8) > 0 for all hex lattice exit angles θ.
-   Specifically:
-   - Left boundary (θ = π): cos(3π/8) = c_alpha > 0
-   - Escape boundary (θ ∈ {±π/3, ±2π/3, π, 0}): cos(3θ/8) > 0
+Hence: 0 ≥ -1/2 + (1/2)·B_mid, so B_mid ≤ 1.
 
-7. From Re(0) = -1/2 + B_paper/2 + (non-negative), we get B_paper ≤ 1.
+Since B_paper = B_mid (each right boundary vertex has exactly one right
+boundary mid-edge), B_paper ≤ 1.
 
-### Why cos(3θ/8) > 0 for all boundary angles
-
-The hex lattice has edge angles in {0, ±π/3, ±2π/3, π} ⊆ [-π, π].
-For θ ∈ [-π, π], |3θ/8| ≤ 3π/8 < π/2, so cos(3θ/8) > 0.
-This is proved as `boundary_cos_pos` above. -/
-
-/-- Reducing the strip identity to B_paper ≤ 1. -/
-lemma strip_identity_from_B_bound (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L)
-    (hB : B_paper T L xc ≤ 1) :
-    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
-  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
-  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]
-    ring
-
-/-- The strip identity: 1 = c_α · A_paper + B_paper + c_ε · E_paper.
-    This is the core identity from Lemma 2 of Duminil-Copin & Smirnov (2012).
-    The proof sums the vertex relation (pair_cancellation + triplet_cancellation)
-    over all vertices of PaperFinStrip T L. Interior mid-edges cancel (discrete
-    Stokes theorem), leaving only boundary contributions.
-    **Status: sorry.** -/
-theorem strip_identity_paper (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc := by
-  sorry
-
-/-- **B_paper ≤ 1**: The key consequence of the strip identity.
-    Since A, E ≥ 0 and c_α, c_ε > 0, the strip identity
-    1 = c_α·A + B + c_ε·E immediately gives B ≤ 1. -/
+**Status: sorry.** Formalizing the full observable + discrete Stokes
+argument is a substantial undertaking. -/
 theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  have hid := strip_identity_paper T L hT hL
-  have hA := A_paper_nonneg T L xc xc_pos.le
-  have hE := E_paper_nonneg T L xc xc_pos.le
-  nlinarith [c_alpha_pos, c_eps_pos]
+  sorry
+
+/- Note: The exact vertex-based identity
+     1 = c_α · A_paper + B_paper + c_ε · E_paper
+   does NOT hold. The paper's identity uses mid-edge-based partition
+   functions. Corner vertices of the strip have multiple boundary
+   mid-edge types, causing the vertex-based classification to disagree
+   with the mid-edge classification. The bound B_paper ≤ 1 is correct
+   and sufficient for the main theorem. -/
 
 lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
-  strip_identity_from_B_bound T L hT hL (B_paper_le_one_direct T L hT hL)
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  have hB := B_paper_le_one_direct T L hT hL
+  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
+  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
+  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]; ring
 
 theorem B_paper_le_one (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 :=

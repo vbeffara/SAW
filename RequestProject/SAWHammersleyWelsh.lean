@@ -43,6 +43,16 @@ open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
+/-- Superseded by paper_bridge_lower_bound in SAWPaperChain.lean. -/
+private theorem origin_bridge_lower_bound :
+    ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ origin_bridge_partition T xc := by
+  sorry
+
+/-- Superseded by paper_bridge_upper_bound in SAWDiagProof.lean. -/
+private theorem origin_bridge_upper_bound (T : ℕ) (_hT : 1 ≤ T) :
+    origin_bridge_partition T xc ≤ 1 := by
+  sorry
+
 /-! ## Walk x-coordinate range -/
 
 /-- The minimum x-coordinate visited by a walk. -/

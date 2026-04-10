@@ -18,6 +18,11 @@ open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
+/-- Superseded by Z_xc_diverges_corrected in SAWPaperChain.lean. -/
+private theorem Z_xc_diverges :
+    ¬ Summable (fun n => (saw_count n : ℝ) * xc ^ n) := by
+  sorry
+
 /-! ## Bridge-to-SAW injection
 
 Each origin bridge of width T determines a unique SAW from hexOrigin

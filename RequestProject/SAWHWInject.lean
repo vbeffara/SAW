@@ -22,6 +22,12 @@ open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
 
+/-- Superseded by paper_bridge_lower_bound in SAWPaperChain.lean.
+    Kept as sorry to avoid breaking dependent files. -/
+private theorem origin_bridge_lower_bound :
+    ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ origin_bridge_partition T xc := by
+  sorry
+
 /-! ## Maximum x-coordinate in a walk -/
 
 /-- The maximum x-coordinate among vertices in a walk's support. -/

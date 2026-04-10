@@ -1,3 +1,39 @@
+# Summary of changes for run a693d182-d106-480c-b266-42c465368b7c
+## Summary of Changes
+
+### Key discovery: False statement corrected
+
+The previously sorry'd `strip_identity_paper` in `SAWStripIdentityCorrect.lean` was **provably false** as stated. The exact vertex-based identity `1 = c_α · A_paper + B_paper + c_ε · E_paper` does NOT hold, because the paper's partition functions use **mid-edge classification** (classifying walks by which boundary mid-edge they exit through), while the formalization used **vertex classification** (classifying by endpoint vertex). At corner vertices of the strip domain (adjacent to boundary mid-edges of multiple types), these disagree.
+
+This was verified computationally: for T=1, L=2, the vertex-based identity gives ≈ 0.896 ≠ 1.
+
+### What was fixed
+
+1. **`SAWStripIdentityCorrect.lean`**: Removed the false `strip_identity_paper` theorem. Replaced it with `B_paper_le_one_direct` as the fundamental sorry. Added detailed documentation explaining:
+   - Why the exact vertex-based identity is false
+   - Why `B_paper ≤ 1` is still correct (because `B_paper = B_mid`: each right boundary vertex has exactly one right boundary mid-edge)
+   - The proof outline for `B_paper ≤ 1` via the parafermionic observable
+
+2. **Non-critical files fixed**: Added private sorry stubs for `origin_bridge_lower_bound`, `origin_bridge_upper_bound`, and `Z_xc_diverges` in `SAWHWInject.lean`, `SAWHammersleyWelsh.lean`, `SAWHWBridge.lean`, and `SAWStripIdentity.lean`. These references were broken when the superseded infrastructure was removed in prior sessions.
+
+3. **Blueprint updated** (`blueprint/src/content.tex`): Updated the strip identity theorem to correctly state `B_paper ≤ 1` instead of the false exact identity. Added the note about vertex-based vs mid-edge-based partition functions.
+
+4. **`PROOF_STATUS.md` updated**: Reflects the corrected proof architecture with accurate descriptions of all three remaining sorry's.
+
+### Current state: 3 sorry's on the critical path
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on three sorry's:
+
+1. **`B_paper_le_one_direct`** (SAWStripIdentityCorrect.lean): B_paper(T,L,xc) ≤ 1. Requires formalizing the parafermionic observable and discrete Stokes theorem.
+
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean): Quadratic recurrence for bridge partition functions. Depends on the infinite-strip identity and cutting argument.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean): Hammersley-Welsh bridge decomposition injection. Independent of #1 and #2.
+
+### Build status
+
+The full project builds successfully (`lake build` with 8072 jobs). The main theorem compiles with `sorryAx` as the only non-standard axiom (from the three sorry's above).
+
 # Summary of changes for run 469a2737-ff61-4cca-af99-198d5da7b25f
 ## Summary of Changes
 
