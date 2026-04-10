@@ -2822,45 +2822,40 @@ domain (discrete Stokes theorem) is the main remaining gap.
   Each case reduces to showing $\cos(3\theta/8) > 0$ or similar.
 \end{proof}
 
-\begin{theorem}[$B_{\text{paper}} \leq 1$ (fundamental gap)]\label{thm:B_paper_le_one_direct}
-\lean{B_paper_le_one_direct}
+\begin{theorem}[Strip identity (Lemma~2)]\label{thm:strip_identity_paper}
+\lean{strip_identity_paper}
 \uses{thm:pair_cancel, thm:triplet_cancel, thm:interior_cancel,
        lem:boundary_cos, def:paper_partition, def:paper_strip}
   For $x = x_c$, $T \geq 1$, $L \geq 1$:
-  $B_{\text{paper}}(T, L, x_c) \leq 1$.
+  $1 = c_{\alpha} \cdot A_{\text{paper}}(T, L, x_c) + B_{\text{paper}}(T, L, x_c) + c_{\varepsilon} \cdot E_{\text{paper}}(T, L, x_c).$
   \textbf{Status: sorry --- the fundamental gap.}
 
   \medskip
   \textbf{Proof outline} (from Lemma~2 of the paper).
   Sum the vertex relation over all vertices of $S_{T,L}$.
   Interior mid-edges cancel (discrete Stokes); only boundary terms survive.
-  The starting mid-edge $a$ contributes $-1/2$ to the real part;
-  the right-boundary mid-edges contribute $(1/2)\cdot B_{T,L}$;
-  all other boundary contributions have $\operatorname{Re} \geq 0$
-  (because $\cos(3\theta/8) > 0$ for every hex-lattice edge angle $\theta$).
-  Hence $0 \geq -1/2 + B_{T,L}/2$, giving $B_{T,L} \leq 1$.
-
-  \medskip
-  \textbf{Key insight (partially formalized in \texttt{SAWObservable.lean}):}
-  On the hexagonal lattice, all SAW turns are $\pm\pi/3$, so the winding
-  \emph{telescopes}: $W = \theta_{\text{exit}} - \theta_{\text{entry}}$.
-  For right boundary mid-edges, both angles are~$0$, giving $W = 0$
-  and weight factor~$1$. This is proved as \texttt{right\_boundary\_winding\_zero}
-  and \texttt{right\_boundary\_direction}.
-
-  \medskip
-  \textbf{Infrastructure still needed:}
-  \begin{enumerate}
-  \item Define the parafermionic observable $F(z)$ for mid-edges of the strip.
-  \item Prove the vertex relation at each strip vertex (via pair/triplet
-        grouping of walks).
-  \item Formalize the discrete Stokes theorem (sum of vertex relations = 0
-        implies boundary sum = 0).
-  \item Evaluate the winding from the starting mid-edge to each boundary
-        type (telescoping: $W = \theta_{\text{exit}} - \theta_{\text{entry}}$).
-  \item Separate the boundary sum by type and extract the $B \leq 1$ bound.
-  \end{enumerate}
+  The starting mid-edge $a$ contributes $-1/2$;
+  the right-boundary mid-edges contribute $(1/2)\cdot B$;
+  the left boundary contributes $(c_{\alpha}/2)\cdot A$;
+  the escape boundary contributes $(c_{\varepsilon}/2)\cdot E$.
+  Setting the total to zero: $-1/2 + c_{\alpha}/2 \cdot A + 1/2 \cdot B + c_{\varepsilon}/2 \cdot E = 0$,
+  hence $1 = c_{\alpha} A + B + c_{\varepsilon} E$.
 \end{theorem}
+
+\begin{theorem}[$B_{\text{paper}} \leq 1$]\label{thm:B_paper_le_one_direct}
+\lean{B_paper_le_one_direct}
+\leanok
+\uses{thm:strip_identity_paper}
+  For $x = x_c$, $T \geq 1$, $L \geq 1$:
+  $B_{\text{paper}}(T, L, x_c) \leq 1$.
+  \textbf{Status: proved} (from the strip identity and non-negativity of $A$, $E$).
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:strip_identity_paper}
+  From $1 = c_{\alpha} A + B + c_{\varepsilon} E$ with $A, E \geq 0$
+  and $c_{\alpha}, c_{\varepsilon} > 0$, we get $B \leq 1$.
+\end{proof}
 
 \section{Abstract proof chain (proved)}
 
@@ -3071,11 +3066,30 @@ the paper's convention).
 
 \begin{theorem}[Paper bridge lower bound]\label{thm:paper_bridge_lower}
 \lean{paper_bridge_lower_bound}
-\uses{thm:B_paper_le_one_direct, thm:quad_lower}
+\leanok
+\uses{thm:paper_bridge_recurrence, thm:quad_lower}
   $\exists c > 0$ such that
   $\texttt{paper\_bridge\_partition}(T, x_c) \geq c/T$ for all $T \geq 1$.
-  \textbf{Status: sorry.} Depends on the strip identity and the
-  infinite-strip quadratic recurrence.
+  \textbf{Status: proved} (from \texttt{paper\_bridge\_recurrence}
+  and \texttt{quadratic\_recurrence\_lower\_bound}).
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:paper_bridge_recurrence, thm:quad_lower}
+  Apply the quadratic recurrence lower bound with
+  $\alpha$ from \texttt{paper\_bridge\_recurrence},
+  $B(1) > 0$ from bridge positivity.
+\end{proof}
+
+\begin{theorem}[Paper bridge recurrence]\label{thm:paper_bridge_recurrence}
+\lean{paper_bridge_recurrence}
+\uses{thm:strip_identity_paper}
+  $\exists \alpha > 0$, $\forall T$:
+  $\texttt{paper\_bridge\_partition}(T, x_c) \leq
+  \alpha \cdot \texttt{paper\_bridge\_partition}(T{+}1, x_c)^2 +
+  \texttt{paper\_bridge\_partition}(T{+}1, x_c)$.
+  \textbf{Status: sorry.} Follows from the infinite-strip identity
+  and the cutting argument.
 \end{theorem}
 
 \begin{theorem}[Paper bridge decomposition injection]\label{thm:paper_bridge_decomp}
@@ -3109,9 +3123,10 @@ the paper's convention).
   $\mu = \sqrt{2+\sqrt{2}}$.
   \textbf{Status: depends on 3 remaining sorry'd lemmas:}
   \begin{enumerate}
-  \item \texttt{B\_paper\_le\_one\_direct} (Lemma~2 of the paper: the strip identity
+  \item \texttt{strip\_identity\_paper} (Lemma~2 of the paper: the strip identity
         via the parafermionic observable),
-  \item \texttt{paper\_bridge\_lower\_bound} (bridge lower bound $c/T$, depends on \#1),
+  \item \texttt{paper\_bridge\_recurrence} (bridge recurrence from cutting argument,
+        depends on \#1),
   \item \texttt{paper\_bridge\_decomp\_injection} (Hammersley--Welsh decomposition,
         independent of \#1).
   \end{enumerate}

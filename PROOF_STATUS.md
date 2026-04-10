@@ -11,54 +11,58 @@
 
 ## Critical path
 
-The main theorem follows the corrected diagonal bridge chain:
-
 ```
 SAW.lean (constants, algebraic identities) ✓
 ├── SAWSubmult.lean (submultiplicativity: c_{n+m} ≤ c_n·c_m) ✓
 │   └── SAWMain.lean (Fekete's lemma → connective constant is a limit) ✓
 │       └── SAWBridge.lean (Bridge defs, connective_constant_eq_from_bounds) ✓
 │           └── SAWBridgeFix.lean (OriginBridge definition) ✓
-│               └── SAWStripIdentityCorrect.lean (PaperBridge, B_paper_le_one_direct) ⚠️ [1 sorry]
-│                   └── SAWDiagBridge.lean → SAWDiagConnection.lean → SAWDiagProof.lean ✓
-│                       └── SAWPaperChain.lean (main theorem assembly) ⚠️ [2 sorry's]
+│               └── SAWStripIdentityCorrect.lean
+│                   ├── strip_identity_paper ⚠️ [sorry — Lemma 2]
+│                   └── B_paper_le_one_direct ✓ (proved from strip_identity_paper)
+│                       └── SAWDiagProof.lean (paper bridge infrastructure) ✓
+│                           └── SAWPaperChain.lean
+│                               ├── paper_bridge_lower_bound ✓ (proved from recurrence)
+│                               │   └── paper_bridge_recurrence ⚠️ [sorry — needs strip identity]
+│                               ├── paper_bridge_decomp_injection ⚠️ [sorry — HW decomposition]
+│                               └── connective_constant_eq_corrected ✓ (proved from above)
 └── SAWDecomp.lean (quadratic recurrence, abstract bridge bounds) ✓
 ```
 
 ## Remaining sorry's (critical path)
 
-### 1. `B_paper_le_one_direct` (SAWStripIdentityCorrect.lean)
-**The fundamental gap.** For x = x_c, T ≥ 1, L ≥ 1: B_paper(T,L,xc) ≤ 1.
+### 1. `strip_identity_paper` (SAWStripIdentityCorrect.lean)
+**The strip identity (Lemma 2):** For xc, T ≥ 1, L ≥ 1:
+  1 = c_α · A_paper(T,L,xc) + B_paper(T,L,xc) + c_ε · E_paper(T,L,xc)
 
-This is Lemma 2 of the paper — the parafermionic observable argument.
-The proof requires:
-- Defining the parafermionic observable F(z)
-- Proving the vertex relation at each strip vertex (pair/triplet grouping)
-- Discrete Stokes theorem (sum of vertex relations = boundary sum = 0)
-- Boundary evaluation: -1/2 + B/2 + (non-negative) = 0 → B ≤ 1
+This is the core mathematical result. The proof requires:
+- The parafermionic observable F(z) at each mid-edge z
+- The vertex relation: pair_cancellation + triplet_cancellation give
+  cancellation at each vertex
+- The discrete Stokes theorem: summing vertex relations over all strip
+  vertices, interior mid-edges cancel, boundary survives
+- Boundary evaluation: starting edge → -1/2; right boundary → B/2;
+  left boundary → c_α/2 · A; escape boundary → c_ε/2 · E
 
-**Infrastructure available (proved):**
-- pair_cancellation ✓, triplet_cancellation ✓
-- interior_cancellation ✓
-- boundary_cos_pos ✓, boundary_weight_re_nonneg ✓
-- right_boundary_weight_eq ✓, starting_dir_factor_eq ✓
-- right_boundary_winding_zero ✓, right_boundary_direction ✓
-- paper_fin_strip_finite ✓, paper_saw_b_finite ✓
+**Note:** B_paper_le_one_direct is now PROVED from strip_identity_paper
+(since A ≥ 0, E ≥ 0, c_α > 0, c_ε > 0, we get B ≤ 1).
 
-### 2. `paper_bridge_lower_bound` (SAWPaperChain.lean)
-∃ c > 0, ∀ T ≥ 1, c/T ≤ paper_bridge_partition(T, xc).
+### 2. `paper_bridge_recurrence` (SAWPaperChain.lean)
+∃ α > 0, ∀ T, paper_bridge_partition T xc ≤ α · (paper_bridge_partition (T+1) xc)² + paper_bridge_partition (T+1) xc
 
-Depends on: B_paper_le_one_direct + infinite strip identity + quadratic recurrence.
+This follows from the strip identity for the infinite strip combined
+with the cutting argument (A_{T+1} - A_T ≤ f(xc)·B_{T+1}²) and
+monotonicity (E_{T+1} ≤ E_T).
+
+**Note:** paper_bridge_lower_bound is now PROVED from paper_bridge_recurrence
+via quadratic_recurrence_lower_bound.
 
 ### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean)
-The Hammersley-Welsh decomposition: every SAW decomposes into bridges.
-Independent of the observable. Requires formalizing the bridge decomposition algorithm.
+∑_{n≤N} c_n x^n ≤ 2 · (∑_{S⊆{1,...,N}} ∏_{T∈S} B_{T+1}^x)²
 
-## Recently proved
-
-- `paper_bridge_partition_pos` ✓ — Bridges exist for all widths T ≥ 1
-- `paper_bridge_partition_one_pos` ✓ — Explicit width-1 bridge exists
-- `paperBridge_width1` ✓ — Explicit bridge construction
+This is the Hammersley-Welsh bridge decomposition. Independent of the
+strip identity. Requires formalizing the decomposition algorithm:
+any SAW can be uniquely decomposed into bridges with monotone widths.
 
 ## Fully proved components
 
@@ -74,23 +78,23 @@ Independent of the observable. Requires formalizing the bridge decomposition alg
 - Boundary weight non-negativity (all 6 edge types) ✓
 - Paper strip domain (PaperInfStrip, PaperFinStrip) ✓
 - Paper-compatible partition functions (A_paper, B_paper, E_paper) ✓
+- B_paper_le_one_direct ✓ (proved from strip_identity_paper)
 - Paper bridge definition and basic properties ✓
-- Paper bridge positivity (bridges exist for all widths) ✓ — NEW
+- Paper bridge positivity (bridges exist for all widths) ✓
 - Paper bridge summability ✓
 - Paper bridge finite sum bound ✓
 - Paper bridge sum ≤ Z(xc) ✓
-- Paper bridge upper bound (≤ 1/xc, from B_paper_le_one) ✓
+- Paper bridge upper bound (≤ 1/xc) ✓
 - Paper bridge decay ((x/xc)^T / xc for x < xc) ✓
 - Bridge-to-SAW injection (paper_bridge_filter_card_le) ✓
+- Paper bridge lower bound (c/T) ✓ (proved from paper_bridge_recurrence)
 - Quadratic recurrence lower bound (abstract) ✓
-- Case 2 bridge sum divergence (abstract) ✓
 - Harmonic series divergence lemma ✓
-- Z(xc) diverges (from paper bridge lower bound) ✓ (modulo sorry)
-- HW summability (from paper bridge decomposition) ✓ (modulo sorry)
-- Main theorem assembly via connective_constant_eq_from_bounds ✓ (modulo sorry's)
+- Z(xc) diverges ✓ (modulo paper_bridge_recurrence)
+- HW summability ✓ (modulo paper_bridge_decomp_injection)
+- Main theorem assembly ✓ (modulo sorry's)
 - Subset product identity ✓
 - Product convergence for geometric bounds ✓
 - Monotone/antitone bounded convergence ✓
-- Strip identity passage to limit (abstract) ✓
 - Winding telescoping on hex lattice ✓
 - Zigzag lower bound construction ✓

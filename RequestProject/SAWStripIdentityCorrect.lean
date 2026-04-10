@@ -25,24 +25,22 @@ The key consequence `B_paper ≤ 1` IS correct and is what matters for
 the downstream proof. We prove it directly from the parafermionic
 observable theory without going through the exact identity.
 
-## Proof of B_paper ≤ 1
+## Proof architecture
 
-The proof follows from the paper's boundary sum argument:
+The fundamental sorry is `strip_identity_paper` (Lemma 2 of the paper):
+  1 = c_α · A_paper + B_paper + c_ε · E_paper
 
-1. **Vertex relation**: At each vertex v in the strip, the direction-weighted
-   sum of the parafermionic observable over v's three adjacent mid-edges is 0.
-   This follows from pair_cancellation and triplet_cancellation.
+`B_paper_le_one_direct` is PROVED from strip_identity_paper:
+  Since A, E ≥ 0 and c_α, c_ε > 0, B ≤ 1.
 
-2. **Discrete Stokes / Telescoping**: Summing the vertex relation over all
-   vertices, interior mid-edges cancel. Only boundary mid-edges survive.
-
-3. **Boundary evaluation**: The starting mid-edge a contributes -1/2 (real).
-   Right boundary mid-edges contribute B_paper/2 (real, non-negative).
-   All other boundary contributions have non-negative real parts (proved
-   using the winding structure on the honeycomb lattice).
-
-4. **Assembly**: Re(boundary sum) = 0 gives -1/2 + B_paper/2 + (≥ 0) = 0,
-   hence B_paper ≤ 1.
+The strip identity proof requires:
+1. **Vertex relation**: pair_cancellation + triplet_cancellation
+2. **Discrete Stokes / Telescoping**: interior cancellation
+3. **Boundary evaluation**: starting mid-edge → -1/2;
+   right boundary → B/2; left boundary → c_α/2 · A;
+   escape boundary → c_ε/2 · E
+4. **Assembly**: 0 = -1/2 + c_α/2 · A + 1/2 · B + c_ε/2 · E,
+   hence 1 = c_α A + B + c_ε E.
 -/
 
 import Mathlib
@@ -300,15 +298,25 @@ lemma strip_identity_from_B_bound (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L)
   · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]
     ring
 
-/-- **B_paper ≤ 1**: The key consequence of the parafermionic observable.
-    This is the essential bound needed for the upper estimate on the
-    connective constant. It follows from summing the vertex relation
-    (pair_cancellation + triplet_cancellation) over all strip vertices,
-    applying interior cancellation (discrete Stokes theorem), and
-    evaluating boundary contributions. -/
+/-- The strip identity: 1 = c_α · A_paper + B_paper + c_ε · E_paper.
+    This is the core identity from Lemma 2 of Duminil-Copin & Smirnov (2012).
+    The proof sums the vertex relation (pair_cancellation + triplet_cancellation)
+    over all vertices of PaperFinStrip T L. Interior mid-edges cancel (discrete
+    Stokes theorem), leaving only boundary contributions.
+    **Status: sorry.** -/
+theorem strip_identity_paper (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc := by
+  sorry
+
+/-- **B_paper ≤ 1**: The key consequence of the strip identity.
+    Since A, E ≥ 0 and c_α, c_ε > 0, the strip identity
+    1 = c_α·A + B + c_ε·E immediately gives B ≤ 1. -/
 theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  sorry
+  have hid := strip_identity_paper T L hT hL
+  have hA := A_paper_nonneg T L xc xc_pos.le
+  have hE := E_paper_nonneg T L xc xc_pos.le
+  nlinarith [c_alpha_pos, c_eps_pos]
 
 lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧

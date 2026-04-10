@@ -4,9 +4,17 @@
 ## Sorry status
 
 Three sorry's remain on the path to the main theorem:
-1. `B_paper_le_one_direct` (imported) — the core strip identity
-2. `paper_bridge_lower_bound` — bridge lower bound c/T (depends on #1)
-3. `paper_bridge_decomp_injection` — HW decomposition (independent of #1)
+1. `strip_identity_paper` (in SAWStripIdentityCorrect.lean) — the core strip
+   identity from Lemma 2 of the paper
+2. `paper_bridge_recurrence` (this file) — quadratic recurrence for bridges,
+   depends on the infinite-strip identity + cutting argument
+3. `paper_bridge_decomp_injection` (this file) — Hammersley-Welsh decomposition,
+   independent of #1
+
+## Proved in this session
+- `B_paper_le_one_direct` is now proved from `strip_identity_paper`
+- `paper_bridge_lower_bound` is now proved from `paper_bridge_recurrence`
+  via `quadratic_recurrence_lower_bound`
 -/
 
 import Mathlib
@@ -35,13 +43,8 @@ lemma saw_count_paperStart (n : ℕ) :
     Fintype.card (SAW paperStart n) = saw_count n :=
   saw_count_vertex_independent paperStart n
 
-/-- Paper bridge lower bound: ∃ c > 0, paper_bridge_partition T xc ≥ c/T.
-    **Status: sorry.** Depends on B_paper_le_one_direct and the strip identity
-    for the infinite strip. The proof uses the quadratic recurrence from
-    quadratic_recurrence_lower_bound in SAWDecomp.lean. -/
-theorem paper_bridge_lower_bound :
-    ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ paper_bridge_partition T xc := by
-  sorry
+-- paper_bridge_lower_bound and paper_bridge_recurrence are stated after
+-- paper_bridge_partition_one_pos (which they depend on).
 
 /-! ## Bridge sum ≤ Z -/
 
@@ -114,6 +117,30 @@ lemma paper_bridge_partition_one_pos : 0 < paper_bridge_partition 1 xc := by
   exact lt_of_lt_of_le (pow_pos xc_pos _)
     (Summable.le_tsum (paper_bridge_summable 1 (by norm_num))
       paperBridge_width1 (fun b _ => pow_nonneg xc_pos.le _))
+
+/-! ## Bridge recurrence and lower bound -/
+
+/-- The paper bridge partition function satisfies a quadratic recurrence.
+    This follows from the strip identity for the infinite strip
+    combined with the cutting argument and monotonicity of E.
+    **Status: sorry.** -/
+lemma paper_bridge_recurrence :
+    ∃ α > 0, ∀ T : ℕ,
+      paper_bridge_partition T xc ≤ α * paper_bridge_partition (T + 1) xc ^ 2 +
+        paper_bridge_partition (T + 1) xc := by
+  sorry
+
+/-- Paper bridge lower bound: ∃ c > 0, paper_bridge_partition T xc ≥ c/T.
+    Uses the quadratic recurrence and positivity of bridges. -/
+theorem paper_bridge_lower_bound :
+    ∃ c > 0, ∀ T : ℕ, 1 ≤ T → c / T ≤ paper_bridge_partition T xc := by
+  obtain ⟨α, hα_pos, hrecur⟩ := paper_bridge_recurrence
+  have hB_nn : ∀ T, 0 ≤ paper_bridge_partition T xc :=
+    fun T => tsum_nonneg fun _ => pow_nonneg xc_pos.le _
+  have hB1 := paper_bridge_partition_one_pos
+  exact ⟨min (paper_bridge_partition 1 xc) (1 / α),
+    lt_min hB1 (div_pos one_pos hα_pos),
+    quadratic_recurrence_lower_bound hα_pos hB_nn hrecur hB1⟩
 
 /-
 paper_bridge_partition T xc > 0 for all T ≥ 1.
