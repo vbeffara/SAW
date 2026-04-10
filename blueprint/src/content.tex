@@ -3115,14 +3115,62 @@ the paper's convention).
   Use $1+a \leq e^a$ and geometric series convergence for $r = x/x_c < 1$.
 \end{proof}
 
+\section{Discrete Stokes infrastructure}
+
+The proof of $B_{\text{paper}} \leq 1$ (Lemma~2) requires the parafermionic
+observable and the discrete Stokes theorem.  The following definitions
+and lemmas provide the formal skeleton for this proof.
+
+\begin{definition}[Strip SAW ending at vertex $v$]\label{def:strip_saw}
+\lean{StripSAW}
+\leanok
+\uses{def:saw, def:paper_strip}
+  A SAW from \texttt{paperStart} to $v$ staying in \texttt{PaperFinStrip T L}.
+\end{definition}
+
+\begin{definition}[Directed observable]\label{def:F_directed}
+\lean{F_directed}
+\leanok
+\uses{def:strip_saw}
+  The observable at directed edge $(v, w)$: sum over SAWs ending at $v$,
+  weighted by $e^{-i\sigma W(\gamma)} \cdot x_c^{\ell(\gamma)+1}$.
+\end{definition}
+
+\begin{definition}[Mid-edge observable]\label{def:F_midedge}
+\lean{F_midedge}
+\leanok
+\uses{def:F_directed}
+  The observable at mid-edge $(v,w)$: $F_{\text{directed}}(v,w) + F_{\text{directed}}(w,v)$.
+  This is the sum over all walks from $a$ to mid-edge $z = \text{mid}(v,w)$.
+\end{definition}
+
+\begin{theorem}[Vertex relation for FALSE vertex]\label{thm:vertex_rel_false}
+\lean{vertex_relation_false}
+\uses{def:F_midedge, thm:pair_cancel, thm:triplet_cancel}
+  For each FALSE vertex $(x,y)$ with all 3 neighbors inside the strip:
+  $\sum_{w \sim v} (\text{embed}(w) - \text{embed}(v)) \cdot F(\text{mid}(v,w)) = 0$.
+  \textbf{Status: sorry.} Requires constructing the pair/triplet partition of walks.
+\end{theorem}
+
+\begin{theorem}[Vertex relation for TRUE vertex]\label{thm:vertex_rel_true}
+\lean{vertex_relation_true}
+\uses{def:F_midedge, thm:pair_cancel, thm:triplet_cancel}
+  Analogous to \ref{thm:vertex_rel_false} for TRUE vertices.
+  \textbf{Status: sorry.}
+\end{theorem}
+
+\section{Main theorem}
+
 \begin{theorem}[Main theorem (corrected)]\label{thm:main_corrected}
 \lean{connective_constant_eq_corrected}
 \uses{thm:paper_bridge_lower, thm:hw_summable}
   $\mu = \sqrt{2+\sqrt{2}}$.
   \textbf{Status: depends on 3 remaining sorry'd lemmas:}
   \begin{enumerate}
-  \item \texttt{strip\_identity\_paper} (Lemma~2 of the paper: the strip identity
-        via the parafermionic observable),
+  \item \texttt{B\_paper\_le\_one\_direct} (Lemma~2 of the paper: $B \leq 1$
+        via the parafermionic observable and discrete Stokes theorem;
+        depends on \texttt{vertex\_relation\_false} and
+        \texttt{vertex\_relation\_true}),
   \item \texttt{paper\_bridge\_recurrence} (bridge recurrence from cutting argument,
         depends on \#1),
   \item \texttt{paper\_bridge\_decomp\_injection} (Hammersley--Welsh decomposition,
@@ -3131,6 +3179,6 @@ the paper's convention).
   All other parts of the proof are fully formalized, including:
   the algebraic identities (pair/triplet cancellation), Fekete's lemma,
   submultiplicativity, bridge infrastructure, quadratic recurrence,
-  bridge decay bounds, bridge--SAW injection, and the main
-  theorem assembly.
+  bridge decay bounds, bridge--SAW injection, boundary weight
+  non-negativity, and the main theorem assembly.
 \end{theorem}

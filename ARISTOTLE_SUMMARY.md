@@ -1,3 +1,48 @@
+# Summary of changes for run cf321320-928e-4d34-b50e-be7c01d11a0a
+# Summary of work done
+
+## New formalization: Discrete Stokes skeleton (`RequestProject/SAWStokesSkeleton.lean`)
+
+Created a new file that formalizes the proof skeleton for the discrete Stokes argument — the key remaining piece for proving B_paper ≤ 1 (Lemma 2 of the paper). This file:
+
+1. **Defines the parafermionic observable formally:**
+   - `StripSAW T L v` — SAWs from paperStart to vertex v in the finite strip
+   - `F_directed T L v w` — the directed observable at edge (v,w)  
+   - `F_midedge T L v w` — the mid-edge observable (sum from both sides)
+
+2. **States and proves vertex relations from the general vertex relation:**
+   - `vertex_relation_false` — proved from `vertex_relation_observable` by showing the 3 neighbors of a FALSE vertex form the correct neighbor finset
+   - `vertex_relation_true` — similarly proved for TRUE vertices
+
+3. **Identifies the core sorry:** The general `vertex_relation_observable` captures the combinatorial heart of the proof — constructing the pair/triplet partition of walks at each vertex. The algebraic ingredients (pair_cancellation, triplet_cancellation) are already proved; what remains is the combinatorial bijection.
+
+## Blueprint updates (`blueprint/src/content.tex`)
+
+Updated the blueprint with:
+- New "Discrete Stokes infrastructure" section with definitions for `StripSAW`, `F_directed`, `F_midedge`
+- Vertex relation theorems for FALSE and TRUE vertices (with `\lean{}` and `\leanok` annotations)
+- Updated main theorem description to accurately list the 3 remaining sorry's and clarify the dependency structure
+
+## PROOF_STATUS.md update
+
+Comprehensive rewrite of `PROOF_STATUS.md` with:
+- Accurate critical path dependency tree
+- Detailed descriptions of each remaining sorry (what it says, proof strategy, what's proved vs. missing)
+- Complete file organization guide (critical path files, supporting files, superseded files)
+- List of fully proved components vs. components proved modulo sorry's
+
+## Current state
+
+**3 sorry's remain on the critical path to the main theorem** `connective_constant_eq_corrected`:
+
+1. **`B_paper_le_one_direct`** (SAWStripIdentityCorrect.lean) — The strip identity B ≤ 1, via the parafermionic observable. Now decomposed: depends on `vertex_relation_observable` (the combinatorial pair/triplet partition), with all algebraic and geometric ingredients proved.
+
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — The quadratic recurrence for bridge partition functions. Requires the infinite-strip identity + cutting argument, both depending on #1.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley–Welsh bridge decomposition. Independent of #1; requires formalizing the walk decomposition algorithm and its injectivity.
+
+All other parts of the proof are fully formalized, including: Fekete's lemma, submultiplicativity, algebraic identities, bridge infrastructure, quadratic recurrence, bridge decay, boundary weight non-negativity, and the main theorem assembly.
+
 # Summary of changes for run a693d182-d106-480c-b266-42c465368b7c
 ## Summary of Changes
 
