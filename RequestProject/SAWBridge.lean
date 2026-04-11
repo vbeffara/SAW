@@ -348,6 +348,10 @@ The decomposition works as follows:
 
     The factor 2 accounts for the two choices of first vertex from
     the starting mid-edge. -/
+/- NOTE: This theorem is superseded by hw_summable_corrected in
+   SAWPaperChain.lean, which does NOT use bridge_partition (the old,
+   incorrect definition). The sorry here does NOT affect the main
+   theorem connective_constant_eq_corrected. -/
 theorem hammersley_welsh_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc)
     (hbridge : ∀ T, bridge_partition T xc ≤ 1) :
     Summable (fun n => (saw_count n : ℝ) * x ^ n) := by sorry
