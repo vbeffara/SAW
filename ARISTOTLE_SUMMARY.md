@@ -1,3 +1,30 @@
+# Summary of changes for run c2e13e60-c507-4c8e-a319-02fc1575a1c8
+## Summary
+
+I restructured the proof of `B_paper_le_one_core` in `RequestProject/SAWStripIdentityCorrect.lean` to follow the proof of Lemma 2 from SAW.tex (Duminil-Copin & Smirnov 2012).
+
+### What was done
+
+The original file had a single `sorry` in `boundary_sum_eq_zero`, which was an intermediate lemma whose statement (`∃ R ≥ 0, 0 = -1 + B_paper T L xc + R`) obscured the mathematical content. I restructured the proof chain to:
+
+1. **Added `strip_identity_paper`** — A new lemma that directly states the paper's Lemma 2 (the strip identity): `∃ A_m E_m ≥ 0, 1 = c_α · A_m + B_paper T L xc + c_ε · E_m`. This lemma has a detailed docstring explaining the proof from the paper (parafermionic observable, vertex relation via pair/triplet cancellation, discrete Stokes, and boundary evaluation). The sorry is now in this clearly-stated mathematical claim.
+
+2. **Proved `boundary_sum_eq_zero`** from `strip_identity_paper` — The witness is `c_α · A_m + c_ε · E_m`, which is non-negative since `c_α, c_ε > 0` and `A_m, E_m ≥ 0`.
+
+3. **Proved `paper_lemma2_identity`** — This is now just `strip_identity_paper` directly (eliminating the previous roundabout proof through `boundary_sum_eq_zero`).
+
+4. **Proved `B_paper_le_one_core`** from `strip_identity_paper` using the already-proved `bridge_bound_of_strip_identity`.
+
+### What remains
+
+The single remaining sorry is in `strip_identity_paper`, which is the core mathematical content of the paper's Lemma 2. Proving it requires formalizing the parafermionic observable (the complex-valued weight e^{−iσW} · xc^ℓ at each mid-edge), the vertex relation (partitioning walks into pairs and triplets that cancel by the already-proved `pair_cancellation` and `triplet_cancellation` identities), the discrete Stokes theorem (summing vertex relations, interior cancellation), and boundary evaluation. This is a substantial formalization task that represents the deep combinatorial/geometric content of the paper.
+
+### Verification
+
+- The file `RequestProject/SAWStripIdentityCorrect.lean` builds successfully with exactly 1 sorry (in `strip_identity_paper`).
+- The full project (including `RequestProject/SAWFinal.lean` and all downstream files) builds successfully.
+- No modifications were made outside of `SAWStripIdentityCorrect.lean`.
+
 # Summary of changes for run a3c79b70-7aaa-467a-b794-80ea51fc980c
 I proved `B_paper_le_one_core` in `RequestProject/SAWStripIdentityCorrect.lean` following the proof structure in SAW.tex (Lemma 2 of Duminil-Copin & Smirnov 2012).
 
