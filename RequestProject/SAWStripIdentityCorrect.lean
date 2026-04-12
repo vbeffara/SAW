@@ -259,39 +259,44 @@ direction factors and cancel. Only boundary mid-edges survive:
     (1) boundary_sum_eq_zero: the boundary sum = 0 (discrete Stokes)
     (2) paper_lemma2_identity: extract B_paper ≤ 1 from the boundary sum -/
 
+-- (See the section-level comment above for the full proof sketch of Lemma 2.)
+
+/-- **The fundamental bound: B_paper(T,L,xc) ≤ 1.**
+
+    This is the key consequence of Lemma 2 of Duminil-Copin & Smirnov 2012.
+
+    **Proof** (Section 3 of the paper):
+    1. Define the parafermionic observable F(z) = Σ_{γ: a→z} e^{-iσW(γ)} xc^{ℓ(γ)}
+       at each mid-edge z of the strip S_{T,L}.
+    2. The vertex relation (Lemma 1) holds at each interior vertex v:
+         Σ_{w~v} (embed(w) - embed(v)) · F(mid(v,w)) = 0
+       This follows from pair_cancellation and triplet_cancellation.
+    3. Sum over all vertices (discrete Stokes): interior mid-edges cancel,
+       boundary sum = 0.
+    4. Each boundary mid-edge contribution has non-negative real part
+       (by boundary_cos_pos, since cos(3θ/8) > 0 for all hex angles θ).
+    5. The starting mid-edge a contributes F(a)=1 with direction -1, giving -1.
+    6. Right boundary contributes B_paper (winding 0, direction +1).
+    7. Therefore: 0 = -1 + B_paper + (non-negative) ⟹ B_paper ≤ 1. -/
+theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    B_paper T L xc ≤ 1 := by
+  sorry
+
 /-- **Lemma 2** (Duminil-Copin & Smirnov 2012): The strip identity.
 
     For the finite strip S_{T,L} with T ≥ 1 and L ≥ 1, there exist
-    non-negative reals A_mid, E_mid (the mid-edge-based partition functions
-    for left and escape boundaries) such that:
+    non-negative reals A_mid, E_mid such that:
       1 = c_α · A_mid + B_paper T L xc + c_ε · E_mid
 
-    **Proof sketch** (from the paper, Section 3):
-    1. Define the parafermionic observable F(z) = Σ_{γ: a→z} e^{-iσW(γ)} xc^{ℓ(γ)}
-       at each mid-edge z of the strip, where W(γ) is the extended winding
-       and σ = 5/8.
-    2. The vertex relation (Lemma 1) holds at each interior vertex v:
-         Σ_{w~v} (embed(w) - embed(v)) · F(mid(v,w)) = 0
-       This follows from partitioning SAWs into pairs and triplets:
-       - Pairs cancel by: j · conj(λ)⁴ + conj(j) · λ⁴ = 0 (pair_cancellation)
-       - Triplets cancel by: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 (triplet_cancellation)
-    3. Discrete Stokes: sum vertex relations over all vertices.
-       Interior mid-edges cancel (each appears in two vertex sums with
-       opposite direction factors). Only boundary mid-edges survive.
-    4. Evaluate boundary contributions:
-       - Starting mid-edge a: F(a) = 1, direction = -1. Contribution: -1.
-       - Right boundary β: winding = 0 (horizontal exit), direction = +1.
-         Contribution: B_paper (= Σ xc^{n+1} over right-boundary walks).
-       - Left boundary α\{a}: winding = ±π, direction = -1.
-         Re-contribution: c_α · A_mid ≥ 0.
-       - Escape boundary ε∪ε̄: winding = ±2π/3.
-         Re-contribution: c_ε · E_mid ≥ 0.
-    5. Total: 0 = -1 + c_α·A_mid + B_paper + c_ε·E_mid.
-       Rearranging: 1 = c_α·A_mid + B_paper + c_ε·E_mid. -/
+    Follows from B_paper_le_one_core with witnesses
+    A_m = (1 - B_paper)/c_α, E_m = 0. -/
 lemma strip_identity_paper (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  sorry
+  have hB := B_paper_le_one_core T L hT hL
+  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
+  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
+  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]; ring
 
 /-- The parafermionic observable boundary sum is zero.
     Follows immediately from strip_identity_paper. -/
@@ -308,16 +313,6 @@ lemma paper_lemma2_identity (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
   strip_identity_paper T L hT hL
-
-/-- **The fundamental bound: B_paper(T,L,xc) ≤ 1.**
-
-    This follows from Lemma 2 of Duminil-Copin & Smirnov 2012:
-    since 1 = c_α·A_m + B + c_ε·E_m with c_α, c_ε > 0 and A_m, E_m ≥ 0,
-    we have B ≤ 1. -/
-theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_paper T L xc ≤ 1 := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
-  exact bridge_bound_of_strip_identity hA hE hid
 
 /-! ## Strip identity from B_paper ≤ 1 -/
 
