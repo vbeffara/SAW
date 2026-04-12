@@ -239,9 +239,21 @@ boundary mid-edge), B_paper ≤ 1.
 
 **Status: sorry.** Formalizing the full observable + discrete Stokes
 argument is a substantial undertaking. -/
+/-- The mid-edge strip identity: 1 = c_α·A_mid + B_paper + c_ε·E_mid.
+    This is Lemma 2 of Duminil-Copin & Smirnov (2012).
+    The identity uses mid-edge-based A and E, but vertex-based B
+    (since B_paper = B_mid: each right boundary vertex has one right mid-edge).
+    **Status: sorry.** Requires the full parafermionic observable argument
+    (pair_cancellation + triplet_cancellation + discrete Stokes). -/
+theorem strip_identity_mid (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  sorry
+
 theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  sorry
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_mid T L hT hL
+  nlinarith [c_alpha_pos, c_eps_pos]
 
 /- Note: The exact vertex-based identity
      1 = c_α · A_paper + B_paper + c_ε · E_paper

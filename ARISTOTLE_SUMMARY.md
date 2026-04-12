@@ -1,3 +1,23 @@
+# Summary of changes for run 5a24e99d-546e-46d2-bb93-73ac5d533d1b
+I made partial progress on proving `B_paper_le_one_direct` in `RequestProject/SAWStripIdentityCorrect.lean`.
+
+**What was accomplished:**
+
+The theorem `B_paper_le_one_direct` has been decomposed and proved from a cleaner helper lemma `strip_identity_mid`. Specifically:
+
+1. **`strip_identity_mid`** (new, sorry'd): States the mid-edge strip identity from Lemma 2 of Duminil-Copin & Smirnov (2012): there exist non-negative reals `A_m`, `E_m` such that `1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m`. This is the core mathematical content requiring the parafermionic observable argument.
+
+2. **`B_paper_le_one_direct`** (now proved from `strip_identity_mid`): The proof is a clean 2-line argument using `nlinarith` with the positivity of `c_alpha` and `c_eps`, combined with the non-negativity of `A_m` and `E_m`.
+
+**What remains:**
+
+The `sorry` has been moved from `B_paper_le_one_direct` to `strip_identity_mid`. This helper lemma encapsulates the deep mathematical content of the paper's Lemma 2, which requires:
+- The parafermionic observable and its vertex relation (using the already-proved `pair_cancellation` and `triplet_cancellation` identities)
+- A discrete Stokes theorem for the hexagonal lattice strip
+- Boundary evaluation showing the starting mid-edge contributes a known constant while other boundary contributions are non-negative
+
+This is a substantial formalization challenge that represents the core of the Duminil-Copin & Smirnov proof. The full downstream dependency chain (including `B_paper_le_one`, `strip_identity_exists`, and the main theorem `connective_constant_eq_corrected`) remains intact and builds successfully.
+
 # Summary of changes for run ae0a921d-5bf6-4372-8cf3-4c29e87411ef
 # Session Summary: Continued Formalization of SAW.tex
 
