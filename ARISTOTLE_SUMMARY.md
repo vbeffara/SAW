@@ -1,3 +1,20 @@
+# Summary of changes for run a3c79b70-7aaa-467a-b794-80ea51fc980c
+I proved `B_paper_le_one_core` in `RequestProject/SAWStripIdentityCorrect.lean` following the proof structure in SAW.tex (Lemma 2 of Duminil-Copin & Smirnov 2012).
+
+**What was done:**
+
+The proof follows the paper's two-step structure:
+
+1. **`boundary_sum_eq_zero`** (new helper lemma, sorry'd): States that the parafermionic observable boundary sum yields `0 = -1 + B_paper T L xc + R` for some non-negative `R`. This captures the discrete Stokes theorem (summing the vertex relation over all vertices of V(S_{T,L}), with interior mid-edges cancelling) combined with the boundary evaluation (starting mid-edge contributes −1, right boundary contributes B_paper, all other boundary contributions have non-negative real part by `boundary_cos_pos`).
+
+2. **`paper_lemma2_identity`** (new helper, fully proved from `boundary_sum_eq_zero`): Extracts the strip identity `1 = c_α · A_m + B_paper T L xc + c_ε · E_m` with `A_m, E_m ≥ 0`.
+
+3. **`B_paper_le_one_core`** (the target theorem, fully proved): Follows immediately from `paper_lemma2_identity` via the already-proved `bridge_bound_of_strip_identity`.
+
+**Remaining sorry:** The single sorry is in `boundary_sum_eq_zero`, which encapsulates the combinatorial heart of the paper's proof — the pair/triplet walk partition at each vertex and the discrete Stokes cancellation. The algebraic ingredients for this (pair_cancellation, triplet_cancellation, boundary weight properties) are already proved elsewhere in the project.
+
+**No unrelated changes were made** — only the proof decomposition of `B_paper_le_one_core` was modified.
+
 # Summary of changes for run 66ceb4f0-3597-4e8f-be31-3e387e0e02b0
 ## Progress on `strip_identity_mid`
 

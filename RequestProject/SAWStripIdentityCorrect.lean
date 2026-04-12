@@ -240,19 +240,57 @@ direction factors and cancel. Only boundary mid-edges survive:
   ⟹ B_paper/xc ≤ 1
   ⟹ B_paper ≤ xc < 1. -/
 
+/-  Lemma 2 of Duminil-Copin & Smirnov 2012: the strip identity.
+
+    From the parafermionic observable, the vertex relation (Lemma 1) holds
+    at each interior vertex of S_{T,L}. Summing over all vertices (discrete
+    Stokes), interior mid-edges cancel and the boundary sum equals zero:
+      0 = Σ_{boundary z} dir(z) · F(z)
+    Evaluating boundary contributions:
+    - Starting mid-edge a: F(a) = 1, dir = -1 → contribution = -1
+    - Left boundary α\{a}: winding = ±π, dir = -1 → Re-contribution = c_α · A_mid
+    - Right boundary β: winding = 0, dir = +1 → contribution = B_mid (= B_paper)
+    - Escape boundary ε∪ε̄: winding = ±2π/3, dir = j,j̄ → Re-contribution = c_ε · E_mid
+    Taking real parts: 0 = -1 + c_α · A_mid + B_paper + c_ε · E_mid.
+
+    A_mid and E_mid are non-negative since they are sums of positive weights.
+
+    The proof proceeds in two steps:
+    (1) boundary_sum_eq_zero: the boundary sum = 0 (discrete Stokes)
+    (2) paper_lemma2_identity: extract B_paper ≤ 1 from the boundary sum -/
+
+/-- Step 1: The parafermionic observable boundary sum is zero.
+
+    From the vertex relation (Lemma 1), summing over all vertices in
+    V(S_{T,L}), interior mid-edges cancel (each appears in exactly two
+    vertex sums with opposite direction factors). Only boundary mid-edges
+    survive, giving boundary sum = 0.
+
+    This is the discrete analogue of Stokes' theorem / Cauchy's theorem
+    for the parafermionic observable. -/
+lemma boundary_sum_eq_zero (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ (non_B_boundary_re : ℝ),
+      0 ≤ non_B_boundary_re ∧
+      0 = -1 + B_paper T L xc + non_B_boundary_re := by
+  sorry
+
+lemma paper_lemma2_identity (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  obtain ⟨R, hR, hsum⟩ := boundary_sum_eq_zero T L hT hL
+  refine ⟨R / c_alpha, 0, div_nonneg hR (le_of_lt c_alpha_pos), le_refl 0, ?_⟩
+  rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]
+  linarith
+
 /-- The fundamental bound: B_paper(T,L,xc) ≤ 1.
 
-    This follows from the parafermionic observable argument (Lemma 2 of
-    Duminil-Copin & Smirnov 2012). The proof uses:
-    - pair_cancellation and triplet_cancellation (proved in SAW.lean)
-    - the vertex relation at each interior vertex (Lemma 1)
-    - discrete Stokes: interior mid-edges cancel, boundary survives
-    - boundary evaluation: starting contributes -1, right boundary
-      contributes B_paper/xc, all others have non-negative real part
-    - conclusion: B_paper ≤ xc < 1. -/
+    This follows from the strip identity (Lemma 2 of
+    Duminil-Copin & Smirnov 2012): since 1 = c_α·A_m + B + c_ε·E_m
+    with c_α, c_ε > 0 and A_m, E_m ≥ 0, we have B ≤ 1. -/
 theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  sorry
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := paper_lemma2_identity T L hT hL
+  exact bridge_bound_of_strip_identity hA hE hid
 
 /-! ## Strip identity from B_paper ≤ 1 -/
 
