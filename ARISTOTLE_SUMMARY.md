@@ -1,3 +1,39 @@
+# Summary of changes for run e1b609f8-27ca-4857-9a42-303e1fdf16d0
+## Summary of Work
+
+### New Mathematical Content
+
+I created `RequestProject/SAWVertexRelProof.lean` — a new file that builds the **direction vector infrastructure** for the vertex relation proof (Lemma 1 of Duminil-Copin & Smirnov). This file provides the geometric foundation needed for the discrete Stokes theorem, which is the key ingredient for proving the strip identity B ≤ 1. All lemmas in this file are fully proved (no sorry's):
+
+- **`hexDir`**: Direction vector definition `correctHexEmbed(w) - correctHexEmbed(v)`.
+- **`hexDir_false_same`**: Direction from FALSE(x,y) to TRUE(x,y) is 1.
+- **`hexDir_true_same`**: Direction from TRUE(x,y) to FALSE(x,y) is -1.
+- **`hexDir_false_sum`** / **`hexDir_true_sum`**: Direction vectors at each vertex type sum to zero (the discrete divergence-free condition).
+- **`interior_cancellation'`**: `hexDir(v,w) + hexDir(w,v) = 0` — the core of interior mid-edge cancellation in the discrete Stokes theorem.
+- **`hexDir_false_right`**: Direction from FALSE(x,y) to TRUE(x+1,y) equals `j = exp(i·2π/3)`.
+- **`hexDir_false_up`**: Direction from FALSE(x,y) to TRUE(x,y+1) equals `conj(j)`.
+- **`false_triplet_factor_w1`**: The **triplet sum factor** at a FALSE vertex vanishes: `1 + xc·j·conj(λ) + xc·conj(j)·λ = 0`. This is the concrete geometric instantiation of `triplet_cancellation` at hex lattice vertices, confirming that the triplet contribution to the vertex relation is zero for each individual walk.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with a new subsection "Direction vector infrastructure" documenting:
+- The `hexDir` definition and its properties
+- All proved lemmas about direction vectors at FALSE/TRUE vertices
+- The interior cancellation theorem for direction vectors
+- Each entry is linked to its Lean declaration with `\lean{...}` and marked `\leanok` (fully proved).
+
+### Status of the Three Critical Sorry's
+
+The three remaining sorry's on the path to the main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) are unchanged:
+
+1. **`B_paper_le_one_obs`** (SAWStripIdentityCorrect.lean) — The strip identity. This requires formalizing the pair/triplet partition of walks at each vertex and the full discrete Stokes argument. The direction vector infrastructure I built is a prerequisite for this proof. The triplet sum factor being zero (`false_triplet_factor_w1`) confirms the algebraic core works at the vertex level.
+
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — The quadratic bridge recurrence. Depends on #1 via the infinite strip identity.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh bridge decomposition injection. Independent of #1 but requires substantial combinatorial formalization.
+
+All other parts of the proof chain are fully formalized: algebraic identities, Fekete's lemma, submultiplicativity, connective constant definition, bridge infrastructure, quadratic recurrence bounds, bridge decay, bridge-SAW injection, boundary weight non-negativity, and the main theorem assembly.
+
 # Summary of changes for run 8071e613-ac1f-446f-89ac-8e16a36a3abf
 ## Summary
 

@@ -3121,6 +3121,68 @@ The proof of $B_{\text{paper}} \leq 1$ (Lemma~2) requires the parafermionic
 observable and the discrete Stokes theorem.  The following definitions
 and lemmas provide the formal skeleton for this proof.
 
+\subsection{Direction vector infrastructure}
+
+\begin{definition}[Hex direction vector]\label{def:hex_dir}
+\lean{hexDir}
+\leanok
+\uses{def:hex_embed_correct}
+  The direction vector $\texttt{hexDir}(v, w) = \texttt{correctHexEmbed}(w) - \texttt{correctHexEmbed}(v)$
+  from vertex $v$ to vertex $w$ in the hex embedding.
+\end{definition}
+
+\begin{lemma}[FALSE same-cell direction]\label{lem:hex_dir_false}
+\lean{hexDir_false_same}
+\leanok
+\uses{def:hex_dir}
+  $\texttt{hexDir}((x,y,\text{false}), (x,y,\text{true})) = 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[TRUE same-cell direction]\label{lem:hex_dir_true}
+\lean{hexDir_true_same}
+\leanok
+\uses{def:hex_dir}
+  $\texttt{hexDir}((x,y,\text{true}), (x,y,\text{false})) = -1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[FALSE vertex direction sum]\label{lem:hex_dir_false_sum}
+\lean{hexDir_false_sum}
+\leanok
+\uses{def:hex_dir}
+  At a FALSE vertex $(x,y)$, the three direction vectors sum to zero:
+  $\texttt{hexDir}(v, w_1) + \texttt{hexDir}(v, w_2) + \texttt{hexDir}(v, w_3) = 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[TRUE vertex direction sum]\label{lem:hex_dir_true_sum}
+\lean{hexDir_true_sum}
+\leanok
+\uses{def:hex_dir}
+  At a TRUE vertex, the three direction vectors sum to zero.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{theorem}[Interior cancellation (direction vectors)]\label{thm:interior_cancel_dir}
+\lean{interior_cancellation'}
+\leanok
+\uses{def:hex_dir}
+  $\texttt{hexDir}(v, w) + \texttt{hexDir}(w, v) = 0$ for all vertices $v, w$.
+  This is the algebraic core of interior mid-edge cancellation.
+\end{theorem}
+\begin{proof}
+\leanok
+\end{proof}
+
 \begin{definition}[Strip SAW ending at vertex $v$]\label{def:strip_saw}
 \lean{StripSAW}
 \leanok
