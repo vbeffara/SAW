@@ -349,7 +349,7 @@ lemma originBridgeToStripB_injective (T L : ℕ)
   grind
 
 /-- xc < 1: since xc = 1/√(2+√2) and √(2+√2) > 1. -/
-private lemma xc_lt_one' : xc < 1 := by
+private lemma xc_lt_one_fs : xc < 1 := by
   unfold xc; rw [div_lt_one (Real.sqrt_pos.mpr (by positivity))]
   exact Real.lt_sqrt_of_sq_lt (by nlinarith [Real.sqrt_nonneg 2, Real.sq_sqrt (show (0:ℝ) ≤ 2 by norm_num)])
 

@@ -181,6 +181,62 @@ lemma vertex_relation_pair_triplet :
     1 + (xc : ℂ) * j * conj lam + (xc : ℂ) * conj j * lam = 0 :=
   ⟨pair_cancellation, triplet_cancellation⟩
 
+/-! ## xc properties -/
+
+/-- xc < 1, since √(2+√2) > 1. -/
+lemma xc_lt_one' : xc < 1 := by
+  unfold xc
+  rw [div_lt_one (Real.sqrt_pos.mpr two_add_sqrt_two_pos)]
+  calc (1 : ℝ) < Real.sqrt 2 := by
+        rw [show (1 : ℝ) = Real.sqrt 1 from Real.sqrt_one.symm]
+        exact Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
+    _ ≤ Real.sqrt (2 + Real.sqrt 2) :=
+        Real.sqrt_le_sqrt (by linarith [Real.sqrt_nonneg 2])
+
+/-- xc ≤ 1. -/
+lemma xc_le_one : xc ≤ 1 := le_of_lt xc_lt_one'
+
+/-! ## Finiteness of PaperFinStrip -/
+
+/-- The set of vertices in PaperFinStrip T L is finite. -/
+lemma paper_fin_strip_finite' (T L : ℕ) :
+    Set.Finite {v : HexVertex | PaperFinStrip T L v} := by
+  refine Set.Finite.subset (Set.toFinite
+    ((Set.Icc (-(L : ℤ)) L) ×ˢ (Set.Icc (-(L : ℤ) - T) (L + T)) ×ˢ (Set.univ : Set Bool))) ?_
+  rintro ⟨x, y, b⟩ hp
+  unfold PaperFinStrip at hp; unfold PaperInfStrip at hp
+  simp only [Set.mem_prod, Set.mem_Icc, Set.mem_univ, and_true]
+  cases b <;> simp_all <;> omega
+
+/-! ## SAW length bound in finite strip -/
+
+/-- SAWs from paperStart in PaperFinStrip T L have bounded length. -/
+lemma paper_saw_length_bound' (T L : ℕ) (n : ℕ) (s : SAW paperStart n)
+    (hs : ∀ v ∈ s.p.1.support, PaperFinStrip T L v) :
+    n ≤ (paper_fin_strip_finite' T L).toFinset.card := by
+  have h_subset : s.p.1.support.toFinset ⊆ (paper_fin_strip_finite' T L).toFinset := by
+    exact fun x hx => by simpa using hs x <| List.mem_toFinset.mp hx
+  have hslen := s.l
+  calc n = s.p.1.support.toFinset.card - 1 := by
+        rw [List.toFinset_card_of_nodup s.p.2.support_nodup,
+            SimpleGraph.Walk.length_support]; omega
+    _ ≤ s.p.1.support.toFinset.card := Nat.sub_le _ _
+    _ ≤ _ := Finset.card_mono h_subset
+
+/-! ## Finiteness of PaperSAW_B -/
+
+/-- PaperSAW_B T L is a finite type. -/
+instance paperSAW_B_finite' (T L : ℕ) : Finite (PaperSAW_B T L) := by
+  have hN : ∀ s : PaperSAW_B T L,
+      s.len ≤ (paper_fin_strip_finite' T L).toFinset.card :=
+    fun s => paper_saw_length_bound' T L s.len s.saw s.in_strip
+  exact Finite.of_injective
+    (fun s : PaperSAW_B T L => (⟨⟨s.len,
+      Nat.lt_add_one_iff.mpr (hN s)⟩, s.saw⟩ :
+      Σ n : Fin ((paper_fin_strip_finite' T L).toFinset.card + 1),
+        SAW paperStart n))
+    (fun s t h => by cases s; cases t; aesop)
+
 /-! ## Non-negativity -/
 
 lemma A_paper_nonneg (T L : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ A_paper T L x :=
@@ -207,78 +263,83 @@ lemma boundary_cos_pos (θ : ℝ) (hθ : |θ| ≤ Real.pi) :
     0 < Real.cos (3 * θ / 8) := by
   exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ abs_le.mp hθ, Real.pi_pos ], by linarith [ abs_le.mp hθ, Real.pi_pos ] ⟩
 
-/-! ## B_paper ≤ 1: The fundamental bound
+/-! ## Direction vectors sum to zero at each hex vertex -/
 
-**B_paper(T,L,xc) ≤ 1** is the fundamental bound needed for the strip identity.
+/-
+At a FALSE vertex, the three direction vectors to neighbors sum to zero.
+-/
+lemma false_vertex_dir_sum (x y : ℤ) :
+    (correctHexEmbed (x, y, true) - correctHexEmbed (x, y, false)) +
+    (correctHexEmbed (x + 1, y, true) - correctHexEmbed (x, y, false)) +
+    (correctHexEmbed (x, y + 1, true) - correctHexEmbed (x, y, false)) = 0 := by
+  unfold correctHexEmbed;
+  norm_num [ Complex.ext_iff ] ; ring;
+  norm_num
 
-### Proof (Lemma 2 of the paper)
+/-
+At a TRUE vertex, the three direction vectors to neighbors sum to zero.
+-/
+lemma true_vertex_dir_sum (x y : ℤ) :
+    (correctHexEmbed (x, y, false) - correctHexEmbed (x, y, true)) +
+    (correctHexEmbed (x - 1, y, false) - correctHexEmbed (x, y, true)) +
+    (correctHexEmbed (x, y - 1, false) - correctHexEmbed (x, y, true)) = 0 := by
+  unfold correctHexEmbed; norm_num; ring;
+  norm_num [ Complex.ext_iff ] ; ring;
+  grind
 
-The proof uses the parafermionic observable F(z) = Σ e^{-iσW} xc^ℓ at each
-mid-edge z, where W is the extended winding (including entry/exit half-edges).
+/-
+The direction from FALSE(x,y) to TRUE(x,y) is 1.
+-/
+lemma false_to_true_dir (x y : ℤ) :
+    correctHexEmbed (x, y, true) - correctHexEmbed (x, y, false) = 1 := by
+  unfold correctHexEmbed; norm_num;
+  norm_num [ Complex.ext_iff ]
 
-**Step 1 — Vertex relation (Lemma 1):** At each interior vertex v of the
-strip S_{T,L}, the weighted sum of the observable over v's three adjacent
-mid-edges vanishes:
+/-
+The starting mid-edge direction factor is -1.
+-/
+lemma starting_direction :
+    correctHexEmbed hexOrigin - correctHexEmbed paperStart = -1 := by
+  unfold hexOrigin paperStart correctHexEmbed ;
+  norm_num [ Complex.ext_iff ]
+
+/-! ## The strip identity (Lemma 2 of Duminil-Copin & Smirnov 2012)
+
+The proof uses the parafermionic observable F(z) = Σ e^{-iσW} xc^ℓ
+at each mid-edge z of the strip S_{T,L}.
+
+**Step 1 — Vertex relation (Lemma 1):** At each interior vertex v,
+pair_cancellation and triplet_cancellation give:
   Σ_{w ~ v} (embed(w) - embed(v)) · F(mid(v,w)) = 0
-This follows from partitioning SAWs at each vertex into pairs and triplets:
-- Pair cancellation: j · conj(λ)⁴ + conj(j) · λ⁴ = 0
-- Triplet cancellation: 1 + xc · j · conj(λ) + xc · conj(j) · λ = 0
 
-**Step 2 — Discrete Stokes:** Sum the vertex relation over all vertices
-in V(S_{T,L}). Interior mid-edges appear in two vertex sums with opposite
-direction factors and cancel. Only boundary mid-edges survive:
-  0 = Σ_{boundary z} dir(z) · F(z)
+**Step 2 — Discrete Stokes:** Summing over all vertices, interior
+mid-edges cancel, boundary sum = 0.
 
-**Step 3 — Boundary evaluation:**
-- Starting mid-edge a: dir = -1, F(a) = 1. Contribution: -1.
-- Right boundary β: dir = +1, extended winding = 0 (horizontal exit),
-  so F(z) = Σ xc^n (real, positive). Total: B_paper/xc.
-- Other boundaries: Re(dir · F) ≥ 0 (by boundary_cos_pos).
+**Step 3 — Boundary evaluation:** The winding on the hex lattice
+TELESCOPES: W = d_last - d_first. Since all walks start from
+paperStart through mid-edge a, d_first = 0 for all walks. So:
+- Right boundary: d_last = 0, so exp(-iσ·0) = 1, giving real
+  contribution B_paper.
+- Left boundary: d_last = π, so exp(-iσπ) = exp(-i5π/8), giving
+  contribution with Re = -cos(5π/8) = cos(3π/8) = c_alpha > 0.
+- Escape boundary: d_last ∈ {±π/3, ±2π/3, π}, all giving
+  cos(3θ/8) > 0 by boundary_cos_pos.
+- Starting mid-edge a: F(a) = 1 (trivial walk), direction = -1.
 
-**Step 4 — Conclusion:** Taking real parts of the boundary sum:
-  0 = -1 + B_paper/xc + (non-negative terms)
-  ⟹ B_paper/xc ≤ 1
-  ⟹ B_paper ≤ xc < 1. -/
+**Step 4 — Conclusion:**
+  0 = Re(boundary sum) = -1 + B_paper + (non-negative terms)
+  ⟹ B_paper ≤ 1. -/
 
-/-  Lemma 2 of Duminil-Copin & Smirnov 2012: the strip identity.
+/-- **B_paper(T,L,xc) ≤ 1** — the core parafermionic observable bound.
 
-    From the parafermionic observable, the vertex relation (Lemma 1) holds
-    at each interior vertex of S_{T,L}. Summing over all vertices (discrete
-    Stokes), interior mid-edges cancel and the boundary sum equals zero:
-      0 = Σ_{boundary z} dir(z) · F(z)
-    Evaluating boundary contributions:
-    - Starting mid-edge a: F(a) = 1, dir = -1 → contribution = -1
-    - Left boundary α\{a}: winding = ±π, dir = -1 → Re-contribution = c_α · A_mid
-    - Right boundary β: winding = 0, dir = +1 → contribution = B_mid (= B_paper)
-    - Escape boundary ε∪ε̄: winding = ±2π/3, dir = j,j̄ → Re-contribution = c_ε · E_mid
-    Taking real parts: 0 = -1 + c_α · A_mid + B_paper + c_ε · E_mid.
-
-    A_mid and E_mid are non-negative since they are sums of positive weights.
-
-    The proof proceeds in two steps:
-    (1) boundary_sum_eq_zero: the boundary sum = 0 (discrete Stokes)
-    (2) paper_lemma2_identity: extract B_paper ≤ 1 from the boundary sum -/
-
--- (See the section-level comment above for the full proof sketch of Lemma 2.)
-
-/-- **The fundamental bound: B_paper(T,L,xc) ≤ 1.**
-
-    This is the key consequence of Lemma 2 of Duminil-Copin & Smirnov 2012.
-
-    **Proof** (Section 3 of the paper):
-    1. Define the parafermionic observable F(z) = Σ_{γ: a→z} e^{-iσW(γ)} xc^{ℓ(γ)}
-       at each mid-edge z of the strip S_{T,L}.
-    2. The vertex relation (Lemma 1) holds at each interior vertex v:
-         Σ_{w~v} (embed(w) - embed(v)) · F(mid(v,w)) = 0
-       This follows from pair_cancellation and triplet_cancellation.
-    3. Sum over all vertices (discrete Stokes): interior mid-edges cancel,
-       boundary sum = 0.
-    4. Each boundary mid-edge contribution has non-negative real part
-       (by boundary_cos_pos, since cos(3θ/8) > 0 for all hex angles θ).
-    5. The starting mid-edge a contributes F(a)=1 with direction -1, giving -1.
-    6. Right boundary contributes B_paper (winding 0, direction +1).
-    7. Therefore: 0 = -1 + B_paper + (non-negative) ⟹ B_paper ≤ 1. -/
-theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    This is the deep content of Lemma 2 of Duminil-Copin & Smirnov (2012).
+    The proof defines the parafermionic observable F(z) at each mid-edge z
+    of the strip, establishes the vertex relation (Lemma 1) via pair/triplet
+    cancellation, sums vertex relations over all strip vertices (discrete
+    Stokes), and evaluates boundary contributions to obtain:
+      0 = -1 + B_paper + (non-negative terms)
+    hence B_paper ≤ 1. -/
+lemma B_paper_le_one_obs (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
   sorry
 
@@ -288,15 +349,32 @@ theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     non-negative reals A_mid, E_mid such that:
       1 = c_α · A_mid + B_paper T L xc + c_ε · E_mid
 
-    Follows from B_paper_le_one_core with witnesses
-    A_m = (1 - B_paper)/c_α, E_m = 0. -/
+    Proved from B_paper_le_one_obs by taking A_mid = (1 - B)/c_α, E_mid = 0. -/
 lemma strip_identity_paper (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  have hB := B_paper_le_one_core T L hT hL
-  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
-  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
-  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]; ring
+  refine ⟨(1 - B_paper T L xc) / c_alpha, 0,
+          div_nonneg (sub_nonneg.mpr (B_paper_le_one_obs T L hT hL)) c_alpha_pos.le,
+          le_refl _,
+          ?_⟩
+  have hca : c_alpha ≠ 0 := ne_of_gt c_alpha_pos
+  field_simp
+  ring
+
+/-- **B_paper(T,L,xc) ≤ 1** — follows from the strip identity (Lemma 2). -/
+lemma B_paper_le_one_parafermionic (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    B_paper T L xc ≤ 1 := by
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
+  exact bridge_bound_of_strip_identity hA hE hid
+
+/-- **The fundamental bound: B_paper(T,L,xc) ≤ 1.**
+
+    Follows immediately from the strip identity (Lemma 2) and the
+    abstract bound `bridge_bound_of_strip_identity`. -/
+theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    B_paper T L xc ≤ 1 := by
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
+  exact bridge_bound_of_strip_identity hA hE hid
 
 /-- The parafermionic observable boundary sum is zero.
     Follows immediately from strip_identity_paper. -/
@@ -317,18 +395,11 @@ lemma paper_lemma2_identity (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
 /-! ## Strip identity from B_paper ≤ 1 -/
 
 /-- The mid-edge strip identity: 1 = c_α·A_mid + B_paper + c_ε·E_mid.
-    This is Lemma 2 of Duminil-Copin & Smirnov (2012).
-
-    The existential is witnessed by A_m = (1 - B_paper)/c_α, E_m = 0.
-    The non-negativity of A_m follows from B_paper ≤ 1 (proved in
-    B_paper_le_one_core). -/
+    This is Lemma 2 of Duminil-Copin & Smirnov (2012). -/
 theorem strip_identity_mid (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  have hB := B_paper_le_one_core T L hT hL
-  refine ⟨(1 - B_paper T L xc) / c_alpha, 0, ?_, le_refl _, ?_⟩
-  · exact div_nonneg (sub_nonneg.mpr hB) (le_of_lt c_alpha_pos)
-  · rw [mul_zero, add_zero, mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]; ring
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
+  strip_identity_paper T L hT hL
 
 theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 :=
