@@ -1,3 +1,53 @@
+# Summary of changes for run cceaec00-c1d3-4f5f-832e-0b7a0d1ccc7e
+## Summary of work done
+
+### Mathematical analysis
+I conducted a deep analysis of the three remaining critical-path sorries in the formalization of the connective constant theorem (μ = √(2+√2)):
+
+1. **B_paper_le_one_obs** (Lemma 2 — parafermionic observable bound): I worked out the complete mathematical argument showing how the winding telescopes on the honeycomb lattice. The key insight is that all turns on the honeycomb lattice are exactly ±π/3, so the winding of any SAW from the starting mid-edge to an exit mid-edge equals the difference of exit and entry angles. This means the observable phase at each boundary mid-edge depends only on the exit angle, not on the path. The vertex relation (Lemma 1) follows from grouping walks into triplets and pairs, using the proved algebraic identities `triplet_cancellation` and `pair_cancellation`.
+
+2. **paper_bridge_recurrence** (quadratic recurrence): Depends on #1 via the strip identity.
+
+3. **paper_bridge_decomp_injection** (Hammersley-Welsh decomposition): Independent combinatorial bound requiring the bridge decomposition algorithm.
+
+### New Lean files
+
+1. **`RequestProject/SAWParafermionicProof.lean`** — Infrastructure for the three sorries:
+   - `hex_adj_diag_bound`: diagonal coordinate changes by ≤ 1 per hex edge
+   - `walk_from_paperStart_diag_ge`: diagonal bound for walks from paperStart
+   - `paper_fin_strip_mono`: PaperFinStrip monotonicity in L (wider strips contain more vertices)
+   - `bridge_weight_le_pow_T`: bridge weight bound for x ≤ 1
+   - `xc_in_unit`, `lt_one_of_lt_xc`: basic xc property helpers
+
+2. **`RequestProject/SAWWindingProperty.lean`** — Key winding property:
+   - `hexTurn_eq_pm_one`: **Proved** that all turns on the honeycomb lattice are exactly ±1 (representing ±π/3). This is the fundamental geometric fact underlying the parafermionic observable proof. The proof works by unfolding hexTurn and hexEdgeDir, then exhaustive case analysis on the adjacency structure.
+
+### Updated documentation
+
+- **`PROOF_STATUS.md`** — Completely rewritten with:
+  - Detailed proof strategy for `B_paper_le_one_obs` including the winding telescoping insight
+  - Explanation of how triplet_cancellation maps to the vertex relation winding differences (ΔW = ±π/3 gives phases conj(lam) and lam, direction ratios j and conj(j))
+  - Updated file organization including new files
+  - Clear dependency structure for all three sorries
+
+### Verification
+
+- Full project builds successfully (`RequestProject.SAWPaperChain` module, 8038 jobs)
+- Main theorem `connective_constant_eq_corrected` depends only on standard axioms + `sorryAx`
+- Critical path has exactly **3 sorries** (unchanged from before, in `SAWStripIdentityCorrect.lean` and `SAWPaperChain.lean`)
+- New files contain **0 sorries** — all new lemmas are fully proved
+- No definitions, names, or structures were renamed or shuffled — only new content was added
+
+### What remains
+
+The three critical-path sorries remain. Each requires substantial infrastructure:
+
+1. **B_paper_le_one_obs**: Needs the combinatorial pair/triplet partition of walks (exhaustiveness) and the discrete Stokes telescoping argument. The algebraic parts and the key geometric fact (`hexTurn_eq_pm_one`) are proved.
+
+2. **paper_bridge_recurrence**: Blocked by #1.
+
+3. **paper_bridge_decomp_injection**: Needs formalizing the Hammersley-Welsh bridge decomposition algorithm (split at deepest vertex, recursive bridge extraction, injectivity proof).
+
 # Summary of changes for run 83fae82f-67a2-4909-9195-c8faef74db21
 ## Summary of work done
 
