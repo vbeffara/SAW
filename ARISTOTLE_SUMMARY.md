@@ -1,3 +1,56 @@
+# Summary of changes for run 83fae82f-67a2-4909-9195-c8faef74db21
+## Summary of work done
+
+### Blueprint updates
+
+Added two substantial new sections to `blueprint/src/content.tex`:
+
+1. **Bridge decomposition algorithm (Hammersley-Welsh)** — Section documenting the full proof structure for `paper_bridge_decomp_injection`:
+   - Half-plane walk definition
+   - Recursive bridge extraction (finding last vertex at maximal diagonal, splitting into bridge + remainder)
+   - Full walk decomposition (splitting at deepest point)
+   - Weight factorization (for x ≤ 1, connecting vertices only reduce weight)
+   - Assembly using `Finset.prod_one_add`
+
+2. **Vertex relation proof structure** — Detailed documentation of the pair/triplet grouping for `B_paper_le_one_obs`:
+   - Walk classification (1, 2, or 3 mid-edges visited)
+   - Triplet grouping (1-mid-edge walks + 2 extensions → sum = 0 by `triplet_cancellation`)
+   - Pair grouping (3-mid-edge walks via loop reversal → sum = 0 by `pair_cancellation`)
+   - Exhaustiveness conditions and the delicate point about already-visited neighbors
+
+### New Lean files
+
+1. **`RequestProject/SAWBridgeDecomp.lean`** — Bridge decomposition infrastructure:
+   - `diagCoord`: diagonal coordinate d(v) = v.1 + v.2.1
+   - `Walk.isHalfPlane`: half-plane walk predicate
+   - `powerset_prod_eq`: the standard algebraic identity Π(1+f(i)) = Σ_{S⊆F} Π f(i)
+   - Statement of `paper_bridge_decomp_injection_v2` (sorry — the HW bound)
+
+2. **`RequestProject/SAWVertexRelProof.lean`** — Vertex relation algebraic components (all proved, no sorries):
+   - `triplet_for_vertex_relation`: triplet cancellation in vertex-relation form
+   - `pair_for_vertex_relation`: pair cancellation in vertex-relation form
+   - `false_dir_same'`, `false_vertex_dir_sum'`, `true_vertex_dir_sum'`: direction factor properties
+   - `interior_edge_cancel`: interior edge direction cancellation
+
+### Updated documentation
+
+- **`PROOF_STATUS.md`** — Completely rewritten with accurate dependency tree, detailed proof strategies for all 3 remaining sorries, and updated file organization.
+
+### Verification
+
+- Full project builds successfully (8075 jobs)
+- Main theorem `connective_constant_eq_corrected` depends only on standard axioms + `sorryAx`
+- Critical path has exactly **3 sorries** (in `SAWStripIdentityCorrect.lean` and `SAWPaperChain.lean`), all other sorries are in non-critical files
+- No definitions, names, or structures were renamed or shuffled — only new content was added
+
+### Remaining 3 critical-path sorries
+
+1. **`B_paper_le_one_obs`** (Lemma 2) — The parafermionic observable bound. All algebraic ingredients (pair/triplet cancellation) are proved. Missing: combinatorial pair/triplet partition of walks and discrete Stokes telescoping.
+
+2. **`paper_bridge_recurrence`** — Quadratic recurrence for bridges. Depends on #1 via the infinite strip identity.
+
+3. **`paper_bridge_decomp_injection`** — Hammersley-Welsh bridge decomposition. Independent of #1 and #2. Requires formalizing the bridge decomposition algorithm (half-plane walk splitting, recursive bridge extraction, injectivity).
+
 # Summary of changes for run e1b609f8-27ca-4857-9a42-303e1fdf16d0
 ## Summary of Work
 

@@ -3221,6 +3221,180 @@ and lemmas provide the formal skeleton for this proof.
   \textbf{Status: sorry.}
 \end{theorem}
 
+\section{Bridge decomposition algorithm (Hammersley--Welsh)}\label{sec:hw_algorithm}
+
+The bridge decomposition, first introduced by Hammersley and Welsh~\cite{HammersleyWelsh},
+is the key combinatorial ingredient for the upper bound $\mu \leq \sqrt{2+\sqrt{2}}$.
+
+\subsection{Half-plane walks}
+
+A \emph{half-plane walk} of width~$T_0$ is a self-avoiding walk $\tilde{\gamma}$
+such that the start of $\tilde{\gamma}$ has extremal diagonal coordinate.
+Formally, for vertices using the diagonal coordinate $d(v) = v_1 + v_2$, the starting
+vertex achieves $\min_{u \in \tilde{\gamma}} d(u)$.
+
+\begin{definition}[Half-plane walk]\label{def:half_plane}
+\uses{def:saw}
+  A SAW $\gamma = (v_0, \ldots, v_n)$ is \emph{half-plane} if
+  $d(v_0) \leq d(v_i)$ for all $i$. The \emph{width} is
+  $T_0 = \max_i d(v_i) - d(v_0)$.
+\end{definition}
+
+\subsection{Recursive bridge extraction}
+
+\begin{lemma}[Bridge extraction]\label{lem:bridge_extract}
+\uses{def:half_plane, def:paper_bridge}
+  Let $\tilde{\gamma}$ be a half-plane walk of width $T_0 \geq 1$.
+  Among the vertices of $\tilde{\gamma}$ achieving $d(v) = d(v_0) + T_0$
+  (the rightmost diagonal coordinate), let $v_k$ be the one visited last.
+  Then:
+  \begin{enumerate}
+  \item The prefix $v_0, \ldots, v_k$ forms a bridge of width $T_0$.
+  \item The vertex $v_{k+1}$ is uniquely determined by the bridge endpoint.
+  \item The suffix $v_{k+2}, \ldots, v_n$ is a half-plane walk of width
+        $T_1 < T_0$ (after forgetting $v_{k+1}$).
+  \end{enumerate}
+  \textbf{Status: not yet formalized.}
+\end{lemma}
+
+\subsection{Full walk decomposition}
+
+\begin{lemma}[Split at deepest point]\label{lem:split_deepest}
+\uses{def:saw}
+  For any SAW $\gamma = (v_0, \ldots, v_n)$, let $v_k$ be the first vertex
+  achieving $\min_i d(v_i)$. Then:
+  \begin{enumerate}
+  \item $\gamma_1 = (v_0, \ldots, v_k)$ reversed is a half-plane walk.
+  \item $\gamma_2 = (v_k, \ldots, v_n)$ is a half-plane walk.
+  \item The vertex sets of $\gamma_1$ and $\gamma_2$ share only $v_k$.
+  \end{enumerate}
+  \textbf{Status: not yet formalized.}
+\end{lemma}
+
+\begin{theorem}[Hammersley--Welsh decomposition]\label{thm:hw_decomp_algorithm}
+\uses{lem:bridge_extract, lem:split_deepest}
+  Any SAW $\gamma$ from the origin admits a canonical decomposition into
+  two sequences of bridges with strictly monotone widths:
+  $T_{-i} < \cdots < T_{-1}$ (from the first half) and
+  $T_0 > \cdots > T_j$ (from the second half).
+
+  The decomposition is injective: given the starting vertex and the
+  sequences of bridge widths, the original walk can be uniquely
+  reconstructed.
+  \textbf{Status: not yet formalized.}
+\end{theorem}
+
+\subsection{Weight bound}
+
+\begin{lemma}[Weight factorization]\label{lem:weight_factor}
+\uses{thm:hw_decomp_algorithm}
+  For $x \leq 1$, the walk weight $x^n$ satisfies
+  $x^n \leq \prod_i x^{\ell(\beta_i)}$
+  where $\beta_i$ are the bridges in the decomposition and $\ell(\beta_i)$
+  is the edge-count of bridge $\beta_i$.
+  This holds because the connecting vertices between bridges contribute
+  additional factors of $x \leq 1$ that can only decrease the weight.
+  \textbf{Status: not yet formalized.}
+\end{lemma}
+
+\subsection{Assembly of the injection bound}
+
+\begin{theorem}[Bridge decomposition injection]\label{thm:hw_injection}
+\lean{paper_bridge_decomp_injection}
+\uses{thm:hw_decomp_algorithm, lem:weight_factor, def:paper_bridge_partition}
+  For $0 < x < x_c$ and any $N$:
+  $\sum_{n=0}^{N} c_n x^n \leq
+    2 \cdot \left(\sum_{S \subseteq \{1,\ldots,N\}}
+    \prod_{T \in S} B_T(x)\right)^2
+    = 2 \cdot \prod_{T=1}^{N} (1 + B_T(x))^2$
+  where $B_T(x) = \texttt{paper\_bridge\_partition}(T, x)$.
+
+  The factor of~2 accounts for the two choices of starting direction.
+  Each half gives a subset $S \subseteq \{1,\ldots,N\}$ (the bridge widths).
+  By the Hammersley--Welsh decomposition, the map is injective, and by
+  the weight factorization, each walk's contribution is bounded by the
+  product of bridge weights.
+
+  The identity $\sum_{S \subseteq F} \prod_{T \in S} f(T) = \prod_{T \in F} (1 + f(T))$
+  is \texttt{Finset.prod\_one\_add} in Mathlib.
+  \textbf{Status: sorry.}
+\end{theorem}
+
+\section{Vertex relation proof structure}\label{sec:vertex_rel_proof}
+
+The proof of the vertex relation (Lemma~1) partitions walks ending at the
+three mid-edges around a vertex $v$ into \emph{triplets} and \emph{pairs}.
+
+\subsection{Walk classification}
+
+For a walk $\gamma$ from $a$ to one of the three mid-edges $p, q, r$ around
+a vertex $v$, define the number of mid-edges around $v$ \emph{visited} by
+$\gamma$ (including start and end half-edges).
+
+\begin{itemize}
+\item \textbf{1 mid-edge}: The walk ends at $p$ and does not cross the other
+  two edges around $v$. This occurs when:
+  \begin{enumerate}
+  \item[(a)] $v$ is the starting vertex and $\gamma$ has length~0, or
+  \item[(b)] $\gamma$ enters $v$ from the same direction as the ending half-edge.
+  \end{enumerate}
+
+\item \textbf{2 mid-edges}: The walk enters $v$ from one direction and exits
+  toward a different mid-edge. This is the generic case.
+
+\item \textbf{3 mid-edges}: The walk uses all three edges around $v$. This
+  requires the walk to enter $v$, exit to another neighbor, and the walk also
+  crosses the third edge from the opposite side.
+\end{itemize}
+
+\subsection{Triplet grouping}
+
+Walks visiting 1 mid-edge form triplets with walks visiting 2 mid-edges.
+For each walk $\gamma_1$ visiting 1 mid-edge (ending at $p$):
+\begin{itemize}
+\item Extension $\gamma_2$: prolong $\gamma_1$ by one vertex step, ending at $q$.
+  The walk now visits 2 mid-edges ($p$ and $q$).
+\item Extension $\gamma_3$: prolong $\gamma_1$ by one vertex step, ending at $r$.
+  The walk now visits 2 mid-edges ($p$ and $r$).
+\end{itemize}
+The contributions satisfy:
+$c(\gamma_1) + c(\gamma_2) + c(\gamma_3) =
+(p-v) \cdot e^{-i\sigma W_1} \cdot x_c^{\ell_1}
+\cdot \underbrace{(1 + x_c \cdot j \cdot \bar{\lambda} + x_c \cdot \bar{j} \cdot \lambda)}_{=\,0} = 0$
+by \texttt{triplet\_cancellation}.
+
+\subsection{Pair grouping}
+
+Walks visiting 3 mid-edges form pairs via loop reversal. If $\gamma_1$ enters
+$v$ from $w_j$, exits to $w_l$, and the walk reaches $w_k$ from the opposite
+side, then the partner $\gamma_2$ reverses the loop around $v$
+(enters from $w_l$, exits to $w_j$, reaches $w_k$ from the opposite side).
+The contributions satisfy:
+$c(\gamma_1) + c(\gamma_2) =
+(p-v) \cdot e^{-i\sigma W_{\text{common}}} \cdot x_c^{\ell}
+\cdot \underbrace{(j \cdot \bar{\lambda}^4 + \bar{j} \cdot \lambda^4)}_{=\,0} = 0$
+by \texttt{pair\_cancellation}.
+
+\subsection{Exhaustiveness}
+
+The grouping is exhaustive: every walk ending at one of the three mid-edges
+around $v$ falls into exactly one triplet or one pair. The proof of exhaustiveness
+requires showing that:
+\begin{enumerate}
+\item Every 1-mid-edge walk can be extended to both other mid-edges
+  (the two unvisited neighbors are not on the walk's path).
+\item Every 2-mid-edge walk is the extension of a unique 1-mid-edge walk.
+\item Every 3-mid-edge walk has a unique loop-reversal partner.
+\end{enumerate}
+Point~(1) is the most delicate: if a neighbor $w_j$ of $v$ is already visited
+by a walk ending at $v$, then the extension to $w_j$ does not exist, and the
+triplet is incomplete. In this case, the walk should be grouped as a
+3-mid-edge walk instead (the walk passes through $w_j$ via a path that
+also uses edge $\{v, w_j\}$ from the opposite side).
+
+\textbf{Status: the algebraic identities (triplet and pair cancellation) are proved.
+The combinatorial grouping (exhaustiveness of the partition) is not yet formalized.}
+
 \section{Main theorem}
 
 \begin{theorem}[Main theorem (corrected)]\label{thm:main_corrected}
