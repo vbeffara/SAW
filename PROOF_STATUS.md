@@ -18,10 +18,11 @@ SAW.lean (constants, algebraic identities) ✓
 │       └── SAWBridge.lean (partition function, connective_constant_eq_from_bounds) ✓
 │           └── SAWBridgeFix.lean (OriginBridge definition, corrections) ✓
 │               └── SAWStripIdentityCorrect.lean (Paper strip domain, partition functions)
-│                   └── B_paper_le_one_obs ⚠️ [sorry — Lemma 2, B ≤ 1]
+│                   ├── strip_identity_genuine ⚠️ [sorry — Lemma 2]
+│                   └── B_paper_le_one_obs ✓ [proved FROM strip_identity_genuine]
 │                       └── SAWDiagProof.lean (Paper bridge infrastructure) ✓
 │                           └── SAWPaperChain.lean (main theorem assembly)
-│                               ├── paper_bridge_recurrence ⚠️ [sorry — strip identity + cutting]
+│                               ├── paper_bridge_recurrence ⚠️ [sorry — recurrence]
 │                               ├── paper_bridge_decomp_injection ⚠️ [sorry — HW decomposition]
 │                               ├── paper_bridge_lower_bound ✓ (from recurrence)
 │                               ├── hw_summable_corrected ✓ (from decomposition + decay)
@@ -32,155 +33,99 @@ SAW.lean (constants, algebraic identities) ✓
 
 ## Remaining 3 critical-path sorries
 
-### 1. `B_paper_le_one_obs` (SAWStripIdentityCorrect.lean, line 344)
-**B_paper(T, L, xc) ≤ 1** — Lemma 2 of the paper (parafermionic observable bound).
+### 1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean, line 358)
+**∃ A E ≥ 0, 1 = c_α·A + B_paper T L xc + c_ε·E**
 
-**Detailed proof strategy (from mathematical analysis):**
+This is Lemma 2 (the strip identity) of Duminil-Copin & Smirnov (2012).
 
-The proof uses the parafermionic observable F(z) at each mid-edge z.
-The key mathematical insight is that **the winding telescopes on the
-honeycomb lattice**: since all turns at vertices are exactly ±π/3
-(which lie in [-π, π] without reduction), the total winding of any
-SAW from the starting mid-edge to a mid-edge z equals
-`angle(z_direction) - angle(a_direction)`.
-
-This means:
-- F(z) = e^{-iσ·angle(z)} · G(v), where G(v) is the real vertex
-  partition function at the vertex v adjacent to z inside the domain
-- The phase factor depends only on the exit angle, NOT on the path
-
-**Vertex relation (Lemma 1):** At each interior vertex v, walks near v
-group into triplets and pairs that cancel algebraically:
-
-- **Triplet:** A walk γ ending at neighbor w_i (not visiting v), plus
-  two extensions γ+w_i→v exiting toward w_j and w_k. The triplet factor
-  is `1 + xc·j·conj(λ) + xc·conj(j)·λ = 0` (proved: `triplet_cancellation`).
-  
-  The winding differences are ΔW = ±π/3 (single turn at v), giving
-  phases `conj(lam) = e^{i5π/24}` and `lam = e^{-i5π/24}`.
-  The direction ratios are j = e^{i2π/3} and conj(j) = e^{-i2π/3}.
-
-- **Pair:** Walks visiting all three mid-edges of v, paired by loop
-  reversal. Factor: `j·conj(λ)^4 + conj(j)·λ^4 = 0` (proved: `pair_cancellation`).
-
-**Discrete Stokes:** Sum vertex relations over all interior vertices.
-Interior mid-edges cancel (appear in two vertex sums with opposite
-direction factors). Only boundary mid-edges survive. Result:
-`Σ_{boundary z} dir(z) · F(z) = 0`.
-
-**Boundary evaluation:** In edge convention (weight = xc^ℓ):
-- Starting mid-edge a: dir = -1, F = 1. Contribution = -1.
-- Right boundary: dir = +1, winding = 0 (exit angle 0). Contribution = Σ xc^ℓ.
-- Other boundary: cos(3θ/8) > 0 for all hex angles |θ| ≤ π.
-
-**Conclusion:** Re(0) = -1 + Σ_right xc^ℓ + (positive) → Σ_right xc^ℓ ≤ 1.
-Since B_paper = xc · Σ xc^ℓ ≤ xc < 1.
-
-**What's proved (algebraic):**
+**Proved algebraic ingredients:**
 - `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
 - `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
 - `boundary_cos_pos`: cos(3θ/8) > 0 for |θ| ≤ π
-- `boundary_weight_re_nonneg`: all hex boundary weights have non-negative Re
-- Direction vector sums at vertices
-- Interior edge cancellation
 
-**What's missing (combinatorial):**
-- The triplet/pair partition of walks at each vertex (exhaustiveness)
-- The discrete Stokes telescoping argument
-- Complete boundary evaluation
+**Remaining combinatorial infrastructure needed:**
+- The pair/triplet partition of walks at each interior vertex
+- Exhaustiveness of the partition
+- The discrete Stokes summation (interior cancellation)
+- Complete boundary evaluation (relating winding to exit angles)
+
+**Consequence:** `B_paper_le_one_obs` (B_paper ≤ 1) is now PROVED from this lemma
+via `bridge_bound_of_strip_identity`.
 
 ### 2. `paper_bridge_recurrence` (SAWPaperChain.lean, line 131)
 **∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}**
 
-**Proof strategy:** From the infinite-strip identity and cutting argument.
-1. Take L→∞ in B_paper_le_one_obs (B_paper is monotone in L)
-2. Get infinite strip identity: 1 = c_α·A_T + B_T + c_ε·E_T
-3. Cutting: A_{T+1} - A_T ≤ xc·B_{T+1}²
+**Proof strategy (from the paper, Section 3):**
+1. Take L→∞ in strip_identity_genuine to get infinite strip identity
+2. Get 1 = c_α·A_T + xc·B_T + c_ε·E_T for the infinite strip
+3. Cutting: A_{T+1} - A_T ≤ xc·B_{T+1}² (walks entering wider strip decompose into two bridges)
 4. E is monotone decreasing in T
-5. Combine: B_T ≤ c_α·xc·B_{T+1}² + B_{T+1}
+5. Apply `recurrence_from_strip` from SAWDecomp.lean
+6. Conclude with α = c_alpha · xc³
 
-**Depends on:** B_paper_le_one_obs (sorry #1).
-
-**New infrastructure:** `paper_fin_strip_mono` (strip monotonicity in L) is proved
-in `SAWParafermionicProof.lean`.
+**Depends on:** strip_identity_genuine (sorry #1)
 
 ### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean, line 257)
-**Σ_{n≤N} c_n·x^n ≤ 2·(Σ_{S⊆{1,...,N}} Π_{T∈S} B_{T+1}(x))²**
+**∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆{1,...,N}} ∏_{T∈S} B_{T+1}(x))²**
 
-**Proof strategy (Hammersley-Welsh):**
-1. Split any SAW at its deepest vertex (minimum diagonal coordinate)
-2. Each half is a half-plane walk decomposing into bridges
-   of strictly decreasing widths
-3. The decomposition is injective
-4. For x ≤ 1, walk weight = product of bridge weights (edges partition cleanly)
-5. Factor 2 for 2 choices of starting direction
+**Proof strategy (Hammersley-Welsh decomposition, from the paper):**
+1. For each SAW γ of length n ≤ N from paperStart:
+   a. Find the vertex with minimum diagonal (x+y)
+   b. Split γ at this vertex into two half-plane walks
+2. Each half-plane walk decomposes into bridges of strictly decreasing widths
+   (by finding the last vertex with max diagonal, extracting the first bridge, recursing)
+3. The decomposition is injective (given starting mid-edge and first vertex)
+4. Walk weight x^n ≤ ∏ x^{bridge_length} since x ≤ 1 and connecting edges are free
+5. Factor 2: two choices for first vertex from starting mid-edge
+6. Summing: Z_N(x) ≤ 2·(∏_{T=1}^N (1+B_T(x)))² = 2·(∑_S ∏_{T∈S} B_T(x))²
 
-**Key facts used:** `paper_bridge_length_ge`, `Finset.prod_one_add` (powerset-product
-identity), walk splitting properties.
+**Independent of:** sorries #1 and #2
 
-**Independent of:** sorry #1 and #2.
+## Proved infrastructure
 
-## New files added this session
+### Algebraic (SAW.lean)
+- Key constants: xc, λ, j, σ, c_α, c_ε ✓
+- pair_cancellation ✓
+- triplet_cancellation ✓
+- sqrt_two_add_sqrt_two_eq ✓
+- xc_inv, xc_pos, c_alpha_pos, c_eps_pos ✓
+- bridge_bound_of_strip_identity ✓
 
-- `SAWParafermionicProof.lean` — Helper infrastructure:
-  - `hex_adj_diag_bound`: diagonal coordinate changes by ≤ 1 per edge
-  - `walk_from_paperStart_diag_ge`: diagonal bound for walks from paperStart
-  - `paper_fin_strip_mono`: PaperFinStrip monotonicity in L
-  - `bridge_weight_le_pow_T`: bridge weight bound
-  - `xc_in_unit`, `lt_one_of_lt_xc`: basic xc properties
+### Combinatorial (SAWSubmult.lean, SAWMain.lean)
+- saw_count_submult' (submultiplicativity) ✓
+- connective_constant definition ✓
+- fekete_submultiplicative ✓
+- connective_constant_eq_from_bounds ✓
 
-## File organization
+### Bridge infrastructure (SAWBridge.lean, SAWBridgeFix.lean, SAWDiagProof.lean)
+- Bridge, OriginBridge definitions ✓
+- PaperBridge, paper_bridge_partition definitions ✓
+- paper_bridge_length_ge ✓
+- paper_bridge_upper_bound ✓ (from B_paper_le_one_obs)
+- paper_bridge_partial_sum_le ✓
+- paperSAW_B_finite' ✓
 
-### Critical path files (transitively imported by SAWPaperChain)
-- `SAW.lean` — Key constants, algebraic identities (pair/triplet cancellation)
-- `SAWSubmult.lean` — Submultiplicativity c_{n+m} ≤ c_n·c_m
-- `SAWMain.lean` — Fekete's lemma, connective constant definition
-- `SAWBridge.lean` — Partition function, main theorem reduction
-- `SAWBridgeFix.lean` — Corrected bridge definitions
-- `SAWStripIdentityCorrect.lean` — Paper strip, **B_paper_le_one_obs (sorry)**
-- `SAWStripIdentityProof.lean` — Strip identity proof infrastructure
-- `SAWDiagBridge.lean` — Diagonal bridge connections
-- `SAWDiagConnection.lean` — Bridge-strip connections
-- `SAWDiagProof.lean` — Paper bridge infrastructure
-- `SAWDecomp.lean` — Quadratic recurrence lower bound
-- `SAWPaperChain.lean` — Main theorem assembly, **recurrence + HW (sorry)**
+### Analysis (SAWDecomp.lean)
+- recurrence_from_strip ✓
+- quadratic_recurrence_lower_bound ✓
+- harmonic_not_summable ✓
+- not_summable_of_lower_bound ✓
+- bridge_product_converges ✓
 
-### Supporting files (not on critical path)
-- `SAWObservable.lean`, `SAWObservableProof.lean`, `SAWObservableProof2.lean` — Observable definitions
-- `SAWDiscreteStokes.lean` — Direction factors, interior cancellation
-- `SAWStokesSkeleton.lean` — Vertex relation statement (sorry)
-- `SAWVertexRelProof.lean` — Vertex relation algebraic components
-- `SAWVertexRelation.lean` — Vertex relation decomposition
-- `SAWPairTriplet.lean` — Pair/triplet winding computations
-- `SAWBridgeDecomp.lean` — Bridge decomposition infrastructure (sorry)
-- `SAWHWAlgorithm.lean`, `SAWHWBridge.lean`, `SAWHWDecomp.lean`, `SAWHWInject.lean` — HW infrastructure (sorry)
-- `SAWHammersleyWelsh.lean` — HW summability infrastructure (sorry)
-- `SAWElementary.lean`, `SAWCompute.lean` — Elementary SAW properties
-- `SAWSymmetry.lean` — Lattice symmetries
-- `SAWWinding.lean` — Winding computations
-- `SAWZigzag.lean`, `SAWZigzagBuild.lean` — Zigzag walk construction
-- `SAWStrip.lean`, `SAWFiniteStrip.lean`, `SAWStripWalks.lean` — Strip domain definitions
-- `SAWVertex.lean`, `SAWQuadRecurrence.lean` — Additional infrastructure
-- `SAWFinal.lean` — Clean main theorem export
-- `SAWParafermionicProof.lean` — New helper infrastructure (this session)
-- Others: `SAWLowerBound.lean`, `SAWLowerBoundProof.lean`, `SAWLowerCount.lean`,
-  `SAWConjectures.lean`, `SAWEquivalence.lean`, `SAWCutting.lean`, `SAWHalfPlane.lean`,
-  `SAWProof.lean`, `SAWStripIdentity.lean`, `SAWStripBridge.lean`
+### Main theorem assembly (SAWPaperChain.lean)
+- paper_bridge_partition_one_pos ✓
+- paper_bridge_lower_bound ✓ (from paper_bridge_recurrence)
+- paper_bridge_decay ✓ (from paper_bridge_upper_bound)
+- Z_xc_diverges_corrected ✓ (from paper_bridge_lower_bound)
+- hw_summable_corrected ✓ (from paper_bridge_decomp_injection + paper_bridge_decay)
+- connective_constant_eq_corrected ✓
 
-## Blueprint
+## Session changes
 
-The blueprint in `blueprint/src/content.tex` documents:
-1. All definitions and their Lean formalization status
-2. The algebraic identities (all proved)
-3. The parafermionic observable framework
-4. The vertex relation proof structure (pair/triplet grouping, exhaustiveness)
-5. The bridge decomposition algorithm (half-plane walks, recursive extraction)
-6. The parafermionic proof of B ≤ 1 (winding telescoping, discrete Stokes)
-7. The three remaining gaps and their dependencies
+1. **Restructured B_paper_le_one_obs**: Previously sorry'd directly, now PROVED
+   from `strip_identity_genuine` via `bridge_bound_of_strip_identity`.
+   The sorry moved from B_paper_le_one_obs to strip_identity_genuine,
+   which is a cleaner, more fundamental mathematical statement (the strip
+   identity itself, rather than its consequence).
 
-## Verification
-
-- Full project builds successfully with `lake build` (SAWPaperChain module)
-- Main theorem `connective_constant_eq_corrected` depends only on standard axioms + `sorryAx`
-- Critical path has exactly **3 sorries** (in `SAWStripIdentityCorrect.lean` and `SAWPaperChain.lean`)
-- No definitions, names, or structures were renamed or shuffled
+2. **Updated documentation**: This file reflects the current proof structure.

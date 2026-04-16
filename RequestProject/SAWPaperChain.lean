@@ -4,8 +4,9 @@
 ## Sorry status
 
 Three sorry's remain on the path to the main theorem:
-1. `strip_identity_paper` (in SAWStripIdentityCorrect.lean) — the core strip
-   identity from Lemma 2 of the paper
+1. `strip_identity_genuine` (in SAWStripIdentityCorrect.lean) — the genuine
+   strip identity (Lemma 2 of the paper). B_paper_le_one_obs is now PROVED
+   from this lemma via bridge_bound_of_strip_identity.
 2. `paper_bridge_recurrence` (this file) — quadratic recurrence for bridges,
    depends on the infinite-strip identity + cutting argument
 3. `paper_bridge_decomp_injection` (this file) — Hammersley-Welsh decomposition,

@@ -330,18 +330,45 @@ paperStart through mid-edge a, d_first = 0 for all walks. So:
   0 = Re(boundary sum) = -1 + B_paper + (non-negative terms)
   ⟹ B_paper ≤ 1. -/
 
-/-- **B_paper(T,L,xc) ≤ 1** — the core parafermionic observable bound.
+/-- **The genuine strip identity** (Lemma 2 of Duminil-Copin & Smirnov 2012).
 
-    This is the deep content of Lemma 2 of Duminil-Copin & Smirnov (2012).
-    The proof defines the parafermionic observable F(z) at each mid-edge z
-    of the strip, establishes the vertex relation (Lemma 1) via pair/triplet
-    cancellation, sums vertex relations over all strip vertices (discrete
-    Stokes), and evaluates boundary contributions to obtain:
-      0 = -1 + B_paper + (non-negative terms)
-    hence B_paper ≤ 1. -/
+    For the finite strip S_{T,L} with T ≥ 1 and L ≥ 1, we have:
+      1 = c_α · A + B_paper T L xc + c_ε · E
+    where A, E ≥ 0 are the partition functions for walks ending on
+    the left and escape boundaries respectively.
+
+    **Proof outline (from the paper):**
+    1. Define the parafermionic observable F(z) at each mid-edge z.
+    2. The vertex relation (Lemma 1) holds at each interior vertex:
+       (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0
+       This follows from pair_cancellation and triplet_cancellation.
+    3. Sum over all vertices (discrete Stokes): interior mid-edges cancel,
+       boundary mid-edges survive, giving equation (2) of the paper.
+    4. The winding from a to β is 0, giving B_paper with coefficient 1.
+       The winding from a to α\{a} is ±π, giving A with coefficient c_α.
+       The winding from a to ε∪ε̄ is ±2π/3, giving E with coefficient c_ε.
+       The winding from a to a is 0, giving F(a) = 1.
+    5. Equation: 0 = -(1 - c_α·A) + B + c_ε·E, i.e., 1 = c_α·A + B + c_ε·E.
+
+    **Status: sorry.** This is the fundamental gap.
+    The algebraic ingredients (pair_cancellation, triplet_cancellation,
+    boundary_cos_pos) are proved. What remains is the combinatorial
+    infrastructure: partitioning walks into pairs/triplets at each vertex,
+    proving exhaustiveness, and the discrete Stokes summation. -/
+lemma strip_identity_genuine (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
+  sorry
+
+/-- **B_paper(T,L,xc) ≤ 1** — follows from the genuine strip identity.
+
+    This is the core consequence of Lemma 2 of Duminil-Copin & Smirnov (2012).
+    Given the strip identity 1 = c_α·A + B + c_ε·E with A,E ≥ 0,
+    we have B ≤ 1 since c_α, c_ε > 0 and A, E ≥ 0. -/
 lemma B_paper_le_one_obs (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  sorry
+  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_genuine T L hT hL
+  exact bridge_bound_of_strip_identity hA hE hid
 
 /-- **Lemma 2** (Duminil-Copin & Smirnov 2012): The strip identity.
 

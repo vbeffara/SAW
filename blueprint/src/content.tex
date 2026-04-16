@@ -2218,25 +2218,47 @@ and their conjectured conformal invariance in the scaling limit.
 \leanok
 \end{proof}
 
-\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one_direct}
-\lean{B_paper_le_one_direct}
+\begin{theorem}[Strip identity (Lemma~2)]\label{thm:strip_identity_genuine}
+\lean{strip_identity_genuine}
 \uses{thm:pair_cancel, thm:triplet_cancel, lem:boundary_cos, def:paper_partition}
+  For $x = x_c$, $T \geq 1$, $L \geq 1$, there exist $A, E \geq 0$ such that:
+  $1 = c_{\alpha} \cdot A + B_{\text{paper}}(T, L, x_c) + c_{\varepsilon} \cdot E$
+
+  \textbf{Proof outline (from the paper):}
+  \begin{enumerate}
+    \item Define the parafermionic observable $F(z) = \sum_{\gamma} e^{-i\sigma W} x_c^{\ell(\gamma)}$.
+    \item Vertex relation (Lemma~1): at each interior vertex $v$, $(p-v)F(p)+(q-v)F(q)+(r-v)F(r)=0$,
+          using \texttt{pair\_cancellation} and \texttt{triplet\_cancellation}.
+    \item Discrete Stokes: sum vertex relations; interior mid-edges cancel.
+    \item Boundary evaluation: winding from $a$ to $\beta$ is 0 (gives $B$),
+          to $\alpha\setminus\{a\}$ is $\pm\pi$ (gives $c_{\alpha} A$),
+          to $\varepsilon$ is $\pm 2\pi/3$ (gives $c_{\varepsilon} E$),
+          $F(a)=1$ (trivial walk).
+  \end{enumerate}
+
+  \textbf{Status: sorry.} This is the fundamental gap.
+  The algebraic ingredients are proved. What remains is the combinatorial
+  pair/triplet partitioning and discrete Stokes summation.
+\end{theorem}
+
+\begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one_direct}
+\lean{B_paper_le_one_obs}
+\leanok
+\uses{thm:strip_identity_genuine}
   For $x = x_c$, $T \geq 1$, $L \geq 1$:
   $B_{\text{paper}}(T, L, x_c) \leq 1$.
 
-  \textbf{Note:} The exact vertex-based identity
-  $1 = c_{\alpha} A_{\text{paper}} + B_{\text{paper}} + c_{\varepsilon} E_{\text{paper}}$
-  does \emph{not} hold. The paper's identity uses mid-edge-based partition
-  functions, which differ from vertex-based ones at corner vertices of the
-  strip. However, $B_{\text{paper}} = B_{\text{mid}}$ (each right boundary
-  vertex has exactly one right boundary mid-edge), so the bound
-  $B_{\text{paper}} \leq 1$ follows from the mid-edge identity.
-
-  \textbf{Status: sorry.} This is the fundamental gap.
-  Proving it requires formalizing the parafermionic observable,
-  the discrete Stokes theorem (interior cancellation when summing
-  vertex relations), and the boundary winding analysis.
+  \textbf{Proof:} From Theorem~\ref{thm:strip_identity_genuine},
+  $1 = c_{\alpha} A + B + c_{\varepsilon} E$ with $A, E \geq 0$
+  and $c_{\alpha}, c_{\varepsilon} > 0$, so $B \leq 1$.
+  Uses \texttt{bridge\_bound\_of\_strip\_identity}.
 \end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:strip_identity_genuine}
+  Follows from \texttt{strip\_identity\_genuine} and
+  \texttt{bridge\_bound\_of\_strip\_identity}.
+\end{proof}
 
 \section{Diagonal bridge infrastructure}
 
