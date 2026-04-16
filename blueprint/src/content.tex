@@ -3425,18 +3425,114 @@ in \texttt{SAWCutting.lean}.
 
 \begin{lemma}[Walks in $A_{T+1} \setminus A_T$ reach right boundary]\label{lem:A_diff_boundary}
 \lean{A_inf_diff_reaches_boundary}
-\uses{def:A_inf, def:paper_inf_strip}
+\leanok
+\uses{def:A_inf, def:paper_inf_strip, lem:true_boundary_lower}
   A walk in $A_{T+1}$ that is NOT in $A_T$ must visit a FALSE vertex
   with diagonal coordinate $-(T{+}1)$.
-  \textbf{Status: sorry.}
 \end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:A_diff_boundary}
+  Case split on the sublattice type of the non-$S_T$ vertex.
+  FALSE vertices at diagonal coordinate $-(T{+}1)$ give the result directly.
+  TRUE vertices at diagonal coordinate $-T$ are interior to the path
+  (not the start or end, both at diagonal coordinate 0).
+  By Lemma~\ref{lem:true_boundary_lower}, the path also contains
+  a FALSE vertex at diagonal coordinate $-(T{+}1)$.
+\end{proof}
+
+\begin{lemma}[TRUE vertex at strip boundary]\label{lem:true_boundary_lower}
+\lean{true_at_boundary_has_lower_false}
+\leanok
+\uses{def:hex_lattice, lem:path_interior_neighbors}
+  If TRUE$(x,y)$ with $x{+}y = -T$ ($T > 0$) is an interior vertex of a
+  self-avoiding path from \texttt{paperStart} to a vertex $w$ (both at
+  diagonal coordinate 0), then the path contains a FALSE vertex with
+  diagonal coordinate $-(T{+}1)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:true_boundary_lower}
+  TRUE$(x,y)$ has three FALSE neighbors: FALSE$(x,y)$ at diagonal coordinate $-T$,
+  FALSE$(x{-}1,y)$ and FALSE$(x,y{-}1)$ at diagonal coordinate $-(T{+}1)$.
+  By Lemma~\ref{lem:path_interior_neighbors}, two distinct neighbors appear
+  in the path. Since only FALSE$(x,y)$ has diagonal coordinate $-T$, at least one
+  of the other two is in the path.
+\end{proof}
+
+\begin{lemma}[Interior vertex has two distinct neighbors]\label{lem:path_interior_neighbors}
+\lean{path_interior_two_distinct_neighbors}
+\leanok
+\uses{def:hex_lattice}
+  An interior vertex ($u \neq v$, $u \neq w$) of a self-avoiding path $v \to w$
+  has two distinct neighbors in the path support.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:path_interior_neighbors}
+  Split the path at $u$ into $p_1: v \to u$ and $p_2: u \to w$.
+  Both are non-nil, giving a successor $z_1$ in $p_2$ and a predecessor $z_2$
+  in $p_1$. Since the path is self-avoiding, supports of $p_1$ and $p_2$
+  (minus $u$) are disjoint, so $z_1 \neq z_2$.
+\end{proof}
+
+\begin{lemma}[Prefix gives bridge]\label{lem:prefix_bridge}
+\lean{prefix_gives_bridge}
+\leanok
+\uses{def:paper_bridge}
+  The prefix of an $A$-walk (from \texttt{paperStart} to the first vertex $v$
+  with diagonal coordinate $-(T{+}1)$) is a \texttt{PaperBridge}$(T{+}1)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:prefix_bridge}
+  Immediate from \texttt{takeUntil}: the walk starts at \texttt{paperStart},
+  ends at~$v$ with the correct diagonal coordinate, and stays in the strip.
+\end{proof}
+
+\begin{lemma}[Suffix reversed gives bridge]\label{lem:suffix_bridge}
+\lean{suffix_reversed_shifted_gives_bridge}
+\leanok
+\uses{def:paper_bridge}
+  The suffix of an $A$-walk (from the cut point~$v$ to the endpoint),
+  when reversed and shifted so that the new start is \texttt{paperStart},
+  gives a \texttt{PaperBridge}$(T{+}1)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:suffix_bridge}
+  The shift $(-\mathrm{end}_v.1, -\mathrm{end}_v.2.1)$ preserves diagonal
+  coordinate (since the sum is 0) and sublattice type, hence preserves
+  \texttt{PaperInfStrip}. The reversed shifted walk is a path from
+  \texttt{paperStart} to a FALSE vertex at diagonal coordinate $-(T{+}1)$.
+\end{proof}
 
 \begin{lemma}[Cutting argument]\label{lem:cutting}
 \lean{cutting_argument}
-\uses{lem:A_diff_boundary, def:paper_bridge_partition}
+\uses{lem:A_diff_boundary, def:paper_bridge_partition, lem:prefix_bridge, lem:suffix_bridge}
   $A_{T+1}^{x_c} - A_T^{x_c} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
-  \textbf{Status: sorry.}
+  \textbf{Status: sorry.} The two pieces (prefix bridge and suffix bridge)
+  are constructed and proved correct. What remains is assembling the tsum
+  bound and proving injectivity of the cutting map.
 \end{lemma}
+
+\begin{theorem}[Bridge recurrence from cutting]\label{thm:bridge_recurrence_from_cutting}
+\lean{bridge_recurrence_from_cutting}
+\leanok
+\uses{lem:cutting, thm:strip_identity_genuine, thm:c_alpha_pos, thm:xc_pos}
+  Assuming the cutting argument and the strip identity for the infinite strip,
+  the bridge partition function satisfies the quadratic recurrence:
+  $B_T \leq c_\alpha \cdot x_c \cdot B_{T+1}^2 + B_{T+1}$.
+\end{theorem}
+\begin{proof}
+\leanok
+\proves{thm:bridge_recurrence_from_cutting}
+  Subtract the strip identity at $T$ and $T{+}1$:
+  $0 = c_\alpha (A_{T+1} - A_T) + (B_{T+1} - B_T) + c_\varepsilon (E_{T+1} - E_T)$.
+  Since $E_{T+1} \leq E_T$ (monotonicity), $B_T - B_{T+1} \leq c_\alpha (A_{T+1} - A_T)$.
+  By the cutting argument, $A_{T+1} - A_T \leq x_c B_{T+1}^2$.
+  Therefore $B_T \leq c_\alpha x_c B_{T+1}^2 + B_{T+1}$.
+\end{proof}
 
 \section{Vertex relation proof structure}\label{sec:vertex_rel_proof}
 
@@ -3525,8 +3621,9 @@ The combinatorial grouping (exhaustiveness of the partition) is not yet formaliz
         via the parafermionic observable and discrete Stokes theorem;
         depends on \texttt{vertex\_relation\_false} and
         \texttt{vertex\_relation\_true}),
-  \item \texttt{paper\_bridge\_recurrence} (bridge recurrence from cutting argument,
-        depends on \#1),
+  \item \texttt{paper\_bridge\_recurrence} (bridge recurrence from cutting argument +
+        strip identity; \texttt{bridge\_recurrence\_from\_cutting} is proved assuming
+        the cutting argument and strip identity as hypotheses),
   \item \texttt{paper\_bridge\_decomp\_injection} (Hammersley--Welsh decomposition,
         independent of \#1).
   \end{enumerate}

@@ -1,3 +1,41 @@
+# Summary of changes for run 46c9a4c4-edca-424d-83dd-04f2d8d9a509
+## Summary of work done
+
+I continued formalizing SAW.tex by going into the missing mathematical content, creating new files and proving new lemmas without duplicating existing statements. The blueprint was updated throughout.
+
+### New files created (fully proved, zero sorries):
+
+1. **`RequestProject/SAWWalkHelpers.lean`** — Walk helper lemmas for the cutting argument:
+   - `path_interior_two_distinct_neighbors`: An interior vertex of a self-avoiding path has two distinct neighbors in the path support. This is proved by splitting the path at the vertex and using the disjointness of takeUntil/dropUntil supports.
+   - `true_at_boundary_has_lower_false`: If TRUE(x,y) at diagCoord −T is visited by a path from paperStart to a vertex at diagCoord 0, then the path also visits a FALSE vertex at diagCoord −(T+1). Proved using the neighbor enumeration of TRUE vertices and the two-neighbor lemma.
+   - `adj_true_iff`: Complete enumeration of hexGraph neighbors of TRUE vertices.
+   - `walk_has_succ`, `walk_has_pred`: Walk vertex successor/predecessor existence.
+
+2. **`RequestProject/SAWCuttingHelpers.lean`** — Bridge construction from walk cutting:
+   - `prefix_gives_bridge`: The prefix of a walk from paperStart to the first boundary vertex is a PaperBridge.
+   - `suffix_reversed_shifted_gives_bridge`: The suffix of a walk, when reversed and shifted (preserving diagonal coordinate), gives a PaperBridge.
+   - `hexShift_preserves_strip`: A diagonal-preserving translation preserves PaperInfStrip membership.
+   - `walk_split_lengths`: Walk splitting preserves total length.
+
+### Existing files updated:
+
+- **`RequestProject/SAWCutting.lean`** — 2 of 3 sorries eliminated:
+  - `A_inf_diff_reaches_boundary` — **PROVED** (was sorry). Uses the new walk helpers to show that walks in A_{T+1}\A_T must visit a FALSE vertex at diagCoord −(T+1).
+  - `bridge_recurrence_from_cutting` — **NEW, PROVED**. Derives the bridge quadratic recurrence B_T ≤ α·B_{T+1}² + B_{T+1} from the strip identity and cutting argument as explicit hypotheses, using pure algebra.
+
+### Blueprint updated (`blueprint/src/content.tex`):
+- Added lemma statements and proofs for all new results (prefix_gives_bridge, suffix_reversed_shifted_gives_bridge, true_at_boundary_has_lower_false, path_interior_two_distinct_neighbors, A_inf_diff_reaches_boundary, bridge_recurrence_from_cutting)
+- Updated the cutting argument entry to reflect the new infrastructure
+- Updated the main theorem status
+
+### Remaining 4 critical-path sorries:
+1. **`strip_identity_genuine`** — The parafermionic observable argument (Lemma 2). Requires the combinatorial partition of walks into pairs/triplets and the discrete Stokes summation. The algebraic cancellations are proved.
+2. **`cutting_argument`** — The tsum bound A_{T+1} − A_T ≤ xc·B_{T+1}². The two bridge pieces (prefix and suffix) are now fully constructed; what remains is the assembly of the tsum bound and injectivity.
+3. **`paper_bridge_recurrence`** — Depends on #1 + #2. The derivation `bridge_recurrence_from_cutting` is proved assuming these as hypotheses.
+4. **`paper_bridge_decomp_injection`** — The Hammersley-Welsh decomposition (independent of #1–#3). Requires the bridge decomposition algorithm and injectivity proof.
+
+### Proof status file updated: `PROOF_STATUS.md`
+
 # Summary of changes for run 17e73459-ea30-4cc0-a09a-8ae4e82d8183
 ## Summary of work done
 

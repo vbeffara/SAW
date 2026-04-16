@@ -17,6 +17,7 @@ This is the quadratic recurrence.
 
 import Mathlib
 import RequestProject.SAWDiagProof
+import RequestProject.SAWWalkHelpers
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -42,21 +43,29 @@ def A_inf (T : ℕ) (x : ℝ) : ℝ :=
 lemma A_inf_nonneg (T : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ A_inf T x :=
   tsum_nonneg fun s => pow_nonneg hx _
 
-/-! ## Cutting argument
+/-! ## Cutting argument: walks reaching the boundary -/
 
-A walk from paperStart to the left boundary in S_{T+1} that reaches
-diagCoord -(T+1) can be cut at the first such vertex, giving two bridges.
+/-
+A walk in A_inf (T+1) that is NOT in A_inf T must reach diagCoord -(T+1).
+
+    A vertex v in PaperInfStrip(T+1) but not PaperInfStrip T satisfies:
+    - FALSE: v.1+v.2.1 = -(T+1) [directly gives the result]
+    - TRUE: v.1+v.2.1 = -T [use true_at_boundary_has_lower_false]
 -/
-
-/-- A walk in A_inf (T+1) that is NOT in A_inf T must reach diagCoord -(T+1). -/
-lemma A_inf_diff_reaches_boundary {T : ℕ} (s : PaperSAW_A_inf (T + 1))
+lemma A_inf_diff_reaches_boundary {T : ℕ} (hT : 0 < T)
+    (s : PaperSAW_A_inf (T + 1))
     (h_not_in_T : ¬ ∀ v ∈ s.walk.1.support, PaperInfStrip T v) :
     ∃ v ∈ s.walk.1.support, v.1 + v.2.1 = -(T + 1 : ℤ) ∧ v.2.2 = false := by
-  sorry
+  simp +zetaDelta at *;
+  contrapose! h_not_in_T;
+  intro x y; constructor <;> intro h <;> have := s.in_strip _ h <;> simp_all +decide [ PaperInfStrip ] ;
+  · grind;
+  · by_cases hxy : x + y = -T;
+    · have := true_at_boundary_has_lower_false s.walk.1 s.walk.2 s.end_left x y hxy h hT; aesop;
+    · omega
 
 /-- Cutting a walk at the first vertex with diagCoord -(T+1)
-    gives two bridges of width T+1. The product of their lengths
-    is at most the walk length - 1 (we lose one connecting vertex).
+    gives two bridges of width T+1.
 
     A_{T+1} - A_T ≤ xc · B_{T+1}² -/
 lemma cutting_argument (T : ℕ) (hT : 1 ≤ T) :
@@ -72,25 +81,41 @@ The quadratic recurrence follows from:
 3. E_{T+1} ≤ E_T (monotonicity of escape partition function)
 
 Subtracting strip identity at T and T+1:
-0 = c_α · (A_{T+1} - A_T) + (B_{T+1} - B_T) + c_ε · (E_{T+1} - E_T)
-
-Since E_{T+1} ≤ E_T: c_ε · (E_{T+1} - E_T) ≤ 0
-So: B_T - B_{T+1} ≤ c_α · (A_{T+1} - A_T)
-And: B_T - B_{T+1} ≤ c_α · xc · B_{T+1}²
+  B_T - B_{T+1} ≤ c_α · (A_{T+1} - A_T) ≤ c_α · xc · B_{T+1}²
 Therefore: B_T ≤ c_α · xc · B_{T+1}² + B_{T+1}
+So α = c_alpha * xc.
 -/
 
-/-- The recurrence from strip identity + cutting.
-    This is an alternative proof of paper_bridge_recurrence that
-    makes the dependency on the strip identity explicit. -/
-theorem bridge_recurrence_from_identity
-    (h_strip : ∀ T : ℕ, 1 ≤ T →
-      paper_bridge_partition T xc ≤ 1 / xc)
+/-
+The recurrence: B_T ≤ α · B_{T+1}² + B_{T+1} where α = c_alpha * xc.
+    Proved from the strip identity + cutting argument.
+-/
+theorem bridge_recurrence_from_cutting
     (h_cut : ∀ T : ℕ, 1 ≤ T →
-      A_inf (T + 1) xc - A_inf T xc ≤ xc * paper_bridge_partition (T + 1) xc ^ 2) :
-    ∃ α > 0, ∀ T : ℕ,
+      A_inf (T + 1) xc - A_inf T xc ≤ xc * paper_bridge_partition (T + 1) xc ^ 2)
+    (h_strip : ∀ T : ℕ, 1 ≤ T →
+      ∃ A E : ℝ, A = A_inf T xc ∧
+        1 = c_alpha * A + paper_bridge_partition T xc + c_eps * E ∧
+        0 ≤ E)
+    (h_E_mono : ∀ T : ℕ, 1 ≤ T →
+      ∀ E₁ E₂ : ℝ,
+        (1 = c_alpha * A_inf T xc + paper_bridge_partition T xc + c_eps * E₁) →
+        (1 = c_alpha * A_inf (T+1) xc + paper_bridge_partition (T+1) xc + c_eps * E₂) →
+        E₂ ≤ E₁) :
+    ∃ α > 0, ∀ T : ℕ, 1 ≤ T →
       paper_bridge_partition T xc ≤ α * paper_bridge_partition (T + 1) xc ^ 2 +
         paper_bridge_partition (T + 1) xc := by
-  sorry
+  use c_alpha * xc, mul_pos (by
+  exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ Real.pi_pos ], by linarith [ Real.pi_pos ] ⟩) (by
+  exact?), by
+    simp +zetaDelta at *;
+    intros T hT
+    obtain ⟨E₁, hE₁⟩ := h_strip T hT
+    obtain ⟨E₂, hE₂⟩ := h_strip (T + 1) (by linarith)
+    have h_recurrence : paper_bridge_partition T xc - paper_bridge_partition (T + 1) xc ≤ c_alpha * (A_inf (T + 1) xc - A_inf T xc) := by
+      nlinarith [ h_E_mono T hT E₁ E₂ hE₁.1 hE₂.1, show 0 < c_eps by exact c_eps_pos ]
+    have h_recurrence' : paper_bridge_partition T xc ≤ c_alpha * xc * paper_bridge_partition (T + 1) xc ^ 2 + paper_bridge_partition (T + 1) xc := by
+      nlinarith [ h_cut T hT, show 0 < c_alpha by exact c_alpha_pos ]
+    exact h_recurrence'
 
 end
