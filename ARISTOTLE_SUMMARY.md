@@ -1,3 +1,41 @@
+# Summary of changes for run db0e32e2-9c95-4dad-8564-d2ce53dad070
+## Summary of work done
+
+### New infrastructure file: `RequestProject/SAWDecompHelpers.lean`
+Created a new file with fully proved helper lemmas for the Hammersley-Welsh bridge decomposition:
+- **`diagCoord'`**: The diagonal coordinate `v.1 + v.2.1` for hex vertices
+- **`diagCoord_adj_bound'`**: Each hex edge changes diagCoord by 0 or ±1
+- **`powerset_prod_eq'`**: The standard identity ∏(1 + f(i)) = ∑_S ∏_{i∈S} f(i)
+- **`pow_le_pow_of_le_one_ge`**: Weight bound for x ≤ 1
+- **`path_split_length`**: Splitting a path at a vertex preserves total length
+- **`takeUntil_support_subset'`**, **`dropUntil_support_subset'`**: Support subset properties for walk splitting
+- **`hexTranslate_diagCoord'`**: Translation shifts diagCoord by dx + dy
+
+All lemmas in this file are fully proved (no sorry, no sorryAx).
+
+### Documentation updates
+
+- **`PROOF_STATUS.md`**: Completely rewritten with the current proof structure, dependency tree, detailed proof strategies for each remaining sorry, and a comprehensive list of all proved infrastructure. Each critical sorry now has a detailed algorithmic proof outline.
+
+- **Blueprint** (`blueprint/src/content.tex`): Updated the `paper_bridge_decomp_injection` entry with a detailed proof strategy describing the 5-step Hammersley-Welsh decomposition algorithm and referencing the new helper infrastructure.
+
+### Build verification
+- Full project builds successfully (8078 jobs)
+- Main theorem `connective_constant_eq_corrected` depends on axioms: `propext`, `sorryAx`, `Classical.choice`, `Quot.sound`
+- All infrastructure lemmas (pair_cancellation, triplet_cancellation, recurrence_from_strip, quadratic_recurrence_lower_bound, saw_count_sq_ge_two_pow, etc.) are fully proved with no sorryAx
+- No names were renamed or structures reshuffled
+
+### Critical path status (unchanged)
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) still has **3 sorry's** on its critical path:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — The parafermionic strip identity (Lemma 2). Requires formalizing: the parafermionic observable definition, the pair/triplet partition of walks at each vertex, discrete Stokes summation, and boundary evaluation. The algebraic ingredients (pair_cancellation, triplet_cancellation, boundary_cos_pos) are fully proved.
+
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — The quadratic recurrence B_T ≤ α·B_{T+1}² + B_{T+1}. Depends on sorry #1 via the infinite strip identity + cutting argument. The abstract recurrence machinery (recurrence_from_strip) is proved.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh decomposition. Independent of #1 and #2 but requires substantial combinatorial infrastructure: splitting SAWs at minimum diagonal coordinate, extracting bridges from half-plane walks by induction, and proving injectivity. New helper lemmas in SAWDecompHelpers.lean provide the foundations.
+
+These three results represent the core mathematical content of the Duminil-Copin & Smirnov (2012) paper and require extensive formalization infrastructure beyond what could be completed in this session.
+
 # Summary of changes for run cffccea0-6e68-4bf8-a81a-c98c2c920ed4
 ## Summary of work done
 

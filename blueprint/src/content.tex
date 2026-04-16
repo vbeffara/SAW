@@ -2690,6 +2690,21 @@ geometric infrastructure.
      \left(\sum_{S \subseteq \{1,\ldots,N\}} \prod_{T \in S}
      \texttt{paper\_bridge\_partition}(T{+}1, x)\right)^2. \]
   \textbf{Status: sorry.} This is the Hammersley--Welsh (1962) decomposition.
+
+  \textbf{Proof strategy:}
+  \begin{enumerate}
+  \item For each SAW $\gamma$ of length $n \leq N$ from \texttt{paperStart},
+    find the first vertex with minimum diagonal coordinate $d(v) = v_1 + v_{2,1}$.
+  \item Split $\gamma$ at this vertex into two half-plane walks.
+  \item Each half-plane walk decomposes into bridges of strictly decreasing widths
+    by induction on width: find the last vertex with maximum $d$, extract the bridge
+    as the prefix, continue with the remaining walk of strictly smaller width.
+  \item The decomposition is injective (factor~2 for starting choice).
+  \item Weight bound: $x^n \leq \prod x^{\ell_i}$ since $x \leq 1$
+    and connecting edges reduce the total.
+  \end{enumerate}
+  Helper infrastructure is provided in \texttt{SAWDecompHelpers.lean}
+  (diagonal coordinate properties, walk splitting, weight bounds).
 \end{theorem}
 
 \begin{theorem}[Paper bridge decay]\label{thm:paper_bridge_decay_thm}
