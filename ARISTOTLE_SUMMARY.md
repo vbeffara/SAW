@@ -1,3 +1,49 @@
+# Summary of changes for run 17e73459-ea30-4cc0-a09a-8ae4e82d8183
+## Summary of work done
+
+### New fully proved file: `RequestProject/SAWWindingProof.lean` (0 sorries)
+Created a new file with fully proved geometric facts about the hex lattice winding that are needed for the strip identity proof (Lemma 2 of the paper):
+
+- **`starting_mid_edge_dir`**: The direction from hexOrigin to paperStart under `correctHexEmbed` is +1 (horizontal right).
+- **`dir_false_to_true_same'`**: The direction from FALSE(x,y) to TRUE(x,y) is +1 (proved via `false_to_true_dir`).
+- **`dir_true_to_false_same'`**: The direction from TRUE(x,y) to FALSE(x,y) is -1.
+- **`right_boundary_winding_zero`**: The exit direction at any right boundary mid-edge equals the starting direction (+1). This is the key fact that gives winding 0 for walks to the right boundary, making the B partition function contribute with coefficient 1 in the strip identity.
+- **`right_boundary_phase`**: The observable phase factor exp(-iσ·0) = 1 at right boundary mid-edges.
+- **`c_alpha_eq_neg_cos`**: The boundary coefficient c_α = -cos(5π/8).
+- **`c_eps_eq'`**: The boundary coefficient c_ε = √2/2.
+
+These lemmas provide the boundary evaluation step of the strip identity proof, showing that the right boundary contributes B (with coefficient 1) to the identity.
+
+### New infrastructure file: `RequestProject/SAWCutting.lean` (3 new sorries, builds successfully)
+Created a new file decomposing the bridge recurrence proof into its constituent parts:
+
+- **`PaperSAW_A_inf`**: Structure for walks from paperStart to the left boundary (TRUE, diagCoord=0) in the infinite strip PaperInfStrip T.
+- **`A_inf`**: Partition function for left boundary walks.
+- **`A_inf_nonneg`**: Non-negativity of A_inf (proved).
+- **`A_inf_diff_reaches_boundary`** [sorry]: A walk in A_{T+1} not in A_T must visit a FALSE vertex at diagCoord -(T+1).
+- **`cutting_argument`** [sorry]: A_{T+1} - A_T ≤ xc · B_{T+1}² (the cutting argument from Section 3).
+- **`bridge_recurrence_from_identity`** [sorry]: Derives the recurrence from the strip identity + cutting argument.
+
+This decomposition makes the dependency structure explicit: `paper_bridge_recurrence` requires (1) the strip identity and (2) the cutting argument. The three new sorries are on a sub-path of sorry #2 (`paper_bridge_recurrence`).
+
+### Updated documentation
+- **`PROOF_STATUS.md`**: Completely rewritten with detailed analysis of each remaining sorry, including the mathematical proof strategies, what has been formalized, and what remains. Includes the new winding properties and cutting argument infrastructure.
+- **`blueprint/src/content.tex`**: Added two new sections:
+  - "Winding properties (proved)" — documenting the new fully proved geometric lemmas with proper `\lean{}` and `\leanok` annotations.
+  - "Cutting argument infrastructure" — documenting the new definitions and sorry'd lemmas for the bridge recurrence decomposition.
+
+### Build verification
+- Full project builds successfully (8079 jobs).
+- Main theorem `connective_constant_eq_corrected` still depends on the 3 original critical-path sorries.
+- No names were renamed, no structures were shuffled — only new files were added.
+- The 3 new sorries in SAWCutting.lean are on a sub-path of the existing `paper_bridge_recurrence` sorry, providing a finer decomposition of the proof.
+
+### Critical path status
+The main theorem still has **3 critical-path sorries**:
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper ≤ 1 via the parafermionic observable. This is the deepest result, requiring the vertex relation (Lemma 1) and discrete Stokes theorem. The algebraic ingredients (pair/triplet cancellation) are proved; what remains is the combinatorial partition of walks at each vertex and the discrete Stokes summation.
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — Now decomposed into strip identity + cutting argument (in SAWCutting.lean).
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh decomposition, independent of the other two.
+
 # Summary of changes for run db0e32e2-9c95-4dad-8564-d2ce53dad070
 ## Summary of work done
 

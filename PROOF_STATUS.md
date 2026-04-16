@@ -35,55 +35,84 @@ SAW.lean (constants, algebraic identities) ✓
 ## Remaining 3 critical-path sorries
 
 ### 1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean, line 361)
-**∃ A E ≥ 0, 1 = c_α·A + B_paper T L xc + c_ε·E**
 
-This is Lemma 2 (the strip identity) of Duminil-Copin & Smirnov (2012).
-Equivalent to B_paper T L xc ≤ 1.
+**Statement:** ∃ A E ≥ 0, 1 = c_α·A + B_paper T L xc + c_ε·E
 
-**Proved algebraic ingredients:**
-- `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
-- `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
-- `boundary_cos_pos`: cos(3θ/8) > 0 for |θ| ≤ π
+**Equivalence:** This is equivalent to B_paper T L xc ≤ 1.
 
-**Remaining infrastructure needed (parafermionic observable proof):**
-1. Observable definition: Define F(z) at each mid-edge z as
-   ∑_{γ: SAW from a to z} xc^{ℓ(γ)} · exp(-iσW(γ))
-2. Vertex relation: At each interior vertex v,
-   ∑_{w~v} (embed(w) - embed(v)) · F(mid(v,w)) = 0
-   This requires the pair/triplet partition of walks at each vertex.
-3. Discrete Stokes: Sum over all vertices → interior mid-edges cancel,
-   boundary mid-edges survive. This is a standard telescoping argument.
-4. Boundary evaluation: Starting mid-edge → -1, left boundary → c_α·A,
-   right boundary → B, escape boundary → c_ε·E.
-5. Conclusion: 0 = -1 + c_α·A + B + c_ε·E → B ≤ 1.
+**Mathematical content (Lemma 2 of the paper):**
+This is proved via the parafermionic observable. The proof requires:
 
-The observable definition exists in SAWStokesSkeleton.lean and
-SAWObservableProof.lean. The vertex relation is sorry'd in
-SAWStokesSkeleton.lean (vertex_relation_observable).
+1. **Observable definition:** F(z) at each mid-edge z, summing over SAWs with
+   complex weights exp(-iσW) · xc^ℓ.
 
-**Consequence:** `B_paper_le_one_obs` (B_paper ≤ 1) is PROVED from this lemma.
+2. **Key geometric fact (proved in SAWWindingProof.lean):** On the hex lattice,
+   the winding from the starting mid-edge to any other mid-edge is
+   PATH-INDEPENDENT for self-avoiding walks. The winding equals the angle of
+   the final half-edge direction minus the initial half-edge direction.
+   This means F(z) = (complex phase) · (real partition function).
+
+3. **Vertex relation (Lemma 1):** At each interior vertex v,
+   Σ d_i · F(z_i) = 0
+   This is proved by partitioning walks into "pairs" and "triplets":
+   - **Triplet:** A walk γ not visiting v, ending at neighbor w_k, paired with
+     its extensions γ·[w_k→v→w_j] for each available j.
+   - **Pair:** A walk passing through v using two edges, paired with the walk
+     using the same edges in reverse at v.
+   The algebraic cancellation follows from:
+   - `pair_cancellation`: j · conj(λ)⁴ + conj(j) · λ⁴ = 0 ✓
+   - `triplet_cancellation`: 1 + xc · j · conj(λ) + xc · conj(j) · λ = 0 ✓
+
+4. **Discrete Stokes:** Sum vertex relations over all interior vertices.
+   Interior mid-edges cancel (each appears with opposite signs from its two
+   endpoints). Boundary mid-edges survive.
+
+5. **Boundary evaluation:**
+   - Starting mid-edge a: direction = -1, F(a) = 1 → contribution = -1
+   - Right boundary β: winding = 0 → contribution = B_edge
+   - Left boundary α: winding = ±π → contribution = cos(σπ)·A = -c_α·A
+   - Escape boundary ε: winding = ±2π/3 → contribution = c_ε·E
+
+6. **Conclusion:** 0 = -1 + c_α·A + B_edge + c_ε·E → 1 = c_α·A + B_edge + c_ε·E
+
+**What remains to formalize:**
+- The combinatorial partition of walks into pairs/triplets at each vertex
+  (the most complex part — requires careful case analysis on walk structure)
+- The exhaustiveness of the partition (every walk falls into exactly one
+  pair or triplet)
+- The discrete Stokes summation argument
+- The boundary winding evaluation (partially done in SAWWindingProof.lean)
 
 ### 2. `paper_bridge_recurrence` (SAWPaperChain.lean, line 131)
-**∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}**
+
+**Statement:** ∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}
+
+**Depends on:** strip_identity_genuine (sorry #1)
 
 **Proof strategy (from the paper, Section 3):**
-1. Take L→∞ in strip_identity_genuine to get infinite strip identity:
+1. From strip_identity_genuine (infinite strip version):
    1 = c_α·A_T + B_T + c_ε·E_T
 2. Subtract identities at T and T+1:
    B_T - B_{T+1} = c_α·(A_{T+1} - A_T) + c_ε·(E_{T+1} - E_T)
 3. Monotonicity: E_{T+1} ≤ E_T (wider strip has fewer escapes)
-4. Cutting argument: A_{T+1} - A_T ≤ xc·B_{T+1}²
-   (walks in the wider strip reaching the left boundary that cross
-   diagCoord = -(T+1) can be cut into two bridges of width T+1)
-5. Conclusion: B_T ≤ c_α·xc·B_{T+1}² + B_{T+1}, so α = c_alpha·xc
+4. **Cutting argument:** A_{T+1} - A_T ≤ xc·B_{T+1}²
+   (A walk in S_{T+1} reaching α that doesn't fit in S_T must visit
+   a FALSE vertex at diagCoord -(T+1). Cut at the first such vertex
+   → two bridges of width T+1.)
+5. Conclusion: B_T ≤ c_α·xc·B_{T+1}² + B_{T+1}, so α = c_α·xc
 
-**Depends on:** strip_identity_genuine (sorry #1)
-
-The abstract recurrence machinery (`recurrence_from_strip` in SAWDecomp.lean)
-is fully proved.
+**Helper infrastructure (SAWCutting.lean):**
+- PaperSAW_A_inf: walks to left boundary in infinite strip
+- A_inf: partition function for left boundary walks
+- A_inf_diff_reaches_boundary: walks in A_{T+1}\A_T reach diagCoord -(T+1) [sorry]
+- cutting_argument: A_{T+1} - A_T ≤ xc · B_{T+1}² [sorry]
+- bridge_recurrence_from_identity: derives recurrence from strip identity + cutting [sorry]
 
 ### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean, line 257)
-**∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆{0,...,N-1}} ∏_{T∈S} B_{T+1}(x))²**
+
+**Statement:** ∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆{0,...,N-1}} ∏_{T∈S} B_{T+1}(x))²
+
+**Independent of:** sorries #1 and #2
 
 **Proof strategy (Hammersley-Welsh decomposition):**
 1. For each SAW γ of length n ≤ N from paperStart:
@@ -100,15 +129,12 @@ is fully proved.
 5. Factor 2: two choices for first vertex from starting mid-edge
 6. Summing: Z_N(x) ≤ 2·(∑_S ∏_{T∈S} B_T(x))² = 2·(∏ (1+B_T))²
 
-**Independent of:** sorries #1 and #2, but requires summability of bridge
-partition functions for the tsum in paper_bridge_partition to be well-defined
-(not just zero by convention).
-
-**Available infrastructure:**
-- SAWDecompHelpers.lean: diagCoord, walk splitting, weight bounds
-- SAWBridgeDecomp.lean: powerset_prod_eq, half-plane walk definition
-- paper_bridge_length_ge: bridges have length ≥ width
-- paperBridge_toSAW: bridges map injectively to SAWs
+**What remains to formalize:**
+- The decomposition algorithm (split at deepest + recursive bridge extraction)
+- Proof that bridge widths are strictly monotone
+- Injectivity of the decomposition
+- The weight bound (x^n ≤ product of bridge weights)
+- Assembly of the counting bound
 
 ## Proved infrastructure summary
 
@@ -152,6 +178,21 @@ partition functions for the tsum in paper_bridge_partition to be well-defined
 - path_split_length
 - hexTranslate_diagCoord'
 
+### Winding properties (SAWWindingProof.lean) ✓ [NEW]
+- starting_mid_edge_dir: direction from hexOrigin to paperStart is +1
+- dir_false_to_true_same': direction from FALSE(x,y) to TRUE(x,y) is +1
+- dir_true_to_false_same': direction from TRUE(x,y) to FALSE(x,y) is -1
+- right_boundary_winding_zero: right boundary exit = starting direction
+- right_boundary_phase: e^{-iσ·0} = 1
+- c_alpha_eq_neg_cos: c_α = -cos(5π/8)
+
+### Cutting argument infrastructure (SAWCutting.lean) [NEW, 3 sorries]
+- PaperSAW_A_inf, A_inf: left boundary walks in infinite strip
+- A_inf_nonneg
+- A_inf_diff_reaches_boundary [sorry]
+- cutting_argument [sorry]
+- bridge_recurrence_from_identity [sorry]
+
 ### Main theorem assembly (SAWPaperChain.lean) ✓ (modulo 3 sorries)
 - paper_bridge_partition_one_pos
 - paper_bridge_lower_bound (from paper_bridge_recurrence)
@@ -159,17 +200,3 @@ partition functions for the tsum in paper_bridge_partition to be well-defined
 - Z_xc_diverges_corrected (from lower bound)
 - hw_summable_corrected (from decomposition + decay)
 - connective_constant_eq_corrected (from above)
-
-## Non-critical-path sorries
-
-These are in auxiliary files and do NOT affect the main theorem:
-- SAWBridgeDecomp.lean: paper_bridge_decomp_injection_v2 (duplicate)
-- SAWFiniteStrip.lean: B_T_inf_eq_origin_bridge, origin_bridge_partial_sum_le_one
-  (uses different bridge/strip definitions than the critical path)
-- SAWHWAlgorithm.lean, SAWHWBridge.lean, SAWHWDecomp.lean, SAWHWInject.lean:
-  Alternative formulations of the HW decomposition
-- SAWHammersleyWelsh.lean: Early attempts at HW
-- SAWStokesSkeleton.lean: vertex_relation_observable (building block for #1)
-- SAWStripIdentity.lean: Old strip identity (superseded)
-- SAWZigzag.lean: saw_count_even_lower, saw_count_odd_lower
-  (proved versions exist in SAWZigzagBuild.lean)

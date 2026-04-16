@@ -3357,6 +3357,87 @@ vertex achieves $\min_{u \in \tilde{\gamma}} d(u)$.
   \textbf{Status: sorry.}
 \end{theorem}
 
+\section{Winding properties (proved)}\label{sec:winding_props}
+
+The following geometric facts about the hex lattice are proved in
+\texttt{SAWWindingProof.lean}. They are needed for the boundary
+evaluation step of the strip identity proof.
+
+\begin{lemma}[Starting mid-edge direction]\label{lem:starting_dir}
+\lean{starting_mid_edge_dir}
+\leanok
+\uses{def:hex_embed, def:hex_origin, def:paper_start}
+  The direction from \texttt{hexOrigin} to \texttt{paperStart} under
+  \texttt{correctHexEmbed} is $+1$ (horizontal right).
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Right boundary exit direction]\label{lem:right_bdy_dir}
+\lean{dir_false_to_true_same'}
+\leanok
+\uses{def:hex_embed}
+  For any \texttt{FALSE}$(x,y)$, the direction to \texttt{TRUE}$(x,y)$
+  under \texttt{correctHexEmbed} is $+1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Right boundary winding = 0]\label{lem:right_winding}
+\lean{right_boundary_winding_zero}
+\leanok
+\uses{lem:starting_dir, lem:right_bdy_dir}
+  The exit direction at any right boundary mid-edge equals the starting
+  direction. Combined with path-independence of winding for SAWs, this means
+  the winding from $a$ to any right boundary mid-edge is $0$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Boundary coefficient identity]\label{lem:c_alpha_cos}
+\lean{c_alpha_eq_neg_cos}
+\leanok
+\uses{def:c_alpha}
+  $c_\alpha = -\cos(5\pi/8)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\section{Cutting argument infrastructure}\label{sec:cutting}
+
+The cutting argument from Section~3 of the paper is partially formalized
+in \texttt{SAWCutting.lean}.
+
+\begin{definition}[Infinite strip left boundary walks]\label{def:A_inf}
+\lean{PaperSAW_A_inf}
+\leanok
+\lean{A_inf}
+\leanok
+\uses{def:paper_start, def:paper_inf_strip}
+  A walk from \texttt{paperStart} to a left boundary vertex (TRUE, $x{+}y=0$,
+  not \texttt{paperStart}), staying in $S_T$ (\texttt{PaperInfStrip T}).
+  The partition function $A_T^{x_c} = \sum x_c^{\ell+1}$.
+\end{definition}
+
+\begin{lemma}[Walks in $A_{T+1} \setminus A_T$ reach right boundary]\label{lem:A_diff_boundary}
+\lean{A_inf_diff_reaches_boundary}
+\uses{def:A_inf, def:paper_inf_strip}
+  A walk in $A_{T+1}$ that is NOT in $A_T$ must visit a FALSE vertex
+  with diagonal coordinate $-(T{+}1)$.
+  \textbf{Status: sorry.}
+\end{lemma}
+
+\begin{lemma}[Cutting argument]\label{lem:cutting}
+\lean{cutting_argument}
+\uses{lem:A_diff_boundary, def:paper_bridge_partition}
+  $A_{T+1}^{x_c} - A_T^{x_c} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
+  \textbf{Status: sorry.}
+\end{lemma}
+
 \section{Vertex relation proof structure}\label{sec:vertex_rel_proof}
 
 The proof of the vertex relation (Lemma~1) partitions walks ending at the
