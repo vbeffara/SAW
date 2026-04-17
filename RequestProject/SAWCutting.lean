@@ -25,6 +25,13 @@ noncomputable section
 
 set_option maxHeartbeats 800000
 
+/-! ## Strip monotonicity -/
+
+/-- PaperInfStrip is monotone in T: wider strip contains narrower strip. -/
+lemma PaperInfStrip_mono {T : ℕ} {v : HexVertex} (hv : PaperInfStrip T v) :
+    PaperInfStrip (T + 1) v := by
+  unfold PaperInfStrip at *; cases hb : v.2.2 <;> simp_all <;> omega
+
 /-! ## Infinite strip walks -/
 
 /-- A walk from paperStart to a LEFT boundary vertex (TRUE, diagCoord = 0)
@@ -38,6 +45,25 @@ structure PaperSAW_A_inf (T : ℕ) where
 /-- Partition function for walks to the left boundary in the infinite strip. -/
 def A_inf (T : ℕ) (x : ℝ) : ℝ :=
   ∑' (s : PaperSAW_A_inf T), x ^ (s.walk.1.length + 1)
+
+/-- The walks in PaperSAW_A_inf T embed into PaperSAW_A_inf (T+1). -/
+def PaperSAW_A_inf_widen {T : ℕ} (s : PaperSAW_A_inf T) : PaperSAW_A_inf (T + 1) where
+  end_v := s.end_v
+  walk := s.walk
+  end_left := s.end_left
+  in_strip := fun v hv => PaperInfStrip_mono (s.in_strip v hv)
+
+/-- The widening injection preserves walk length. -/
+lemma PaperSAW_A_inf_widen_length {T : ℕ} (s : PaperSAW_A_inf T) :
+    (PaperSAW_A_inf_widen s).walk.1.length = s.walk.1.length := rfl
+
+/-- The widening map is injective. -/
+lemma PaperSAW_A_inf_widen_injective (T : ℕ) :
+    Function.Injective (@PaperSAW_A_inf_widen T) := by
+  intro s₁ s₂ h
+  unfold PaperSAW_A_inf_widen at h
+  cases s₁; cases s₂; simp at h
+  obtain ⟨h1, h2⟩ := h; subst h1; subst h2; rfl
 
 /-- A_inf is non-negative. -/
 lemma A_inf_nonneg (T : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ A_inf T x :=
