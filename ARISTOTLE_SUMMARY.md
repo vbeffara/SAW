@@ -1,3 +1,33 @@
+# Summary of changes for run 2cd76f6a-e2d8-4777-95f6-f28f27fcc43c
+## Progress on SAW Formalization
+
+### New file: `RequestProject/SAWCuttingProof.lean`
+Created a systematic decomposition of the cutting argument into smaller, independently provable lemmas. The following were fully proved:
+
+1. **`embed_in_strip`** — Maps walks in A_{T+1} that stay in strip T to A_T walks, preserving walk length.
+2. **`embed_in_strip_injective`** — The embedding is injective.
+3. **`A_inf_summable_of_succ`** — Summability of A_T follows from summability of A_{T+1}, via the injection `PaperSAW_A_inf_widen` and `Summable.comp_injective`.
+4. **`in_strip_sum_le`** — Any finite partial sum of in-strip A_{T+1}-walks is ≤ A_inf(T, xc). Proved by reindexing through `embed_in_strip` and applying `Summable.sum_le_tsum`.
+5. **`extra_walk_decomp`** — Each extra A_{T+1}-walk (not staying in strip T) decomposes into two PaperBridge(T+1)s whose lengths sum to the walk length. Combines `A_inf_diff_reaches_boundary`, `prefix_gives_bridge`, `suffix_reversed_shifted_gives_bridge`, and `walk_split_lengths`.
+6. **`cutting_argument_proved`** — Reduces the cutting argument to `in_strip_sum_le` + `extra_walk_sum_le`, handling the summability/non-summability case split cleanly.
+
+### Remaining sorry: `extra_walk_sum_le`
+The only remaining piece for the cutting argument is proving that the sum over "extra" walks is ≤ xc · B(T+1)². This requires formalizing the injectivity of the cutting map s ↦ (prefix_bridge(s), suffix_bridge(s)) into PaperBridge(T+1)², and using the injection to bound the sum. The mathematical argument is clear but the formalization requires non-trivial walk reconstruction infrastructure.
+
+### Blueprint updated
+Added 5 new entries to `blueprint/src/content.tex` in the "Cutting argument infrastructure" section, with \lean{} references and \leanok markers for the proved lemmas. Updated the cutting argument entry to reflect the new decomposition.
+
+### Updated `PROOF_STATUS.md`
+Comprehensive update documenting the new decomposition, all proved lemmas, and the precise remaining gaps.
+
+### Overall critical-path sorries (unchanged count: 4)
+1. **`strip_identity_genuine`** — The parafermionic observable identity (B_paper ≤ 1). Requires the combinatorial pair/triplet partition of walks at each vertex + discrete Stokes summation.
+2. **`extra_walk_sum_le`** (was part of `cutting_argument`) — Requires cutting map injectivity.
+3. **`paper_bridge_recurrence`** — Follows from #1 + #2 via the already-proved `bridge_recurrence_from_cutting`.
+4. **`paper_bridge_decomp_injection`** — Hammersley-Welsh bridge decomposition (independent).
+
+The algebraic core (pair/triplet cancellation), Fekete's lemma, submultiplicativity, bridge infrastructure, quadratic recurrence lower bound, bridge decay, and main theorem assembly are all fully proved.
+
 # Summary of changes for run 46c9a4c4-edca-424d-83dd-04f2d8d9a509
 ## Summary of work done
 

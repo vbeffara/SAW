@@ -7,7 +7,7 @@
 μ = √(2+√2)
 ```
 
-**Status: 4 sorry's remaining on the critical path.**
+**Status: 4 sorry's remain on the critical path.**
 
 ## Critical path (dependency tree)
 
@@ -29,34 +29,32 @@ SAW.lean (constants, algebraic identities) ✓
 │                               ├── Z_xc_diverges_corrected ✓ (from lower bound)
 │                               └── connective_constant_eq_corrected ✓ (from above)
 ├── SAWCutting.lean (cutting argument infrastructure)
-│   ├── PaperInfStrip_mono ✓ [NEW — strip monotonicity]
-│   ├── PaperSAW_A_inf_widen ✓ [NEW — walk embedding T → T+1]
-│   ├── PaperSAW_A_inf_widen_injective ✓ [NEW — embedding is injective]
-│   ├── A_inf_diff_reaches_boundary ✓ [walks in A_{T+1}\A_T reach boundary]
-│   ├── cutting_argument ⚠️ [sorry — the tsum bound]
-│   └── bridge_recurrence_from_cutting ✓ [derives recurrence from hypotheses]
-├── SAWWalkHelpers.lean [Walk helper lemmas, all proved]
-│   ├── path_interior_two_distinct_neighbors ✓
-│   ├── true_at_boundary_has_lower_false ✓
-│   ├── adj_true_iff ✓
-│   ├── walk_has_succ ✓
-│   └── walk_has_pred ✓
-├── SAWCuttingHelpers.lean [Cutting bridge construction, all proved]
+│   ├── PaperInfStrip_mono ✓
+│   ├── PaperSAW_A_inf_widen ✓
+│   ├── PaperSAW_A_inf_widen_injective ✓
+│   ├── A_inf_diff_reaches_boundary ✓
+│   └── cutting_argument ⚠️ [sorry — depends on extra_walk_sum_le]
+├── SAWCuttingProof.lean [NEW — Cutting argument decomposition]
+│   ├── embed_in_strip ✓ [embeds in-strip walks into A_inf(T)]
+│   ├── embed_in_strip_injective ✓ [embedding is injective]
+│   ├── A_inf_summable_of_succ ✓ [summability propagation T+1 → T]
+│   ├── in_strip_sum_le ✓ [in-strip partial sum ≤ A_inf(T)]
+│   ├── extra_walk_decomp ✓ [extra walk → pair of bridges]
+│   ├── extra_walk_sum_le ⚠️ [sorry — requires cutting map injectivity]
+│   └── cutting_argument_proved ✓ [reduces to in_strip_sum_le + extra_walk_sum_le]
+├── SAWCuttingHelpers.lean [all proved]
 │   ├── prefix_gives_bridge ✓
 │   ├── suffix_reversed_shifted_gives_bridge ✓
 │   ├── hexShift_preserves_strip ✓
 │   └── walk_split_lengths ✓
-└── SAWVertexTriple.lean [NEW — Vertex relation triplet structure]
-    ├── triplet_sum_zero ✓ [triplet cancellation restated]
-    ├── false_directions ✓ [NEW — direction vectors at FALSE vertex = cube roots of unity]
-    ├── starting_midedge_dir ✓ [starting direction = -1]
-    └── right_boundary_dir ✓ [right boundary direction = +1]
+└── SAWVertexTriple.lean [Vertex relation triplet structure, all proved]
 ```
 
-## Remaining 4 critical-path sorries
+## Remaining critical-path sorries
 
 ### 1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean)
 **Statement:** ∃ A E ≥ 0, 1 = c_α·A + B_paper T L xc + c_ε·E
+**Equivalent to:** B_paper(T, L, xc) ≤ 1
 **Status:** Requires full parafermionic observable proof (Lemma 2 of the paper).
 **Proved infrastructure:**
 - pair_cancellation and triplet_cancellation ✓ (algebraic core)
@@ -65,23 +63,21 @@ SAW.lean (constants, algebraic identities) ✓
 - false_to_true_dir ✓ (right boundary direction = +1)
 - starting_direction ✓ (starting direction = -1)
 - cos_five_pi_eight ✓ (cos(5π/8) = -c_α)
-**Remaining:** Triplet partition of walks at each vertex + discrete Stokes summation.
+**Remaining:** Combinatorial partition of walks into pairs/triplets at each vertex + discrete Stokes summation.
 
-### 2. `cutting_argument` (SAWCutting.lean)
-**Statement:** A_inf(T+1) xc - A_inf(T) xc ≤ xc · paper_bridge_partition(T+1)²
-**Proved infrastructure:**
-- PaperInfStrip_mono ✓ (strip monotonicity)
-- PaperSAW_A_inf_widen ✓ (walk embedding T → T+1)
-- PaperSAW_A_inf_widen_injective ✓ (embedding is injective)
-- A_inf_diff_reaches_boundary ✓ (diff walks reach diagCoord -(T+1))
-- prefix_gives_bridge ✓ (prefix gives PaperBridge)
-- suffix_reversed_shifted_gives_bridge ✓ (reversed suffix gives PaperBridge)
-- walk_split_lengths ✓ (lengths add up)
-**Remaining:** Assembly of tsum bound using injection into PaperBridge(T+1)².
+### 2. `extra_walk_sum_le` (SAWCuttingProof.lean)
+**Statement:** For F ⊆ {extra walks}, Σ xc^{|s|+1} ≤ xc · B(T+1)²
+**Status:** Requires proving injectivity of the cutting map s ↦ (b1(s), b2(s)).
+**Proved infrastructure (this session):**
+- A_inf_summable_of_succ ✓ (summability propagation)
+- in_strip_sum_le ✓ (in-strip partial sums ≤ A_inf(T))
+- extra_walk_decomp ✓ (each extra walk gives a bridge pair with matching lengths)
+- cutting_argument_proved ✓ (reduces cutting_argument to in_strip_sum_le + extra_walk_sum_le)
+**Remaining:** Injectivity of the cutting map and tsum comparison for the image.
 
 ### 3. `paper_bridge_recurrence` (SAWPaperChain.lean)
 **Statement:** ∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}
-**Depends on:** strip_identity_genuine (#1) + cutting_argument (#2)
+**Depends on:** strip_identity_genuine (#1) + cutting_argument (depends on #2)
 **Infrastructure:** bridge_recurrence_from_cutting ✓ derives the recurrence
 from the strip identity and cutting argument as explicit hypotheses.
 
@@ -89,28 +85,23 @@ from the strip identity and cutting argument as explicit hypotheses.
 **Statement:** ∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²
 **Independent of:** sorries #1, #2, #3.
 **Status:** Requires Hammersley-Welsh bridge decomposition algorithm.
-The abstract infrastructure (bridge_product_converges, bridge_ratio_bound,
-upper_bound_principle) is proved. The combinatorial injection is the gap.
 
-## Summary of infrastructure added this session
+## New work this session
 
-### New file:
-- **SAWVertexTriple.lean** — Vertex relation triplet structure (all proved):
-  - `triplet_sum_zero`: triplet cancellation restated
-  - `false_directions`: direction vectors at FALSE vertex = cube roots of unity
-  - `VertexWalk` structure: strip walk ending at specific vertex
-  - `walkObservableWeight`: observable weight definition
-  - Boundary edge type analysis (starting, right, left, escape)
-
-### Updated files:
-- **SAWCutting.lean** — 3 new proved lemmas:
-  - `PaperInfStrip_mono`: strip monotonicity (T → T+1)
-  - `PaperSAW_A_inf_widen`: walk embedding into wider strip
-  - `PaperSAW_A_inf_widen_injective`: embedding is injective
+### New file: SAWCuttingProof.lean
+Decomposition of the cutting argument into proved components:
+- `embed_in_strip` ✓ — Maps in-strip A_{T+1}-walks to A_T-walks
+- `embed_in_strip_injective` ✓ — The embedding is injective
+- `A_inf_summable_of_succ` ✓ — Summability propagates from T+1 to T
+- `in_strip_sum_le` ✓ — Finite partial sums of in-strip walks ≤ A_inf(T)
+- `extra_walk_decomp` ✓ — Each extra walk decomposes into two bridges
+- `extra_walk_sum_le` ⚠️ — Total weight of extra walks ≤ xc·B²
+- `cutting_argument_proved` ✓ — Reduces cutting_argument to the above
 
 ### Blueprint updated:
-- Added section "Strip monotonicity and walk embedding" with `PaperInfStrip_mono`,
-  `PaperSAW_A_inf_widen`, `PaperSAW_A_inf_widen_injective`
-- Added section "Direction vectors at hex vertices" with `false_directions`,
-  `triplet_sum_zero`
-- All new lemmas marked with `\leanok` in blueprint
+- Added Section "Cutting argument infrastructure" entries for:
+  - A_inf_summable_of_succ (with proof)
+  - in_strip_sum_le (with proof)
+  - extra_walk_decomp (with proof)
+  - extra_walk_sum_le (sorry'd)
+  - Updated cutting_argument to reference new decomposition

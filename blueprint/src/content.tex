@@ -3570,13 +3570,70 @@ in \texttt{SAWCutting.lean}.
   \texttt{paperStart} to a FALSE vertex at diagonal coordinate $-(T{+}1)$.
 \end{proof}
 
+\begin{lemma}[Summability of $A_T$ from $A_{T+1}$]\label{lem:A_inf_summable_succ}
+\lean{A_inf_summable_of_succ}
+\leanok
+\uses{def:A_inf}
+  If $A_{T+1}^{x_c}$ is summable, then $A_T^{x_c}$ is summable.
+  Proved via the injection \texttt{PaperSAW\_A\_inf\_widen}.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:A_inf_summable_succ}
+  Pull back summability through the injective map \texttt{PaperSAW\_A\_inf\_widen}
+  using \texttt{Summable.comp\_injective}.
+\end{proof}
+
+\begin{lemma}[In-strip walks embed into $A_T$]\label{lem:in_strip_sum_le}
+\lean{in_strip_sum_le}
+\leanok
+\uses{def:A_inf, lem:A_inf_summable_succ}
+  For a finite set $F$ of $A_{T+1}$-walks that all stay in $S_T$, the partial
+  sum $\sum_{s \in F} x_c^{|s|+1} \leq A_T^{x_c}$.
+  The map \texttt{embed\_in\_strip} injects $F$ into \texttt{PaperSAW\_A\_inf}$(T)$,
+  and the tsum dominates any partial sum.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:in_strip_sum_le}
+  Reindex the sum through \texttt{embed\_in\_strip} (which preserves walk length
+  and is injective), then apply \texttt{Summable.sum\_le\_tsum}.
+\end{proof}
+
+\begin{lemma}[Extra walk decomposition]\label{lem:extra_walk_decomp}
+\lean{extra_walk_decomp}
+\leanok
+\uses{lem:A_diff_boundary, lem:prefix_bridge, lem:suffix_bridge}
+  Each $A_{T+1}$-walk that does NOT stay in $S_T$ decomposes into two
+  \texttt{PaperBridge}$(T{+}1)$s whose lengths sum to the walk length.
+\end{lemma}
+\begin{proof}
+\leanok
+\proves{lem:extra_walk_decomp}
+  By \texttt{A\_inf\_diff\_reaches\_boundary}, find a FALSE vertex $v$ with
+  diagonal coordinate $-(T{+}1)$. Apply \texttt{prefix\_gives\_bridge} and
+  \texttt{suffix\_reversed\_shifted\_gives\_bridge} to the pieces, then
+  combine lengths via \texttt{walk\_split\_lengths}.
+\end{proof}
+
+\begin{lemma}[Extra walk sum bound]\label{lem:extra_walk_sum_le}
+\lean{extra_walk_sum_le}
+\uses{lem:extra_walk_decomp, def:paper_bridge_partition}
+  For a finite set $F$ of $A_{T+1}$-walks NOT staying in $S_T$,
+  $\sum_{s \in F} x_c^{|s|+1} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
+  \textbf{Status: sorry.} Requires the injectivity of the cutting map
+  $s \mapsto (b_1(s), b_2(s))$ into \texttt{PaperBridge}$(T{+}1)^2$.
+\end{lemma}
+
 \begin{lemma}[Cutting argument]\label{lem:cutting}
 \lean{cutting_argument}
-\uses{lem:A_diff_boundary, def:paper_bridge_partition, lem:prefix_bridge, lem:suffix_bridge}
+\uses{lem:A_inf_summable_succ, lem:in_strip_sum_le, lem:extra_walk_sum_le}
   $A_{T+1}^{x_c} - A_T^{x_c} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
-  \textbf{Status: sorry.} The two pieces (prefix bridge and suffix bridge)
-  are constructed and proved correct. What remains is assembling the tsum
-  bound and proving injectivity of the cutting map.
+  \textbf{Status: depends on \texttt{extra\_walk\_sum\_le} (sorry).}
+  The proof structure is complete:
+  split a finite partial sum of $A_{T+1}$ into in-strip walks (bounded by $A_T$)
+  and extra walks (bounded by $x_c B_{T+1}^2$), then take the tsum limit.
+  All infrastructure except the cutting map injectivity is proved.
 \end{lemma}
 
 \begin{theorem}[Bridge recurrence from cutting]\label{thm:bridge_recurrence_from_cutting}
