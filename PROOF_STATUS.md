@@ -34,14 +34,21 @@ SAW.lean (constants, algebraic identities) ✓
 │   ├── PaperSAW_A_inf_widen_injective ✓
 │   ├── A_inf_diff_reaches_boundary ✓
 │   └── cutting_argument ⚠️ [sorry — depends on extra_walk_sum_le]
-├── SAWCuttingProof.lean [NEW — Cutting argument decomposition]
-│   ├── embed_in_strip ✓ [embeds in-strip walks into A_inf(T)]
-│   ├── embed_in_strip_injective ✓ [embedding is injective]
-│   ├── A_inf_summable_of_succ ✓ [summability propagation T+1 → T]
-│   ├── in_strip_sum_le ✓ [in-strip partial sum ≤ A_inf(T)]
-│   ├── extra_walk_decomp ✓ [extra walk → pair of bridges]
+├── SAWCuttingProof.lean [Cutting argument decomposition]
+│   ├── embed_in_strip ✓
+│   ├── embed_in_strip_injective ✓
+│   ├── A_inf_summable_of_succ ✓
+│   ├── in_strip_sum_le ✓
+│   ├── extra_walk_decomp ✓
 │   ├── extra_walk_sum_le ⚠️ [sorry — requires cutting map injectivity]
 │   └── cutting_argument_proved ✓ [reduces to in_strip_sum_le + extra_walk_sum_le]
+├── SAWParafermionic.lean [NEW — Walk reconstruction infrastructure]
+│   ├── path_determined_by_parts ✓ [walk = takeUntil ++ dropUntil]
+│   ├── walk_reverse_injective ✓ [reverse is injective]
+│   ├── shiftWalk_injective_walks ✓ [shift is injective on walks]
+│   ├── extraWalkCutData, extraWalkB1, extraWalkB2 ✓ [cutting map defined]
+│   ├── extraWalk_length_rel ✓ [s.len = b1.len + b2.len]
+│   └── extra_walk_sum_le_proved ⚠️ [sorry — needs injection proof]
 ├── SAWCuttingHelpers.lean [all proved]
 │   ├── prefix_gives_bridge ✓
 │   ├── suffix_reversed_shifted_gives_bridge ✓
@@ -65,21 +72,22 @@ SAW.lean (constants, algebraic identities) ✓
 - cos_five_pi_eight ✓ (cos(5π/8) = -c_α)
 **Remaining:** Combinatorial partition of walks into pairs/triplets at each vertex + discrete Stokes summation.
 
-### 2. `extra_walk_sum_le` (SAWCuttingProof.lean)
+### 2. `extra_walk_sum_le` / `extra_walk_sum_le_proved` (SAWCuttingProof/SAWParafermionic.lean)
 **Statement:** For F ⊆ {extra walks}, Σ xc^{|s|+1} ≤ xc · B(T+1)²
 **Status:** Requires proving injectivity of the cutting map s ↦ (b1(s), b2(s)).
 **Proved infrastructure (this session):**
-- A_inf_summable_of_succ ✓ (summability propagation)
-- in_strip_sum_le ✓ (in-strip partial sums ≤ A_inf(T))
-- extra_walk_decomp ✓ (each extra walk gives a bridge pair with matching lengths)
-- cutting_argument_proved ✓ (reduces cutting_argument to in_strip_sum_le + extra_walk_sum_le)
-**Remaining:** Injectivity of the cutting map and tsum comparison for the image.
+- path_determined_by_parts ✓ (walk = takeUntil ++ dropUntil)
+- walk_reverse_injective ✓ (reverse is injective)
+- shiftWalk_injective_walks ✓ (shift is injective)
+- extraWalkCutData, extraWalkB1, extraWalkB2 ✓ (cutting map defined)
+- extraWalk_length_rel ✓ (s.len = b1.len + b2.len)
+**Remaining:** Injectivity of (extraWalkB1, extraWalkB2) and tsum comparison.
 
 ### 3. `paper_bridge_recurrence` (SAWPaperChain.lean)
 **Statement:** ∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}
 **Depends on:** strip_identity_genuine (#1) + cutting_argument (depends on #2)
 **Infrastructure:** bridge_recurrence_from_cutting ✓ derives the recurrence
-from the strip identity and cutting argument as explicit hypotheses.
+from the cutting argument and strip identity as explicit hypotheses.
 
 ### 4. `paper_bridge_decomp_injection` (SAWPaperChain.lean)
 **Statement:** ∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²
@@ -88,20 +96,13 @@ from the strip identity and cutting argument as explicit hypotheses.
 
 ## New work this session
 
-### New file: SAWCuttingProof.lean
-Decomposition of the cutting argument into proved components:
-- `embed_in_strip` ✓ — Maps in-strip A_{T+1}-walks to A_T-walks
-- `embed_in_strip_injective` ✓ — The embedding is injective
-- `A_inf_summable_of_succ` ✓ — Summability propagates from T+1 to T
-- `in_strip_sum_le` ✓ — Finite partial sums of in-strip walks ≤ A_inf(T)
-- `extra_walk_decomp` ✓ — Each extra walk decomposes into two bridges
-- `extra_walk_sum_le` ⚠️ — Total weight of extra walks ≤ xc·B²
-- `cutting_argument_proved` ✓ — Reduces cutting_argument to the above
-
-### Blueprint updated:
-- Added Section "Cutting argument infrastructure" entries for:
-  - A_inf_summable_of_succ (with proof)
-  - in_strip_sum_le (with proof)
-  - extra_walk_decomp (with proof)
-  - extra_walk_sum_le (sorry'd)
-  - Updated cutting_argument to reference new decomposition
+### New file: SAWParafermionic.lean
+Walk reconstruction infrastructure for the cutting map:
+- `path_determined_by_parts` ✓ — A path is determined by its takeUntil and dropUntil at any support vertex
+- `walk_reverse_injective` ✓ — Walk reversal is injective
+- `shiftWalk_injective_walks` ✓ — Walk shifting is injective
+- `extraWalkCutData` ✓ — Extract cut vertex from extra walk
+- `extraWalkB1` ✓ — Prefix bridge from cutting
+- `extraWalkB2` ✓ — Suffix bridge from cutting
+- `extraWalk_length_rel` ✓ — Length relation: s.len = b1.len + b2.len
+- `extra_walk_sum_le_proved` ⚠️ — Needs injection + tsum comparison

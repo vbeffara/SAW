@@ -1,3 +1,51 @@
+# Summary of changes for run 63c6ffe6-f56a-4978-a9ca-d7e06870af05
+## Summary of work done
+
+### New file: `RequestProject/SAWParafermionic.lean`
+This file contains the walk reconstruction infrastructure needed for the cutting map injection — the key missing math for proving `extra_walk_sum_le`.
+
+**Proved lemmas (5 new, all sorry-free):**
+1. **`path_determined_by_parts`** — A path is uniquely determined by its `takeUntil` prefix and `dropUntil` suffix at any support vertex. This is the fundamental reconstruction lemma.
+2. **`walk_reverse_injective`** — Walk reversal is injective (if reversed walks are equal, the original walks are equal).
+3. **`shiftWalk_injective_walks`** — Walk translation by `hexShift` is injective (preserves distinctness of walks).
+4. **`extraWalk_length_rel`** — For each extra walk cut at the boundary vertex, the walk length equals the sum of the two bridge lengths: `s.len = b1.len + b2.len`.
+5. **`walk_take_drop_spec`** — A walk equals its `takeUntil ++ dropUntil` at any support vertex (wrapper for `SimpleGraph.Walk.take_spec`).
+
+**New definitions (3, all sorry-free):**
+- `extraWalkCutData` — Extracts the canonical cut vertex from an extra walk
+- `extraWalkB1` — The prefix bridge (from paperStart to the cut vertex)  
+- `extraWalkB2` — The suffix bridge (reversed and shifted)
+
+**Remaining sorry:**
+- `extra_walk_sum_le_proved` — The sum bound `∑ xc^(len+1) ≤ xc · B²`. All ingredients for the injection proof are now in place (path reconstruction, reverse/shift injectivity, cutting map definitions, length relation). What remains is chaining these together to prove injectivity of the cutting map `s ↦ (b1, b2)` and using it for the `Finset.sum` comparison.
+
+### Updated file: `RequestProject/SAWCuttingInject.lean`
+Now serves as a clean import bridge to `SAWParafermionic.lean`.
+
+### Updated file: `blueprint/src/content.tex`
+Added 5 new blueprint entries with `\leanok` proofs:
+- `lem:path_determined_by_parts` — Walk determined by parts
+- `lem:walk_reverse_injective` — Walk reverse injective
+- `lem:shiftWalk_injective` — ShiftWalk injective  
+- `lem:extraWalk_length_rel` — Extra walk length relation
+- Updated `lem:extra_walk_sum_le` with new dependencies and status
+
+### Updated file: `PROOF_STATUS.md`
+Comprehensive update reflecting all new infrastructure and the current dependency tree.
+
+### What remains on the critical path
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on 4 sorry'd lemmas:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper ≤ 1 via the parafermionic observable. Requires formalizing the discrete Stokes argument (interior mid-edge cancellation) and boundary evaluation. The algebraic core (pair/triplet cancellation) is proved.
+
+2. **`extra_walk_sum_le`** (SAWCuttingProof.lean) / **`extra_walk_sum_le_proved`** (SAWParafermionic.lean) — The cutting map injection bound. All ingredients are now proved; what remains is the final composition proving injectivity and the tsum comparison.
+
+3. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — Depends on #1 and #2. The proof structure (`bridge_recurrence_from_cutting`) is complete assuming these hypotheses.
+
+4. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh decomposition (independent of #1-#3). Requires formalizing the bridge decomposition algorithm.
+
+All other components of the proof are fully formalized and verified.
+
 # Summary of changes for run 2cd76f6a-e2d8-4777-95f6-f28f27fcc43c
 ## Progress on SAW Formalization
 

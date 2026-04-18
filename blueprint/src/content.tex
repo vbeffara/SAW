@@ -3616,13 +3616,72 @@ in \texttt{SAWCutting.lean}.
   combine lengths via \texttt{walk\_split\_lengths}.
 \end{proof}
 
+\begin{lemma}[Walk determined by parts]\label{lem:path_determined_by_parts}
+\lean{path_determined_by_parts}
+\leanok
+  A path $p : v \to w$ is uniquely determined by its \texttt{takeUntil} prefix
+  and \texttt{dropUntil} suffix at any vertex $u$ in its support.
+  That is, if two paths agree on both parts at $u$, they are equal.
+\end{lemma}
+\begin{proof}
+\leanok
+  By \texttt{take\_spec}, $p = \texttt{takeUntil}(u) \mathbin{++} \texttt{dropUntil}(u)$.
+  If both parts agree, the walks are equal. Paths are a subtype with a
+  propositional condition, so they are equal by \texttt{Subtype.ext}.
+\end{proof}
+
+\begin{lemma}[Walk reverse injective]\label{lem:walk_reverse_injective}
+\lean{walk_reverse_injective}
+\leanok
+  If $p_1.\texttt{reverse} = p_2.\texttt{reverse}$, then $p_1 = p_2$.
+\end{lemma}
+\begin{proof}
+\leanok
+  By \texttt{reverse\_reverse}: $p_i = p_i.\texttt{reverse.reverse}$.
+\end{proof}
+
+\begin{lemma}[ShiftWalk injective]\label{lem:shiftWalk_injective}
+\lean{shiftWalk_injective_walks}
+\leanok
+  If $\texttt{shiftWalk}(dx, dy, p_1) = \texttt{shiftWalk}(dx, dy, p_2)$,
+  then $p_1 = p_2$.
+\end{lemma}
+\begin{proof}
+\leanok
+  The support of \texttt{shiftWalk} is the image of the original support
+  under \texttt{hexShift}. Since \texttt{hexShift} is injective, the
+  supports are equal, from which the walks are equal.
+\end{proof}
+
+\begin{lemma}[Extra walk length relation]\label{lem:extraWalk_length_rel}
+\lean{extraWalk_length_rel}
+\leanok
+\uses{lem:extra_walk_decomp}
+  For each extra walk $s$, cutting at the boundary vertex gives bridges
+  $b_1, b_2$ with $|s| = |b_1| + |b_2|$ (and hence
+  $x_c^{|s|+1} = x_c \cdot x_c^{|b_1|} \cdot x_c^{|b_2|}$).
+\end{lemma}
+\begin{proof}
+\leanok
+  By \texttt{walk\_split\_lengths}: the takeUntil and dropUntil lengths
+  sum to the total walk length.
+\end{proof}
+
 \begin{lemma}[Extra walk sum bound]\label{lem:extra_walk_sum_le}
 \lean{extra_walk_sum_le}
-\uses{lem:extra_walk_decomp, def:paper_bridge_partition}
+\uses{lem:extra_walk_decomp, def:paper_bridge_partition, lem:path_determined_by_parts, lem:walk_reverse_injective, lem:shiftWalk_injective, lem:extraWalk_length_rel}
   For a finite set $F$ of $A_{T+1}$-walks NOT staying in $S_T$,
   $\sum_{s \in F} x_c^{|s|+1} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
-  \textbf{Status: sorry.} Requires the injectivity of the cutting map
-  $s \mapsto (b_1(s), b_2(s))$ into \texttt{PaperBridge}$(T{+}1)^2$.
+  \textbf{Status: sorry.} Requires proving that the cutting map
+  $s \mapsto (b_1(s), b_2(s))$ is injective. The key ingredients for
+  injectivity are now proved:
+  \begin{itemize}
+  \item \texttt{path\_determined\_by\_parts}: walk $=$ takeUntil $++$ dropUntil
+  \item \texttt{walk\_reverse\_injective}: reversal preserves distinctness
+  \item \texttt{shiftWalk\_injective}: translation preserves distinctness
+  \end{itemize}
+  What remains is chaining these together to show that equal bridge pairs
+  imply equal walks, and using the injection to bound the Finset sum.
 \end{lemma}
 
 \begin{lemma}[Cutting argument]\label{lem:cutting}
