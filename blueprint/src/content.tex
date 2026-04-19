@@ -3667,33 +3667,63 @@ in \texttt{SAWCutting.lean}.
   sum to the total walk length.
 \end{proof}
 
+\begin{definition}[Suffix bridge construction]\label{def:mkSuffixBridge}
+\lean{mkSuffixBridge}
+\leanok
+  Given a walk suffix from a cut vertex $c$ (with $\operatorname{diag}(c) = -(T+1)$,
+  $c$ on the false sublattice) to an endpoint $e$ (with $\operatorname{diag}(e)=0$,
+  $e$ on the true sublattice), the reversed shifted suffix produces
+  a \texttt{PaperBridge}$(T+1)$: reverse the suffix, then translate by
+  $(-e_1, -e_{2,1})$ to move $e$ to \texttt{paperStart}.
+  Length is preserved, and the walk stays in \texttt{PaperInfStrip}$(T+1)$.
+\end{definition}
+
+\begin{lemma}[Cutting map injectivity]\label{lem:extraWalk_cut_injective}
+\lean{extraWalk_cut_injective}
+\leanok
+\uses{def:mkSuffixBridge, lem:path_determined_by_parts, lem:extraWalk_length_rel}
+  The cutting map $s \mapsto (b_1(s), b_2(s))$ from extra walks to
+  pairs of \texttt{PaperBridge}$(T+1)$ is injective.
+\end{lemma}
+\begin{proof}
+\leanok
+  Equal $b_1$ gives equal cut vertices and equal \texttt{takeUntil} supports.
+  Equal $b_2$ with equal cut vertices gives equal endpoints (via \texttt{hexShift}
+  analysis) and equal \texttt{dropUntil} supports (via shift/reverse/map injectivity).
+  Finally, \texttt{walk\_eq\_of\_support} (walks on simple graphs are determined by
+  their support) gives walk equality.
+\end{proof}
+
 \begin{lemma}[Extra walk sum bound]\label{lem:extra_walk_sum_le}
-\lean{extra_walk_sum_le}
-\uses{lem:extra_walk_decomp, def:paper_bridge_partition, lem:path_determined_by_parts, lem:walk_reverse_injective, lem:shiftWalk_injective, lem:extraWalk_length_rel}
+\lean{extra_walk_sum_le_proved}
+\leanok
+\uses{lem:extraWalk_cut_injective, lem:extraWalk_length_rel, def:paper_bridge_partition}
   For a finite set $F$ of $A_{T+1}$-walks NOT staying in $S_T$,
   $\sum_{s \in F} x_c^{|s|+1} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
-  \textbf{Status: sorry.} Requires proving that the cutting map
-  $s \mapsto (b_1(s), b_2(s))$ is injective. The key ingredients for
-  injectivity are now proved:
-  \begin{itemize}
-  \item \texttt{path\_determined\_by\_parts}: walk $=$ takeUntil $++$ dropUntil
-  \item \texttt{walk\_reverse\_injective}: reversal preserves distinctness
-  \item \texttt{shiftWalk\_injective}: translation preserves distinctness
-  \end{itemize}
-  What remains is chaining these together to show that equal bridge pairs
-  imply equal walks, and using the injection to bound the Finset sum.
 \end{lemma}
+\begin{proof}
+\leanok
+  By \texttt{extraWalk\_length\_rel}, rewrite each term as
+  $x_c \cdot x_c^{|b_1|} \cdot x_c^{|b_2|}$. Factor out $x_c$.
+  The injection $s \mapsto (b_1, b_2)$ into $\texttt{PaperBridge} \times \texttt{PaperBridge}$
+  (by \texttt{extraWalk\_cut\_injective}) gives
+  $\sum f(\varphi(s)) \leq \sum' f(p) = B^2$
+  via \texttt{Summable.sum\_le\_tsum}.
+\end{proof}
 
 \begin{lemma}[Cutting argument]\label{lem:cutting}
-\lean{cutting_argument}
+\lean{cutting_argument_proved}
+\leanok
 \uses{lem:A_inf_summable_succ, lem:in_strip_sum_le, lem:extra_walk_sum_le}
   $A_{T+1}^{x_c} - A_T^{x_c} \leq x_c \cdot (B_{T+1}^{x_c})^2$.
-  \textbf{Status: depends on \texttt{extra\_walk\_sum\_le} (sorry).}
-  The proof structure is complete:
-  split a finite partial sum of $A_{T+1}$ into in-strip walks (bounded by $A_T$)
-  and extra walks (bounded by $x_c B_{T+1}^2$), then take the tsum limit.
-  All infrastructure except the cutting map injectivity is proved.
 \end{lemma}
+\begin{proof}
+\leanok
+  Split a finite partial sum of $A_{T+1}$ into in-strip walks
+  (bounded by $A_T$ via \texttt{in\_strip\_sum\_le}) and extra walks
+  (bounded by $x_c B_{T+1}^2$ via \texttt{extra\_walk\_sum\_le\_proved}),
+  then take the tsum limit.
+\end{proof}
 
 \begin{theorem}[Bridge recurrence from cutting]\label{thm:bridge_recurrence_from_cutting}
 \lean{bridge_recurrence_from_cutting}

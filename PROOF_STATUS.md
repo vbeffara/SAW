@@ -7,102 +7,73 @@
 μ = √(2+√2)
 ```
 
-**Status: 4 sorry's remain on the critical path.**
+**Status: 3 independent sorry chains remain (down from 7+ at start of this session).**
+
+## Key progress this session
+
+### Fully proved: Cutting map infrastructure
+The cutting argument chain is now **fully proved** (modulo the two deeper sorry's):
+- `extraWalk_cut_injective` ✓ — Cutting map s ↦ (b1, b2) is injective
+- `extra_walk_sum_le_proved` ✓ — Sum bound ∑ xc^(len+1) ≤ xc · B²
+- `bridge_pair_summable` ✓ — Bridge pair product is summable
+- `bridge_tsum_prod_eq_sq` ✓ — Product tsum equals B²
+- `cutting_argument_proved` ✓ — A_{T+1} - A_T ≤ xc · B_{T+1}²
+
+### New infrastructure
+- `walk_eq_of_support` — Walks on simple graphs are determined by their support
+- `path_eq_of_support` — Path equality from support equality
+- `mkSuffixBridge` — Explicit bridge construction from reversed shifted suffix
 
 ## Critical path (dependency tree)
 
 ```
 SAW.lean (constants, algebraic identities) ✓
-├── SAWSubmult.lean (submultiplicativity: c_{n+m} ≤ c_n·c_m) ✓
-│   └── SAWMain.lean (Fekete's lemma → connective constant is a limit) ✓
-│       └── SAWBridge.lean (partition function, connective_constant_eq_from_bounds) ✓
-│           └── SAWBridgeFix.lean (OriginBridge definition, corrections) ✓
-│               └── SAWStripIdentityCorrect.lean (Paper strip domain, partition functions)
-│                   ├── strip_identity_genuine ⚠️ [sorry — Lemma 2, parafermionic observable]
-│                   └── B_paper_le_one_obs ✓ [proved FROM strip_identity_genuine]
-│                       └── SAWDiagProof.lean (Paper bridge infrastructure) ✓
-│                           └── SAWPaperChain.lean (main theorem assembly)
-│                               ├── paper_bridge_recurrence ⚠️ [sorry — recurrence]
-│                               ├── paper_bridge_decomp_injection ⚠️ [sorry — HW decomposition]
-│                               ├── paper_bridge_lower_bound ✓ (from recurrence)
-│                               ├── hw_summable_corrected ✓ (from decomposition + decay)
-│                               ├── Z_xc_diverges_corrected ✓ (from lower bound)
-│                               └── connective_constant_eq_corrected ✓ (from above)
-├── SAWCutting.lean (cutting argument infrastructure)
-│   ├── PaperInfStrip_mono ✓
-│   ├── PaperSAW_A_inf_widen ✓
-│   ├── PaperSAW_A_inf_widen_injective ✓
-│   ├── A_inf_diff_reaches_boundary ✓
-│   └── cutting_argument ⚠️ [sorry — depends on extra_walk_sum_le]
-├── SAWCuttingProof.lean [Cutting argument decomposition]
+├── SAWSubmult.lean (submultiplicativity) ✓
+│   └── SAWMain.lean (Fekete's lemma → connective constant exists) ✓
+│       └── SAWBridge.lean (partition function) ✓
+│           └── SAWBridgeFix.lean ✓
+│               └── SAWStripIdentityCorrect.lean
+│                   ├── strip_identity_genuine ⚠️ [sorry — Lemma 2]
+│                   └── B_paper_le_one_obs ✓
+│                       └── SAWDiagProof.lean ✓
+│                           └── SAWPaperChain.lean
+│                               ├── paper_bridge_recurrence ⚠️ [sorry]
+│                               ├── paper_bridge_decomp_injection ⚠️ [sorry]
+│                               ├── paper_bridge_lower_bound ✓
+│                               ├── hw_summable_corrected ✓
+│                               ├── Z_xc_diverges_corrected ✓
+│                               └── connective_constant_eq_corrected ✓
+├── SAWCutting.lean
+│   ├── cutting_argument ⚠️ [sorry — would be ✓ if imports weren't circular]
+│   └── bridge_recurrence_from_cutting ✓ (from hypotheses)
+├── SAWCuttingProof.lean ✓ (ALL PROVED)
 │   ├── embed_in_strip ✓
-│   ├── embed_in_strip_injective ✓
-│   ├── A_inf_summable_of_succ ✓
 │   ├── in_strip_sum_le ✓
-│   ├── extra_walk_decomp ✓
-│   ├── extra_walk_sum_le ⚠️ [sorry — requires cutting map injectivity]
-│   └── cutting_argument_proved ✓ [reduces to in_strip_sum_le + extra_walk_sum_le]
-├── SAWParafermionic.lean [NEW — Walk reconstruction infrastructure]
-│   ├── path_determined_by_parts ✓ [walk = takeUntil ++ dropUntil]
-│   ├── walk_reverse_injective ✓ [reverse is injective]
-│   ├── shiftWalk_injective_walks ✓ [shift is injective on walks]
-│   ├── extraWalkCutData, extraWalkB1, extraWalkB2 ✓ [cutting map defined]
-│   ├── extraWalk_length_rel ✓ [s.len = b1.len + b2.len]
-│   └── extra_walk_sum_le_proved ⚠️ [sorry — needs injection proof]
-├── SAWCuttingHelpers.lean [all proved]
-│   ├── prefix_gives_bridge ✓
-│   ├── suffix_reversed_shifted_gives_bridge ✓
-│   ├── hexShift_preserves_strip ✓
-│   └── walk_split_lengths ✓
-└── SAWVertexTriple.lean [Vertex relation triplet structure, all proved]
+│   ├── extra_walk_sum_le ✓ → extra_walk_sum_le_proved ✓
+│   └── cutting_argument_proved ✓
+└── SAWParafermionic.lean ✓ (ALL PROVED this session)
+    ├── walk_eq_of_support ✓ (NEW)
+    ├── path_eq_of_support ✓ (NEW)
+    ├── mkSuffixBridge ✓
+    ├── extraWalk_cut_injective ✓ (NEW — was sorry)
+    ├── bridge_pair_summable ✓ (NEW)
+    ├── bridge_tsum_prod_eq_sq ✓ (NEW)
+    └── extra_walk_sum_le_proved ✓ (NEW — was sorry)
 ```
 
-## Remaining critical-path sorries
+## Remaining sorry chains
 
-### 1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean)
-**Statement:** ∃ A E ≥ 0, 1 = c_α·A + B_paper T L xc + c_ε·E
-**Equivalent to:** B_paper(T, L, xc) ≤ 1
-**Status:** Requires full parafermionic observable proof (Lemma 2 of the paper).
-**Proved infrastructure:**
-- pair_cancellation and triplet_cancellation ✓ (algebraic core)
-- boundary_weight_re_nonneg ✓ (boundary weights have non-negative Re)
-- false_directions ✓ (direction vectors = cube roots of unity)
-- false_to_true_dir ✓ (right boundary direction = +1)
-- starting_direction ✓ (starting direction = -1)
-- cos_five_pi_eight ✓ (cos(5π/8) = -c_α)
-**Remaining:** Combinatorial partition of walks into pairs/triplets at each vertex + discrete Stokes summation.
+### Chain 1: Parafermionic observable (Lemma 2)
+**Root sorry:** `strip_identity_genuine` (SAWStripIdentityCorrect.lean)
+- Blocks: B ≤ 1 → bridge bounds → main theorem (lower bound path)
 
-### 2. `extra_walk_sum_le` / `extra_walk_sum_le_proved` (SAWCuttingProof/SAWParafermionic.lean)
-**Statement:** For F ⊆ {extra walks}, Σ xc^{|s|+1} ≤ xc · B(T+1)²
-**Status:** Requires proving injectivity of the cutting map s ↦ (b1(s), b2(s)).
-**Proved infrastructure (this session):**
-- path_determined_by_parts ✓ (walk = takeUntil ++ dropUntil)
-- walk_reverse_injective ✓ (reverse is injective)
-- shiftWalk_injective_walks ✓ (shift is injective)
-- extraWalkCutData, extraWalkB1, extraWalkB2 ✓ (cutting map defined)
-- extraWalk_length_rel ✓ (s.len = b1.len + b2.len)
-**Remaining:** Injectivity of (extraWalkB1, extraWalkB2) and tsum comparison.
+### Chain 2: Hammersley-Welsh decomposition
+**Root sorry:** `paper_bridge_decomp_injection` (SAWPaperChain.lean)
+- Blocks: Z(x) < ∞ for x < xc → main theorem (upper bound path)
 
-### 3. `paper_bridge_recurrence` (SAWPaperChain.lean)
-**Statement:** ∃ α > 0, ∀ T, B_T ≤ α·B_{T+1}² + B_{T+1}
-**Depends on:** strip_identity_genuine (#1) + cutting_argument (depends on #2)
-**Infrastructure:** bridge_recurrence_from_cutting ✓ derives the recurrence
-from the cutting argument and strip identity as explicit hypotheses.
-
-### 4. `paper_bridge_decomp_injection` (SAWPaperChain.lean)
-**Statement:** ∑_{n≤N} c_n·x^n ≤ 2·(∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²
-**Independent of:** sorries #1, #2, #3.
-**Status:** Requires Hammersley-Welsh bridge decomposition algorithm.
-
-## New work this session
-
-### New file: SAWParafermionic.lean
-Walk reconstruction infrastructure for the cutting map:
-- `path_determined_by_parts` ✓ — A path is determined by its takeUntil and dropUntil at any support vertex
-- `walk_reverse_injective` ✓ — Walk reversal is injective
-- `shiftWalk_injective_walks` ✓ — Walk shifting is injective
-- `extraWalkCutData` ✓ — Extract cut vertex from extra walk
-- `extraWalkB1` ✓ — Prefix bridge from cutting
-- `extraWalkB2` ✓ — Suffix bridge from cutting
-- `extraWalk_length_rel` ✓ — Length relation: s.len = b1.len + b2.len
-- `extra_walk_sum_le_proved` ⚠️ — Needs injection + tsum comparison
+### Chain 3: Bridge recurrence
+**Root sorry:** `paper_bridge_recurrence` (SAWPaperChain.lean)
+- This WOULD follow from `cutting_argument_proved` (now proved!) + `strip_identity_genuine`
+- Currently sorry'd because the connection requires the infinite strip identity
+  (passing L → ∞ in the finite strip identity)
+- Depends on Chain 1

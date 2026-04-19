@@ -21,6 +21,7 @@ Three sorry's remain on the path to the main theorem:
 import Mathlib
 import RequestProject.SAWDiagProof
 import RequestProject.SAWDecomp
+import RequestProject.SAWCuttingProof
 
 open Real Complex ComplexConjugate Filter Topology
 

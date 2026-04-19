@@ -1,3 +1,50 @@
+# Summary of changes for run d552bfab-a778-4268-a5c3-9c869628b21a
+## Summary of work done
+
+### Major accomplishment: Cutting argument chain fully proved
+
+The cutting argument — equation (13) of Duminil-Copin & Smirnov (2012), stating that A_{T+1} - A_T ≤ x_c · B_{T+1}² — is now **fully proved** in `SAWParafermionic.lean` and `SAWCuttingProof.lean`. This was previously the main mathematical gap on the critical path.
+
+#### New lemmas proved (all sorry-free):
+
+**In `SAWParafermionic.lean`:**
+1. **`walk_eq_of_support`** — Walks on simple graphs are determined by their vertex support sequence. This is a fundamental structural lemma that resolved the dependent-type challenge of extracting walk equality from bridge structure equality.
+2. **`path_eq_of_support`** — Path equality from support equality (corollary).
+3. **`mkSuffixBridge`** — Explicit PaperBridge construction from the reversed/shifted suffix of a walk, replacing the previous `.choose`-based approach.
+4. **`extraWalk_cut_injective`** — The cutting map s ↦ (b₁(s), b₂(s)) is injective. The proof uses support-based equality: equal bridges imply equal takeUntil/dropUntil supports, which determine the full walk.
+5. **`bridge_pair_summable`** — The product bridge sum is summable.
+6. **`bridge_tsum_prod_eq_sq`** — ∑' (b₁,b₂) xc^|b₁| · xc^|b₂| = B².
+7. **`extra_walk_sum_le_proved`** — ∑ xc^(|s|+1) ≤ xc · B² for extra walks. Uses the injection into bridge pairs and tsum comparison.
+
+**In `SAWCuttingProof.lean`:**
+- `extra_walk_sum_le` now delegates to `extra_walk_sum_le_proved` (no sorry).
+- `cutting_argument_proved` is fully proved from `in_strip_sum_le` + `extra_walk_sum_le`.
+
+### Remaining sorry's (3 independent chains)
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) now depends on exactly 3 remaining sorry'd lemmas:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — Lemma 2 of the paper: the parafermionic observable identity 1 = c_α·A + B + c_ε·E. Requires the combinatorial walk partition into pairs/triplets and discrete Stokes summation.
+
+2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh bridge decomposition inequality. Independent of the other sorry's.
+
+3. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — The quadratic recurrence B_T ≤ α·B_{T+1}² + B_{T+1}. Depends on #1 (strip identity) plus the cutting argument (now proved). The proof framework `bridge_recurrence_from_cutting` is complete; what remains is the passage from finite-strip to infinite-strip identity.
+
+### Blueprint updated
+
+The blueprint (`blueprint/src/content.tex`) has been updated with:
+- New definitions: `mkSuffixBridge`, `extraWalkCutVertex`
+- New proved lemmas with `\leanok` status: cutting map injectivity, extra walk sum bound, cutting argument
+- Updated proof sketches reflecting the new infrastructure
+- Corrected `\lean{}` references to match current Lean declaration names
+
+### Files modified
+- `RequestProject/SAWParafermionic.lean` — Complete rewrite with new infrastructure (7 new proved lemmas)
+- `RequestProject/SAWCuttingProof.lean` — Added import and connected to `extra_walk_sum_le_proved`
+- `RequestProject/SAWPaperChain.lean` — Added import of SAWCuttingProof
+- `blueprint/src/content.tex` — Updated 3 lemma entries with \leanok proofs
+- `PROOF_STATUS.md` — Updated with current status
+
 # Summary of changes for run 63c6ffe6-f56a-4978-a9ca-d7e06870af05
 ## Summary of work done
 

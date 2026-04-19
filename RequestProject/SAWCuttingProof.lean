@@ -5,6 +5,7 @@
 import Mathlib
 import RequestProject.SAWCutting
 import RequestProject.SAWCuttingHelpers
+import RequestProject.SAWParafermionic
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -85,8 +86,8 @@ lemma extra_walk_sum_le {T : ℕ} (hT : 1 ≤ T)
     (F : Finset (PaperSAW_A_inf (T + 1)))
     (hF : ∀ s ∈ F, ¬∀ v ∈ s.walk.1.support, PaperInfStrip T v) :
     ∑ s ∈ F, xc ^ (s.walk.1.length + 1) ≤
-    xc * paper_bridge_partition (T + 1) xc ^ 2 := by
-  sorry
+    xc * paper_bridge_partition (T + 1) xc ^ 2 :=
+  extra_walk_sum_le_proved hT F hF
 
 /-! ## Main cutting argument -/
 
