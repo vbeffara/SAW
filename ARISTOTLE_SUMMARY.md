@@ -1,3 +1,37 @@
+# Summary of changes for run 8949cbcc-3671-4781-b0d8-a023cfe056be
+## Summary of work done
+
+### Project state
+The project formalizes the paper "The connective constant of the honeycomb lattice equals √(2+√2)" by Duminil-Copin and Smirnov (2012). The full project builds successfully with 3 sorry's remaining on the critical path.
+
+### What was done this session
+
+1. **Analyzed and documented the critical path** — Identified the exact 3 remaining sorry's that block the main theorem, traced their dependencies, and documented the mathematical content needed to prove each one.
+
+2. **Updated PROOF_STATUS.md** — Comprehensive status document describing:
+   - All fully proved infrastructure (algebraic identities, Fekete's lemma, submultiplicativity, cutting argument, bridge decay, etc.)
+   - The 3 critical sorry's with detailed descriptions of what's needed
+   - The dependency tree showing exactly how each sorry blocks the main theorem
+   - The 12 total sorry-containing files, noting which are on the critical path vs. redundant
+
+3. **Updated the blueprint** (`blueprint/src/content.tex`) — Updated the main theorem section to accurately reflect the current proof status, listing what's proved and what remains.
+
+4. **Attempted to prove all 3 critical sorry's** — Each was attempted with detailed proof sketches:
+   - `strip_identity_genuine` (Lemma 2): The parafermionic observable argument. The algebraic core (pair/triplet cancellation) is proved, but the combinatorial infrastructure (partitioning walks into pairs/triplets, exhaustiveness, discrete Stokes summation) is not yet formalized.
+   - `paper_bridge_recurrence`: Depends on the strip identity for the infinite strip + the cutting argument (which IS proved as `cutting_argument_proved`).
+   - `paper_bridge_decomp_injection`: The Hammersley-Welsh bridge decomposition. Independent of the strip identity but requires substantial combinatorial infrastructure (half-plane walk induction, injectivity of decomposition).
+
+### Three remaining sorry's
+
+1. **`strip_identity_genuine`** in `RequestProject/SAWStripIdentityCorrect.lean` — The strip identity (Lemma 2 of the paper). This is the mathematical core: at critical weight xc with spin σ = 5/8, the parafermionic observable satisfies a vertex relation at each strip vertex, and summing gives B_paper ≤ 1.
+
+2. **`paper_bridge_recurrence`** in `RequestProject/SAWPaperChain.lean` — The quadratic recurrence for bridge partition functions. Depends on sorry #1 (strip identity for the infinite strip) combined with the proved cutting argument.
+
+3. **`paper_bridge_decomp_injection`** in `RequestProject/SAWPaperChain.lean` — The Hammersley-Welsh bridge decomposition injection. Independent of sorry #1. Requires formalizing the inductive half-plane walk decomposition algorithm and proving injectivity.
+
+### What's fully proved
+All other components of the proof are formalized and verified, including: the hexagonal lattice model, SAW counting, submultiplicativity, Fekete's lemma, the connective constant definition, the algebraic identities (pair/triplet cancellation), the bridge infrastructure, the cutting argument, bridge decay bounds, bridge-SAW injections, the quadratic recurrence lower bound, Z(xc) divergence, Hammersley-Welsh summability, and the main theorem assembly.
+
 # Summary of changes for run d552bfab-a778-4268-a5c3-9c869628b21a
 ## Summary of work done
 

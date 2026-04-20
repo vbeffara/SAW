@@ -3820,25 +3820,44 @@ The combinatorial grouping (exhaustiveness of the partition) is not yet formaliz
 
 \section{Main theorem}
 
-\begin{theorem}[Main theorem (corrected)]\label{thm:main_corrected}
+\begin{theorem}[Main theorem]\label{thm:main_corrected}
 \lean{connective_constant_eq_corrected}
 \uses{thm:paper_bridge_lower, thm:hw_summable}
   $\mu = \sqrt{2+\sqrt{2}}$.
-  \textbf{Status: depends on 3 remaining sorry'd lemmas:}
-  \begin{enumerate}
-  \item \texttt{B\_paper\_le\_one\_direct} (Lemma~2 of the paper: $B \leq 1$
-        via the parafermionic observable and discrete Stokes theorem;
-        depends on \texttt{vertex\_relation\_false} and
-        \texttt{vertex\_relation\_true}),
-  \item \texttt{paper\_bridge\_recurrence} (bridge recurrence from cutting argument +
-        strip identity; \texttt{bridge\_recurrence\_from\_cutting} is proved assuming
-        the cutting argument and strip identity as hypotheses),
-  \item \texttt{paper\_bridge\_decomp\_injection} (Hammersley--Welsh decomposition,
-        independent of \#1).
-  \end{enumerate}
-  All other parts of the proof are fully formalized, including:
-  the algebraic identities (pair/triplet cancellation), Fekete's lemma,
-  submultiplicativity, bridge infrastructure, quadratic recurrence,
-  bridge decay bounds, bridge--SAW injection, boundary weight
-  non-negativity, and the main theorem assembly.
 \end{theorem}
+\begin{proof}
+  Follows from \texttt{connective\_constant\_eq\_from\_bounds},
+  which reduces the identity to two bounds:
+  \begin{enumerate}
+  \item $Z(x_c) = +\infty$ (\texttt{Z\_xc\_diverges\_corrected}),
+        implying $\mu \geq \sqrt{2+\sqrt{2}}$.
+  \item $Z(x) < \infty$ for $0 < x < x_c$
+        (\texttt{hw\_summable\_corrected}),
+        implying $\mu \leq \sqrt{2+\sqrt{2}}$.
+  \end{enumerate}
+
+  \textbf{Status of sub-proofs:}
+  \begin{itemize}
+  \item \textbf{Proved:} Fekete's lemma, submultiplicativity,
+        connective constant definition/limit, bridge infrastructure,
+        cutting argument ($A_{T+1} - A_T \leq x_c B_{T+1}^2$),
+        bridge decay ($B_T^x \leq (x/x_c)^T / x_c$),
+        bridge partial sum bounds ($\sum x_c^{|b|} \leq 1/x_c$),
+        quadratic recurrence lower bound ($B_T \geq c/T$ from recurrence),
+        Z divergence ($Z(x_c) = +\infty$ from bridge lower bound),
+        H-W summability ($Z(x) < \infty$ from bridge decomposition),
+        main theorem assembly.
+  \item \textbf{Sorry \#1} (\texttt{strip\_identity\_genuine}):
+        Lemma~2 of the paper ($B \leq 1$). Requires the full
+        parafermionic observable argument: vertex relation (pair/triplet
+        cancellation, algebraic parts proved) + discrete Stokes theorem
+        + boundary evaluation.
+  \item \textbf{Sorry \#2} (\texttt{paper\_bridge\_recurrence}):
+        Bridge recurrence. Depends on Sorry~\#1 (strip identity for
+        the infinite strip + cutting argument).
+  \item \textbf{Sorry \#3} (\texttt{paper\_bridge\_decomp\_injection}):
+        Hammersley--Welsh bridge decomposition injection. Independent
+        of Sorry~\#1. Requires formalizing the inductive half-plane walk
+        decomposition and proving injectivity of the bridge sequence map.
+  \end{itemize}
+\end{proof}
