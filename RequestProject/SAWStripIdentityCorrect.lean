@@ -273,7 +273,7 @@ lemma false_vertex_dir_sum (x y : ℤ) :
     (correctHexEmbed (x + 1, y, true) - correctHexEmbed (x, y, false)) +
     (correctHexEmbed (x, y + 1, true) - correctHexEmbed (x, y, false)) = 0 := by
   unfold correctHexEmbed;
-  norm_num [ Complex.ext_iff ] ; ring;
+  norm_num [ Complex.ext_iff ] ; ring_nf;
   norm_num
 
 /-
@@ -283,8 +283,8 @@ lemma true_vertex_dir_sum (x y : ℤ) :
     (correctHexEmbed (x, y, false) - correctHexEmbed (x, y, true)) +
     (correctHexEmbed (x - 1, y, false) - correctHexEmbed (x, y, true)) +
     (correctHexEmbed (x, y - 1, false) - correctHexEmbed (x, y, true)) = 0 := by
-  unfold correctHexEmbed; norm_num; ring;
-  norm_num [ Complex.ext_iff ] ; ring;
+  unfold correctHexEmbed; norm_num; ring_nf;
+  norm_num [ Complex.ext_iff ] ; ring_nf;
   grind
 
 /-

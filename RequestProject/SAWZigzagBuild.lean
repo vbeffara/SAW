@@ -977,7 +977,7 @@ lemma zigzag_endpoint_true_not_in_support (choices : List Bool) :
     induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ List.foldl ];
     · cases ih <;> rfl;
     · have h_support : ∀ (choices : List Bool) (x y : ℤ) (ih : Bool), (buildZigzagWalk (choices ++ [ih]) x y).val.support = (buildZigzagWalk choices x y).val.support ++ (buildZigzagWalk [ih] (List.foldl zigzag_step (x, y) choices).1 (List.foldl zigzag_step (x, y) choices).2).val.support.tail := by
-        intros choices x y ih; induction' choices with choices ih generalizing x y <;> simp_all +decide [ List.foldl ] ;
+        intros choices x y ih; induction' choices with choices ih generalizing x y <;> simp_all
         · cases ih <;> rfl;
         · rename_i k hk₁ hk₂;
           convert congr_arg ( fun l => [ ( x, y, false ) ] ++ [ ( x, y, true ) ] ++ l ) ( hk₂ ( zigzag_step ( x, y ) choices |>.1 ) ( zigzag_step ( x, y ) choices |>.2 ) ) using 1;
@@ -990,7 +990,7 @@ lemma zigzag_endpoint_true_not_in_support (choices : List Bool) :
       generalize_proofs at *;
       obtain ⟨ pos, hpos, hpos' ⟩ := h_support _ h; simp_all +decide [ zigzag_positions ] ;
       have h_scanl : ∀ (choices : List Bool) (pos : ℤ × ℤ), (List.foldl zigzag_step pos choices).1 + (List.foldl zigzag_step pos choices).2 = pos.1 + pos.2 - choices.length := by
-        intro choices pos; induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ zigzag_step ] ; ring;
+        intro choices pos; induction' choices using List.reverseRecOn with choices ih <;> simp_all +decide [ zigzag_step ] ; ring_nf;
         split_ifs <;> linarith! [ zigzag_step_sum ( List.foldl zigzag_step pos choices ) ih ] ;
       generalize_proofs at *; simp_all +decide [ sub_eq_iff_eq_add ] ;
       have := h_support _ _ |>.2 h; simp_all +decide [ List.mem_iff_get ] ;
@@ -1000,8 +1000,8 @@ lemma zigzag_endpoint_true_not_in_support (choices : List Bool) :
   · constructor;
     · intro h;
       have := buildZigzagWalk_support_structure choices 0 0 _ h; simp_all +decide [ zigzag_positions ] ;
-      have := zigzag_sum_eq_neg choices ( List.idxOf ( ( List.foldl zigzag_step ( 0, 0 ) choices ).1, ( List.foldl zigzag_step ( 0, 0 ) choices ).2 - 1 ) ( List.scanl ( fun pos c => zigzag_step pos c ) ( 0, 0 ) choices ) ) ?_ <;> simp_all +decide [ List.idxOf_lt_length_iff ];
-      any_goals exact Nat.le_of_lt_succ ( List.idxOf_lt_length_iff.mpr this |> Nat.lt_of_lt_of_le <| by simp +decide [ zigzag_positions ] );
+      have := zigzag_sum_eq_neg choices ( List.idxOf ( ( List.foldl zigzag_step ( 0, 0 ) choices ).1, ( List.foldl zigzag_step ( 0, 0 ) choices ).2 - 1 ) ( List.scanl ( fun pos c => zigzag_step pos c ) ( 0, 0 ) choices ) ) ?_ <;> simp_all
+      any_goals exact Nat.le_of_lt_succ ( List.idxOf_lt_length_iff.mpr this |> Nat.lt_of_lt_of_le <| by simp );
       have := zigzag_sum_eq_neg choices ( List.length choices ) ?_ <;> simp_all +decide [ zigzag_positions ];
       grind;
     · erw [ List.mem_cons, List.mem_singleton ] ; aesop ( simp_config := { decide := true } ) ;

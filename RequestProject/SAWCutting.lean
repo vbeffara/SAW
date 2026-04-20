@@ -67,7 +67,7 @@ lemma PaperSAW_A_inf_widen_injective (T : ℕ) :
 
 /-- A_inf is non-negative. -/
 lemma A_inf_nonneg (T : ℕ) (x : ℝ) (hx : 0 ≤ x) : 0 ≤ A_inf T x :=
-  tsum_nonneg fun s => pow_nonneg hx _
+  tsum_nonneg fun _ => pow_nonneg hx _
 
 /-! ## Cutting argument: walks reaching the boundary -/
 
@@ -132,8 +132,7 @@ theorem bridge_recurrence_from_cutting
       paper_bridge_partition T xc ≤ α * paper_bridge_partition (T + 1) xc ^ 2 +
         paper_bridge_partition (T + 1) xc := by
   use c_alpha * xc, mul_pos (by
-  exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ Real.pi_pos ], by linarith [ Real.pi_pos ] ⟩) (by
-  exact?), by
+  exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ Real.pi_pos ], by linarith [ Real.pi_pos ] ⟩) xc_pos, by
     simp +zetaDelta at *;
     intros T hT
     obtain ⟨E₁, hE₁⟩ := h_strip T hT

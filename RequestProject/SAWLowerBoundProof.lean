@@ -83,8 +83,8 @@ theorem case2_B_lower_bound
   have h_quad_rec : ∃ c > 0, ∀ T, 1 ≤ T → c / T ≤ B T := by
     have h_rec : ∀ T, 1 ≤ T → c_a * α * (B (T + 1)) ^ 2 + B (T + 1) ≥ B T := by
       exact fun T hT => by nlinarith [ hstrip T hT, hstrip ( T + 1 ) ( by linarith ), hrec T hT ] ;
-    apply quadratic_recurrence_exists_lower (mul_pos hca hα) hB_pos (fun T hT => by
-      nlinarith [ hstrip T hT, hA_nonneg T hT ]) h_rec;
+    apply quadratic_recurrence_exists_lower (mul_pos hca hα) (fun T hT => by
+      nlinarith [ hstrip T hT, hA_nonneg T hT, hB_pos T hT ]) h_rec;
   exact h_quad_rec
 
 /-
@@ -100,7 +100,7 @@ theorem case2_bridge_sum_diverges
     (hrec : ∀ T, 1 ≤ T → A (T + 1) - A T ≤ α * (B (T + 1)) ^ 2) :
     ¬ Summable B := by
   obtain ⟨c, hc_pos, hc_bound⟩ : ∃ c > 0, ∀ T, 1 ≤ T → c / T ≤ B T := by
-    exact?;
+    exact case2_B_lower_bound hca hα hA_nonneg hB_pos hstrip hrec;
   have h_diverge : ¬ Summable (fun T : ℕ => c / (T + 1 : ℝ)) := by
     erw [ summable_mul_left_iff ] <;> norm_num ; exact_mod_cast mt ( summable_nat_add_iff 1 |>.1 ) Real.not_summable_natCast_inv;
     positivity;
