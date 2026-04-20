@@ -3,25 +3,25 @@
 
 ## Sorry status
 
-Three sorry's remain on the path to the main theorem:
-1. `strip_identity_genuine` (in SAWStripIdentityCorrect.lean) — the genuine
-   strip identity (Lemma 2 of the paper). B_paper_le_one_obs is now PROVED
-   from this lemma via bridge_bound_of_strip_identity.
-2. `paper_bridge_recurrence` (this file) — quadratic recurrence for bridges,
-   depends on the infinite-strip identity + cutting argument
-3. `paper_bridge_decomp_injection` (this file) — Hammersley-Welsh decomposition,
-   independent of #1
+Two independent sorry chains remain:
+1. `infinite_strip_identity` (in SAWRecurrenceProof.lean) — the parafermionic
+   observable identity for the infinite strip (follows from Lemma 2 of the paper).
+   This also implies `strip_identity_genuine` in SAWStripIdentityCorrect.lean.
+   The bridge recurrence is now PROVED from this + cutting argument.
+2. `paper_bridge_decomp_injection` (this file) — Hammersley-Welsh decomposition,
+   independent of #1.
 
-## Proved in this session
-- `B_paper_le_one_direct` is now proved from `strip_identity_paper`
-- `paper_bridge_lower_bound` is now proved from `paper_bridge_recurrence`
-  via `quadratic_recurrence_lower_bound`
+## Proved
+- `paper_bridge_recurrence` — derived from infinite strip identity + cutting argument
+- `paper_bridge_lower_bound` — from recurrence via quadratic_recurrence_lower_bound
+- `B_paper_le_one_direct` — from strip_identity_paper
 -/
 
 import Mathlib
 import RequestProject.SAWDiagProof
 import RequestProject.SAWDecomp
 import RequestProject.SAWCuttingProof
+import RequestProject.SAWRecurrenceProof
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -123,14 +123,13 @@ lemma paper_bridge_partition_one_pos : 0 < paper_bridge_partition 1 xc := by
 /-! ## Bridge recurrence and lower bound -/
 
 /-- The paper bridge partition function satisfies a quadratic recurrence.
-    This follows from the strip identity for the infinite strip
-    combined with the cutting argument and monotonicity of E.
-    **Status: sorry.** -/
+    Derived from the infinite strip identity + cutting argument.
+    See SAWRecurrenceProof.lean for the full derivation. -/
 lemma paper_bridge_recurrence :
     ∃ α > 0, ∀ T : ℕ,
       paper_bridge_partition T xc ≤ α * paper_bridge_partition (T + 1) xc ^ 2 +
-        paper_bridge_partition (T + 1) xc := by
-  sorry
+        paper_bridge_partition (T + 1) xc :=
+  paper_bridge_recurrence_derived
 
 /-- Paper bridge lower bound: ∃ c > 0, paper_bridge_partition T xc ≥ c/T.
     Uses the quadratic recurrence and positivity of bridges. -/

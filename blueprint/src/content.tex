@@ -3116,16 +3116,74 @@ the paper's convention).
   $B(1) > 0$ from bridge positivity.
 \end{proof}
 
+\begin{lemma}[Infinite strip identity]\label{lem:infinite_strip_identity}
+\lean{infinite_strip_identity}
+\uses{lem:pair_cancel, lem:triplet_cancel}
+  For the infinite strip $S_T$ with $T \geq 1$:
+  $1 = c_\alpha \cdot A_{\inf}(T, x_c) + x_c \cdot \texttt{paper\_bridge\_partition}(T, x_c).$
+  In the infinite strip, there is no escape boundary ($E = 0$).
+  \textbf{Status: sorry.} Follows from the parafermionic observable
+  argument applied to the infinite strip.
+\end{lemma}
+
+\begin{lemma}[Bridge partition at width zero]\label{lem:bridge_zero}
+\lean{paper_bridge_partition_zero}
+\leanok
+  $\texttt{paper\_bridge\_partition}(0, x_c) = 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+  PaperBridge~0 is empty: a bridge of width~0 requires the endpoint
+  to have $\operatorname{diagCoord} = 0$ on the FALSE sublattice,
+  but PaperInfStrip~0 only allows FALSE vertices with
+  $-0 \leq d \leq -1$, which is empty.
+\end{proof}
+
+\begin{lemma}[Bridge difference identity]\label{lem:bridge_diff_eq}
+\lean{bridge_diff_eq}
+\leanok
+\uses{lem:infinite_strip_identity}
+  $B(T) - B(T{+}1) = \frac{c_\alpha}{x_c} \cdot (A_{\inf}(T{+}1) - A_{\inf}(T))$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Subtract the infinite strip identity at $T$ and $T{+}1$.
+\end{proof}
+
+\begin{theorem}[Bridge recurrence proved]\label{thm:bridge_recurrence_proved}
+\lean{bridge_recurrence_proved}
+\leanok
+\uses{lem:bridge_diff_eq, lem:cutting}
+  For $T \geq 1$:
+  $B(T) \leq c_\alpha \cdot B(T{+}1)^2 + B(T{+}1)$.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{lem:bridge_diff_eq, lem:cutting}
+  By \texttt{bridge\_diff\_eq}:
+  $B(T) - B(T{+}1) = \frac{c_\alpha}{x_c} \cdot (A(T{+}1) - A(T))$.
+  By the cutting argument: $A(T{+}1) - A(T) \leq x_c \cdot B(T{+}1)^2$.
+  Therefore $B(T) - B(T{+}1) \leq c_\alpha \cdot B(T{+}1)^2$.
+\end{proof}
+
 \begin{theorem}[Paper bridge recurrence]\label{thm:paper_bridge_recurrence}
 \lean{paper_bridge_recurrence}
-\uses{thm:strip_identity_paper}
+\leanok
+\uses{thm:bridge_recurrence_proved, lem:bridge_zero}
   $\exists \alpha > 0$, $\forall T$:
   $\texttt{paper\_bridge\_partition}(T, x_c) \leq
   \alpha \cdot \texttt{paper\_bridge\_partition}(T{+}1, x_c)^2 +
   \texttt{paper\_bridge\_partition}(T{+}1, x_c)$.
-  \textbf{Status: sorry.} Follows from the infinite-strip identity
-  and the cutting argument.
+  \textbf{Status: proved} from \texttt{bridge\_recurrence\_proved}
+  (for $T \geq 1$) and \texttt{paper\_bridge\_partition\_zero} (for $T = 0$).
 \end{theorem}
+\begin{proof}
+\leanok
+\uses{thm:bridge_recurrence_proved, lem:bridge_zero}
+  Take $\alpha = c_\alpha > 0$. For $T \geq 1$, use
+  \texttt{bridge\_recurrence\_proved}. For $T = 0$,
+  $B(0) = 0$ by \texttt{paper\_bridge\_partition\_zero}.
+\end{proof}
 
 \begin{theorem}[Paper bridge decomposition injection]\label{thm:paper_bridge_decomp}
 \lean{paper_bridge_decomp_injection}
@@ -3818,6 +3876,68 @@ also uses edge $\{v, w_j\}$ from the opposite side).
 \textbf{Status: the algebraic identities (triplet and pair cancellation) are proved.
 The combinatorial grouping (exhaustiveness of the partition) is not yet formalized.}
 
+\subsection{Walk extension and retraction infrastructure}
+
+The triplet grouping requires extending a walk by one step and
+retracting (removing the last step). These operations are formalized
+in \texttt{SAWWalkExtension.lean}.
+
+\begin{definition}[Walk extension]\label{def:walkExtend}
+\lean{walkExtend}
+\leanok
+  Given a walk $p : v \to w$ and an adjacency $w \sim u$,
+  $\texttt{walkExtend}(p, h) : v \to u$ appends one step.
+\end{definition}
+
+\begin{lemma}[Extension preserves path property]\label{lem:walkExtend_isPath}
+\lean{walkExtend_isPath}
+\leanok
+\uses{def:walkExtend}
+  If $p$ is a path and $u \notin \operatorname{supp}(p)$,
+  then $\texttt{walkExtend}(p, h)$ is a path.
+\end{lemma}
+\begin{proof}
+\leanok
+  The extended support is $\operatorname{supp}(p) \mathbin{++} [u]$,
+  which is duplicate-free since $u \notin \operatorname{supp}(p)$.
+\end{proof}
+
+\begin{definition}[Walk retraction]\label{def:walkRetract}
+\lean{walkRetract}
+\leanok
+  Given a walk $p : v \to w$ of length $\geq 1$,
+  $\texttt{walkRetract}(p)$ returns $(u, q, h)$ where
+  $q : v \to u$ is the walk with the last step removed
+  and $h : u \sim w$.
+\end{definition}
+
+\begin{lemma}[Retraction preserves path property]\label{lem:walkRetract_isPath}
+\lean{walkRetract_isPath}
+
+\begin{lemma}[Retraction preserves path property]\label{lem:walkRetract_isPath}
+\lean{walkRetract_isPath}
+\leanok
+\uses{def:walkRetract}
+  If $p$ is a path, so is $\texttt{walkRetract}(p)$.
+\end{lemma}
+\begin{proof}
+\leanok
+  The retracted walk's support is a sublist of $p$'s support,
+  which is duplicate-free.
+\end{proof}
+
+\begin{lemma}[Retract then extend = identity]\label{lem:walkRetract_extend}
+\lean{walkRetract_extend}
+\leanok
+\uses{def:walkExtend, def:walkRetract}
+  For a path $p$ of length $\geq 1$:
+  $\texttt{walkExtend}(\texttt{walkRetract}(p)) = p$.
+\end{lemma}
+\begin{proof}
+\leanok
+  By induction on $p$.
+\end{proof}
+
 \section{Main theorem}
 
 \begin{theorem}[Main theorem]\label{thm:main_corrected}
@@ -3843,19 +3963,19 @@ The combinatorial grouping (exhaustiveness of the partition) is not yet formaliz
         cutting argument ($A_{T+1} - A_T \leq x_c B_{T+1}^2$),
         bridge decay ($B_T^x \leq (x/x_c)^T / x_c$),
         bridge partial sum bounds ($\sum x_c^{|b|} \leq 1/x_c$),
+        \textbf{bridge recurrence} ($B_T \leq c_\alpha B_{T+1}^2 + B_{T+1}$,
+        derived from infinite strip identity + cutting argument),
         quadratic recurrence lower bound ($B_T \geq c/T$ from recurrence),
         Z divergence ($Z(x_c) = +\infty$ from bridge lower bound),
         H-W summability ($Z(x) < \infty$ from bridge decomposition),
         main theorem assembly.
-  \item \textbf{Sorry \#1} (\texttt{strip\_identity\_genuine}):
-        Lemma~2 of the paper ($B \leq 1$). Requires the full
-        parafermionic observable argument: vertex relation (pair/triplet
+  \item \textbf{Sorry \#1} (\texttt{infinite\_strip\_identity} and
+        \texttt{strip\_identity\_genuine}):
+        The parafermionic observable identity for the strip.
+        Requires the full vertex relation (pair/triplet
         cancellation, algebraic parts proved) + discrete Stokes theorem
         + boundary evaluation.
-  \item \textbf{Sorry \#2} (\texttt{paper\_bridge\_recurrence}):
-        Bridge recurrence. Depends on Sorry~\#1 (strip identity for
-        the infinite strip + cutting argument).
-  \item \textbf{Sorry \#3} (\texttt{paper\_bridge\_decomp\_injection}):
+  \item \textbf{Sorry \#2} (\texttt{paper\_bridge\_decomp\_injection}):
         Hammersley--Welsh bridge decomposition injection. Independent
         of Sorry~\#1. Requires formalizing the inductive half-plane walk
         decomposition and proving injectivity of the bridge sequence map.
