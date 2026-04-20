@@ -1,3 +1,36 @@
+# Summary of changes for run d88ea71a-f70b-4359-a80c-55b0774b2e27
+## Summary of work done
+
+### Analysis and documentation
+I performed an in-depth analysis of the 3 remaining sorry's that block the main theorem `connective_constant_eq_corrected` (μ = √(2+√2)), and updated the project documentation accordingly.
+
+### Key finding: Single mathematical bottleneck
+All three sorry's trace back to a single fundamental gap: **`strip_identity_genuine`** (Lemma 2 of Duminil-Copin & Smirnov 2012), the parafermionic observable argument. This is the core mathematical innovation of the paper — it shows B_paper(T,L,xc) ≤ 1 using a complex-valued observable that satisfies vertex relations at each strip vertex.
+
+The three sorry's are:
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — The strip identity itself. Requires the full parafermionic observable: vertex relation (pair/triplet cancellation), discrete Stokes theorem, boundary evaluation.
+2. **`paper_bridge_recurrence`** (SAWPaperChain.lean) — Bridge quadratic recurrence. Depends on sorry #1: needs the EXACT infinite-strip identity 1 = c_α·A + xc·B (not just the existential bound B ≤ 1), combined with the cutting argument (which IS proved).
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh decomposition. Requires substantial combinatorial infrastructure (half-plane walk decomposition, bridge sequence injectivity). Also depends on sorry #1 through `paper_bridge_decay`.
+
+### Technical analysis of the parafermionic gap
+Through detailed mathematical analysis, I identified the specific technical challenges:
+- The **winding** of a SAW on the hex lattice does NOT telescope to just the exit-minus-entry direction angle. Signed turn angles (in (-π,π]) differ from raw direction differences by multiples of 2π at certain vertex configurations (when d_{k+1} - d_k = ±5π/3).
+- This means different SAWs to the same exit mid-edge can have **different complex weights**, making the vertex relation a non-trivial identity about SAW counting.
+- The **algebraic core** is fully proved: `pair_cancellation` and `triplet_cancellation` provide the cancellation identities. What's missing is the **combinatorial infrastructure**: constructing the pair/triplet partition of walks at each vertex and proving exhaustiveness.
+
+### Updated documentation
+- Updated `PROOF_STATUS.md` with detailed analysis of each sorry, including:
+  - What mathematical infrastructure is needed
+  - Why the existing existential form of the strip identity is insufficient for the recurrence
+  - The dependency structure showing all sorry's trace to strip_identity_genuine
+- The blueprint (`blueprint/src/content.tex`) already contains accurate descriptions of the proof status.
+
+### Project state
+- The project builds successfully with `lake build` (8045 jobs)
+- The main theorem `connective_constant_eq_corrected` compiles with sorry propagation from the 3 critical sorry's
+- All other components are fully proved: Fekete's lemma, submultiplicativity, connective constant, cutting argument, bridge decay, bridge-SAW injections, zigzag bounds, quadratic recurrence lower bound, etc.
+- The main theorem uses only standard axioms (`propext`, `Classical.choice`, `Quot.sound`) plus `sorryAx`
+
 # Summary of changes for run 8949cbcc-3671-4781-b0d8-a023cfe056be
 ## Summary of work done
 
