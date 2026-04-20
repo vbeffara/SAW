@@ -2682,9 +2682,31 @@ geometric infrastructure.
   Proved in \texttt{SAWPaperChain.lean}.
 \end{proof}
 
+\begin{lemma}[Powerset product identity]\label{lem:powerset_prod}
+\lean{powerset_prod_identity}
+\leanok
+  $\displaystyle
+  \sum_{S \subseteq \operatorname{range}(N)} \prod_{T \in S} f(T)
+  = \prod_{T \in \operatorname{range}(N)} (1 + f(T)).
+  $
+  From Mathlib (\texttt{Finset.prod\_one\_add}).
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct application of \texttt{Finset.prod\_one\_add}.
+\end{proof}
+
+\begin{definition}[Diagonal coordinate]\label{def:diagCoord}
+\lean{diagCoord}
+\leanok
+\uses{def:hex_lattice}
+  The diagonal coordinate of a hex vertex: $d(v) = v_1 + v_{2,1}$.
+  Each hexagonal step changes $d$ by at most~$1$.
+\end{definition}
+
 \begin{theorem}[Paper bridge decomposition injection]\label{thm:paper_bridge_decomp}
 \lean{paper_bridge_decomp_injection}
-\uses{def:paper_bridge_partition}
+\uses{def:paper_bridge_partition, lem:powerset_prod, def:diagCoord}
   Every SAW decomposes into paper bridges with strictly monotone widths:
   \[ \sum_{n \leq N} c_n x^n \leq 2 \cdot
      \left(\sum_{S \subseteq \{1,\ldots,N\}} \prod_{T \in S}
@@ -2704,7 +2726,14 @@ geometric infrastructure.
     and connecting edges reduce the total.
   \end{enumerate}
   Helper infrastructure is provided in \texttt{SAWDecompHelpers.lean}
+  and \texttt{SAWHWPaperProof.lean}
   (diagonal coordinate properties, walk splitting, weight bounds).
+
+  The powerset product identity
+  $\sum_{S \subseteq \operatorname{range}(N)} \prod_{T \in S} f(T)
+  = \prod_{T \in \operatorname{range}(N)} (1 + f(T))$
+  is provided by \texttt{powerset\_prod\_identity}
+  (from Mathlib's \texttt{Finset.prod\_one\_add}).
 \end{theorem}
 
 \begin{theorem}[Paper bridge decay]\label{thm:paper_bridge_decay_thm}

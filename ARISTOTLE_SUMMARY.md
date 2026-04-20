@@ -1,3 +1,44 @@
+# Summary of changes for run 548c72db-aded-4134-bf56-07beefe607da
+## Summary of work done
+
+### New infrastructure built
+
+**`RequestProject/SAWHWPaperProof.lean`** (new file, fully proved, no sorries):
+- `powerset_prod_identity`: The standard powerset-product identity ∑_{S⊆range(N)} ∏_{T∈S} f(T) = ∏_{T∈range(N)} (1+f(T)), proved using Mathlib's `Finset.prod_one_add`. This is a key ingredient for the Hammersley-Welsh decomposition.
+- `diagCoord`: The diagonal coordinate d(v) = v₁ + v₂₁ for hex vertices, which is the natural coordinate for the paper's strip domains.
+- `diagCoord_step_bound`: Each hex step changes diagCoord by at most 1.
+- `saw_diagCoord_le_length` and `saw_diagCoord_upper`: Bounds on diagonal coordinates of SAW vertices.
+
+### Blueprint updated
+
+**`blueprint/src/content.tex`**: Added entries for:
+- Powerset product identity (`lem:powerset_prod`) — marked as proved
+- Diagonal coordinate definition (`def:diagCoord`) — marked as proved
+- Updated the HW decomposition theorem to reference the new infrastructure
+
+### Documentation updated
+
+**`PROOF_STATUS.md`**: Comprehensive update with:
+- Clear identification of exactly 3 sorry lemmas on the critical path
+- Detailed dependency tree showing how sorries affect the main theorem
+- Description of available vs. missing infrastructure for each sorry chain
+- File organization guide (critical vs. infrastructure vs. superseded files)
+
+### Analysis of the remaining mathematical gaps
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on 3 sorry'd lemmas in 2 independent chains:
+
+**Sorry Chain 1** (parafermionic observable — Lemma 2 of the paper):
+- `strip_identity_genuine` in `SAWStripIdentityCorrect.lean`
+- `infinite_strip_identity` in `SAWRecurrenceProof.lean`
+- Both require formalizing the vertex relation (pair/triplet walk partition) and discrete Stokes summation. The algebraic core (pair_cancellation, triplet_cancellation, boundary coefficient positivity) is already proved. What remains is the combinatorial walk partitioning infrastructure.
+
+**Sorry Chain 2** (Hammersley-Welsh decomposition):
+- `paper_bridge_decomp_injection` in `SAWPaperChain.lean`
+- Requires formalizing the half-plane walk decomposition (by induction on width), bridge extraction and translation, injectivity, and weight accounting. The powerset product identity (now proved) simplifies the RHS.
+
+Both sorry chains represent deep mathematical content that requires substantial formalization infrastructure beyond what the automated prover can handle in isolation. The project is well-structured for incremental progress on these gaps.
+
 # Summary of changes for run 0c57071c-9864-4621-bf3d-2948e12b7853
 # Session Summary: Continued formalization of SAW.tex
 
