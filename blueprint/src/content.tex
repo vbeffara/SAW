@@ -4092,3 +4092,90 @@ The following infrastructure supports the bridge decomposition argument.
   By induction on the list of bridge lengths, using
   $x^n = x^{\ell_1} \cdot x^{n-\ell_1}$ and the induction hypothesis.
 \end{proof}
+
+\section{Walk maximum diagCoord}\label{sec:walk_max_diag}
+
+\begin{definition}[Walk maximum diagCoord]\label{def:walkMaxDiagCoord}
+\lean{walkMaxDiagCoord}
+\leanok
+  For a walk $p : v \to w$ in \texttt{hexGraph}, the maximum of
+  $\operatorname{diagCoord}(u)$ over all $u \in \operatorname{supp}(p)$.
+\end{definition}
+
+\begin{lemma}[walkMaxDiagCoord is an upper bound]\label{lem:walkMaxDiagCoord_ge}
+\lean{walkMaxDiagCoord_ge}
+\leanok
+\uses{def:walkMaxDiagCoord}
+  For every vertex $u$ in the support of a walk $p$,
+  $\operatorname{diagCoord}(u) \leq \texttt{walkMaxDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By properties of \texttt{List.foldl max}.
+\end{proof}
+
+\begin{definition}[Half-plane walk width]\label{def:halfPlaneWidth}
+\lean{halfPlaneWidth}
+\leanok
+\uses{def:walkMaxDiagCoord}
+  The width of a half-plane walk $p$ from vertex $v$ is
+  $\texttt{walkMaxDiagCoord}(p) - \operatorname{diagCoord}(v)$,
+  which equals the maximum depth reached relative to the starting vertex.
+\end{definition}
+
+\begin{lemma}[Half-plane width zero characterization]\label{lem:halfPlaneWidth_zero}
+\lean{halfPlaneWidth_zero_iff}
+\leanok
+\uses{def:halfPlaneWidth}
+  The width is zero if and only if all vertices in the walk have the same
+  diagCoord as the starting vertex.
+\end{lemma}
+\begin{proof}\leanok
+  The forward direction uses that all vertices are between the min and max.
+  The backward direction uses that max = start diagCoord when all vertices
+  agree.
+\end{proof}
+
+\begin{lemma}[SAW count upper bound]\label{lem:saw_count_upper}
+\lean{saw_count_upper_bound'}
+\leanok
+  For $n \geq 1$, $c_n \leq 3 \cdot 2^{n-1}$.
+\end{lemma}
+\begin{proof}\leanok
+  Each vertex has at most 3 neighbors; the first step has 3 choices,
+  each subsequent step has at most 2 choices (can't revisit the
+  previous vertex).
+\end{proof}
+
+\section{Hammersley--Welsh bridge decomposition}\label{sec:hw_decomp}
+
+The Hammersley--Welsh bridge decomposition provides an injection from
+SAWs (with a binary tag) to pairs of bridge sequences with strictly
+decreasing widths. This is the content of Section~3 of the paper,
+starting from ``any self-avoiding walk can be canonically decomposed
+into a sequence of bridges''.
+
+\begin{theorem}[Bridge decomposition injection]\label{thm:hw_decomp}
+\lean{paper_bridge_decomp_injection}
+\uses{lem:walkMaxDiagCoord_ge, lem:saw_suffix_half_plane, lem:bridge_weight}
+  For $0 < x < x_c$ and any $N \in \mathbb{N}$,
+  \[
+    \sum_{n=0}^{N} c_n \, x^n
+    \;\leq\;
+    2 \left(
+      \sum_{S \subseteq \{0,\ldots,N{-}1\}}
+      \prod_{T \in S} B_{T+1}(x)
+    \right)^{\!2}.
+  \]
+  \textbf{Status: sorry.}
+  The proof requires:
+  \begin{enumerate}
+  \item Splitting each SAW at its first vertex of minimum diagCoord.
+  \item Decomposing each half-plane walk into bridges of strictly
+    decreasing widths (by strong induction on the walk width).
+  \item Mapping each extracted bridge to a \texttt{PaperBridge}
+    via a graph automorphism (translation + optional flip).
+  \item Proving the decomposition map is injective.
+  \item Verifying the weight factorization:
+    $x^n = \prod x^{|b_i|}$ where $|b_i|$ are bridge lengths.
+  \end{enumerate}
+\end{theorem}

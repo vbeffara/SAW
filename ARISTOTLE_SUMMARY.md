@@ -1,3 +1,43 @@
+# Summary of changes for run 0d4ef14f-370b-47d4-a048-12d6cef1d6e8
+## Summary of Work Done
+
+### New Mathematical Infrastructure Added
+
+I created a new file `RequestProject/SAWHWDecompFinal.lean` (sorry-free, builds cleanly) with the following proved results supporting the Hammersley-Welsh bridge decomposition:
+
+1. **`walkMaxDiagCoord`** — Definition of the maximum diagonal coordinate in a walk's support, with the proved bound `walkMaxDiagCoord_ge`: every vertex in the walk's support has diagCoord ≤ walkMaxDiagCoord.
+
+2. **`halfPlaneWidth`** — Definition of the width of a half-plane walk (max diagCoord minus starting diagCoord), with the proved characterization `halfPlaneWidth_zero_iff`: width is zero iff all vertices share the same diagCoord.
+
+3. **`saw_count_upper_bound'`** — The SAW count bound c_n ≤ 3·2^{n-1} for n ≥ 1, proved from the existing `saw_count_upper_bound`.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with:
+- New section on walk maximum diagCoord infrastructure (§Walk maximum diagCoord)
+- New section on the Hammersley-Welsh bridge decomposition (§Hammersley-Welsh bridge decomposition), including a detailed proof outline for `paper_bridge_decomp_injection` listing the 5 required steps
+- Lean declaration links and proof status markers for all new results
+
+### Documentation Updates
+
+Rewrote `PROOF_STATUS.md` with:
+- Complete dependency tree of the proof chain
+- Detailed description of both remaining sorry chains
+- Comprehensive list of all proved infrastructure
+- Clear file organization guide
+
+### Status of the 3 Critical Sorries
+
+The three remaining sorry lemmas on the critical path are **unchanged** — they represent deep mathematical arguments that require substantial new formalization:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean:361) — The parafermionic observable strip identity. Requires formalizing the mid-edge walk model, walk classification into pairs/triplets, and discrete Stokes summation.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean:49) — The infinite strip version. Can be derived from #1 by taking L → ∞.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean:258) — The Hammersley-Welsh bridge decomposition injection. Requires formalizing the half-plane walk bridge extraction by strong induction on width, mapping to PaperBridges via graph automorphisms, and proving injectivity.
+
+Both sorry chains are independent — #1-#2 form one chain (blocking both directions of μ = √(2+√2)) and #3 is a separate chain (blocking only the upper bound μ ≤ √(2+√2)).
+
 # Summary of changes for run 9c106652-bd73-41cf-b8c9-e3b7332ff3a9
 # Session Summary: Formalizing SAW.tex — Bridge Decomposition Infrastructure
 
