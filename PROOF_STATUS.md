@@ -21,6 +21,12 @@ The following are fully proved (no sorry):
 - **Algebraic identities** (Lemma 1 of the paper):
   - `pair_cancellation`: j · conj(λ)⁴ + conj(j) · λ⁴ = 0
   - `triplet_cancellation`: 1 + xc · j · conj(λ) + xc · conj(j) · λ = 0
+- **Direction vectors** (vertex relation infrastructure, SAWVertexRelFull.lean):
+  - `false_to_true_dir`: embed(TRUE(x,y)) - embed(FALSE(x,y)) = 1
+  - `false_to_true_xp1_dir`: embed(TRUE(x+1,y)) - embed(FALSE(x,y)) = j
+  - `false_to_true_yp1_dir`: embed(TRUE(x,y+1)) - embed(FALSE(x,y)) = conj(j)
+- **Walk extension**: `walkCons'_isPath` — extending a path by one step preserves path
+- **Adjacency lemmas**: `adj_false_true_same/xp1/yp1`, `adj_true_false_same/xm1/ym1`
 - **Bridge infrastructure**: PaperBridge, paper_bridge_partition, paper_bridge_length_ge
 - **Cutting argument**: `cutting_argument_proved` — A_{T+1} - A_T ≤ xc · B_{T+1}²
 - **Bridge recurrence**: `paper_bridge_recurrence` — derived from

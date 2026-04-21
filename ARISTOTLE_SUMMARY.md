@@ -1,3 +1,50 @@
+# Summary of changes for run d01f7052-5105-4ceb-a6b7-44d54b1222e6
+## Session Summary
+
+### New Mathematical Content Added
+
+Created `RequestProject/SAWVertexRelFull.lean` — a new sorry-free file containing infrastructure for the vertex relation (Lemma 1 of Duminil-Copin & Smirnov 2012). All lemmas are fully proved with clean axioms:
+
+**Walk extension infrastructure:**
+- `walkCons'` — definition: extend a walk by one step
+- `walkCons'_length` — the extended walk has length + 1
+- `walkCons'_support` — the extended walk's support = original ++ [new vertex]
+- `walkCons'_isPath` — extending a path by one step to a non-visited vertex gives a path
+
+**Adjacency lemmas for hexGraph (6 lemmas, all proved):**
+- `adj_false_true_same/xp1/yp1` — FALSE→TRUE adjacency for each neighbor type
+- `adj_true_false_same/xm1/ym1` — TRUE→FALSE adjacency for each neighbor type
+
+**Direction vector computations (key for the vertex relation):**
+- `false_to_true_xp1_dir` — direction FALSE(x,y)→TRUE(x+1,y) = j = exp(i·2π/3)
+- `false_to_true_yp1_dir` — direction FALSE(x,y)→TRUE(x,y+1) = conj(j) = exp(-i·2π/3)
+- `one_add_j_add_conj_j` — 1 + j + conj(j) = 0 (cube roots of unity sum to zero)
+- `false_dir_eq_cube_roots` — the three direction vectors from a FALSE vertex are exactly 1, j, conj(j)
+- `false_dir_sum_zero` — the three direction vectors sum to zero
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex`:
+- Updated `lem:false_directions` to reference the individual direction lemmas with correct Lean names (`false_to_true_dir`, `false_to_true_xp1_dir`, `false_to_true_yp1_dir`)
+- Added `lem:cube_roots_sum` — cube roots of unity sum to zero (`one_add_j_add_conj_j`)
+- Added `lem:false_cube_roots` — FALSE direction vectors are cube roots of unity
+
+Updated `PROOF_STATUS.md`:
+- Added new direction vector lemmas, walk extension, and adjacency lemmas to "Fully proved infrastructure"
+
+### Current State
+
+The 3 critical-path sorry lemmas remain unchanged:
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — the parafermionic observable identity for the finite strip (Lemma 2)
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — same for the infinite strip
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh bridge decomposition
+
+These are deep mathematical results requiring:
+- Sorry #1/#2: Walk pairing/triplet partitioning → discrete Stokes summation → boundary evaluation. The algebraic ingredients (pair_cancellation, triplet_cancellation) and geometric ingredients (direction vectors, cube root sums) are proved. The combinatorial infrastructure for partitioning walks into pairs/triplets at each vertex remains the key gap.
+- Sorry #3: Inductive half-plane walk decomposition into bridges + injectivity proof.
+
+The new lemmas in `SAWVertexRelFull.lean` provide foundational building blocks needed for the vertex relation proof (Lemma 1), which is the core ingredient for Sorry #1 and #2.
+
 # Summary of changes for run 548c72db-aded-4134-bf56-07beefe607da
 ## Summary of work done
 

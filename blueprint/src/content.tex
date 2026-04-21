@@ -3529,20 +3529,23 @@ evaluation step of the strip identity proof.
 \section{Direction vectors at hex vertices}\label{sec:dir_vectors}
 
 \begin{lemma}[FALSE vertex directions]\label{lem:false_directions}
-\lean{false_directions}
+\lean{false_to_true_dir}
+\lean{false_to_true_xp1_dir}
+\lean{false_to_true_yp1_dir}
 \leanok
 \uses{def:hex_embed}
   At a FALSE vertex $(x,y)$, the three direction vectors to its neighbors are:
   \begin{align*}
-    \operatorname{embed}(\mathrm{TRUE}(x,y)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= 1 \\
-    \operatorname{embed}(\mathrm{TRUE}(x{+}1,y)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= j = e^{2\pi i/3} \\
-    \operatorname{embed}(\mathrm{TRUE}(x,y{+}1)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= \bar{j} = e^{-2\pi i/3}
+    \operatorname{embed}(\mathrm{TRUE}(x,y)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= 1 & \quad\text{(\texttt{false\_to\_true\_dir})}\\
+    \operatorname{embed}(\mathrm{TRUE}(x{+}1,y)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= j = e^{2\pi i/3} & \quad\text{(\texttt{false\_to\_true\_xp1\_dir})}\\
+    \operatorname{embed}(\mathrm{TRUE}(x,y{+}1)) - \operatorname{embed}(\mathrm{FALSE}(x,y)) &= \bar{j} = e^{-2\pi i/3} & \quad\text{(\texttt{false\_to\_true\_yp1\_dir})}
   \end{align*}
   These are the three cube roots of unity, confirming the regular hexagonal geometry.
 \end{lemma}
 \begin{proof}
 \leanok
   Direct computation from the definition of \texttt{correctHexEmbed}.
+  All three cases proved in \texttt{SAWVertexRelFull.lean} and \texttt{SAWStripIdentityCorrect.lean}.
 \end{proof}
 
 \begin{lemma}[Triplet sum zero]\label{lem:triplet_sum_zero}
@@ -3555,6 +3558,30 @@ evaluation step of the strip identity proof.
 \begin{proof}
 \leanok
   Immediate from \texttt{triplet\_cancellation}.
+\end{proof}
+
+\begin{lemma}[Cube roots of unity sum to zero]\label{lem:cube_roots_sum}
+\lean{one_add_j_add_conj_j}
+\leanok
+  $1 + j + \bar{j} = 0$, since $j = e^{2\pi i/3}$ is a primitive
+  cube root of unity and the sum of all cube roots of unity vanishes.
+\end{lemma}
+\begin{proof}
+\leanok
+  Compute $j + \bar{j} = 2\cos(2\pi/3) = -1$.
+  Proved in \texttt{SAWVertexRelFull.lean}.
+\end{proof}
+
+\begin{lemma}[FALSE direction vectors = cube roots of unity]\label{lem:false_cube_roots}
+\lean{false_dir_eq_cube_roots}
+\leanok
+\uses{lem:false_directions, lem:cube_roots_sum}
+  The three direction vectors from a FALSE vertex equal the three
+  cube roots of unity: $1$, $j$, and $\bar{j}$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Combines the three individual direction lemmas.
 \end{proof}
 
 \section{Cutting argument infrastructure}\label{sec:cutting}
