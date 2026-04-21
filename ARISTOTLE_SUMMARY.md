@@ -1,3 +1,39 @@
+# Summary of changes for run 9c106652-bd73-41cf-b8c9-e3b7332ff3a9
+# Session Summary: Formalizing SAW.tex — Bridge Decomposition Infrastructure
+
+## What was done
+
+### New mathematical infrastructure (`RequestProject/SAWHWDecompNew.lean`)
+Created a new file building the walk-splitting and bridge weight infrastructure needed for the Hammersley-Welsh decomposition (Section 3 of the paper). This file imports from `SAWHWPaperProof.lean` and provides:
+
+**Proved lemmas (no sorry):**
+- `walkMinDiagCoord`: Definition of the minimum diagCoord value in a walk's support
+- `walkMinDiagCoord_le`: Every vertex in the walk has diagCoord ≥ the minimum (proved via `List.foldl min` properties)
+- `walkMinDiagCoord_achieved`: The minimum is achieved by some vertex in the support (proved by induction on walks using `min_choice`)
+- `HalfPlaneSAW`: Structure for half-plane SAWs (walks where start has minimal diagCoord)
+- `saw_suffix_half_plane`: After splitting a SAW at its first vertex of minimal diagCoord, the suffix satisfies the half-plane property
+- `bridge_weight_le_walk_weight`: For 0 < x ≤ 1, if bridge lengths sum to ≤ n, then x^n ≤ ∏ x^{bridge_length} (proved by induction on the bridge list)
+
+**Remaining sorry in this file:**
+- `hw_counting_inequality`: The full Hammersley-Welsh counting inequality (equivalent to `paper_bridge_decomp_injection`). This requires the complete walk decomposition algorithm and its injectivity proof — deep combinatorial infrastructure that is the core of Sorry Chain #2.
+
+### Blueprint update (`blueprint/src/content.tex`)
+Added Section "Hammersley–Welsh bridge decomposition infrastructure" with blueprint entries for all new definitions and lemmas, including `\lean{}` links and `\leanok` markers for proved results.
+
+## What remains (unchanged critical path)
+
+The two independent sorry chains from PROOF_STATUS.md remain:
+
+1. **Sorry Chain #1 (Parafermionic Observable / Lemma 2)**: `strip_identity_genuine` and `infinite_strip_identity` — requires formalizing the vertex relation's combinatorial partition of walks into pairs/triplets, the discrete Stokes summation, and boundary evaluation. The algebraic cancellation identities (`pair_cancellation`, `triplet_cancellation`) are proved; the combinatorial walk-grouping infrastructure is the missing piece.
+
+2. **Sorry Chain #2 (Hammersley-Welsh)**: `paper_bridge_decomp_injection` — requires the full bridge decomposition algorithm (splitting at min diagCoord → half-plane walk decomposition by strong induction on width → bridge extraction → injectivity proof). The new file provides foundational infrastructure (walk min-diagCoord analysis, half-plane property, bridge weight bounds) but the decomposition algorithm and injectivity remain.
+
+## Project state
+- All existing files continue to build successfully
+- No statements were renamed or shuffled
+- The new file uses imports (no duplication)
+- The blueprint is updated with both statements and proof status
+
 # Summary of changes for run d01f7052-5105-4ceb-a6b7-44d54b1222e6
 ## Session Summary
 

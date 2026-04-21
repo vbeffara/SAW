@@ -4037,3 +4037,58 @@ in \texttt{SAWWalkExtension.lean}.
         decomposition and proving injectivity of the bridge sequence map.
   \end{itemize}
 \end{proof}
+
+\section{Hammersley--Welsh bridge decomposition infrastructure}\label{sec:hw_infra}
+
+The following infrastructure supports the bridge decomposition argument.
+
+\begin{definition}[Walk minimum diagCoord]\label{def:walkMinDiagCoord}
+\lean{walkMinDiagCoord}
+\leanok
+  For a walk $p : v \to w$ in \texttt{hexGraph}, the minimum of
+  $\operatorname{diagCoord}(u)$ over all $u \in \operatorname{supp}(p)$.
+\end{definition}
+
+\begin{lemma}[walkMinDiagCoord is a lower bound]\label{lem:walkMinDiagCoord_le}
+\lean{walkMinDiagCoord_le}
+\leanok
+\uses{def:walkMinDiagCoord}
+  For every vertex $u$ in the support of a walk $p$,
+  $\texttt{walkMinDiagCoord}(p) \leq \operatorname{diagCoord}(u)$.
+\end{lemma}
+\begin{proof}\leanok
+  By properties of \texttt{List.foldl min}.
+\end{proof}
+
+\begin{lemma}[walkMinDiagCoord is achieved]\label{lem:walkMinDiagCoord_achieved}
+\lean{walkMinDiagCoord_achieved}
+\leanok
+\uses{def:walkMinDiagCoord}
+  There exists $u \in \operatorname{supp}(p)$ with
+  $\operatorname{diagCoord}(u) = \texttt{walkMinDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the walk, using \texttt{min\_choice}.
+\end{proof}
+
+\begin{lemma}[Half-plane property of suffix]\label{lem:saw_suffix_half_plane}
+\lean{saw_suffix_half_plane}
+\leanok
+  If a SAW is split at the first vertex $u^*$ of minimal \texttt{diagCoord},
+  the suffix has the half-plane property: all vertices $v$ in the suffix
+  satisfy $\operatorname{diagCoord}(u^*) \leq \operatorname{diagCoord}(v)$.
+\end{lemma}
+\begin{proof}\leanok
+  Vertices in the suffix are also in the full walk's support.
+\end{proof}
+
+\begin{lemma}[Bridge weight bound]\label{lem:bridge_weight}
+\lean{bridge_weight_le_walk_weight}
+\leanok
+  For $0 < x \leq 1$ and bridge lengths summing to at most $n$:
+  $x^n \leq \prod_i x^{\ell_i}$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the list of bridge lengths, using
+  $x^n = x^{\ell_1} \cdot x^{n-\ell_1}$ and the induction hypothesis.
+\end{proof}
