@@ -1,3 +1,40 @@
+# Summary of changes for run df8aef99-ec2e-4acd-82fc-99fa92a8f6f9
+# Summary of Progress
+
+## What was done
+
+### New Mathematical Infrastructure (SAWHWCore.lean)
+Created a new file `RequestProject/SAWHWCore.lean` with 7 fully-proved helper lemmas for the Hammersley-Welsh bridge decomposition:
+
+1. **`diagCoordZ_adj_bound`** — Each hexagonal edge changes the diagonal coordinate by at most 1
+2. **`walk_diagCoordZ_bound`** — Walk vertices stay within walk-length of the start's diagonal coordinate
+3. **`walkMinDiagCoord_le`** — The minimum diagonal coordinate in a walk is a lower bound for all vertices
+4. **`walkMinDiagCoord_achieved`** — The minimum diagonal coordinate is achieved by some vertex in the walk
+5. **`hw_bridge_length_ge`** — A bridge of width T has walk length ≥ T
+6. **`walk_split_at_vertex`** — Splitting a walk at a vertex preserves total length
+7. **`dropUntil_min_diagCoord`** — The suffix of a walk split at the minimum-diagCoord vertex inherits the minimum bound
+8. **`pow_le_prod_pow`** — Weight bound: x^n ≤ ∏ x^{l_i} when ∑l_i ≤ n and 0 < x ≤ 1
+
+All 7 lemmas compile without sorry.
+
+### Blueprint Updates (blueprint/src/content.tex)
+- Added a new section "Hammersley-Welsh decomposition: infrastructure" documenting all the new helper lemmas with their Lean links and proof status
+- Updated the "Proof gaps and dependencies" section to accurately reflect the current state: **exactly 2 sorry's remain** (down from 3 previously documented)
+- Clarified the dependency chain for each remaining sorry
+
+### Documentation (PROOF_STATUS.md)
+Updated the proof status document to comprehensively list all proved components and the two remaining gaps.
+
+## Current State
+
+The main theorem `connective_constant_eq : connective_constant = √(2+√2)` in `RequestProject/SAWFinal.lean` **builds successfully** and depends on exactly **2 sorry'd lemmas**:
+
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The parafermionic observable identity for the infinite strip: 1 = c_α · A∞(T) + xc · B(T). This is the core mathematical contribution of the Duminil-Copin & Smirnov paper (Lemma 2). The algebraic ingredients (pair/triplet cancellation) are fully proved; what remains is the combinatorial walk partitioning and discrete Stokes summation.
+
+2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — The Hammersley-Welsh bridge decomposition counting inequality. Key infrastructure (walk splitting, diagonal coordinate bounds, bridge length bounds, weight bounds) is now proved in SAWHWCore.lean. What remains is the half-plane walk bridge decomposition algorithm and its injectivity proof.
+
+All other components in the proof chain are fully proved: submultiplicativity, Fekete's lemma, connective constant characterization, bridge recurrence, cutting argument, lower bound via divergence, bridge decay, and product convergence.
+
 # Summary of changes for run b53a3a67-988d-4cd5-bcbe-5501f04215de
 ## Summary of Progress
 

@@ -4361,29 +4361,125 @@ $j \overline{\lambda}^4 + \bar{j} \lambda^4 = 0$
   $e^{-i\sigma\pi/3} = \lambda$.
 \end{proof}
 
+\section{Hammersley--Welsh decomposition: infrastructure}\label{sec:hw_infra}
+
+The following helper lemmas for the Hammersley--Welsh bridge decomposition
+are proved in \texttt{SAWHWCore.lean}.
+
+\begin{lemma}[Diagonal coordinate step bound]\label{lem:diag_step}
+\lean{diagCoordZ_adj_bound}
+\leanok
+  Each hexagonal edge changes $\mathrm{diagCoord}(v) = v_1 + v_{2,1}$
+  by at most~$1$.
+\end{lemma}
+\begin{proof}\leanok Case split on edge type.\end{proof}
+
+\begin{lemma}[Walk diagonal coordinate bound]\label{lem:walk_diag_bound}
+\lean{walk_diagCoordZ_bound}
+\leanok
+\uses{lem:diag_step}
+  For any walk $p: v \to w$ and $u \in \mathrm{supp}(p)$,
+  $|\mathrm{diagCoord}(u) - \mathrm{diagCoord}(v)| \leq \mathrm{length}(p)$.
+\end{lemma}
+\begin{proof}\leanok Induction on the walk.\end{proof}
+
+\begin{definition}[Walk minimum diagonal coordinate]\label{def:walk_min_diag}
+\lean{walkMinDiagCoord}
+\leanok
+  The minimum of $\mathrm{diagCoord}(u)$ over all vertices $u$ in
+  a walk's support, computed via \texttt{foldl min}.
+\end{definition}
+
+\begin{lemma}[Minimum is a lower bound]\label{lem:min_diag_le}
+\lean{walkMinDiagCoord_le}
+\leanok
+\uses{def:walk_min_diag}
+  For any $u$ in the walk's support,
+  $\mathrm{walkMinDiagCoord}(p) \leq \mathrm{diagCoord}(u)$.
+\end{lemma}
+\begin{proof}\leanok Induction on the support list.\end{proof}
+
+\begin{lemma}[Minimum is achieved]\label{lem:min_diag_achieved}
+\lean{walkMinDiagCoord_achieved}
+\leanok
+\uses{def:walk_min_diag}
+  There exists $u$ in the walk's support with
+  $\mathrm{diagCoord}(u) = \mathrm{walkMinDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok Induction on the walk.\end{proof}
+
+\begin{lemma}[Bridge length $\geq$ width]\label{lem:bridge_len_ge}
+\lean{hw_bridge_length_ge}
+\leanok
+\uses{lem:walk_diag_bound}
+  A \texttt{PaperBridge} of width $T$ has walk length $\geq T$.
+\end{lemma}
+\begin{proof}\leanok
+  The bridge goes from $\mathrm{diagCoord}\,0$ to $-T$; each step
+  changes diagCoord by at most~$1$.
+\end{proof}
+
+\begin{lemma}[Walk splitting preserves length]\label{lem:walk_split}
+\lean{walk_split_at_vertex}
+\leanok
+  Splitting a walk at a vertex: $\mathrm{len}(\mathrm{take}) +
+  \mathrm{len}(\mathrm{drop}) = \mathrm{len}(p)$.
+\end{lemma}
+\begin{proof}\leanok From \texttt{Walk.take\_spec} + \texttt{length\_append}.\end{proof}
+
+\begin{lemma}[Drop preserves min diagCoord]\label{lem:drop_min}
+\lean{dropUntil_min_diagCoord}
+\leanok
+\uses{lem:min_diag_le}
+  If $u$ has min diagCoord in the full walk, it has min diagCoord
+  in the suffix \texttt{dropUntil}.
+\end{lemma}
+\begin{proof}\leanok
+  Every vertex in the suffix is in the full walk's support.
+\end{proof}
+
+\begin{lemma}[Weight bound for bridge decomposition]\label{lem:pow_prod}
+\lean{pow_le_prod_pow}
+\leanok
+  For $0 < x \leq 1$ and $\sum l_i \leq n$:
+  $x^n \leq \prod x^{l_i}$.
+\end{lemma}
+\begin{proof}\leanok
+  Since $\prod x^{l_i} = x^{\sum l_i}$ and $x \leq 1$ gives
+  $x^n \leq x^{\sum l_i}$ when $\sum l_i \leq n$.
+\end{proof}
+
 \section{Proof gaps and dependencies}\label{sec:gaps}
 
-The main theorem (\S\ref{sec:main_thm}) depends on three independent
-sorry'd lemmas:
+The main theorem (\S\ref{sec:main_thm}) depends on exactly
+\textbf{two} sorry'd lemmas:
 
 \begin{enumerate}
-\item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}):
-  $1 = c_\alpha \cdot A_\infty(T) + x_c \cdot B(T)$ for $T \geq 1$.
-  This follows from the parafermionic observable (Lemma~1 + discrete Stokes
-  applied to the infinite strip $S_T$). Required for the lower bound
-  $\mu \geq \sqrt{2+\sqrt{2}}$.
-
-\item \textbf{Finite strip identity} (\texttt{strip\_identity\_genuine}):
-  $\exists A_m, E_m \geq 0$ such that $1 = c_\alpha A_m + B + c_\varepsilon E_m$.
-  Same proof method applied to $S_{T,L}$. Required for $B \leq 1$
-  and the upper bound.
+\item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}
+  in \texttt{SAWRecurrenceProof.lean}):
+  $1 = c_\alpha \cdot A_\infty(T, x_c) + x_c \cdot B(T, x_c)$ for $T \geq 1$.
+  This follows from the parafermionic observable vertex relation (Lemma~1
+  of the paper) summed over all vertices of the infinite strip $S_T$
+  (discrete Stokes). The algebraic ingredients \texttt{pair\_cancellation}
+  and \texttt{triplet\_cancellation} are fully proved.
+  The remaining gap is the combinatorial construction of the pair/triplet
+  partition of walks at each vertex and the resulting boundary sum
+  evaluation.
+  Required for the lower bound $\mu \geq \sqrt{2+\sqrt{2}}$.
 
 \item \textbf{Hammersley--Welsh decomposition}
-  (\texttt{paper\_bridge\_decomp\_injection}):
+  (\texttt{paper\_bridge\_decomp\_injection} in \texttt{SAWPaperChain.lean}):
   $\sum_{n \leq N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{1,\ldots,N\}}
-  \prod_{T \in S} B_T(x)\right)^2$.
+  \prod_{T \in S} B_{T+1}(x)\right)^2$.
   Purely combinatorial; independent of the observable.
+  Key infrastructure (walk splitting, diagonal coordinate bounds,
+  bridge length bounds, weight bounds) is proved in \texttt{SAWHWCore.lean}.
+  The remaining gap is the half-plane walk bridge decomposition algorithm
+  and its injectivity proof.
   Required for the upper bound $\mu \leq \sqrt{2+\sqrt{2}}$.
 \end{enumerate}
 
-All other lemmas in the proof chain are fully proved.
+All other lemmas in the proof chain (submultiplicativity, Fekete's lemma,
+connective constant characterization, bridge recurrence, cutting argument,
+lower bound via divergence, bridge decay, product convergence) are
+fully proved with no sorry dependencies.
