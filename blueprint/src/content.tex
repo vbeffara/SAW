@@ -4269,3 +4269,121 @@ observable proof of the strip identity (Lemma~2 of the paper).
 \leanok
   Direct computation from \texttt{correctHexEmbed}.
 \end{proof}
+
+\section{Vertex relation (Lemma~1)}\label{sec:vertex_rel}
+
+The vertex relation is the heart of the paper. It says that for each
+interior vertex $v$ of a strip domain $\Omega$, the weighted sum of the
+parafermionic observable over the three mid-edges adjacent to $v$ vanishes:
+\begin{equation}\label{eq:vertex_rel}
+  (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0,
+\end{equation}
+where $p, q, r$ are the three mid-edges adjacent to $v$.
+
+The proof partitions walks ending at $p$, $q$, or $r$ into:
+\begin{itemize}
+\item \textbf{Triplets}: a walk visiting one mid-edge, paired with two
+  walks visiting two mid-edges (obtained by extending one step through $v$).
+\item \textbf{Pairs}: two walks visiting all three mid-edges, differing
+  by the direction of the ``loop'' around $v$.
+\end{itemize}
+
+The algebraic cancellation for triplets uses the identity
+$1 + x_c j \overline{\lambda} + x_c \bar{j} \lambda = 0$
+(\texttt{triplet\_cancellation}), and for pairs the identity
+$j \overline{\lambda}^4 + \bar{j} \lambda^4 = 0$
+(\texttt{pair\_cancellation}).
+
+\begin{definition}[Hex edge direction]\label{def:hex_edge_dir}
+\lean{hexEdgeDir}
+\leanok
+  The six possible edge directions in the hexagonal lattice,
+  encoded as $\{0,1,2,3,4,5\}$ representing angles
+  $0, \pi/3, 2\pi/3, \pi, -2\pi/3, -\pi/3$.
+\end{definition}
+
+\begin{definition}[Hex turn]\label{def:hex_turn}
+\lean{hexTurn}
+\leanok
+\uses{def:hex_edge_dir}
+  The turning angle at a vertex: the change in direction
+  (in units of $\pi/3$) from one edge to the next.
+\end{definition}
+
+\begin{lemma}[Hex turn values at FALSE vertex]\label{lem:hex_turns_false}
+\lean{hexTurn_false_w1_w2}
+\leanok
+\uses{def:hex_turn}
+  At a FALSE vertex $v = (x,y,\text{false})$ with neighbors
+  $w_1 = (x,y,\text{true})$, $w_2 = (x{+}1,y,\text{true})$,
+  $w_3 = (x,y{+}1,\text{true})$:
+  \begin{itemize}
+  \item $\texttt{hexTurn}(w_1, v, w_2) = -1$ (turn $-\pi/3$)
+  \item $\texttt{hexTurn}(w_1, v, w_3) = +1$ (turn $+\pi/3$)
+  \item $\texttt{hexTurn}(w_2, v, w_1) = +1$ (turn $+\pi/3$)
+  \item $\texttt{hexTurn}(w_2, v, w_3) = -1$ (turn $-\pi/3$)
+  \item $\texttt{hexTurn}(w_3, v, w_1) = -1$ (turn $-\pi/3$)
+  \item $\texttt{hexTurn}(w_3, v, w_2) = +1$ (turn $+\pi/3$)
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct computation by unfolding definitions.
+\end{proof}
+
+\begin{lemma}[Triplet winding difference]\label{lem:triplet_winding}
+\uses{def:hex_turn}
+  For a walk $\gamma$ from $a$ to vertex $w_1$ (neighbor of $v$)
+  that does not visit $v$, extended by one step through $v$:
+  \[
+    W(\gamma_2, a \to q) - W(\gamma, a \to p) = \texttt{hexTurn}(w_1, v, w_2)
+  \]
+  where $q = \text{mid}(v, w_2)$ and $p = \text{mid}(v, w_1)$.
+  The difference is a \emph{constant} that depends only on the local
+  geometry at $v$, not on the specific walk $\gamma$.
+
+  \textbf{Status: partially formalized.} The hex turn values are
+  computed; the winding telescoping property needs more infrastructure.
+\end{lemma}
+
+\begin{lemma}[Triplet cancellation (geometric)]\label{lem:triplet_cancel_geom}
+\lean{triplet_cancellation_hex}
+\leanok
+\uses{lem:triplet_winding}
+  With winding differences $-1$ and $+1$ (in units of $\pi/3$):
+  $1 + x_c \cdot e^{-i\sigma(-\pi/3)} \cdot j + x_c \cdot e^{-i\sigma(\pi/3)} \cdot \bar{j} = 0$.
+  This is equivalent to \texttt{triplet\_cancellation}.
+\end{lemma}
+\begin{proof}
+\leanok
+  Proved by converting to \texttt{triplet\_cancellation} via the
+  identification $e^{i\sigma\pi/3} = \overline{\lambda}$ and
+  $e^{-i\sigma\pi/3} = \lambda$.
+\end{proof}
+
+\section{Proof gaps and dependencies}\label{sec:gaps}
+
+The main theorem (\S\ref{sec:main_thm}) depends on three independent
+sorry'd lemmas:
+
+\begin{enumerate}
+\item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}):
+  $1 = c_\alpha \cdot A_\infty(T) + x_c \cdot B(T)$ for $T \geq 1$.
+  This follows from the parafermionic observable (Lemma~1 + discrete Stokes
+  applied to the infinite strip $S_T$). Required for the lower bound
+  $\mu \geq \sqrt{2+\sqrt{2}}$.
+
+\item \textbf{Finite strip identity} (\texttt{strip\_identity\_genuine}):
+  $\exists A_m, E_m \geq 0$ such that $1 = c_\alpha A_m + B + c_\varepsilon E_m$.
+  Same proof method applied to $S_{T,L}$. Required for $B \leq 1$
+  and the upper bound.
+
+\item \textbf{Hammersley--Welsh decomposition}
+  (\texttt{paper\_bridge\_decomp\_injection}):
+  $\sum_{n \leq N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{1,\ldots,N\}}
+  \prod_{T \in S} B_T(x)\right)^2$.
+  Purely combinatorial; independent of the observable.
+  Required for the upper bound $\mu \leq \sqrt{2+\sqrt{2}}$.
+\end{enumerate}
+
+All other lemmas in the proof chain are fully proved.

@@ -1,3 +1,53 @@
+# Summary of changes for run b53a3a67-988d-4cd5-bcbe-5501f04215de
+## Summary of Progress
+
+### New Mathematical Content
+
+Created `RequestProject/SAWVertexRel.lean` with infrastructure for the vertex relation (Lemma 1 of Duminil-Copin & Smirnov 2012), the mathematical heart of the paper. This file contains:
+
+1. **Full winding definition** (`fullWinding`): Extends the existing `walkWindingInt` to include the exit half-edge turn, giving the complete winding from starting mid-edge to ending mid-edge. This corrects the vertex-level observable formulation that was previously missing exit phases.
+
+2. **Walk direction propagation** (`walkLastDir_append_single`): Proved that appending a single edge to a walk updates the last edge direction correctly.
+
+3. **Hex turn computations** (8 lemmas, all proved):
+   - `hexTurn_false_w1_w2`, `hexTurn_false_w1_w3`, `hexTurn_false_w2_w1`, `hexTurn_false_w2_w3`, `hexTurn_false_w3_w1`, `hexTurn_false_w3_w2` (FALSE vertices)
+   - `hexTurn_true_u1_u2`, `hexTurn_true_u1_u3` (TRUE vertices)
+   
+   These confirm that the hex turn values are ±1 (in units of π/3), matching the paper's calculation of winding differences ±π/3 for triplets.
+
+4. **Triplet cancellation with geometric phases** (`triplet_cancellation_hex`): Proved that the algebraic triplet cancellation identity holds with the specific winding phases arising from the hexagonal lattice geometry. This bridges the abstract algebraic identity (`triplet_cancellation`) with the concrete geometric setting.
+
+5. **Interior mid-edge cancellation** (`midedge_direction_cancel`): The key geometric property for the discrete Stokes theorem — direction vectors from the two endpoints of an edge to the midpoint sum to zero.
+
+6. **Triplet winding property** (`triplet_winding_property`): Stated (with one sorry) that the winding difference between a walk and its extension through a vertex is a fixed constant `hexTurn(w₁, v, w₂)`. This is the KEY property needed for the vertex relation — it shows the winding difference depends only on local geometry, not the specific walk.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with:
+- New section on the vertex relation (§Vertex relation, Lemma 1) with the pair/triplet partition approach
+- Definitions for hex edge direction and hex turn, with `\lean{}` and `\leanok` tags
+- Lemma for hex turn values at FALSE vertices (proved)
+- Lemma for triplet winding difference (partially formalized)  
+- Lemma for triplet cancellation with geometric phases (proved)
+- New section documenting the three remaining proof gaps and their dependencies
+
+### Updated Documentation
+
+Updated `PROOF_STATUS.md` with a comprehensive overview of:
+- The proof architecture and dependency chain
+- The three independent sorry gaps
+- All fully proved components
+- New infrastructure added in this session
+
+### Proof Status
+
+The main theorem (`connective_constant_eq` in `SAWFinal.lean`) compiles with the same 2 declaration-level sorry warnings as before. The three fundamental gaps remain:
+1. **Infinite strip identity** — parafermionic observable for the infinite strip
+2. **Finite strip identity** — parafermionic observable for the finite strip  
+3. **HW decomposition** — Hammersley-Welsh bridge decomposition injection
+
+The new vertex relation infrastructure provides the algebraic and geometric building blocks needed for gaps 1 and 2. The remaining formalization challenge is the combinatorial walk partition (pairing/tripling walks at each vertex) and the walk-level winding telescoping property.
+
 # Summary of changes for run 98d0a98f-17b2-4f5a-b0e3-8ddfcd08f869
 ## Summary of Work Done
 
