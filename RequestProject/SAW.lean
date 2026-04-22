@@ -696,13 +696,28 @@ lemma saw_count_pos : ∀ n, 0 < saw_count n := by
 def connective_constant : ℝ :=
   sInf ((fun n => (saw_count n : ℝ) ^ (1 / (n : ℝ))) '' Set.Ici 1)
 
--- The connective constant equals the limit of c_n^{1/n} as n → ∞.
--- This is a consequence of Fekete's lemma applied to the submultiplicative
--- sequence c_n.
--- Proved in SAWMain.lean as connective_constant_is_limit'
+/-
+The connective constant equals the limit of c_n^{1/n} as n → ∞.
+This is a consequence of Fekete's lemma applied to the submultiplicative
+sequence c_n.
+Proved in SAWMain.lean as connective_constant_is_limit'
 
--- The connective constant is positive (in fact ≥ √2, since c_n ≥ (√2)^n).
--- Proved in SAWMain.lean as connective_constant_pos'
+The connective constant is positive (in fact ≥ √2, since c_n ≥ (√2)^n).
+Proved in SAWMain.lean as connective_constant_pos'
+
+Key identity: c_α · x_c = (√2 - 1)/2.
+    This relates the boundary coefficient to the critical fugacity.
+-/
+lemma c_alpha_mul_xc : c_alpha * xc = (Real.sqrt 2 - 1) / 2 := by
+  unfold xc
+  field_simp;
+  -- Substitute the simplified form of c_alpha into the equation.
+  have h_sub : c_alpha = Real.sqrt (2 - Real.sqrt 2) / 2 := by
+    unfold c_alpha;
+    rw [ show 3 * Real.pi / 8 = Real.pi / 2 - Real.pi / 8 by ring, Real.cos_pi_div_two_sub ] ; norm_num;
+  rw [ h_sub, div_mul_cancel₀ _ two_ne_zero, ← sq_eq_sq₀ ] <;> ring <;> norm_num;
+  · rw [ Real.sq_sqrt, Real.sq_sqrt ] <;> nlinarith [ Real.sq_sqrt ( show 0 ≤ 2 by norm_num ) ];
+  · exact le_mul_of_one_le_left ( Real.sqrt_nonneg _ ) ( Real.le_sqrt_of_sq_le ( by norm_num ) )
 
 -- **Main Theorem** (Duminil-Copin & Smirnov, 2012):
 -- The connective constant of the hexagonal lattice equals √(2+√2).

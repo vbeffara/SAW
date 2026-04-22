@@ -4452,34 +4452,104 @@ are proved in \texttt{SAWHWCore.lean}.
 \section{Proof gaps and dependencies}\label{sec:gaps}
 
 The main theorem (\S\ref{sec:main_thm}) depends on exactly
-\textbf{two} sorry'd lemmas:
+\textbf{three} sorry'd lemmas, each corresponding to a distinct
+mathematical ingredient:
 
 \begin{enumerate}
-\item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}
-  in \texttt{SAWRecurrenceProof.lean}):
-  $1 = c_\alpha \cdot A_\infty(T, x_c) + x_c \cdot B(T, x_c)$ for $T \geq 1$.
-  This follows from the parafermionic observable vertex relation (Lemma~1
-  of the paper) summed over all vertices of the infinite strip $S_T$
-  (discrete Stokes). The algebraic ingredients \texttt{pair\_cancellation}
-  and \texttt{triplet\_cancellation} are fully proved.
-  The remaining gap is the combinatorial construction of the pair/triplet
-  partition of walks at each vertex and the resulting boundary sum
-  evaluation.
-  Required for the lower bound $\mu \geq \sqrt{2+\sqrt{2}}$.
+\item \textbf{Finite strip identity / $B_{\text{paper}} \le 1$}
+  (\texttt{strip\_identity\_genuine} in
+  \texttt{SAWStripIdentityCorrect.lean}):
+  For the finite strip $S_{T,L}$ with $T \ge 1$, $L \ge 1$:
+  \[
+    \exists A_m, E_m \ge 0, \quad
+    1 = c_\alpha \cdot A_m + B_{\text{paper}}(T,L,x_c) + c_\varepsilon \cdot E_m.
+  \]
+  This implies $B_{\text{paper}} \le 1$.
+  It follows from the parafermionic observable vertex relation
+  (Lemma~1 of the paper) summed over all vertices of the finite strip
+  (discrete Stokes / telescoping argument). The algebraic ingredients
+  \texttt{pair\_cancellation} and \texttt{triplet\_cancellation} are
+  fully proved; the combinatorial pair/triplet walk partition and
+  boundary evaluation remain.
+  Required for the bridge partition decay bound and hence for the
+  upper bound proof ($\mu \le \sqrt{2+\sqrt{2}}$).
+
+\item \textbf{Infinite strip identity}
+  (\texttt{infinite\_strip\_identity} in
+  \texttt{SAWRecurrenceProof.lean}):
+  For the infinite strip $S_T$ with $T \ge 1$:
+  \[
+    1 = c_\alpha \cdot A_\infty(T, x_c) + x_c \cdot B(T, x_c).
+  \]
+  This is the $L \to \infty$ limit of the finite strip identity
+  (with escape term $E \to 0$). Alternatively, it can be proved
+  directly by the parafermionic argument on the infinite strip
+  (no escape boundary). Used for the bridge recurrence
+  $B(T) \le c_\alpha \cdot B(T{+}1)^2 + B(T{+}1)$ and hence for
+  the lower bound $\mu \ge \sqrt{2+\sqrt{2}}$.
 
 \item \textbf{Hammersley--Welsh decomposition}
-  (\texttt{paper\_bridge\_decomp\_injection} in \texttt{SAWPaperChain.lean}):
-  $\sum_{n \leq N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{1,\ldots,N\}}
-  \prod_{T \in S} B_{T+1}(x)\right)^2$.
+  (\texttt{paper\_bridge\_decomp\_injection} in
+  \texttt{SAWPaperChain.lean}):
+  \[
+    \sum_{n \leq N} c_n x^n \leq 2 \left(
+    \sum_{S \subseteq \{1,\ldots,N\}}
+    \prod_{T \in S} B_{T+1}(x)\right)^{\!2}.
+  \]
   Purely combinatorial; independent of the observable.
   Key infrastructure (walk splitting, diagonal coordinate bounds,
-  bridge length bounds, weight bounds) is proved in \texttt{SAWHWCore.lean}.
-  The remaining gap is the half-plane walk bridge decomposition algorithm
-  and its injectivity proof.
-  Required for the upper bound $\mu \leq \sqrt{2+\sqrt{2}}$.
+  bridge length bounds, weight bounds) is proved.
+  The remaining gap is the half-plane walk bridge decomposition
+  algorithm and its injectivity proof.
+  Required for $Z(x) < \infty$ when $x < x_c$ and hence for
+  the upper bound $\mu \le \sqrt{2+\sqrt{2}}$.
 \end{enumerate}
 
-All other lemmas in the proof chain (submultiplicativity, Fekete's lemma,
-connective constant characterization, bridge recurrence, cutting argument,
-lower bound via divergence, bridge decay, product convergence) are
-fully proved with no sorry dependencies.
+\subsection*{Proof sketch for the strip identity (Lemmas~1 and~2)}
+
+For each interior vertex $v$ of the strip domain, the set of SAWs
+from the starting mid-edge $a$ that reach one of $v
+s three mid-edges
+$p,q,r$ is partitioned into:
+\begin{itemize}
+\item \textbf{Triplets.} A walk $\gamma$ visiting only one mid-edge of
+$v$ pairs with two extensions $\gamma_q, \gamma_r$ (adding one step
+through $v$). The algebraic cancellation is
+\texttt{triplet\_cancellation}:
+$1 + x_c j \bar\lambda + x_c \bar j \lambda = 0$.
+\item \textbf{Pairs.} A walk visiting all three mid-edges of $v$
+pairs with a ``loop-reversed'' walk. The cancellation is
+\texttt{pair\_cancellation}:
+$j \bar\lambda^4 + \bar j \lambda^4 = 0$.
+\end{itemize}
+Summing over all interior vertices (discrete Stokes), interior
+mid-edges cancel by direction antisymmetry, leaving only boundary
+contributions:
+$0 = -1 + c_\alpha A + B + c_\varepsilon E$.
+Non-negativity of $A, E$ follows from \texttt{boundary\_cos\_pos}.
+
+\subsection*{Proof sketch for the HW decomposition}
+
+For each SAW $\gamma$ of length $n$ from the origin:
+\begin{enumerate}
+\item Split $\gamma$ at the first vertex of minimum diagCoord $d_{\min}$.
+\item The prefix (reversed) and suffix are half-plane walks.
+\item Each half-plane walk decomposes into bridges by induction on width:
+  find the last vertex at max diagCoord, extract a bridge, recurse.
+\item Bridge widths form a strictly decreasing subset of $\{1,\ldots,n\}$.
+\item Walk length $\ge$ sum of bridge lengths, so
+  $x^n \le \prod x^{\text{bridge length}}$.
+\item The map $(\gamma, \text{choice}) \mapsto
+  (\text{left bridges}, \text{right bridges})$ is injective.
+\item Factor~$2$ accounts for two half-edge choices from the starting
+  mid-edge.
+\end{enumerate}
+
+\subsection*{What is proved}
+
+All other lemmas in the proof chain are fully proved:
+submultiplicativity, Fekete's lemma, connective constant as limit,
+bridge recurrence, cutting argument, quadratic recurrence lower bound,
+lower bound via divergence of $Z(x_c)$, bridge decay, product
+convergence, and the final assembly of $\mu = \sqrt{2+\sqrt{2}}$
+from the divergence and convergence bounds.

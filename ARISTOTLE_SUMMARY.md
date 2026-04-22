@@ -1,3 +1,41 @@
+# Summary of changes for run 495a5435-4521-4360-abe6-d4e15876175c
+## Summary of Changes
+
+### New Mathematical Content
+
+1. **Proved `c_alpha_mul_xc`** (in `RequestProject/SAW.lean`): The identity `c_α · x_c = (√2 − 1)/2`, which relates the boundary coefficient `cos(3π/8)` to the critical fugacity `1/√(2+√2)`. This is a key algebraic identity that appears in the strip identity for T=1 and validates the parafermionic observable boundary evaluation.
+
+2. **Fixed `SAWStripT1.lean`**: Removed a duplicate definition of `c_alpha_mul_xc` that conflicted with the newly proved version in `SAW.lean`. The file's existing proofs (`strip_T1_algebraic` and `strip_identity_T1_from_formulas`) compile cleanly. These verify the infinite strip identity algebraically for T=1:
+   - `strip_T1_algebraic`: `2 · xc² · (c_α · xc + 1) = 1 − xc²`
+   - `strip_identity_T1_from_formulas`: conditional proof that `1 = c_α · A_inf(1) + xc · B(1)` given the explicit formulas for `A_inf(1)` and `B(1)`
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` (Section "Proof gaps and dependencies") to accurately document **three** root sorry'd lemmas (previously stated as two):
+
+1. **Finite strip identity** (`strip_identity_genuine`): For B_paper ≤ 1, needed for bridge decay and upper bound
+2. **Infinite strip identity** (`infinite_strip_identity`): For bridge recurrence and lower bound  
+3. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): For Z(x) < ∞ and upper bound
+
+Added detailed proof sketches for the strip identity (pair/triplet partition + discrete Stokes) and HW decomposition (walk splitting + bridge extraction by induction on width).
+
+### Documentation
+
+Updated `PROOF_STATUS.md` with a comprehensive status document including:
+- Complete list of fully proved results (with Lean declaration names)
+- Detailed description of each remaining sorry'd lemma
+- File map showing which files contain sorries and their dependencies
+- Proof method descriptions for each gap
+
+### What Remains
+
+The three root sorry'd lemmas all require substantial mathematical infrastructure:
+- The **strip identity** requires formalizing the vertex relation (pair/triplet walk partition at each vertex) and the discrete Stokes telescoping argument. The algebraic core (pair_cancellation, triplet_cancellation) is proved; the combinatorial walk partition is the gap.
+- The **infinite strip identity** is the L→∞ limit of the strip identity, or equivalently a direct application of the vertex relation to the infinite strip.
+- The **HW decomposition** requires formalizing the bridge decomposition algorithm (splitting walks at extremal coordinates, extracting bridges by induction) and proving injectivity. Infrastructure (walk splitting, coordinate bounds, weight bounds) is proved.
+
+All other components of the proof chain are fully verified.
+
 # Summary of changes for run df8aef99-ec2e-4acd-82fc-99fa92a8f6f9
 # Summary of Progress
 

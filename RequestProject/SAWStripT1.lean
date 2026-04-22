@@ -46,14 +46,7 @@ set_option maxHeartbeats 800000
 
 /-! ## Key algebraic identities for xc and c_alpha -/
 
-/-
-c_alpha * xc = (√2 - 1) / 2, which equals tan(π/8)/2.
--/
-lemma c_alpha_mul_xc : c_alpha * xc = (Real.sqrt 2 - 1) / 2 := by
-  unfold c_alpha xc;
-  rw [ show 3 * Real.pi / 8 = Real.pi / 2 - Real.pi / 8 by ring, Real.cos_pi_div_two_sub ] ; norm_num;
-  field_simp;
-  rw [ Real.sqrt_eq_iff_mul_self_eq ] <;> nlinarith [ Real.sqrt_nonneg 2, Real.sqrt_nonneg ( 2 + Real.sqrt 2 ), Real.mul_self_sqrt ( show 0 ≤ 2 by norm_num ), Real.mul_self_sqrt ( show 0 ≤ 2 + Real.sqrt 2 by positivity ) ]
+-- c_alpha_mul_xc is now proved in SAW.lean
 
 /-
 2 * xc² * (c_alpha * xc + 1) = 1 - xc².
