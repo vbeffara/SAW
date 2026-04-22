@@ -4179,3 +4179,93 @@ into a sequence of bridges''.
     $x^n = \prod x^{|b_i|}$ where $|b_i|$ are bridge lengths.
   \end{enumerate}
 \end{theorem}
+
+\section{Strip identity for $T=1$ (algebraic verification)}\label{sec:strip_T1}
+
+For $T=1$, the infinite strip $S_1$ has a simple path-graph structure.
+We verify the strip identity algebraically by computing the partition
+functions exactly.
+
+\begin{lemma}[$c_\alpha \cdot x_c = (\sqrt{2}-1)/2$]\label{lem:c_alpha_mul_xc}
+\lean{c_alpha_mul_xc}
+\leanok
+\uses{def:c_alpha, def:xc}
+  Using $c_\alpha = \cos(3\pi/8) = \sin(\pi/8)$ and
+  $x_c = 1/(2\cos(\pi/8))$, we get
+  $c_\alpha \cdot x_c = \sin(\pi/8)/(2\cos(\pi/8)) = \tan(\pi/8)/2 = (\sqrt{2}-1)/2$.
+\end{lemma}
+\begin{proof}
+\leanok
+  By direct trigonometric computation using $\cos(3\pi/8) = \sin(\pi/8)$
+  and $\sqrt{2+\sqrt{2}} = 2\cos(\pi/8)$.
+\end{proof}
+
+\begin{lemma}[Algebraic identity for $T=1$ strip]\label{lem:strip_T1_alg}
+\lean{strip_T1_algebraic}
+\leanok
+\uses{lem:c_alpha_mul_xc, def:xc}
+  $2x_c^2(c_\alpha x_c + 1) = 1 - x_c^2$.
+
+  Both sides equal $1/\sqrt{2}$:
+  \begin{itemize}
+  \item LHS: $2x_c^2 \cdot (\sqrt{2}+1)/2 = x_c^2(\sqrt{2}+1)
+    = (\sqrt{2}+1)/(2+\sqrt{2}) = 1/\sqrt{2}$.
+  \item RHS: $1 - 1/(2+\sqrt{2}) = (1+\sqrt{2})/(2+\sqrt{2}) = 1/\sqrt{2}$.
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+\leanok
+  Algebraic simplification using the definition of $x_c$ and
+  rationalization of $2+\sqrt{2} = \sqrt{2}(\sqrt{2}+1)$.
+\end{proof}
+
+\begin{lemma}[Strip identity for $T=1$ from formulas]\label{lem:strip_T1_from_formulas}
+\lean{strip_identity_T1_from_formulas}
+\leanok
+\uses{lem:strip_T1_alg, def:A_inf, def:paper_bridge_partition}
+  If $B_1 = 2x_c/(1-x_c^2)$ and $A_1 = 2x_c^3/(1-x_c^2)$, then
+  $1 = c_\alpha A_1 + x_c B_1$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Substitute the formulas and apply the algebraic identity.
+\end{proof}
+
+\section{Parafermionic observable infrastructure}\label{sec:paraferm_infra}
+
+The following definitions and lemmas support the parafermionic
+observable proof of the strip identity (Lemma~2 of the paper).
+
+\begin{lemma}[Edge direction antisymmetry]\label{lem:edge_dir_antisymm}
+\lean{hexEdgeDir'_antisymm}
+\leanok
+  For any vertices $v, w$: $d(v,w) = -d(w,v)$ where
+  $d(v,w) = \texttt{correctHexEmbed}(w) - \texttt{correctHexEmbed}(v)$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Immediate from the definition.
+\end{proof}
+
+\begin{lemma}[Left boundary coefficient]\label{lem:left_bdy_re}
+\lean{left_boundary_coeff_re}
+\leanok
+  $\operatorname{Re}(-\exp(-5i\pi/8)) = c_\alpha = \cos(3\pi/8)$.
+
+  This is the coefficient for left boundary walk contributions:
+  direction $= -1$, phase $= \exp(-5i\pi/8)$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Uses $\cos(5\pi/8) = -\cos(3\pi/8)$ from $\cos(\pi - x) = -\cos(x)$.
+\end{proof}
+
+\begin{lemma}[Starting mid-edge direction]\label{lem:starting_dir}
+\lean{starting_midedge_coeff}
+\leanok
+  The direction from \texttt{paperStart} to \texttt{hexOrigin} is $-1$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct computation from \texttt{correctHexEmbed}.
+\end{proof}

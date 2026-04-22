@@ -37,6 +37,15 @@ The following are fully proved (no sorry):
 - **Main theorem assembly**: `connective_constant_eq_from_bounds` (modulo sorry dependencies)
 - **Winding analysis**: boundary coefficients c_α, c_ε computed
 - **Boundary coefficient positivity**: `c_alpha_pos`, `c_eps_pos`
+- **Strip T=1 algebraic identities** (new):
+  - `c_alpha_mul_xc`: c_α · xc = (√2-1)/2
+  - `strip_T1_algebraic`: 2xc²(c_α·xc + 1) = 1 - xc²
+  - `strip_identity_T1_from_formulas`: conditional strip identity for T=1
+- **Parafermionic infrastructure** (new):
+  - `hexEdgeDir'_antisymm`: d(v,w) = -d(w,v)
+  - `left_boundary_coeff_re`: Re(-exp(-5iπ/8)) = c_alpha
+  - `starting_midedge_coeff`: direction paperStart→hexOrigin = -1
+  - `hexEdgeDir'_FT_same`, `hexEdgeDir'_TF_same`: edge direction computations
 - **Powerset product identity**: from Mathlib's `Finset.prod_one_add`
 - **Diagonal coordinate**: `diagCoord`, `diagCoord_step_bound`, SAW depth bounds
 - **Walk max/min diagCoord**: `walkMinDiagCoord`, `walkMaxDiagCoord` with bounds

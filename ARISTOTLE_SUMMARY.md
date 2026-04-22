@@ -1,3 +1,50 @@
+# Summary of changes for run 98d0a98f-17b2-4f5a-b0e3-8ddfcd08f869
+## Summary of Work Done
+
+### New Mathematical Content (sorry-free)
+
+I created three new Lean files with fully proved mathematical content, focusing on the "missing math" for the two remaining sorry chains:
+
+#### 1. `RequestProject/SAWStripT1.lean` — Strip Identity for T=1 (Algebraic Verification)
+For the width-1 strip, the strip identity can be verified purely algebraically. Three new lemmas were proved:
+- **`c_alpha_mul_xc`**: c_α · xc = (√2−1)/2. Uses cos(3π/8) = sin(π/8) and xc = 1/(2cos(π/8)).
+- **`strip_T1_algebraic`**: 2xc²(c_α·xc + 1) = 1 − xc². Both sides equal 1/√2.
+- **`strip_identity_T1_from_formulas`**: If the partition functions have their expected closed forms (B₁ = 2xc/(1−xc²), A₁ = 2xc³/(1−xc²)), then the strip identity 1 = c_α·A₁ + xc·B₁ holds.
+
+This establishes the algebraic core of the strip identity for T=1, and serves as a template for the general case.
+
+#### 2. `RequestProject/SAWParafermionicCore.lean` — Parafermionic Observable Infrastructure
+New definitions and lemmas supporting the parafermionic proof:
+- **`hexEdgeDir'`**: Edge direction vectors on the hex lattice.
+- **`hexEdgeDir'_FT_same`**, **`hexEdgeDir'_TF_same`**: Exit directions at boundary mid-edges.
+- **`hexEdgeDir'_antisymm`**: d(v,w) = −d(w,v), the key property for discrete Stokes cancellation.
+- **`left_boundary_coeff_re`**: Re(−exp(−5iπ/8)) = c_alpha (left boundary coefficient).
+- **`starting_midedge_coeff`**: Direction from paperStart to hexOrigin is −1.
+- **`walkExitDir'`**: Exit direction of a walk (last edge direction).
+
+#### 3. `RequestProject/SAWHWExtract.lean` — Bridge Extraction Infrastructure
+- **`diagCoord_adj_diff'`**: Adjacent hex vertices have diagCoord differing by at most 1 (values in {−1, 0, 1}).
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with:
+- New section "Strip identity for T=1 (algebraic verification)" documenting the three proved algebraic lemmas.
+- New section "Parafermionic observable infrastructure" documenting the proved boundary coefficient and edge direction lemmas.
+- All new entries are marked with `\leanok` (both statement and proof).
+
+### Updated `PROOF_STATUS.md`
+
+Added the new proved infrastructure to the "Fully proved" section.
+
+### Status of Critical-Path Sorries
+
+The same 3 critical-path sorries remain (unchanged):
+1. **`strip_identity_genuine`** in `SAWStripIdentityCorrect.lean` — Parafermionic strip identity for finite strip.
+2. **`infinite_strip_identity`** in `SAWRecurrenceProof.lean` — Strip identity for infinite strip.
+3. **`paper_bridge_decomp_injection`** in `SAWPaperChain.lean` — Hammersley-Welsh decomposition.
+
+These represent the two deepest mathematical results in the paper: (1-2) the parafermionic observable argument (Lemma 2), and (3) the bridge decomposition (Section 3). The new infrastructure built in this session provides stepping stones toward their eventual proof, particularly the T=1 algebraic verification which demonstrates the strip identity holds at the algebraic level.
+
 # Summary of changes for run 0d4ef14f-370b-47d4-a048-12d6cef1d6e8
 ## Summary of Work Done
 
