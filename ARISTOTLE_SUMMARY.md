@@ -1,3 +1,46 @@
+# Summary of changes for run 5298c526-fc01-45c1-a192-a0255be8f08d
+## Progress on SAW Formalization
+
+### New Files Created (all sorry-free)
+
+1. **`RequestProject/SAWHWDecompProof.lean`** — Walk max diagCoord infrastructure:
+   - `walkMaxDiagCoord`: maximum diagonal coordinate over a walk's support
+   - `walkMaxDiagCoord_ge`: the max bounds every vertex from above (proved)
+   - `walkMaxDiagCoord_achieved`: the max is achieved by some vertex (proved)
+
+2. **`RequestProject/SAWObservableVertex.lean`** — Walk width and splitting infrastructure:
+   - `walkWidth`: max diagCoord − min diagCoord
+   - `walkWidth_nonneg`: width ≥ 0 (proved)
+   - `walkWidth_le_length`: width ≤ walk length (proved — key for bridge decomposition)
+   - `walk_has_min_vertex`, `walk_has_max_vertex`: existence of extremal vertices (proved)
+   - `takeUntil_min_le`, `dropUntil_min_le'`: diagCoord bounds for walk halves (proved)
+   - `walk_split_total_length`: splitting preserves total length (proved)
+
+3. **`RequestProject/SAWStripProof.lean`** — Strip identity reduction:
+   - `strip_identity_of_B_le_one`: shows the strip identity follows trivially from B_paper ≤ 1 (proved)
+
+4. **`RequestProject/SAWInfStripFromFinite.lean`** — Finite strip monotonicity:
+   - `PaperFinStrip_mono_L`: PaperFinStrip is monotone in L (proved)
+   - `B_paper_le_bridge'`: B_paper bounded by bridge partition (proved via existing lemma)
+
+### Blueprint Updated
+
+The blueprint (`blueprint/src/content.tex`) has been updated with a new section "Walk width infrastructure" documenting all the newly proved lemmas with their `\lean{}`, `\leanok`, `\uses{}`, and proof annotations.
+
+### Proof Status Updated
+
+`PROOF_STATUS.md` updated to reflect the new infrastructure and file map.
+
+### Remaining Sorry's (unchanged)
+
+The project still has **two independent root sorry's** in the critical path:
+
+1. **`strip_identity_genuine`** / **`infinite_strip_identity`** — The parafermionic observable identity for the strip (Lemma 2 of the paper). The algebraic core (pair/triplet cancellation) is fully proved. What remains is the combinatorial walk partitioning (grouping walks into pairs and triplets at each vertex) and the discrete Stokes summation (showing interior mid-edge contributions cancel).
+
+2. **`paper_bridge_decomp_injection`** — The Hammersley–Welsh bridge decomposition counting inequality. The walk splitting/width infrastructure is now proved. What remains is the half-plane walk bridge decomposition algorithm and its injectivity proof.
+
+All other lemmas in the proof chain are fully proved: submultiplicativity, Fekete's lemma, connective constant, bridge recurrence, cutting argument, quadratic recurrence lower bound, Z(xc) divergence, bridge decay, and the final assembly μ = √(2+√2).
+
 # Summary of changes for run 7f85c462-f0f5-46b6-8a63-590161099c8d
 ## Summary of Changes
 

@@ -4534,6 +4534,93 @@ For each SAW $\gamma$ of length $n$ from the origin:
   mid-edge.
 \end{enumerate}
 
+\section{Walk width infrastructure}\label{sec:walk_width}
+
+\begin{definition}[Walk max diagCoord]\label{def:walk_max_diag}
+\lean{walkMaxDiagCoord}
+\leanok
+  The maximum of $\mathrm{diagCoord}(u)$ over all vertices $u$ in
+  a walk's support, computed via \texttt{foldl max}.
+\end{definition}
+
+\begin{lemma}[Max diagCoord bounds from above]\label{lem:walk_max_ge}
+\lean{walkMaxDiagCoord_ge}
+\leanok
+\uses{def:walk_max_diag}
+  For any $u$ in the walk's support,
+  $\mathrm{diagCoord}(u) \leq \mathrm{walkMaxDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok By induction on the support list, tracking the fold.\end{proof}
+
+\begin{lemma}[Max diagCoord is achieved]\label{lem:walk_max_achieved}
+\lean{walkMaxDiagCoord_achieved}
+\leanok
+\uses{def:walk_max_diag}
+  There exists $u$ in the walk's support with
+  $\mathrm{diagCoord}(u) = \mathrm{walkMaxDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok Conversion to \texttt{Finset.max} and back.\end{proof}
+
+\begin{definition}[Walk width]\label{def:walk_width}
+\lean{walkWidth}
+\leanok
+\uses{def:walk_max_diag,def:walk_min_diag}
+  The width of a walk: $\mathrm{walkMaxDiagCoord}(p) - \mathrm{walkMinDiagCoord}(p)$.
+\end{definition}
+
+\begin{lemma}[Walk width is non-negative]\label{lem:width_nonneg}
+\lean{walkWidth_nonneg}
+\leanok
+\uses{def:walk_width}
+  $0 \leq \mathrm{walkWidth}(p)$.
+\end{lemma}
+\begin{proof}\leanok From max $\geq$ min.\end{proof}
+
+\begin{lemma}[Walk width $\leq$ walk length]\label{lem:width_le_length}
+\lean{walkWidth_le_length}
+\leanok
+\uses{def:walk_width,lem:walk_diag_bound}
+  $\mathrm{walkWidth}(p) \leq \mathrm{length}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  Extract the subwalk between the min and max diagCoord vertices;
+  each step changes diagCoord by at most~1.
+\end{proof}
+
+\begin{lemma}[Walk has min vertex]\label{lem:walk_has_min}
+\lean{walk_has_min_vertex}
+\leanok
+\uses{lem:min_diag_achieved}
+  Every walk has a vertex achieving the minimum diagCoord.
+\end{lemma}
+\begin{proof}\leanok Immediate from \texttt{walkMinDiagCoord\_achieved}.\end{proof}
+
+\begin{lemma}[Walk has max vertex]\label{lem:walk_has_max}
+\lean{walk_has_max_vertex}
+\leanok
+\uses{lem:walk_max_achieved}
+  Every walk has a vertex achieving the maximum diagCoord.
+\end{lemma}
+\begin{proof}\leanok Immediate from \texttt{walkMaxDiagCoord\_achieved}.\end{proof}
+
+\begin{lemma}[Walk split total length]\label{lem:walk_split_length}
+\lean{walk_split_total_length}
+\leanok
+  Splitting a walk at a vertex preserves total length:
+  $\mathrm{len}(\mathrm{takeUntil}) + \mathrm{len}(\mathrm{dropUntil}) = \mathrm{len}(p)$.
+\end{lemma}
+\begin{proof}\leanok From \texttt{Walk.take\_spec} and \texttt{length\_append}.\end{proof}
+
+\begin{lemma}[B\_paper $\leq$ 1 implies strip identity]\label{lem:strip_from_B}
+\lean{strip_identity_of_B_le_one}
+\leanok
+  If $B_{\mathrm{paper}}(T,L,x_c) \leq 1$, then there exist $A_m, E_m \geq 0$
+  with $1 = c_\alpha A_m + B_{\mathrm{paper}} + c_\varepsilon E_m$.
+\end{lemma}
+\begin{proof}\leanok
+  Take $A_m = (1 - B) / c_\alpha$ and $E_m = 0$.
+\end{proof}
+
 \subsection*{What is proved}
 
 All other lemmas in the proof chain are fully proved:

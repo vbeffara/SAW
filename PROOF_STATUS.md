@@ -6,40 +6,54 @@
 
 **File**: `RequestProject/SAWFinal.lean` — `connective_constant_eq`
 
-**Status**: Proved modulo two independent sorry'd lemmas (reduced from three).
-
-## Reduction of Sorry's: 3 → 2
-
-**New result** (in `SAWParafermionicProof.lean`): The finite strip identity
-(`strip_identity_genuine`) follows from the infinite strip identity
-(`infinite_strip_identity`). This is proved via an injection from
-`PaperSAW_B` (finite strip walks) into `PaperBridge` (infinite strip bridges),
-which gives `B_paper ≤ xc · paper_bridge_partition ≤ 1`.
-
-The three original sorry's reduce to **two independent sorry's**:
-1. `infinite_strip_identity` (implies `strip_identity_genuine`)
-2. `paper_bridge_decomp_injection` (Hammersley-Welsh, independent)
+**Status**: Proved modulo two independent sorry'd lemmas.
 
 ## Two Remaining Sorry'd Lemmas
 
-### 1. Infinite Strip Identity
-**File**: `SAWRecurrenceProof.lean`
-**Name**: `infinite_strip_identity`
-**Statement**: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
-**Used for**: Bridge recurrence → lower bound → Z(xc) = ∞ (lower bound μ ≥ √(2+√2))
-**Also implies**: `strip_identity_genuine` → B_paper ≤ 1 → bridge decay → Z(x) < ∞ (upper bound, via HW)
-**Proof method**: Parafermionic observable vertex relation (Lemma 1 of Duminil-Copin & Smirnov) 
-summed over the infinite strip (discrete Stokes). Algebraic core (pair_cancellation, 
-triplet_cancellation) is proved. Missing: combinatorial walk partition and boundary evaluation.
+### 1. Infinite Strip Identity / Finite Strip Identity
+**Files**: `SAWRecurrenceProof.lean` (`infinite_strip_identity`) and
+`SAWStripIdentityCorrect.lean` (`strip_identity_genuine`)
 
-### 2. Hammersley-Welsh Decomposition
+**Statement**: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
+(infinite strip) or equivalently `∃ A_m E_m ≥ 0, 1 = c_α A_m + B_paper + c_ε E_m`
+(finite strip)
+
+**Used for**: Bridge recurrence → lower bound μ ≥ √(2+√2);
+also B_paper ≤ 1 → bridge upper bound → bridge decay
+
+**Proof method**: Parafermionic observable vertex relation (Lemma 1 of
+Duminil-Copin & Smirnov 2012) summed over the strip (discrete Stokes).
+Algebraic core (pair_cancellation, triplet_cancellation) is proved.
+Missing: combinatorial walk partition and boundary evaluation.
+
+**New reduction** (`SAWStripProof.lean`): `strip_identity_of_B_le_one` shows
+the strip identity follows from B_paper ≤ 1.
+
+### 2. Hammersley–Welsh Decomposition
 **File**: `SAWPaperChain.lean`
 **Name**: `paper_bridge_decomp_injection`
+
 **Statement**: `∑ n ≤ N, c_n x^n ≤ 2 · (∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²`
+
 **Used for**: Z(x) < ∞ for x < xc → upper bound μ ≤ √(2+√2)
-**Proof method**: Bridge decomposition algorithm (each SAW → two half-plane walks → bridge sequences).
-Infrastructure (walk splitting, coordinate bounds, weight bounds) is proved.
-Missing: decomposition algorithm and injectivity proof.
+
+**Proof method**: Bridge decomposition algorithm (each SAW → two half-plane
+walks → bridge sequences with strictly decreasing widths).
+
+**Infrastructure proved**:
+- Walk diagonal coordinate bounds (`walk_diagCoordZ_bound`)
+- Walk minimum/maximum diagCoord (`walkMinDiagCoord_le`, `walkMaxDiagCoord_ge`)
+- Walk min/max achievement (`walkMinDiagCoord_achieved`, `walkMaxDiagCoord_achieved`)
+- Walk width ≤ walk length (`walkWidth_le_length`)
+- Walk has min/max vertex (`walk_has_min_vertex`, `walk_has_max_vertex`)
+- Walk splitting preserves length (`walk_split_total_length`)
+- PaperFinStrip monotonicity in L (`PaperFinStrip_mono_L`)
+- Bridge weight bounds (`pow_le_prod_pow`)
+- Walk splitting at vertex (`walk_split_at_vertex`)
+- Translation of walks (`hexShift`, `shiftWalk`, `shiftWalk_isPath`)
+- Bridge-to-origin translation (`bridgeToOriginBridge_false`)
+
+**Missing**: Half-plane walk decomposition algorithm and injectivity proof.
 
 ## Fully Proved Results
 
@@ -52,14 +66,22 @@ Missing: decomposition algorithm and injectivity proof.
 - **Connective constant** (`connective_constant`): definition as infimum
 - **Connective constant is limit** (`connective_constant_is_limit'`)
 - **Connective constant is positive** (`connective_constant_pos'`)
+- **Elementary upper bound** (`saw_count_upper_bound`): c_n ≤ 3 · 2^{n-1}
 
 ### Algebraic Identities (Lemma 1 core)
 - **Pair cancellation** (`pair_cancellation`): j·conj(λ)⁴ + conj(j)·λ⁴ = 0
 - **Triplet cancellation** (`triplet_cancellation`): 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
 - **xc inverse** (`xc_inv`): xc⁻¹ = √(2+√2)
 - **Boundary coefficients** (`c_alpha_pos`, `c_eps_pos`)
-- **c_α · xc identity** (`c_alpha_mul_xc`): c_α · xc = (√2−1)/2
+- **c_α · xc identity** (`c_alpha_mul_xc`)
 - **Boundary cosine positivity** (`boundary_cos_pos`)
+
+### Walk Width Infrastructure (NEW)
+- **Walk max diagCoord** (`walkMaxDiagCoord_ge`, `walkMaxDiagCoord_achieved`)
+- **Walk width** (`walkWidth`, `walkWidth_nonneg`, `walkWidth_le_length`)
+- **Walk min/max vertex existence** (`walk_has_min_vertex`, `walk_has_max_vertex`)
+- **Walk splitting** (`walk_split_total_length`, `takeUntil_min_le`, `dropUntil_min_le'`)
+- **PaperFinStrip L-monotonicity** (`PaperFinStrip_mono_L`)
 
 ### Bridge Infrastructure
 - **Paper bridge** (`PaperBridge`): definition, length bound, finiteness
@@ -68,10 +90,11 @@ Missing: decomposition algorithm and injectivity proof.
 - **Bridge positivity** (`paper_bridge_partition_one_pos`)
 
 ### Strip Identity Consequences
-- **PaperSAW_B → PaperBridge injection** (`PaperSAW_B_to_PaperBridge_injective'`): NEW
-- **B_paper ≤ xc · bridge partition** (`B_paper_le_xc_bridge'`): NEW
-- **Strip identity from infinite** (`strip_identity_from_infinite'`): NEW
-- **B_paper ≤ 1** (`B_paper_le_one_from_infinite'`): NEW (alternative proof via infinite strip)
+- **PaperSAW_B → PaperBridge injection** (`PaperSAW_B_to_PaperBridge_injective'`)
+- **B_paper ≤ xc · bridge partition** (`B_paper_le_xc_bridge'`)
+- **Strip identity from infinite** (`strip_identity_from_infinite'`)
+- **B_paper ≤ 1 from infinite** (`B_paper_le_one_from_infinite'`)
+- **B ≤ 1 implies strip identity** (`strip_identity_of_B_le_one`) (NEW)
 
 ### Cutting Argument (Section 3)
 - **Strip monotonicity** (`PaperInfStrip_mono`)
@@ -82,7 +105,7 @@ Missing: decomposition algorithm and injectivity proof.
 
 ### Bridge Recurrence and Lower Bound
 - **Bridge recurrence** (`bridge_recurrence_proved`): B(T) ≤ c_α · B(T+1)² + B(T+1)
-- **Quadratic recurrence lower bound** (`quadratic_recurrence_lower_bound`): B(T) ≥ c/T
+- **Quadratic recurrence lower bound** (`quadratic_recurrence_lower_bound`)
 - **Bridge lower bound** (`paper_bridge_lower_bound`): ∃ c > 0, c/T ≤ B(T)
 
 ### Main Theorem Assembly
@@ -101,7 +124,6 @@ Missing: decomposition algorithm and injectivity proof.
 | SAW.lean | Core definitions, constants, algebraic identities | No |
 | SAWSubmult.lean | Submultiplicativity c_{n+m} ≤ c_n·c_m | No |
 | SAWMain.lean | Fekete → connective constant | No |
-| SAWBridge.lean | Bridge definitions, partition function | Dead sorry |
 | SAWBridgeFix.lean | Corrected bridge partition | No |
 | SAWStripIdentityCorrect.lean | Strip identity, B_paper ≤ 1 | **Sorry #1** |
 | SAWDiagProof.lean | Bridge partial sum bounds | Depends on #1 |
@@ -109,5 +131,11 @@ Missing: decomposition algorithm and injectivity proof.
 | SAWRecurrenceProof.lean | Bridge recurrence from strip identity | **Sorry #1** |
 | SAWDecomp.lean | Quadratic recurrence lower bound | No |
 | SAWPaperChain.lean | Main theorem assembly | **Sorry #2** |
-| SAWParafermionicProof.lean | Finite from infinite strip identity | **No** (NEW) |
+| SAWParafermionicProof.lean | Finite from infinite strip identity | No |
+| SAWStripProof.lean | B ≤ 1 implies strip identity | No (NEW) |
+| SAWHWDecompProof.lean | Walk max diagCoord infrastructure | No (NEW) |
+| SAWObservableVertex.lean | Walk width, splitting infrastructure | No (NEW) |
+| SAWInfStripFromFinite.lean | Strip monotonicity in L | No (NEW) |
+| SAWHWCore.lean | DiagCoord bounds, walk splitting | No |
+| SAWHWAlgorithm.lean | Translation, bipartiteness, walk analysis | No |
 | SAWFinal.lean | Final theorem | Depends on #1, #2 |
