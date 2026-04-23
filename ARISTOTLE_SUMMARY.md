@@ -1,3 +1,51 @@
+# Summary of changes for run 8e597ee3-78d1-443f-9a6a-519178fceae0
+## Summary of work done
+
+### New mathematical content formalized
+
+I created a new file `RequestProject/SAWVertexRelCore2.lean` that proves **all 18 hexTurn computation lemmas** needed for the vertex relation (Lemma 1 of Duminil-Copin & Smirnov 2012). These are the computational ingredients that feed directly into the pair/triplet cancellation argument:
+
+**FALSE vertex turns (9 lemmas):** For FALSE vertex (x,y,false) with TRUE neighbors w₁=(x,y,true), w₂=(x+1,y,true), w₃=(x,y+1,true):
+- `hexTurn_false_w1_w1` through `hexTurn_false_w3_w3`: all 9 combinations verified
+
+**TRUE vertex turns (9 lemmas):** For TRUE vertex (x,y,true) with FALSE neighbors w₁=(x,y,false), w₂=(x-1,y,false), w₃=(x,y-1,false):
+- `hexTurn_true_w1_w1` through `hexTurn_true_w3_w3`: all 9 combinations verified
+
+**Key pattern verified:** At every hex vertex, the three exit turns from any incoming direction are always {-3, -1, +1} (reversal, right turn, left turn), which is exactly what's needed for the triplet/pair cancellation.
+
+**Phase shift lemmas (2 lemmas):** Connecting hexTurn values to λ and conj(λ):
+- `exit_phase_w2`: exp(iσπ/3) = conj(λ) — the phase shift for w₂ extension
+- `exit_phase_w3`: exp(-iσπ/3) = λ — the phase shift for w₃ extension
+
+These lemmas, combined with the already-proved `triplet_cancellation` and `pair_cancellation`, establish that the vertex relation's algebraic core is fully verified. The file has **no sorry's**.
+
+### Blueprint updated
+
+Added a new section "Hex turn computations" (§sec:hex_turns) to the blueprint with:
+- Lemma for FALSE vertex hex turns (lem:hex_turns_false2) — marked \leanok
+- Lemma for TRUE vertex hex turns (lem:hex_turns_true2) — marked \leanok
+- Updated the vertex relation proof structure section to reflect that phase shifts and hex turns are now proved
+
+Updated `PROOF_STATUS.md` with the new hex turn results and file map entry.
+
+### Remaining gaps
+
+The two main sorry'd lemmas remain:
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — the strip identity B ≤ 1. The algebraic ingredients are now complete; what remains is the combinatorial walk partition (grouping walks into pairs/triplets) and the discrete Stokes summation.
+2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — the Hammersley-Welsh bridge decomposition. Infrastructure (walk splitting, diagonal coordinates, bridge bounds) is proved; the half-plane decomposition algorithm and injectivity proof remain.
+
+### Analysis of the vertex relation proof path
+
+Through detailed analysis of the paper's proof, I established the precise connection between the hexTurn computations and the cancellation identities. Specifically:
+
+For the **triplet** at vertex v (walk γ entering from w₁):
+- v-side exit (reversal, turn -3): direction factor 1, weight xc^{n+1}
+- Extension to w₂ (turns -1, -3): relative phase = conj(λ), direction factor j, weight xc^{n+2}
+- Extension to w₃ (turns +1, -3): relative phase = λ, direction factor conj(j), weight xc^{n+2}
+- Total: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 ✓ (triplet_cancellation)
+
+This analysis is documented in the file comments and the blueprint.
+
 # Summary of changes for run 890ec2e6-dea9-41ff-b40c-33eed185b3ad
 ## Summary of Progress
 

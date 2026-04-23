@@ -79,12 +79,19 @@ walks → bridge sequences with strictly decreasing widths).
 - **c_α · xc identity** (`c_alpha_mul_xc`)
 - **Boundary cosine positivity** (`boundary_cos_pos`)
 
-### Direction Factors at Hex Vertices (NEW)
+### Direction Factors at Hex Vertices
 - **FALSE same-cell** (`false_to_true_dir`): embed(TRUE(x,y)) - embed(FALSE(x,y)) = 1
 - **FALSE to (x+1,y)** (`false_to_plus1_dir`): embed(TRUE(x+1,y)) - embed(FALSE(x,y)) = j
 - **FALSE to (x,y+1)** (`false_to_yplus1_dir`): embed(TRUE(x,y+1)) - embed(FALSE(x,y)) = conj(j)
 - **TRUE to (x-1,y)** (`true_to_minus1_dir`): embed(FALSE(x-1,y)) - embed(TRUE(x,y)) = -j
 - **TRUE to (x,y-1)** (`true_to_yminus1_dir`): embed(FALSE(x,y-1)) - embed(TRUE(x,y)) = -conj(j)
+
+### Hex Turn Values (NEW — SAWVertexRelCore2.lean)
+- **All 18 hexTurn values** at FALSE and TRUE vertices: verified computationally
+  - At each vertex, the three exit turns from any incoming direction are: -3 (reversal), -1 (right), +1 (left)
+  - `hexTurn_false_w1_w1` through `hexTurn_false_w3_w3` (9 lemmas)
+  - `hexTurn_true_w1_w1` through `hexTurn_true_w3_w3` (9 lemmas)
+  - These are the computational ingredients for the vertex relation (Lemma 1)
 
 ### Walk Width Infrastructure (NEW)
 - **Walk width (diagCoord)** (`walkWidthDiag`): definition
@@ -154,6 +161,7 @@ walks → bridge sequences with strictly decreasing widths).
 | SAWInfStripFromFinite.lean | Strip monotonicity in L | No |
 | SAWHWCore.lean | DiagCoord bounds, walk splitting | No |
 | SAWHWAlgorithm.lean | Translation, bipartiteness, walk analysis | No |
-| SAWVertexRelCore.lean | Direction factors at hex vertices (NEW) | No |
+| SAWVertexRelCore.lean | Direction factors at hex vertices | No |
+| SAWVertexRelCore2.lean | Hex turn values (18 lemmas, NEW) | No |
 | SAWHWHalfPlane.lean | Walk width via diagCoord, suffix properties (NEW) | No |
 | SAWFinal.lean | Final theorem | Depends on #1, #2 |
