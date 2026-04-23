@@ -10,24 +10,24 @@
 
 ## Two Remaining Sorry'd Lemmas
 
-### 1. Infinite Strip Identity / Finite Strip Identity
-**Files**: `SAWRecurrenceProof.lean` (`infinite_strip_identity`) and
-`SAWStripIdentityCorrect.lean` (`strip_identity_genuine`)
+### 1. Infinite Strip Identity
+**File**: `SAWRecurrenceProof.lean` (`infinite_strip_identity`)
 
 **Statement**: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
-(infinite strip) or equivalently `∃ A_m E_m ≥ 0, 1 = c_α A_m + B_paper + c_ε E_m`
-(finite strip)
 
 **Used for**: Bridge recurrence → lower bound μ ≥ √(2+√2);
-also B_paper ≤ 1 → bridge upper bound → bridge decay
+also implies B_paper ≤ 1 (via SAWParafermionicProof.lean).
 
 **Proof method**: Parafermionic observable vertex relation (Lemma 1 of
 Duminil-Copin & Smirnov 2012) summed over the strip (discrete Stokes).
 Algebraic core (pair_cancellation, triplet_cancellation) is proved.
-Missing: combinatorial walk partition and boundary evaluation.
+Direction factors at hex vertices (false_to_plus1_dir, false_to_yplus1_dir,
+true_to_minus1_dir, true_to_yminus1_dir) are proved.
+Missing: combinatorial walk partition into pairs/triplets and discrete
+Stokes summation.
 
-**New reduction** (`SAWStripProof.lean`): `strip_identity_of_B_le_one` shows
-the strip identity follows from B_paper ≤ 1.
+**Also implies** (`strip_identity_genuine` in SAWStripIdentityCorrect.lean):
+the finite strip identity ∃ A_m E_m ≥ 0, 1 = c_α·A_m + B_paper + c_ε·E_m.
 
 ### 2. Hammersley–Welsh Decomposition
 **File**: `SAWPaperChain.lean`
@@ -44,9 +44,12 @@ walks → bridge sequences with strictly decreasing widths).
 - Walk diagonal coordinate bounds (`walk_diagCoordZ_bound`)
 - Walk minimum/maximum diagCoord (`walkMinDiagCoord_le`, `walkMaxDiagCoord_ge`)
 - Walk min/max achievement (`walkMinDiagCoord_achieved`, `walkMaxDiagCoord_achieved`)
-- Walk width ≤ walk length (`walkWidth_le_length`)
+- Walk width via diagCoord ≤ walk length (`walkWidthDiag_le_length`)
+- SAW width ≤ length (`saw_width_le_length`)
 - Walk has min/max vertex (`walk_has_min_vertex`, `walk_has_max_vertex`)
 - Walk splitting preserves length (`walk_split_total_length`)
+- Prefix min ≤ full min (`takeUntil_min_le_full`)
+- Adjacent vertices diagCoord step (`adj_diagCoord_step`)
 - PaperFinStrip monotonicity in L (`PaperFinStrip_mono_L`)
 - Bridge weight bounds (`pow_le_prod_pow`)
 - Walk splitting at vertex (`walk_split_at_vertex`)
@@ -76,10 +79,23 @@ walks → bridge sequences with strictly decreasing widths).
 - **c_α · xc identity** (`c_alpha_mul_xc`)
 - **Boundary cosine positivity** (`boundary_cos_pos`)
 
+### Direction Factors at Hex Vertices (NEW)
+- **FALSE same-cell** (`false_to_true_dir`): embed(TRUE(x,y)) - embed(FALSE(x,y)) = 1
+- **FALSE to (x+1,y)** (`false_to_plus1_dir`): embed(TRUE(x+1,y)) - embed(FALSE(x,y)) = j
+- **FALSE to (x,y+1)** (`false_to_yplus1_dir`): embed(TRUE(x,y+1)) - embed(FALSE(x,y)) = conj(j)
+- **TRUE to (x-1,y)** (`true_to_minus1_dir`): embed(FALSE(x-1,y)) - embed(TRUE(x,y)) = -j
+- **TRUE to (x,y-1)** (`true_to_yminus1_dir`): embed(FALSE(x,y-1)) - embed(TRUE(x,y)) = -conj(j)
+
 ### Walk Width Infrastructure (NEW)
+- **Walk width (diagCoord)** (`walkWidthDiag`): definition
+- **Max ≥ min diagCoord** (`walkMax_ge_walkMin`)
+- **Walk width ≤ length** (`walkWidthDiag_le_length`)
+- **SAW width ≤ length** (`saw_width_le_length`)
+- **Prefix min ≤ full min** (`takeUntil_min_le_full`)
+- **Adjacent diagCoord step** (`adj_diagCoord_step`)
 - **Walk max diagCoord** (`walkMaxDiagCoord_ge`, `walkMaxDiagCoord_achieved`)
 - **Walk width** (`walkWidth`, `walkWidth_nonneg`, `walkWidth_le_length`)
-- **Walk min/max vertex existence** (`walk_has_min_vertex`, `walk_has_max_vertex`)
+- **Walk min/max vertex** (`walk_has_min_vertex`, `walk_has_max_vertex`)
 - **Walk splitting** (`walk_split_total_length`, `takeUntil_min_le`, `dropUntil_min_le'`)
 - **PaperFinStrip L-monotonicity** (`PaperFinStrip_mono_L`)
 
@@ -94,7 +110,7 @@ walks → bridge sequences with strictly decreasing widths).
 - **B_paper ≤ xc · bridge partition** (`B_paper_le_xc_bridge'`)
 - **Strip identity from infinite** (`strip_identity_from_infinite'`)
 - **B_paper ≤ 1 from infinite** (`B_paper_le_one_from_infinite'`)
-- **B ≤ 1 implies strip identity** (`strip_identity_of_B_le_one`) (NEW)
+- **B ≤ 1 implies strip identity** (`strip_identity_of_B_le_one`)
 
 ### Cutting Argument (Section 3)
 - **Strip monotonicity** (`PaperInfStrip_mono`)
@@ -132,10 +148,12 @@ walks → bridge sequences with strictly decreasing widths).
 | SAWDecomp.lean | Quadratic recurrence lower bound | No |
 | SAWPaperChain.lean | Main theorem assembly | **Sorry #2** |
 | SAWParafermionicProof.lean | Finite from infinite strip identity | No |
-| SAWStripProof.lean | B ≤ 1 implies strip identity | No (NEW) |
-| SAWHWDecompProof.lean | Walk max diagCoord infrastructure | No (NEW) |
-| SAWObservableVertex.lean | Walk width, splitting infrastructure | No (NEW) |
-| SAWInfStripFromFinite.lean | Strip monotonicity in L | No (NEW) |
+| SAWStripProof.lean | B ≤ 1 implies strip identity | No |
+| SAWHWDecompProof.lean | Walk max diagCoord infrastructure | No |
+| SAWObservableVertex.lean | Walk width, splitting infrastructure | No |
+| SAWInfStripFromFinite.lean | Strip monotonicity in L | No |
 | SAWHWCore.lean | DiagCoord bounds, walk splitting | No |
 | SAWHWAlgorithm.lean | Translation, bipartiteness, walk analysis | No |
+| SAWVertexRelCore.lean | Direction factors at hex vertices (NEW) | No |
+| SAWHWHalfPlane.lean | Walk width via diagCoord, suffix properties (NEW) | No |
 | SAWFinal.lean | Final theorem | Depends on #1, #2 |

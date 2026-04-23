@@ -4621,6 +4621,100 @@ For each SAW $\gamma$ of length $n$ from the origin:
   Take $A_m = (1 - B) / c_\alpha$ and $E_m = 0$.
 \end{proof}
 
+\section{Direction factors at hex vertices}\label{sec:dir_factors}
+
+The following lemmas compute the direction vectors from each hex vertex
+to its three neighbors, expressed in terms of the cube root of unity
+$j = e^{i2\pi/3}$.
+
+\begin{lemma}[FALSE to same-cell TRUE direction]\label{lem:dir_false_same}
+\lean{false_to_true_dir}
+\leanok
+  $\mathrm{embed}(\mathrm{TRUE}(x,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y)) = 1$.
+\end{lemma}
+\begin{proof}\leanok Direct computation.\end{proof}
+
+\begin{lemma}[FALSE to $(x{+}1,y)$ TRUE direction]\label{lem:dir_false_plus1}
+\lean{false_to_plus1_dir}
+\leanok
+\uses{lem:dir_false_same}
+  $\mathrm{embed}(\mathrm{TRUE}(x{+}1,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y)) = j$.
+\end{lemma}
+\begin{proof}\leanok Complex.ext + ring.\end{proof}
+
+\begin{lemma}[FALSE to $(x,y{+}1)$ TRUE direction]\label{lem:dir_false_yplus1}
+\lean{false_to_yplus1_dir}
+\leanok
+\uses{lem:dir_false_same}
+  $\mathrm{embed}(\mathrm{TRUE}(x,y{+}1)) - \mathrm{embed}(\mathrm{FALSE}(x,y)) = \bar{j}$.
+\end{lemma}
+\begin{proof}\leanok Complex.ext + ring.\end{proof}
+
+\begin{lemma}[TRUE to $(x{-}1,y)$ FALSE direction]\label{lem:dir_true_minus1}
+\lean{true_to_minus1_dir}
+\leanok
+  $\mathrm{embed}(\mathrm{FALSE}(x{-}1,y)) - \mathrm{embed}(\mathrm{TRUE}(x,y)) = -j$.
+\end{lemma}
+\begin{proof}\leanok Complex.ext + ring.\end{proof}
+
+\begin{lemma}[TRUE to $(x,y{-}1)$ FALSE direction]\label{lem:dir_true_yminus1}
+\lean{true_to_yminus1_dir}
+\leanok
+  $\mathrm{embed}(\mathrm{FALSE}(x,y{-}1)) - \mathrm{embed}(\mathrm{TRUE}(x,y)) = -\bar{j}$.
+\end{lemma}
+\begin{proof}\leanok Complex.ext + ring.\end{proof}
+
+\section{Walk width via diagCoord}\label{sec:walk_width_diag}
+
+\begin{definition}[Walk width (diagCoord)]\label{def:walk_width_diag}
+\lean{walkWidthDiag}
+\leanok
+\uses{def:walk_max_diag,def:walk_min_diag}
+  The width of a walk via diagonal coordinates:
+  $(\mathrm{walkMaxDiagCoord}(p) - \mathrm{walkMinDiagCoord}(p)).\mathrm{toNat}$.
+\end{definition}
+
+\begin{lemma}[Max diagCoord $\geq$ min diagCoord]\label{lem:max_ge_min}
+\lean{walkMax_ge_walkMin}
+\leanok
+\uses{def:walk_max_diag,def:walk_min_diag}
+  $\mathrm{walkMinDiagCoord}(p) \leq \mathrm{walkMaxDiagCoord}(p)$.
+\end{lemma}
+\begin{proof}\leanok Both bound $\mathrm{diagCoordZ}(v)$ for the start vertex.\end{proof}
+
+\begin{lemma}[Walk width (diag) $\leq$ length]\label{lem:walk_width_diag_le}
+\lean{walkWidthDiag_le_length}
+\leanok
+\uses{def:walk_width_diag,lem:walk_diag_bound}
+  $\mathrm{walkWidthDiag}(p) \leq \mathrm{length}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  Extract the subwalk between the min and max diagCoord vertices;
+  each step changes diagCoord by at most~$1$, so the range is at
+  most the subwalk length, which is at most the full walk length.
+\end{proof}
+
+\begin{lemma}[SAW width $\leq$ length]\label{lem:saw_width_le}
+\lean{saw_width_le_length}
+\leanok
+\uses{lem:walk_width_diag_le}
+  For a SAW from \texttt{paperStart} of length $n$:
+  $\mathrm{walkWidthDiag}(p) \leq n$.
+\end{lemma}
+\begin{proof}\leanok Immediate from \texttt{walkWidthDiag\_le\_length}.\end{proof}
+
+\begin{lemma}[Prefix min $\leq$ full min]\label{lem:prefix_min_le}
+\lean{takeUntil_min_le_full}
+\leanok
+\uses{def:walk_min_diag}
+  Splitting a walk at vertex $u$: the minimum diagCoord of the full
+  walk is $\leq$ the minimum of the prefix (takeUntil).
+\end{lemma}
+\begin{proof}\leanok
+  Every vertex in the prefix is in the full walk; apply
+  \texttt{walkMinDiagCoord\_le}.
+\end{proof}
+
 \subsection*{What is proved}
 
 All other lemmas in the proof chain are fully proved:

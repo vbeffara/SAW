@@ -1,3 +1,48 @@
+# Summary of changes for run 890ec2e6-dea9-41ff-b40c-33eed185b3ad
+## Summary of Progress
+
+### New Files Created (Sorry-Free)
+
+1. **`RequestProject/SAWVertexRelCore.lean`** — Direction factor lemmas at hex vertices:
+   - `false_to_plus1_dir`: embed(TRUE(x+1,y)) - embed(FALSE(x,y)) = j
+   - `false_to_yplus1_dir`: embed(TRUE(x,y+1)) - embed(FALSE(x,y)) = conj(j)  
+   - `true_to_minus1_dir`: embed(FALSE(x-1,y)) - embed(TRUE(x,y)) = -j
+   - `true_to_yminus1_dir`: embed(FALSE(x,y-1)) - embed(TRUE(x,y)) = -conj(j)
+   
+   These prove that the direction vectors from each hex vertex to its three neighbors are exactly the cube roots of unity (times ±1), as needed for the vertex relation (Lemma 1).
+
+2. **`RequestProject/SAWHWHalfPlane.lean`** — Walk width and half-plane walk infrastructure:
+   - `walkWidthDiag`: definition of walk width via diagCoord
+   - `walkMax_ge_walkMin`: max diagCoord ≥ min diagCoord
+   - `walkWidthDiag_le_length`: walk width ≤ walk length (key bound: max - min ≤ length)
+   - `saw_width_le_length`: SAW width ≤ length
+   - `takeUntil_min_le_full`: prefix minimum ≤ full walk minimum
+   - `adj_diagCoord_step`: adjacent vertices have diagCoord in {d-1, d, d+1}
+   - `suffix_diagCoord_gt_min`: vertices after the last minimum have diagCoord ≥ min + 1
+
+### Blueprint Updated
+
+Updated `blueprint/src/content.tex` with:
+- Section on direction factors at hex vertices (5 fully proved lemmas)
+- Section on walk width via diagCoord (6 fully proved lemmas/definitions)
+- All new entries include `\lean{}`, `\leanok`, `\uses{}`, and proof annotations
+
+### Proof Status Updated
+
+Updated `PROOF_STATUS.md` to reflect all new infrastructure and the current state of the two remaining sorry's.
+
+### What Remains (Unchanged)
+
+The project still has exactly **two independent sorry'd lemmas** blocking the main theorem:
+
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): The parafermionic observable identity `1 = c_α · A_inf(T, xc) + xc · B(T, xc)`. Requires the combinatorial walk partition into pairs/triplets and discrete Stokes summation over the strip. The algebraic core (pair/triplet cancellation) and direction factors are now fully proved.
+
+2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean): The Hammersley-Welsh bridge decomposition counting inequality. Requires the half-plane walk decomposition algorithm and injectivity proof. Significant infrastructure for walk splitting, diagCoord bounds, bridge extraction, and width bounds is now proved.
+
+### Build Status
+
+All files build successfully. The two new files (`SAWVertexRelCore.lean`, `SAWHWHalfPlane.lean`) contain zero sorry's and depend only on standard axioms (propext, Classical.choice, Quot.sound).
+
 # Summary of changes for run 5298c526-fc01-45c1-a192-a0255be8f08d
 ## Progress on SAW Formalization
 
