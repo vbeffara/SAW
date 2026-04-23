@@ -6,11 +6,42 @@
 
 **File**: `RequestProject/SAWFinal.lean` — `connective_constant_eq`
 
-**Status**: Proved modulo three sorry'd lemmas (see below).
+**Status**: Proved modulo two independent sorry'd lemmas (reduced from three).
+
+## Reduction of Sorry's: 3 → 2
+
+**New result** (in `SAWParafermionicProof.lean`): The finite strip identity
+(`strip_identity_genuine`) follows from the infinite strip identity
+(`infinite_strip_identity`). This is proved via an injection from
+`PaperSAW_B` (finite strip walks) into `PaperBridge` (infinite strip bridges),
+which gives `B_paper ≤ xc · paper_bridge_partition ≤ 1`.
+
+The three original sorry's reduce to **two independent sorry's**:
+1. `infinite_strip_identity` (implies `strip_identity_genuine`)
+2. `paper_bridge_decomp_injection` (Hammersley-Welsh, independent)
+
+## Two Remaining Sorry'd Lemmas
+
+### 1. Infinite Strip Identity
+**File**: `SAWRecurrenceProof.lean`
+**Name**: `infinite_strip_identity`
+**Statement**: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
+**Used for**: Bridge recurrence → lower bound → Z(xc) = ∞ (lower bound μ ≥ √(2+√2))
+**Also implies**: `strip_identity_genuine` → B_paper ≤ 1 → bridge decay → Z(x) < ∞ (upper bound, via HW)
+**Proof method**: Parafermionic observable vertex relation (Lemma 1 of Duminil-Copin & Smirnov) 
+summed over the infinite strip (discrete Stokes). Algebraic core (pair_cancellation, 
+triplet_cancellation) is proved. Missing: combinatorial walk partition and boundary evaluation.
+
+### 2. Hammersley-Welsh Decomposition
+**File**: `SAWPaperChain.lean`
+**Name**: `paper_bridge_decomp_injection`
+**Statement**: `∑ n ≤ N, c_n x^n ≤ 2 · (∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²`
+**Used for**: Z(x) < ∞ for x < xc → upper bound μ ≤ √(2+√2)
+**Proof method**: Bridge decomposition algorithm (each SAW → two half-plane walks → bridge sequences).
+Infrastructure (walk splitting, coordinate bounds, weight bounds) is proved.
+Missing: decomposition algorithm and injectivity proof.
 
 ## Fully Proved Results
-
-The following key results are fully proved with no sorry dependencies:
 
 ### Foundations
 - **Hexagonal lattice** (`hexGraph`): vertex type, adjacency, decidability
@@ -36,6 +67,12 @@ The following key results are fully proved with no sorry dependencies:
 - **Bridge-to-SAW injection** (`paperBridge_toSAW_sigma_injective`)
 - **Bridge positivity** (`paper_bridge_partition_one_pos`)
 
+### Strip Identity Consequences
+- **PaperSAW_B → PaperBridge injection** (`PaperSAW_B_to_PaperBridge_injective'`): NEW
+- **B_paper ≤ xc · bridge partition** (`B_paper_le_xc_bridge'`): NEW
+- **Strip identity from infinite** (`strip_identity_from_infinite'`): NEW
+- **B_paper ≤ 1** (`B_paper_le_one_from_infinite'`): NEW (alternative proof via infinite strip)
+
 ### Cutting Argument (Section 3)
 - **Strip monotonicity** (`PaperInfStrip_mono`)
 - **Walk widening** (`PaperSAW_A_inf_widen`, injective)
@@ -57,30 +94,6 @@ The following key results are fully proved with no sorry dependencies:
 - **Divergence above xc** (`partition_function_diverges_above_xc'`)
 - **Convergence below xc** (`partition_function_converges_below_xc'`)
 
-## Three Remaining Sorry'd Lemmas
-
-### 1. Finite Strip Identity (B_paper ≤ 1)
-**File**: `SAWStripIdentityCorrect.lean`
-**Name**: `strip_identity_genuine`
-**Statement**: ∃ A_m E_m ≥ 0, 1 = c_α · A_m + B_paper(T,L,xc) + c_ε · E_m
-**Used for**: Bridge partition decay bound → HW summability → upper bound μ ≤ √(2+√2)
-**Proof method**: Parafermionic observable vertex relation (Lemma 1) + discrete Stokes on finite strip (Lemma 2). Algebraic core (pair/triplet cancellation) proved; combinatorial walk partition and boundary evaluation remain.
-
-### 2. Infinite Strip Identity
-**File**: `SAWRecurrenceProof.lean`
-**Name**: `infinite_strip_identity`
-**Statement**: 1 = c_α · A_inf(T,xc) + xc · B(T,xc)
-**Used for**: Bridge recurrence → lower bound → divergence of Z(xc) → lower bound μ ≥ √(2+√2)
-**Proof method**: Same parafermionic argument as #1 but for infinite strip (no escape boundary). Can also be derived as L→∞ limit of #1.
-**Algebraic verification**: For T=1, the identity reduces to 1−xc² = 2xc²(c_α·xc + 1), which is verified using c_α·xc = (√2−1)/2.
-
-### 3. Hammersley-Welsh Decomposition
-**File**: `SAWPaperChain.lean`
-**Name**: `paper_bridge_decomp_injection`
-**Statement**: Σ_{n≤N} c_n x^n ≤ 2 · (Π_{T=1}^N (1 + B_T(x)))²
-**Used for**: Z(x) < ∞ for x < xc → upper bound μ ≤ √(2+√2)
-**Proof method**: Bridge decomposition algorithm. Each SAW splits at min diagCoord into two half-plane walks, each decomposing into bridges by induction on width. Infrastructure (walk splitting, coordinate bounds, weight bounds) proved; decomposition algorithm and injectivity remain.
-
 ## File Map
 
 | File | Role | Sorry? |
@@ -92,12 +105,9 @@ The following key results are fully proved with no sorry dependencies:
 | SAWBridgeFix.lean | Corrected bridge partition | No |
 | SAWStripIdentityCorrect.lean | Strip identity, B_paper ≤ 1 | **Sorry #1** |
 | SAWDiagProof.lean | Bridge partial sum bounds | Depends on #1 |
-| SAWCutting.lean | Cutting argument setup | Dead sorry |
 | SAWCuttingProof.lean | Cutting argument proved | No |
-| SAWRecurrenceProof.lean | Bridge recurrence from strip identity | **Sorry #2** |
+| SAWRecurrenceProof.lean | Bridge recurrence from strip identity | **Sorry #1** |
 | SAWDecomp.lean | Quadratic recurrence lower bound | No |
-| SAWPaperChain.lean | Main theorem assembly | **Sorry #3** |
-| SAWFinal.lean | Final theorem | Depends on #1, #2, #3 |
-| SAWVertexRel.lean | Vertex relation infrastructure | Sorry (helper) |
-| SAWStokesSkeleton.lean | Discrete Stokes infrastructure | Sorry (helper) |
-| SAWHWDecomp.lean | HW decomposition infrastructure | Sorry (dup) |
+| SAWPaperChain.lean | Main theorem assembly | **Sorry #2** |
+| SAWParafermionicProof.lean | Finite from infinite strip identity | **No** (NEW) |
+| SAWFinal.lean | Final theorem | Depends on #1, #2 |

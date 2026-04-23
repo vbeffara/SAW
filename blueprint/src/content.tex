@@ -4452,28 +4452,10 @@ are proved in \texttt{SAWHWCore.lean}.
 \section{Proof gaps and dependencies}\label{sec:gaps}
 
 The main theorem (\S\ref{sec:main_thm}) depends on exactly
-\textbf{three} sorry'd lemmas, each corresponding to a distinct
-mathematical ingredient:
+\textbf{two} independent sorry'd lemmas (reduced from three by
+showing that the finite strip identity follows from the infinite one):
 
 \begin{enumerate}
-\item \textbf{Finite strip identity / $B_{\text{paper}} \le 1$}
-  (\texttt{strip\_identity\_genuine} in
-  \texttt{SAWStripIdentityCorrect.lean}):
-  For the finite strip $S_{T,L}$ with $T \ge 1$, $L \ge 1$:
-  \[
-    \exists A_m, E_m \ge 0, \quad
-    1 = c_\alpha \cdot A_m + B_{\text{paper}}(T,L,x_c) + c_\varepsilon \cdot E_m.
-  \]
-  This implies $B_{\text{paper}} \le 1$.
-  It follows from the parafermionic observable vertex relation
-  (Lemma~1 of the paper) summed over all vertices of the finite strip
-  (discrete Stokes / telescoping argument). The algebraic ingredients
-  \texttt{pair\_cancellation} and \texttt{triplet\_cancellation} are
-  fully proved; the combinatorial pair/triplet walk partition and
-  boundary evaluation remain.
-  Required for the bridge partition decay bound and hence for the
-  upper bound proof ($\mu \le \sqrt{2+\sqrt{2}}$).
-
 \item \textbf{Infinite strip identity}
   (\texttt{infinite\_strip\_identity} in
   \texttt{SAWRecurrenceProof.lean}):
@@ -4487,6 +4469,13 @@ mathematical ingredient:
   (no escape boundary). Used for the bridge recurrence
   $B(T) \le c_\alpha \cdot B(T{+}1)^2 + B(T{+}1)$ and hence for
   the lower bound $\mu \ge \sqrt{2+\sqrt{2}}$.
+  \textbf{Also implies the finite strip identity}
+  (\texttt{strip\_identity\_from\_infinite'} in
+  \texttt{SAWParafermionicProof.lean}):
+  since \texttt{PaperSAW\_B} $\hookrightarrow$
+  \texttt{PaperBridge} (walks in the finite strip embed into infinite
+  strip bridges), we get $B_{\text{paper}} \le x_c \cdot B \le 1$.
+  This chain eliminates the finite strip identity as an independent sorry.
 
 \item \textbf{Hammersley--Welsh decomposition}
   (\texttt{paper\_bridge\_decomp\_injection} in

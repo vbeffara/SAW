@@ -1,3 +1,34 @@
+# Summary of changes for run 7f85c462-f0f5-46b6-8a63-590161099c8d
+## Summary of Changes
+
+### Key New Mathematical Result: Reducing Sorry's from 3 to 2
+
+**New file `RequestProject/SAWParafermionicProof.lean`** — This file proves that the finite strip identity (`strip_identity_genuine`) follows from the infinite strip identity (`infinite_strip_identity`), reducing the number of independent root sorry's from three to two.
+
+The proof chain is:
+1. **PaperSAW_B → PaperBridge injection** (`PaperSAW_B_to_PaperBridge_injective'`): Each walk in the finite strip `PaperSAW_B T L` embeds into an infinite strip bridge `PaperBridge T`, since `PaperFinStrip T L v → PaperInfStrip T v`. The embedding preserves walk length and is injective.
+
+2. **B_paper ≤ xc · paper_bridge_partition** (`B_paper_le_xc_bridge'`): The finite strip partition function is bounded by the infinite strip bridge partition function (via the injection above plus `tsum_comp_le_tsum_of_inj`).
+
+3. **xc · paper_bridge_partition ≤ 1** (`xc_bridge_le_one'`): Follows directly from the infinite strip identity `1 = c_α · A_inf + xc · B` since `c_α · A_inf ≥ 0`.
+
+4. **strip_identity_from_infinite'**: Combines the above to get `B_paper ≤ 1`, then constructs witnesses `A_m = (1 - B_paper)/c_α, E_m = 0`.
+
+All proofs in this file compile without sorry.
+
+### Updated Documentation
+
+- **`PROOF_STATUS.md`**: Updated to reflect the reduction from 3 to 2 independent sorry's, with detailed description of the new logical dependency.
+- **`blueprint/src/content.tex`**: Updated the "Proof gaps and dependencies" section to document two (not three) remaining sorry'd lemmas, and the derivation chain from infinite to finite strip identity.
+
+### Two Remaining Sorry'd Lemmas
+
+1. **`infinite_strip_identity`** (in `SAWRecurrenceProof.lean`): The parafermionic observable identity `1 = c_α · A_inf(T, xc) + xc · B(T, xc)` for the infinite strip. Now also implies the finite strip identity. Requires formalizing the vertex relation (walk partition into pairs/triplets) and discrete Stokes argument.
+
+2. **`paper_bridge_decomp_injection`** (in `SAWPaperChain.lean`): The Hammersley-Welsh bridge decomposition counting inequality. Requires formalizing the bridge decomposition algorithm and proving injectivity.
+
+Both are deep mathematical results requiring substantial combinatorial infrastructure. The algebraic core (pair_cancellation, triplet_cancellation, boundary_cos_pos) is fully proved; the combinatorial walk partitioning and boundary evaluation remain as the fundamental gaps.
+
 # Summary of changes for run 495a5435-4521-4360-abe6-d4e15876175c
 ## Summary of Changes
 
