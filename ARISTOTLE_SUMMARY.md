@@ -1,3 +1,51 @@
+# Summary of changes for run 6cf53b5d-fa6f-4662-a33b-3baffb3d7df8
+## Summary of Progress
+
+### New File: `RequestProject/SAWStripT1Walks.lean` (sorry-free)
+
+Created a new file with **fully proved** lemmas about walk structure in the width-1 strip. All lemmas compile without sorry:
+
+1. **Walk bipartiteness** (`walk_true_to_false_odd`): A walk on hexGraph from a TRUE vertex to a FALSE vertex has odd length. Proved by induction using `hexGraph_bipartite`.
+
+2. **PaperBridge 1 has odd length** (`paper_bridge_1_odd_length`): Every bridge of width 1 has odd walk length.
+
+3. **Strip-1 neighbor characterization**:
+   - `strip1_true_neighbors`: In PaperInfStrip 1, a TRUE vertex (k, -k, true) has exactly 2 in-strip neighbors.
+   - `strip1_false_neighbors`: In PaperInfStrip 1, a FALSE vertex (k, -k-1, false) has exactly 2 in-strip neighbors.
+   - `paperStart_strip1_neighbors`: paperStart has exactly 2 strip-1 neighbors: (0,-1,false) and (-1,0,false).
+
+4. **Explicit bridge constructions** (`rightBridge0`, `leftBridge0`): Two distinct PaperBridge 1 walks of length 1 explicitly constructed.
+
+5. **Length-1 bridge classification** (`paper_bridge_1_length1_classification`): Every PaperBridge 1 of length 1 equals either rightBridge0 or leftBridge0. This establishes that the width-1 strip at the shortest bridge length has exactly 2 bridges.
+
+6. **Auxiliary lemmas**: `xc_sq_lt_one`, `one_sub_xc_sq_pos` for geometric series bounds.
+
+### Modified Files
+
+- **`RequestProject/SAWStripT1Identity.lean`**: Added import of `SAWStripT1Walks` to make the T=1 infrastructure available.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with new entries for all proved lemmas:
+- Walk bipartiteness (with `\leanok`)
+- PaperBridge 1 odd length (with `\leanok`)
+- Strip-1 TRUE/FALSE neighbor characterization (with `\leanok`)
+- Explicit width-1 bridges (with `\leanok`)
+
+### Updated `PROOF_STATUS.md`
+
+Comprehensive update documenting all proved results and remaining gaps with current file status.
+
+### What Remains
+
+The main theorem `connective_constant_eq_corrected` still depends on 2 fundamental gaps:
+
+1. **Strip identity** (`strip_identity_genuine` / `infinite_strip_identity`): The parafermionic observable identity. The new bipartiteness and neighbor characterization lemmas provide infrastructure for the T=1 case, but the general case requires formalizing the walk partition into pairs/triplets at each vertex and the discrete Stokes summation.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The canonical bridge decomposition of SAWs. Requires formalizing the half-plane walk decomposition algorithm, its injectivity, and weight accounting.
+
+Both gaps are deep mathematical results requiring substantial combinatorial infrastructure. The algebraic core (pair/triplet cancellation) and geometric infrastructure (direction ratios, boundary cosine positivity) are fully proved.
+
 # Summary of changes for run bc93a97b-a6ea-48aa-b0db-f346f0974155
 ## Summary of Progress
 

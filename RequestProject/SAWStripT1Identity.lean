@@ -8,6 +8,7 @@ and the infinite strip identity for T = 1.
 import Mathlib
 import RequestProject.SAWRecurrenceProof
 import RequestProject.SAWStripT1
+import RequestProject.SAWStripT1Walks
 
 open Real Complex ComplexConjugate Filter Topology
 

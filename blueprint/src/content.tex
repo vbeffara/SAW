@@ -4964,6 +4964,61 @@ by explicitly computing the partition functions.
   factor out $2x_c^2/(1-x_c^2)$ and apply \texttt{strip\_T1\_algebraic}.
 \end{proof}
 
+\begin{lemma}[Walk bipartiteness]\label{lem:walk_bipartite}
+\lean{walk_true_to_false_odd}
+\leanok
+\uses{def:hex_lattice}
+  A walk from a TRUE vertex to a FALSE vertex in \texttt{hexGraph}
+  has odd length. This follows from the bipartiteness of the hex lattice:
+  adjacent vertices have different sublattice types, so the sublattice type
+  alternates along any walk.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the walk, tracking the sublattice parity.
+  Uses \texttt{hexGraph\_bipartite}.
+\end{proof}
+
+\begin{lemma}[PaperBridge 1 has odd length]\label{lem:bridge1_odd}
+\lean{paper_bridge_1_odd_length}
+\leanok
+\uses{lem:walk_bipartite, def:paper_bridge}
+  Every PaperBridge of width $1$ has odd walk length.
+  This is because \texttt{paperStart} is TRUE and the endpoint is FALSE.
+\end{lemma}
+\begin{proof}\leanok
+  Apply \texttt{walk\_true\_to\_false\_odd} to the bridge walk.
+\end{proof}
+
+\begin{lemma}[Strip-1 TRUE neighbors]\label{lem:strip1_true_nbrs}
+\lean{strip1_true_neighbors}
+\leanok
+\uses{def:hex_lattice, def:paper_inf_strip}
+  In PaperInfStrip $1$, a TRUE vertex $(k, -k, \mathit{true})$ has exactly
+  two neighbors in the strip: $(k, {-k-1}, \mathit{false})$ and
+  $(k{-}1, -k, \mathit{false})$.
+\end{lemma}
+\begin{proof}\leanok Unfold hexGraph and PaperInfStrip; case split.\end{proof}
+
+\begin{lemma}[Strip-1 FALSE neighbors]\label{lem:strip1_false_nbrs}
+\lean{strip1_false_neighbors}
+\leanok
+\uses{def:hex_lattice, def:paper_inf_strip}
+  In PaperInfStrip $1$, a FALSE vertex $(k, {-k-1}, \mathit{false})$ has exactly
+  two neighbors in the strip: $(k, -k, \mathit{true})$ and
+  $(k{+}1, {-(k+1)}, \mathit{true})$.
+\end{lemma}
+\begin{proof}\leanok Unfold hexGraph and PaperInfStrip; case split.\end{proof}
+
+\begin{lemma}[Explicit width-1 bridges]\label{lem:explicit_bridges}
+\lean{rightBridge0, leftBridge0}
+\leanok
+\uses{def:paper_bridge, def:paper_inf_strip}
+  Two distinct PaperBridge~$1$ walks of length~$1$:
+  \texttt{rightBridge0} (to $(0,-1,\mathit{false})$)
+  and \texttt{leftBridge0} (to $(-1,0,\mathit{false})$).
+\end{lemma}
+\begin{proof}\leanok Explicit construction and \texttt{decide}.\end{proof}
+
 \subsection*{Remaining gaps}
 
 Two independent sorry chains remain:
