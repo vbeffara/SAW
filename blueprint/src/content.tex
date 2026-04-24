@@ -4852,6 +4852,69 @@ lower bound via divergence of $Z(x_c)$, bridge decay, product
 convergence, and the final assembly of $\mu = \sqrt{2+\sqrt{2}}$
 from the divergence and convergence bounds.
 
+\section{New algebraic identities (SAWStripT1, SAWVertexRelProof2)}
+
+\begin{lemma}[$x_c \cdot c_\alpha = (\sqrt{2}-1)/2$]\label{lem:xc_calpha}
+\lean{xc_mul_c_alpha}
+\leanok
+\uses{def:xc, def:boundary_coeffs}
+  $x_c \cdot c_\alpha = (\sqrt{2} - 1)/2$.
+  Proved via the half-angle formula for $\cos(3\pi/8) = \sin(\pi/8)$.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\begin{lemma}[$c_\alpha x_c + 1 = (\sqrt{2}+1)/2$]\label{lem:calpha_xc_plus1}
+\lean{c_alpha_xc_plus_one}
+\leanok
+\uses{lem:xc_calpha}
+  $c_\alpha \cdot x_c + 1 = (\sqrt{2}+1)/2$.
+\end{lemma}
+\begin{proof}\leanok Direct from \texttt{xc\_mul\_c\_alpha}.\end{proof}
+
+\begin{lemma}[Strip $T{=}1$ algebraic identity]\label{lem:strip_T1_alg}
+\lean{strip_T1_algebraic}
+\leanok
+\uses{def:xc}
+  $\dfrac{2x_c^2}{1 - x_c^2} \cdot \dfrac{\sqrt{2}+1}{2} = 1$.
+  This verifies the infinite strip identity for $T = 1$ at the algebraic level.
+\end{lemma}
+\begin{proof}\leanok
+  After substituting $x_c^2 = 1/(2+\sqrt{2})$, the LHS simplifies to
+  $\dfrac{2}{1+\sqrt{2}} \cdot \dfrac{\sqrt{2}+1}{2} = 1$.
+\end{proof}
+
+\begin{lemma}[Direction ratio $= j$ (FALSE vertex)]\label{lem:dir_ratio_j_false}
+\lean{dir_ratio_j}
+\leanok
+\uses{def:hex_embed_correct, def:j}
+  For a FALSE vertex $(x,y)$:
+  $\mathrm{embed}(\mathrm{TRUE}(x{+}1,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y))
+   = j \cdot [\mathrm{embed}(\mathrm{TRUE}(x,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y))]$.
+\end{lemma}
+\begin{proof}\leanok Both sides equal $(-1/2, \sqrt{3}/2) = j$.\end{proof}
+
+\begin{lemma}[Direction ratio $= j^2$ (FALSE vertex)]\label{lem:dir_ratio_jsq_false}
+\lean{dir_ratio_j_sq}
+\leanok
+\uses{def:hex_embed_correct, def:j}
+  For a FALSE vertex $(x,y)$:
+  $\mathrm{embed}(\mathrm{TRUE}(x,y{+}1)) - \mathrm{embed}(\mathrm{FALSE}(x,y))
+   = j^2 \cdot [\mathrm{embed}(\mathrm{TRUE}(x,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y))]$.
+\end{lemma}
+\begin{proof}\leanok Both sides equal $(-1/2, -\sqrt{3}/2) = j^2$.\end{proof}
+
+\begin{lemma}[SAW diagCoord bounds]\label{lem:saw_diag_bounds}
+\lean{saw_maxDiag_le', saw_minDiag_ge', saw_diagCoord_abs_le}
+\leanok
+\uses{def:saw}
+  For a SAW from \texttt{paperStart} of length $n$,
+  every vertex $u$ in the support satisfies:
+  $-n \leq u_1 + u_{2,1} \leq n$, i.e., $|\mathrm{diagCoord}(u)| \leq n$.
+\end{lemma}
+\begin{proof}\leanok
+  Apply \texttt{hexGraph\_walk\_sum\_bound\_pos/neg} to the prefix.
+\end{proof}
+
 \subsection*{Remaining gaps}
 
 Two independent sorry chains remain:
@@ -4859,13 +4922,14 @@ Two independent sorry chains remain:
 \item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}): the
   parafermionic observable identity $1 = c_\alpha \cdot A_T^{x_c} + x_c \cdot B_T^{x_c}$,
   and the finite strip identity (\texttt{strip\_identity\_genuine}).
-  The algebraic core (pair and triplet cancellation) and the
-  triplet winding telescoping property are proved.
+  The algebraic core (pair and triplet cancellation), the direction ratio identities
+  ($\mathrm{dir} = j, j^2$), and the $T{=}1$ algebraic identity are proved.
   What remains: the combinatorial walk partition into pairs/triplets at each vertex,
   and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
   the canonical bridge decomposition of SAWs giving
   $\sum c_n x^n \leq 2 \prod (1 + B_T)^2$.
-  Walk max/min diagCoord infrastructure and the product--powerset identity are proved.
+  Walk max/min diagCoord infrastructure, SAW diagCoord bounds,
+  and the product--powerset identity are proved.
   What remains: the decomposition algorithm and its injectivity proof.
 \end{enumerate}

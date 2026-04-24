@@ -1,3 +1,46 @@
+# Summary of changes for run b4392733-988d-4405-914e-bec7e8505793
+## Session Summary: Continuing Formalization of SAW.tex
+
+### New Files Created (all sorry-free)
+
+1. **`RequestProject/SAWStripT1.lean`** — Algebraic identities for the T=1 strip:
+   - `xc_mul_c_alpha`: xc · c_α = (√2 - 1)/2 (proved via half-angle formula)
+   - `c_alpha_xc_plus_one`: c_α · xc + 1 = (√2 + 1)/2
+   - `strip_T1_algebraic`: 2xc²/(1-xc²) · (√2+1)/2 = 1 (verifies the infinite strip identity for T=1 at the algebraic level)
+
+2. **`RequestProject/SAWVertexRelProof2.lean`** — Direction ratio identities for the vertex relation:
+   - `dir_ratio_j`: The direction from FALSE(x,y) to TRUE(x+1,y) equals j times the direction to TRUE(x,y)
+   - `dir_ratio_j_sq`: The direction from FALSE(x,y) to TRUE(x,y+1) equals j² times the direction to TRUE(x,y)
+   - These identities are key geometric ingredients for the vertex relation (Lemma 1 of the paper)
+
+3. **`RequestProject/SAWHWDecompDiag.lean`** — SAW diagonal coordinate bounds:
+   - `saw_maxDiag_le'`: Every vertex in a SAW of length n has diagCoord ≤ n
+   - `saw_minDiag_ge'`: Every vertex has diagCoord ≥ -n
+   - `saw_diagCoord_abs_le`: |diagCoord| ≤ n
+   - Infrastructure for the Hammersley-Welsh bridge decomposition
+
+### Blueprint Updated
+
+- `blueprint/src/content.tex` updated with 7 new blueprint entries (all marked `\leanok`):
+  - `xc_mul_c_alpha`, `c_alpha_xc_plus_one`, `strip_T1_algebraic`
+  - `dir_ratio_j`, `dir_ratio_j_sq`
+  - `saw_maxDiag_le'`, `saw_minDiag_ge'`, `saw_diagCoord_abs_le`
+- Updated "Remaining gaps" section to reflect the new proved infrastructure
+
+### Proof Status Updated
+
+- `PROOF_STATUS.md` rewritten with comprehensive status of all 19 sorry's
+
+### Current State of the Formalization
+
+The main theorem `connective_constant_eq : μ = √(2+√2)` compiles with sorry dependencies tracing to exactly **two independent fundamental gaps**:
+
+1. **Strip Identity (Lemma 2)**: `strip_identity_genuine` / `infinite_strip_identity` — proving B_paper(T,L,xc) ≤ 1 via the parafermionic observable. The algebraic core (pair/triplet cancellation) and geometric infrastructure (direction ratios, boundary cosine positivity) are fully proved. What remains is the combinatorial walk partition into pairs/triplets at each vertex and the discrete Stokes summation.
+
+2. **Hammersley-Welsh Decomposition**: `paper_bridge_decomp_injection` — the canonical bridge decomposition giving ∑c_n·x^n ≤ 2·∏(1+B_T)². Walk diagCoord bounds and the powerset product identity are proved. What remains is the decomposition algorithm (half-plane walk induction on width) and its injectivity proof.
+
+The remaining 16 sorries are all dead code (superseded by proved versions in other files) or in the old column-bridge chain that has been replaced by the diagonal-bridge chain.
+
 # Summary of changes for run d6c61185-b957-457c-a38c-a3b51586a007
 ## Summary of work done
 

@@ -1,109 +1,121 @@
-# Proof Status: The Connective Constant of the Honeycomb Lattice
+# Proof Status: Connective Constant of the Honeycomb Lattice
 
 ## Main Theorem
+`connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 2)`
 
-**Statement**: The connective constant of the hexagonal lattice equals √(2+√2).
+**Status: Compiles with sorry.** The theorem and its complete proof chain compile in Lean.
+All sorries ultimately reduce to TWO independent fundamental gaps.
 
-**File**: `RequestProject/SAWFinal.lean` — `connective_constant_eq`
+## What Is Fully Proved (no sorry dependencies)
 
-**Status**: Proved modulo two independent sorry'd lemmas.
+### Foundation
+- Hexagonal lattice definition, adjacency, decidability, local finiteness
+- Self-avoiding walk (SAW) definition, finiteness, counting
+- Translation and flip automorphisms of the hex lattice
+- SAW count is vertex-independent: `saw_count_vertex_independent`
+- SAW counts: c₁ = 3, c₂ = 6
+- Submultiplicativity: c_{n+m} ≤ c_n · c_m
+- Fekete's lemma (submultiplicative sequences)
+- Connective constant as limit of c_n^{1/n}
+- Connective constant positivity (μ > 0)
 
-## Two Remaining Sorry'd Lemmas
+### Elementary Bounds
+- c_{n+1} ≤ 3·c_n (degree bound)
+- c_{n+1} ≤ 2·c_n for n ≥ 1
+- c_n ≤ 3·2^{n-1} (upper bound)
+- μ ≥ 1, μ ≤ 2
+- Zigzag walk construction: c_{2k} ≥ 2^k (`saw_count_even_lower_proved`)
+- 2^n ≤ c_n² (`saw_count_sq_ge_two_pow_proved`)
+- μ ≥ √2 (`connective_constant_ge_sqrt_two`)
 
-### 1. Infinite Strip Identity
-**File**: `SAWRecurrenceProof.lean` (`infinite_strip_identity`)
+### Algebraic Core (Lemma 1 of the paper)
+- Constants: xc, λ, j, σ, c_α, c_ε with all basic properties
+- Pair cancellation: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
+- Triplet cancellation: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
+- √(2+√2) = 2·cos(π/8)
+- xc·c_alpha = (√2-1)/2 (NEW)
+- Strip T=1 algebraic identity: 2xc²/(1-xc²)·(√2+1)/2 = 1 (NEW)
 
-**Statement**: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
+### Geometric Infrastructure
+- Hex embedding into ℂ with unit edge length
+- Direction vectors sum to zero at each vertex
+- Direction ratios: dir(F→T₂)/dir(F→T₁) = j, dir(F→T₃)/dir(F→T₁) = j² (NEW)
+- Boundary cosine positivity: cos(3θ/8) > 0 for |θ| ≤ π
+- Right boundary direction = (1,0), starting direction = (-1,0)
+- Interior cancellation: opposite direction factors cancel
 
-**Used for**: Bridge recurrence → lower bound μ ≥ √(2+√2);
-also implies B_paper ≤ 1 (via SAWParafermionicProof.lean).
+### Strip Domain Infrastructure
+- Paper-compatible strip domains (PaperInfStrip, PaperFinStrip)
+- Partition functions A_paper, B_paper, E_paper
+- Paper bridges (PaperBridge) and partition function
+- Bridge length ≥ width, bridge fits in finite strip
+- PaperSAW_B injection into NegDiagOriginBridge
+- Bridge partial sum ≤ 1/xc (modulo strip identity)
+- Paper bridge decay: B_T^x ≤ (x/xc)^T / xc
 
-**Proof method**: Parafermionic observable vertex relation (Lemma 1 of
-Duminil-Copin & Smirnov 2012) summed over the strip (discrete Stokes).
+### Abstract Proof Chain (fully proved modulo the two gaps)
+- Strip identity → B_paper ≤ 1
+- Cutting argument: A_{T+1} - A_T ≤ xc · B_{T+1}² (SAWCuttingProof)
+- Bridge recurrence from strip identity + cutting
+- Quadratic recurrence lower bound: B_T ≥ min(B₁, 1/α) / T
+- Bridge lower bound: ∃ c > 0, B_T ≥ c/T
+- Z(xc) diverges from bridge lower bound + harmonic divergence
+- Bridge-to-SAW injection: B_T ≤ Z(x) for each T
+- Product convergence: ∏(1+r^T) converges for r < 1
+- HW partial sum bound → summability of Z(x) for x < xc
+- Main theorem assembly: μ = √(2+√2)
 
-**Infrastructure proved**:
-- Pair cancellation (`pair_cancellation`): j·conj(λ)⁴ + conj(j)·λ⁴ = 0 ✓
-- Triplet cancellation (`triplet_cancellation`): 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 ✓
-- **Triplet winding property** (`triplet_winding_property`): fullWinding of extended walk = fullWinding + hexTurn ✓ (NEW)
-- **Full winding factoring** (`fullWinding_cons_cons`): winding factors through first edge ✓ (NEW)
-- **Walk winding factoring** (`walkWindingInt_cons_cons`): walkWindingInt = hexTurn + tail winding ✓ (NEW)
-- Direction factors at hex vertices (all proved) ✓
-- Hex turn values (all 18 lemmas proved) ✓
-- `walkWindingInt` definition **fixed** (bug: previously used end-of-walk vertex instead of next vertex in hexTurn)
+### SAW diagCoord Bounds (NEW)
+- saw_maxDiag_le': diagCoord(u) ≤ n for SAW of length n
+- saw_minDiag_ge': -n ≤ diagCoord(u) for SAW of length n
+- saw_diagCoord_abs_le: |diagCoord(u)| ≤ n
 
-**Missing**: Combinatorial walk partition into pairs/triplets at each vertex,
-and discrete Stokes summation.
+## Fundamental Gap 1: Strip Identity (Parafermionic Observable)
 
-### 2. Hammersley–Welsh Decomposition
-**File**: `SAWPaperChain.lean`
-**Name**: `paper_bridge_decomp_injection`
+**Location:** `strip_identity_genuine` in `SAWStripIdentityCorrect.lean`
+and `infinite_strip_identity` in `SAWRecurrenceProof.lean`
 
-**Statement**: `∑ n ≤ N, c_n x^n ≤ 2 · (∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²`
+**Statement:** For the finite strip S_{T,L}:
+∃ A_m E_m ≥ 0, 1 = c_α · A_m + B_paper(T,L,xc) + c_ε · E_m
 
-**Used for**: Z(x) < ∞ for x < xc → upper bound μ ≤ √(2+√2)
+**What is proved:**
+- All algebraic identities (pair/triplet cancellation)
+- Direction vector relationships (ratios = j, j²)
+- Boundary cosine positivity
+- Interior cancellation
+- The T=1 algebraic identity (verifying the formula at the algebraic level)
 
-**Infrastructure proved**:
-- Walk max diagCoord (`maxDiagInWalk'_ge`, `maxDiagInWalk'_achieved`) ✓ (NEW)
-- Walk width ≤ length (`walk_width_le_length'`) ✓ (NEW)
-- Product-powerset identity (`prod_one_add_eq`) ✓ (NEW)
-- Walk diagonal coordinate bounds (`walk_diagCoordZ_bound`) ✓
-- Walk minimum/maximum diagCoord (`walkMinDiagCoord_le`, `walkMaxDiagCoord_ge`) ✓
-- Walk min/max achievement (`walkMinDiagCoord_achieved`, `walkMaxDiagCoord_achieved`) ✓
-- Walk splitting at vertex (`walk_split_at_vertex`) ✓
-- Translation of walks (`hexShift`, `shiftWalk`, `shiftWalk_isPath`) ✓
-- Bridge-to-origin translation (`bridgeToOriginBridge_false`) ✓
+**What remains:**
+- Combinatorial walk partition into pairs/triplets at each vertex
+- Discrete Stokes summation (formal telescoping)
+- Boundary winding evaluation
+- Assembly of the strip identity from the boundary sum
 
-**Missing**: Half-plane walk decomposition algorithm and injectivity proof.
+## Fundamental Gap 2: Hammersley-Welsh Bridge Decomposition
 
-## Fully Proved Results
+**Location:** `paper_bridge_decomp_injection` in `SAWPaperChain.lean`
 
-### Foundations
-- **Hexagonal lattice** (`hexGraph`): vertex type, adjacency, decidability
-- **Self-avoiding walks** (`SAW`): definition, finiteness, counting
-- **SAW count** (`saw_count`): independence from starting vertex
-- **Submultiplicativity** (`saw_count_submult'`): c_{n+m} ≤ c_n · c_m
-- **Fekete's lemma** (`fekete_submultiplicative`): limit exists
-- **Connective constant** (`connective_constant`): definition as infimum
-- **Connective constant is limit** (`connective_constant_is_limit'`)
-- **Connective constant is positive** (`connective_constant_pos'`)
-- **Elementary upper bound** (`saw_count_upper_bound`): c_n ≤ 3 · 2^{n-1}
+**Statement:**
+∑_{n≤N} c_n x^n ≤ 2 · (∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}^x)²
 
-### Algebraic Identities (Lemma 1 core)
-- **Pair cancellation** (`pair_cancellation`): j·conj(λ)⁴ + conj(j)·λ⁴ = 0
-- **Triplet cancellation** (`triplet_cancellation`): 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
-- **xc inverse** (`xc_inv`): xc⁻¹ = √(2+√2)
-- **Boundary coefficients** (`c_alpha_pos`, `c_eps_pos`)
+**What is proved:**
+- Powerset product identity
+- Bridge decay bounds
+- Walk diagCoord bounds
+- Walk splitting infrastructure (takeUntil, dropUntil)
 
-### Winding Infrastructure (NEW — Lemma 1 support)
-- **walkWindingInt definition** (FIXED): correctly computes sum of hexTurns at interior vertices
-- **walkWindingInt_cons_cons**: winding factors through first edge (definitional)
-- **walkLastDir_cons_cons**: walkLastDir factors through first edge (definitional)
-- **fullWinding_cons_cons**: full winding factors through first edge
-- **triplet_winding_property**: extending a walk by one step adds a constant hexTurn
-- **walkLastDir_isSome**: walks of length ≥ 1 have defined last direction
-- **hexEdgeDir_adj_isSome**: adjacent vertices have defined edge direction
+**What remains:**
+- Half-plane walk decomposition algorithm (by induction on width)
+- General SAW splitting at first min-diagCoord vertex
+- Injectivity of the decomposition
+- Weight accounting (walk length ≥ sum of bridge lengths)
 
-### Walk Width Infrastructure (NEW)
-- **maxDiagInWalk'**: maximum diagCoord in walk support
-- **maxDiagInWalk'_ge**: bound on all vertices
-- **maxDiagInWalk'_achieved**: max is achieved
-- **walk_width_le_length'**: max - min ≤ length
+## Dead/Superseded Sorries (16 total, not on critical path)
 
-### Cutting Argument (Section 3)
-- **Cutting argument** (`cutting_argument_proved`): A_{T+1} − A_T ≤ xc · B_{T+1}²
-
-### Bridge Recurrence and Lower Bound
-- **Bridge recurrence** (`bridge_recurrence_proved`): B(T) ≤ c_α · B(T+1)² + B(T+1)
-- **Bridge lower bound** (`paper_bridge_lower_bound`): ∃ c > 0, c/T ≤ B(T)
-
-### Main Theorem Assembly
-- **Z(xc) diverges** (`Z_xc_diverges_corrected`)
-- **Z(x) converges for x < xc** (`hw_summable_corrected`)
-- **Bridge decay** (`paper_bridge_decay`): B_T(x) ≤ (x/xc)^T / xc
-- **Connective constant** (`connective_constant_eq_corrected`): μ = √(2+√2)
-
-## New Files Created This Session
-
-| File | Role | Sorry? |
-|------|------|--------|
-| SAWHWDecompose.lean | Walk max diagCoord, width bound, product identity | **No** |
+These are in files from the old "column bridge" chain or have been
+proved in alternative files:
+- SAWZigzag.lean (2): proved in SAWZigzagBuild.lean
+- SAWCutting.lean (1): proved in SAWCuttingProof.lean  
+- SAWHammersleyWelsh.lean (2): superseded by SAWPaperChain.lean
+- SAWHWDecomp.lean, SAWHWInject.lean, etc. (8): old column bridge chain
+- SAWStokesSkeleton.lean, SAWStripIdentity.lean, SAWFiniteStrip.lean (3): old strip infrastructure
