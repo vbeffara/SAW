@@ -4915,6 +4915,55 @@ from the divergence and convergence bounds.
   Apply \texttt{hexGraph\_walk\_sum\_bound\_pos/neg} to the prefix.
 \end{proof}
 
+\section{Strip identity for $T = 1$ (walk enumeration)}\label{sec:strip_T1_identity}
+
+For the width-$1$ strip ($T = 1$), we prove the infinite strip identity
+by explicitly computing the partition functions.
+
+\begin{lemma}[Paper bridge partition for $T = 1$: upper bound]\label{lem:bridge_part_1_le}
+\lean{paper_bridge_partition_1_le}
+\uses{def:bridge_partition}
+  $B_1^{x_c} \leq \frac{2x_c}{1 - x_c^2}$.
+  In the width-$1$ strip, there are at most $2$ PaperBridge walks
+  of each length.
+\end{lemma}
+\begin{proof} Walk enumeration in the path graph. \end{proof}
+
+\begin{lemma}[Paper bridge partition for $T = 1$: lower bound]\label{lem:bridge_part_1_ge}
+\lean{paper_bridge_partition_1_ge}
+\uses{def:bridge_partition}
+  $B_1^{x_c} \geq \frac{2x_c}{1 - x_c^2}$.
+  Construct $2$ explicit bridges of each odd length.
+\end{lemma}
+\begin{proof} Explicit bridge construction. \end{proof}
+
+\begin{lemma}[$A_{\inf}$ for $T = 1$: upper bound]\label{lem:A_inf_1_le}
+\lean{A_inf_1_le}
+\uses{def:ABE_inf}
+  $A_1^{x_c} \leq \frac{2x_c^3}{1 - x_c^2}$.
+\end{lemma}
+\begin{proof} Walk enumeration. \end{proof}
+
+\begin{lemma}[$A_{\inf}$ for $T = 1$: lower bound]\label{lem:A_inf_1_ge}
+\lean{A_inf_1_ge}
+\uses{def:ABE_inf}
+  $A_1^{x_c} \geq \frac{2x_c^3}{1 - x_c^2}$.
+\end{lemma}
+\begin{proof} Explicit walk construction. \end{proof}
+
+\begin{theorem}[Infinite strip identity for $T = 1$]\label{thm:strip_T1_identity}
+\lean{infinite_strip_identity_T1}
+\leanok
+\uses{lem:bridge_part_1_le, lem:bridge_part_1_ge, lem:A_inf_1_le, lem:A_inf_1_ge, lem:strip_T1_alg, lem:calpha_xc_plus1}
+  $1 = c_\alpha \cdot A_1^{x_c} + x_c \cdot B_1^{x_c}$.
+  Proved from exact partition function values and the algebraic identity
+  \texttt{strip\_T1\_algebraic}.
+\end{theorem}
+\begin{proof}\leanok
+  Substitute $B_1 = 2x_c/(1-x_c^2)$ and $A_1 = 2x_c^3/(1-x_c^2)$,
+  factor out $2x_c^2/(1-x_c^2)$ and apply \texttt{strip\_T1\_algebraic}.
+\end{proof}
+
 \subsection*{Remaining gaps}
 
 Two independent sorry chains remain:
@@ -4924,8 +4973,11 @@ Two independent sorry chains remain:
   and the finite strip identity (\texttt{strip\_identity\_genuine}).
   The algebraic core (pair and triplet cancellation), the direction ratio identities
   ($\mathrm{dir} = j, j^2$), and the $T{=}1$ algebraic identity are proved.
-  What remains: the combinatorial walk partition into pairs/triplets at each vertex,
-  and the discrete Stokes summation.
+  \textbf{The $T = 1$ case} (\texttt{infinite\_strip\_identity\_T1})
+  is proved from explicit walk enumeration, modulo four sorry'd
+  partition function bounds.
+  What remains for general $T$: the combinatorial walk partition into
+  pairs/triplets at each vertex, and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
   the canonical bridge decomposition of SAWs giving
   $\sum c_n x^n \leq 2 \prod (1 + B_T)^2$.

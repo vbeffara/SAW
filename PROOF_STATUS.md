@@ -33,13 +33,13 @@ All sorries ultimately reduce to TWO independent fundamental gaps.
 - Pair cancellation: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
 - Triplet cancellation: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
 - √(2+√2) = 2·cos(π/8)
-- xc·c_alpha = (√2-1)/2 (NEW)
-- Strip T=1 algebraic identity: 2xc²/(1-xc²)·(√2+1)/2 = 1 (NEW)
+- xc·c_alpha = (√2-1)/2
+- Strip T=1 algebraic identity: 2xc²/(1-xc²)·(√2+1)/2 = 1
 
 ### Geometric Infrastructure
 - Hex embedding into ℂ with unit edge length
 - Direction vectors sum to zero at each vertex
-- Direction ratios: dir(F→T₂)/dir(F→T₁) = j, dir(F→T₃)/dir(F→T₁) = j² (NEW)
+- Direction ratios: dir(F→T₂)/dir(F→T₁) = j, dir(F→T₃)/dir(F→T₁) = j²
 - Boundary cosine positivity: cos(3θ/8) > 0 for |θ| ≤ π
 - Right boundary direction = (1,0), starting direction = (-1,0)
 - Interior cancellation: opposite direction factors cancel
@@ -53,6 +53,14 @@ All sorries ultimately reduce to TWO independent fundamental gaps.
 - Bridge partial sum ≤ 1/xc (modulo strip identity)
 - Paper bridge decay: B_T^x ≤ (x/xc)^T / xc
 
+### Strip Identity for T = 1 (NEW)
+- `infinite_strip_identity_T1`: The T=1 identity is proved from exact
+  partition function values + the algebraic identity strip_T1_algebraic
+- Modulo 4 sorry'd partition function bounds (walk enumeration in the
+  width-1 strip)
+- The algebraic reduction is complete: once the 4 bounds are proved,
+  the T=1 identity follows automatically
+
 ### Abstract Proof Chain (fully proved modulo the two gaps)
 - Strip identity → B_paper ≤ 1
 - Cutting argument: A_{T+1} - A_T ≤ xc · B_{T+1}² (SAWCuttingProof)
@@ -65,7 +73,7 @@ All sorries ultimately reduce to TWO independent fundamental gaps.
 - HW partial sum bound → summability of Z(x) for x < xc
 - Main theorem assembly: μ = √(2+√2)
 
-### SAW diagCoord Bounds (NEW)
+### SAW diagCoord Bounds
 - saw_maxDiag_le': diagCoord(u) ≤ n for SAW of length n
 - saw_minDiag_ge': -n ≤ diagCoord(u) for SAW of length n
 - saw_diagCoord_abs_le: |diagCoord(u)| ≤ n
@@ -78,18 +86,24 @@ and `infinite_strip_identity` in `SAWRecurrenceProof.lean`
 **Statement:** For the finite strip S_{T,L}:
 ∃ A_m E_m ≥ 0, 1 = c_α · A_m + B_paper(T,L,xc) + c_ε · E_m
 
+For the infinite strip S_T:
+1 = c_α · A_inf(T,xc) + xc · paper_bridge_partition(T,xc)
+
 **What is proved:**
 - All algebraic identities (pair/triplet cancellation)
 - Direction vector relationships (ratios = j, j²)
 - Boundary cosine positivity
 - Interior cancellation
 - The T=1 algebraic identity (verifying the formula at the algebraic level)
+- The T=1 identity structure: proved from 4 partition function bounds
+  (SAWStripT1Identity.lean)
 
 **What remains:**
-- Combinatorial walk partition into pairs/triplets at each vertex
-- Discrete Stokes summation (formal telescoping)
-- Boundary winding evaluation
-- Assembly of the strip identity from the boundary sum
+- The 4 partition function bounds for T=1 (walk enumeration in width-1 strip)
+- Combinatorial walk partition into pairs/triplets at each vertex (general T)
+- Discrete Stokes summation (general T)
+- Boundary winding evaluation (general T)
+- Assembly of the strip identity from the boundary sum (general T)
 
 ## Fundamental Gap 2: Hammersley-Welsh Bridge Decomposition
 
@@ -110,12 +124,19 @@ and `infinite_strip_identity` in `SAWRecurrenceProof.lean`
 - Injectivity of the decomposition
 - Weight accounting (walk length ≥ sum of bridge lengths)
 
-## Dead/Superseded Sorries (16 total, not on critical path)
+## Files Overview
 
-These are in files from the old "column bridge" chain or have been
-proved in alternative files:
-- SAWZigzag.lean (2): proved in SAWZigzagBuild.lean
-- SAWCutting.lean (1): proved in SAWCuttingProof.lean  
-- SAWHammersleyWelsh.lean (2): superseded by SAWPaperChain.lean
-- SAWHWDecomp.lean, SAWHWInject.lean, etc. (8): old column bridge chain
-- SAWStokesSkeleton.lean, SAWStripIdentity.lean, SAWFiniteStrip.lean (3): old strip infrastructure
+| File | Status | Description |
+|------|--------|-------------|
+| SAW.lean | ✅ Proved | Core definitions, constants, algebraic identities |
+| SAWSubmult.lean | ✅ Proved | Submultiplicativity |
+| SAWMain.lean | ✅ Proved | Fekete → connective constant |
+| SAWBridge.lean | ⚠️ Has sorry | Bridge definitions (some dead code) |
+| SAWStripIdentityCorrect.lean | ❌ Sorry | Strip identity (fundamental gap) |
+| SAWRecurrenceProof.lean | ❌ Sorry | Infinite strip identity (fundamental gap) |
+| SAWPaperChain.lean | ❌ Sorry | HW decomposition (fundamental gap) |
+| SAWStripT1Identity.lean | ⚠️ 4 sorries | T=1 identity from walk enumeration |
+| SAWFinal.lean | ✅ Proved | Main theorem assembly |
+| SAWCuttingProof.lean | ✅ Proved | Cutting argument |
+| SAWDecomp.lean | ✅ Proved | Quadratic recurrence |
+| SAWStripT1.lean | ✅ Proved | T=1 algebraic identity |

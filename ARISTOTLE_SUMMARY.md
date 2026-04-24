@@ -1,3 +1,50 @@
+# Summary of changes for run bc93a97b-a6ea-48aa-b0db-f346f0974155
+## Summary of Progress
+
+### New Mathematical Infrastructure
+
+I added `RequestProject/SAWStripT1Identity.lean`, which establishes the proof structure for the **infinite strip identity for T = 1**:
+
+```
+1 = c_α · A_inf(1, xc) + xc · paper_bridge_partition(1, xc)
+```
+
+The proof reduces to 4 partition function bounds (sorry'd), then uses the algebraic identity `strip_T1_algebraic` (already proved) via:
+- `paper_bridge_partition(1, xc) = 2xc/(1-xc²)` (upper + lower bound)
+- `A_inf(1, xc) = 2xc³/(1-xc²)` (upper + lower bound)
+- Algebraic verification: `2xc²/(1-xc²) · (√2+1)/2 = 1`
+
+The theorem `infinite_strip_identity_T1` is proved from these 4 bounds + `c_alpha_xc_plus_one` + `strip_T1_algebraic`. No circular dependencies.
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with a new section "Strip identity for T = 1 (walk enumeration)" documenting:
+- 4 partition function bounds (sorry'd lemmas)
+- The T=1 strip identity theorem (proved from the bounds)
+- Updated gap description noting the T=1 case is partially resolved
+
+### Documentation
+
+Updated `PROOF_STATUS.md` with:
+- New "Strip Identity for T = 1" section in proved results
+- Updated gap descriptions
+- Added file status table
+
+### What Remains
+
+The main theorem `connective_constant_eq` still depends on 2 fundamental gaps:
+
+1. **Strip identity** (`strip_identity_genuine` / `infinite_strip_identity`): The parafermionic observable identity. The T=1 case has a complete proof structure (4 sorry'd walk-enumeration lemmas → algebraic verification). The general case requires the vertex relation (pair/triplet cancellation at each vertex) and discrete Stokes summation.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The canonical bridge decomposition of SAWs. Requires formalizing the half-plane walk decomposition algorithm, its injectivity, and weight accounting.
+
+Both gaps are deep mathematical results requiring substantial combinatorial infrastructure to formalize.
+
+### Files Modified/Created
+- `RequestProject/SAWStripT1Identity.lean` (NEW) — T=1 strip identity
+- `blueprint/src/content.tex` — Updated with T=1 section
+- `PROOF_STATUS.md` — Updated proof status
+
 # Summary of changes for run b4392733-988d-4405-914e-bec7e8505793
 ## Session Summary: Continuing Formalization of SAW.tex
 
