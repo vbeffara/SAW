@@ -4336,20 +4336,43 @@ $j \overline{\lambda}^4 + \bar{j} \lambda^4 = 0$
   Direct computation by unfolding definitions.
 \end{proof}
 
-\begin{lemma}[Triplet winding difference]\label{lem:triplet_winding}
+\begin{lemma}[Walk winding factoring]\label{lem:winding_factor}
+\lean{walkWindingInt_cons_cons}
+\leanok
 \uses{def:hex_turn}
-  For a walk $\gamma$ from $a$ to vertex $w_1$ (neighbor of $v$)
-  that does not visit $v$, extended by one step through $v$:
-  \[
-    W(\gamma_2, a \to q) - W(\gamma, a \to p) = \texttt{hexTurn}(w_1, v, w_2)
-  \]
-  where $q = \text{mid}(v, w_2)$ and $p = \text{mid}(v, w_1)$.
-  The difference is a \emph{constant} that depends only on the local
-  geometry at $v$, not on the specific walk $\gamma$.
-
-  \textbf{Status: partially formalized.} The hex turn values are
-  computed; the winding telescoping property needs more infrastructure.
+  For a walk $u \to v_1 \to \ldots$ of length $\geq 2$:
+  $\mathrm{walkWindingInt}(\mathrm{cons}~h_1~(\mathrm{cons}~h_2~\mathrm{rest})) = \mathrm{hexTurn}(u, v_1, w_1) + \mathrm{walkWindingInt}(\mathrm{cons}~h_2~\mathrm{rest})$.
 \end{lemma}
+\begin{proof}\leanok By definitional unfolding (\texttt{rfl}).\end{proof}
+
+\begin{lemma}[Full winding factoring]\label{lem:full_winding_factor}
+\lean{fullWinding_cons_cons}
+\leanok
+\uses{lem:winding_factor}
+  For a walk $u \to v_1 \to \ldots \to w_1$ of length $\geq 2$:
+  $\mathrm{fullWinding}(\mathrm{cons}~h_1~q, w_{\mathrm{exit}}) = \mathrm{hexTurn}(u, v_1, q.\mathrm{getVert}~1) + \mathrm{fullWinding}(q, w_{\mathrm{exit}})$.
+\end{lemma}
+\begin{proof}\leanok
+  Case split on $q$ (length $\geq 1$), unfold definitions, use \texttt{walkLastDir\_cons\_cons}
+  and \texttt{walkWindingInt\_cons\_cons}.
+\end{proof}
+
+\begin{lemma}[Triplet winding property]\label{lem:triplet_winding}
+\lean{triplet_winding_property}
+\leanok
+\uses{def:hex_turn, lem:full_winding_factor}
+  For a walk $\gamma$ from $u$ to $w_1$ of length $\geq 1$, extended by one step through $v$:
+  \[
+    \mathrm{fullWinding}(\gamma \cdot (w_1 \to v), w_2) = \mathrm{fullWinding}(\gamma, v) + \mathrm{hexTurn}(w_1, v, w_2).
+  \]
+  The winding difference is a \emph{constant} that depends only on the local
+  geometry at $v$, not on the specific walk $\gamma$. This is the key
+  telescoping property needed for the triplet cancellation in the vertex relation.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on $\gamma$. Base case: direct computation. Inductive step: use
+  \texttt{fullWinding\_cons\_cons} to factor out the first edge, apply IH to the tail.
+\end{proof}
 
 \begin{lemma}[Triplet cancellation (geometric)]\label{lem:triplet_cancel_geom}
 \lean{triplet_cancellation_hex}
@@ -4764,6 +4787,62 @@ $-3$ for reversal, $-1$ for right turn, $+1$ for left turn.
   \texttt{unfold hexTurn hexEdgeDir; simp +decide [hexGraph]; split\_ifs; omega}.
 \end{proof}
 
+\section{Walk maximum diagCoord infrastructure}\label{sec:max_diag}
+
+\begin{definition}[Maximum diagCoord in walk]\label{def:max_diag_walk}
+\lean{maxDiagInWalk'}
+\leanok
+  The maximum of $\mathrm{diagCoord}(u)$ over all vertices $u$ in
+  a walk's support, computed via \texttt{foldl max}.
+\end{definition}
+
+\begin{lemma}[Max diagCoord bound]\label{lem:max_diag_ge}
+\lean{maxDiagInWalk'_ge}
+\leanok
+\uses{def:max_diag_walk}
+  For any $u$ in the walk's support, $\mathrm{diagCoord}(u) \leq
+  \mathrm{maxDiagInWalk'}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the support list using \texttt{foldl} properties.
+\end{proof}
+
+\begin{lemma}[Max diagCoord achieved]\label{lem:max_diag_achieved}
+\lean{maxDiagInWalk'_achieved}
+\leanok
+\uses{def:max_diag_walk}
+  There exists $u$ in the walk's support with $\mathrm{diagCoord}(u) =
+  \mathrm{maxDiagInWalk'}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the walk structure.
+\end{proof}
+
+\begin{lemma}[Walk width $\leq$ length (max-min)]\label{lem:walk_width_max_min}
+\lean{walk_width_le_length'}
+\leanok
+\uses{def:max_diag_walk, def:walk_min_diag, lem:max_diag_achieved, lem:walk_min_achieved}
+  For any walk $p: v \to w$,
+  $(\mathrm{maxDiagInWalk'}(p) - \mathrm{walkMinDiagCoord}(p))^+ \leq
+  \mathrm{length}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  The max and min are achieved at vertices $u_1, u_2$. The subwalk
+  between them has length $\leq p.\mathrm{length}$. By the step bound,
+  $|\mathrm{diagCoord}(u_1) - \mathrm{diagCoord}(u_2)| \leq$
+  subwalk length.
+\end{proof}
+
+\begin{lemma}[Product--powerset identity]\label{lem:prod_powerset}
+\lean{prod_one_add_eq}
+\leanok
+  $\prod_{T \in \mathrm{range}(N)} (1 + f(T)) = \sum_{S \subseteq
+  \mathrm{range}(N)} \prod_{T \in S} f(T)$.
+\end{lemma}
+\begin{proof}\leanok
+  \texttt{Finset.prod\_one\_add}.
+\end{proof}
+
 \subsection*{What is proved}
 
 All other lemmas in the proof chain are fully proved:
@@ -4772,3 +4851,21 @@ bridge recurrence, cutting argument, quadratic recurrence lower bound,
 lower bound via divergence of $Z(x_c)$, bridge decay, product
 convergence, and the final assembly of $\mu = \sqrt{2+\sqrt{2}}$
 from the divergence and convergence bounds.
+
+\subsection*{Remaining gaps}
+
+Two independent sorry chains remain:
+\begin{enumerate}
+\item \textbf{Infinite strip identity} (\texttt{infinite\_strip\_identity}): the
+  parafermionic observable identity $1 = c_\alpha \cdot A_T^{x_c} + x_c \cdot B_T^{x_c}$,
+  and the finite strip identity (\texttt{strip\_identity\_genuine}).
+  The algebraic core (pair and triplet cancellation) and the
+  triplet winding telescoping property are proved.
+  What remains: the combinatorial walk partition into pairs/triplets at each vertex,
+  and the discrete Stokes summation.
+\item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
+  the canonical bridge decomposition of SAWs giving
+  $\sum c_n x^n \leq 2 \prod (1 + B_T)^2$.
+  Walk max/min diagCoord infrastructure and the product--powerset identity are proved.
+  What remains: the decomposition algorithm and its injectivity proof.
+\end{enumerate}

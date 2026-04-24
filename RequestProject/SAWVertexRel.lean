@@ -97,6 +97,64 @@ lemma walkLastDir_append_single {u w₁ v : HexVertex}
   induction p <;> simp_all +decide;
   cases ‹hexGraph.Walk _ _› <;> simp_all +decide [ walkLastDir ]
 
+/-- For walks of length ≥ 1, walkLastDir returns some value. -/
+lemma walkLastDir_isSome {v w : HexVertex} (p : hexGraph.Walk v w) (hp : 1 ≤ p.length) :
+    (walkLastDir p).isSome = true := by
+  induction p with
+  | nil => simp at hp
+  | cons h rest ih =>
+    cases rest with
+    | nil => simp [walkLastDir, hexEdgeDir]; split_ifs <;> simp_all [hexGraph]
+    | cons h' rest' =>
+      simp [walkLastDir]
+      apply ih; simp [SimpleGraph.Walk.length]
+
+/-- For walks of length ≥ 1, hexEdgeDir for adjacent vertices returns some. -/
+lemma hexEdgeDir_adj_isSome {v w : HexVertex} (h : hexGraph.Adj v w) :
+    (hexEdgeDir v w).isSome = true := by
+  unfold hexEdgeDir; split_ifs <;> simp_all
+
+/-- walkLastDir factors through the first edge for length ≥ 2 walks. -/
+lemma walkLastDir_cons_cons {u v₁ w₁ w₂ : HexVertex}
+    (h₁ : hexGraph.Adj u v₁)
+    (h₂ : hexGraph.Adj v₁ w₁)
+    (rest : hexGraph.Walk w₁ w₂) :
+    walkLastDir (.cons h₁ (.cons h₂ rest)) = walkLastDir (.cons h₂ rest) := by
+  rfl
+
+/-- walkWindingInt factors through the first edge for length ≥ 2 walks. -/
+lemma walkWindingInt_cons_cons {u v₁ w₁ w₂ : HexVertex}
+    (h₁ : hexGraph.Adj u v₁)
+    (h₂ : hexGraph.Adj v₁ w₁)
+    (rest : hexGraph.Walk w₁ w₂) :
+    walkWindingInt (.cons h₁ (.cons h₂ rest)) =
+    hexTurn u v₁ w₁ + walkWindingInt (.cons h₂ rest) := by
+  rfl
+
+/-
+Key structural lemma: fullWinding factors through the first edge.
+-/
+private lemma fullWinding_cons_cons {u v₁ w₁ : HexVertex}
+    (h₁ : hexGraph.Adj u v₁)
+    (q : hexGraph.Walk v₁ w₁)
+    (hq : 1 ≤ q.length)
+    (w_exit : HexVertex) :
+    fullWinding (.cons h₁ q) w_exit =
+    hexTurn u v₁ (q.getVert 1) + fullWinding q w_exit := by
+  rcases q with ( _ | ⟨ h₂, q ⟩ ) <;> simp_all +decide [ SimpleGraph.Walk.getVert ];
+  unfold fullWinding;
+  rw [ walkLastDir_cons_cons, walkWindingInt_cons_cons ];
+  cases h : walkLastDir ( SimpleGraph.Walk.cons h₂ q ) <;> cases h' : hexEdgeDir w₁ w_exit <;> simp +decide [ h, h' ] ; ring
+
+/-
+The key winding telescoping property:
+    extending a walk by one step through v adds hexTurn(w₁, v, w₂).
+
+    Proof by induction on p:
+    - Length 1 (p = u → w₁): direct computation with fullWinding.
+    - Length ≥ 2 (p = u → v₁ → ... → w₁): factor out first edge using
+      fullWinding_cons_cons, apply IH to the tail.
+-/
 theorem triplet_winding_property {u w₁ v : HexVertex}
     (p : hexGraph.Walk u w₁)
     (hp : 1 ≤ p.length)
@@ -104,7 +162,18 @@ theorem triplet_winding_property {u w₁ v : HexVertex}
     (w₂ : HexVertex) :
     fullWinding (p.append (.cons h_adj_w₁_v .nil)) w₂ =
     fullWinding p v + hexTurn w₁ v w₂ := by
-  sorry
+  induction' p with u w₁ p ih generalizing w₂;
+  · contradiction;
+  · rename_i h₁ h₂ h₃;
+    by_cases h : 1 ≤ h₂.length <;> simp_all +decide [fullWinding_cons_cons];
+    · rcases w₂ with ⟨ a, b, c ⟩ ; simp_all +decide [ add_assoc ] ;
+      cases c <;> simp_all +decide [ SimpleGraph.Walk.getVert ];
+      · cases h₂ <;> aesop;
+      · cases h₂ <;> aesop;
+    · cases h₂ <;> simp_all +decide [ SimpleGraph.Walk.append ];
+      unfold fullWinding;
+      unfold hexTurn; simp +decide [ walkLastDir, walkWindingInt ] ;
+      cases hexEdgeDir w₁ p <;> cases hexEdgeDir p v <;> cases hexEdgeDir v w₂ <;> simp +decide [ * ]
 
 /-! ## Walk extension for triplets
 

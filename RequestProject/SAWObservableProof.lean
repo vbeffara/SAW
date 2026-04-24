@@ -65,12 +65,15 @@ def hexTurn (u v w : HexVertex) : ℤ :=
     diff
   | _, _ => 0
 
-/-- The winding of a walk as an integer multiple of π/3. -/
+/-- The winding of a walk as an integer multiple of π/3.
+    Sum of hexTurn at each interior vertex: hexTurn(vᵢ, vᵢ₊₁, vᵢ₊₂).
+    For a walk v₀ → v₁ → v₂ → ... → vₙ, computes
+    Σᵢ₌₀ⁿ⁻² hexTurn(vᵢ, vᵢ₊₁, vᵢ₊₂). -/
 def walkWindingInt : {v w : HexVertex} → hexGraph.Walk v w → ℤ
   | _, _, .nil => 0
-  | _, _, .cons h (.nil) => 0
-  | v, _, @SimpleGraph.Walk.cons _ _ _ u _ h (@SimpleGraph.Walk.cons _ _ _ _ w h' rest) =>
-    hexTurn v u w + walkWindingInt (.cons h' rest)
+  | _, _, .cons _ (.nil) => 0
+  | start, _, @SimpleGraph.Walk.cons _ _ _ mid _ _ (@SimpleGraph.Walk.cons _ _ _ next _ h' rest) =>
+    hexTurn start mid next + walkWindingInt (.cons h' rest)
 
 /-! ## Observable contribution
 

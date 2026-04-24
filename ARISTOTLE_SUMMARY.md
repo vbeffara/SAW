@@ -1,3 +1,41 @@
+# Summary of changes for run d6c61185-b957-457c-a38c-a3b51586a007
+## Summary of work done
+
+### Bug fix in `walkWindingInt` (SAWObservableProof.lean)
+Found and fixed a bug in the `walkWindingInt` definition: the pattern matching was capturing the **end vertex of the walk** instead of the **next vertex** in the hexTurn call. This caused incorrect winding computation for walks of length ≥ 3. The fix correctly binds the intermediate vertex (4th implicit of inner Walk.cons) instead of the walk endpoint (5th implicit).
+
+### New proofs in SAWVertexRel.lean (Lemma 1 infrastructure)
+Proved 5 key lemmas that are building blocks for the vertex relation (Lemma 1 of the paper):
+1. **`walkLastDir_cons_cons`**: walkLastDir factors through the first edge (definitional)
+2. **`walkWindingInt_cons_cons`**: walkWindingInt = hexTurn + tail winding (definitional, now correct after the bug fix)
+3. **`walkLastDir_isSome`**: walks of length ≥ 1 have a defined last direction
+4. **`fullWinding_cons_cons`**: fullWinding factors through the first edge for walks of length ≥ 2
+5. **`triplet_winding_property`** (the KEY result): extending a walk by one step through vertex v adds exactly `hexTurn(w₁, v, w₂)` to the fullWinding. This is the **winding telescoping property** needed for triplet cancellation in the vertex relation — it shows the winding difference is a constant independent of the specific walk.
+
+All 5 lemmas proved without sorry. The file `SAWVertexRel.lean` is now sorry-free.
+
+### New file: SAWHWDecompose.lean (Hammersley-Welsh infrastructure)
+Created a new file with 6 fully proved results for the bridge decomposition:
+1. **`maxDiagInWalk'`**: definition of maximum diagCoord in a walk
+2. **`maxDiagInWalk'_ge`**: every vertex has diagCoord ≤ the max
+3. **`maxDiagInWalk'_achieved`**: the max is achieved by some vertex
+4. **`maxDiagInWalk'_ge_start`**: start diagCoord ≤ max
+5. **`walk_width_le_length'`**: walk width (max - min diagCoord) ≤ walk length
+6. **`prod_one_add_eq`**: the product-powerset identity ∏(1+f(i)) = Σ_{S⊆range} ∏_{i∈S} f(i)
+
+### Blueprint updates (blueprint/src/content.tex)
+- Added entries for all new proved lemmas (winding infrastructure, walk max diagCoord, product identity)
+- Updated triplet winding entry from "partially formalized" to fully proved with `\leanok`
+- Added "Remaining gaps" section summarizing the two sorry chains with precise descriptions of what's proved and what's missing
+
+### Updated PROOF_STATUS.md
+Comprehensive update reflecting all new results.
+
+### What remains
+Two independent sorry chains:
+1. **Infinite strip identity** (`infinite_strip_identity`): needs combinatorial walk partition into pairs/triplets at each vertex, plus discrete Stokes summation. The algebraic core (pair/triplet cancellation) and the triplet winding telescoping property are now fully proved.
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): needs the decomposition algorithm and injectivity proof. Walk max/min diagCoord infrastructure and the product-powerset identity are now proved.
+
 # Summary of changes for run 8e597ee3-78d1-443f-9a6a-519178fceae0
 ## Summary of work done
 
