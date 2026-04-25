@@ -1,3 +1,46 @@
+# Summary of changes for run 404e8b75-bf49-41fb-a017-7108fb0525dc
+## Summary of Progress
+
+### New File: `RequestProject/SAWStripT1Exact.lean`
+
+Created a new file formalizing the exact partition function computation for the width-1 strip. The file establishes the **path graph structure** of the T=1 strip and uses it to construct explicit bridges of all odd lengths. Key results proved (sorry-free):
+
+1. **Path graph structure** (`strip1_at_most_2_neighbors`): In PaperInfStrip 1, each vertex has at most 2 strip-neighbors. This establishes that the T=1 strip graph is a path graph.
+
+2. **Position function** (`strip1_pos`, `strip1_adj_pos_diff`, `strip1_pos_injective`): A linear ordering of strip vertices by integer position, with adjacent vertices differing by ±1 and the function being injective.
+
+3. **Constant sign** (`strip1_path_constant_sign`): On any SAW of length ≥ 2 in the strip, consecutive position differences are all equal. This follows from the degree-2 constraint: reversing direction would revisit a vertex, contradicting the path property.
+
+4. **Monotonicity** (`strip1_saw_monotone`): Position is strictly monotone along any SAW in the width-1 strip — either all increasing or all decreasing. This is the key structural result for the T=1 strip.
+
+5. **Bridge existence for all odd lengths** (`exists_right_bridge`, `exists_left_bridge`): For each m ≥ 0, explicit PaperBridge 1 walks of length 2m+1 exist, going right to (m,-m-1,false) and left to (-m-1,m,false). Proved by induction, extending previous bridges by 2 steps.
+
+6. **Lower bound on partition function** (`paper_bridge_partition_1_ge`): paper_bridge_partition 1 xc ≥ 2xc/(1-xc²), using the explicit bridge constructions and geometric series computation.
+
+### Remaining sorry lemmas in SAWStripT1Exact.lean (4 sorries):
+- `paper_bridge_1_unique_by_endpoint`: uniqueness of bridges given endpoint (needed for upper bound)
+- `paper_bridge_1_right_endpoint` / `paper_bridge_1_left_endpoint`: endpoint classification 
+- `paper_bridge_partition_1_le`: upper bound on partition function
+
+### Blueprint Updates
+Updated `blueprint/src/content.tex` with new entries (all with `\leanok`) for:
+- Strip-1 path graph structure
+- Position function and injectivity
+- Constant sign property
+- Monotonicity
+- Bridge existence for all odd lengths
+- Partition function lower bound
+
+### Updated `PROOF_STATUS.md`
+Comprehensive update documenting all proved results including the new T=1 infrastructure.
+
+### What Remains
+The main theorem `connective_constant_eq_corrected` still depends on 2 fundamental gaps:
+
+1. **Strip identity** (`strip_identity_genuine` / `infinite_strip_identity`): The parafermionic observable identity. The new monotonicity and bridge existence results provide substantial infrastructure for the T=1 case, but the general case requires formalizing the walk partition into pairs/triplets at each vertex and the discrete Stokes summation.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The canonical bridge decomposition of SAWs.
+
 # Summary of changes for run 6cf53b5d-fa6f-4662-a33b-3baffb3d7df8
 ## Summary of Progress
 

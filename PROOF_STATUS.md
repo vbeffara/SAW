@@ -1,7 +1,7 @@
 # Proof Status: Connective Constant of the Honeycomb Lattice
 
 ## Main Theorem
-`connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 2)`
+`connective_constant_eq_corrected : connective_constant = Real.sqrt (2 + Real.sqrt 2)`
 
 **Status: Compiles with sorry.** The theorem and its complete proof chain compile in Lean.
 All sorries ultimately reduce to TWO independent fundamental gaps.
@@ -44,13 +44,23 @@ All sorries ultimately reduce to TWO independent fundamental gaps.
 - Right boundary direction = (1,0), starting direction = (-1,0)
 - Interior cancellation: opposite direction factors cancel
 
-### Bipartiteness and Walk Structure (NEW)
-- Walk bipartiteness: walks from TRUE to FALSE have odd length (`walk_true_to_false_odd`)
-- PaperBridge 1 has odd length (`paper_bridge_1_odd_length`)
-- Strip-1 TRUE vertex neighbors: exactly 2 in-strip neighbors (`strip1_true_neighbors`)
-- Strip-1 FALSE vertex neighbors: exactly 2 in-strip neighbors (`strip1_false_neighbors`)
-- paperStart has exactly 2 strip-1 neighbors (`paperStart_strip1_neighbors`)
-- Two explicit width-1 bridges constructed (`rightBridge0`, `leftBridge0`)
+### Width-1 Strip Infrastructure (NEW - SAWStripT1Exact.lean)
+- **Path graph structure** (`strip1_at_most_2_neighbors`): each vertex in PaperInfStrip 1 has at most 2 strip-neighbors
+- **Position function** (`strip1_pos`): assigns integer position to each strip vertex, with adjacent vertices differing by ±1
+- **Position injectivity** (`strip1_pos_injective`): position uniquely determines the vertex
+- **Constant sign** (`strip1_path_constant_sign`): consecutive position differences along a SAW are constant (all +1 or all -1)
+- **Monotonicity** (`strip1_saw_monotone`): position is strictly monotone along any SAW in the strip
+- **Right bridge existence** (`exists_right_bridge`): for each m≥0, a PaperBridge 1 of length 2m+1 ending at (m,-m-1,false)
+- **Left bridge existence** (`exists_left_bridge`): for each m≥0, a PaperBridge 1 of length 2m+1 ending at (-m-1,m,false)
+- **Partition function lower bound** (`paper_bridge_partition_1_ge`): paper_bridge_partition 1 xc ≥ 2xc/(1-xc²)
+
+### Bipartiteness and Walk Structure
+- Walk bipartiteness: walks from TRUE to FALSE have odd length
+- PaperBridge 1 has odd length
+- Strip-1 TRUE/FALSE vertex neighbor characterization
+- paperStart has exactly 2 strip-1 neighbors
+- Two explicit width-1 bridges constructed
+- Length-1 bridge classification
 
 ### Strip Domain Infrastructure
 - Paper-compatible strip domains (PaperInfStrip, PaperFinStrip)
@@ -78,47 +88,21 @@ All sorries ultimately reduce to TWO independent fundamental gaps.
 **Location:** `strip_identity_genuine` in `SAWStripIdentityCorrect.lean`
 and `infinite_strip_identity` in `SAWRecurrenceProof.lean`
 
-**Statement:** For the finite strip S_{T,L}:
-∃ A_m E_m ≥ 0, 1 = c_α · A_m + B_paper(T,L,xc) + c_ε · E_m
-
-For the infinite strip S_T:
-1 = c_α · A_inf(T,xc) + xc · paper_bridge_partition(T,xc)
-
-**What is proved:**
-- All algebraic identities (pair/triplet cancellation)
-- Direction vector relationships (ratios = j, j²)
-- Boundary cosine positivity
-- Interior cancellation
-- Bipartiteness of hex walks (walk_true_to_false_odd)
-- Width-1 strip neighbor characterization (strip1_true_neighbors, strip1_false_neighbors)
-- Explicit bridge constructions for T=1
-
 **What remains:**
-- Combinatorial walk partition into pairs/triplets at each vertex (general T)
-- Discrete Stokes summation (general T)
-- Boundary winding evaluation (general T)
-- Assembly of the strip identity from the boundary sum (general T)
-- T=1 partition function exact values (4 sorry'd bounds)
+- Bridge uniqueness for T=1 (`paper_bridge_1_unique_by_endpoint`): proving that on the path graph, SAWs from a fixed start to a fixed end are unique. The monotonicity infrastructure is proved but the final uniqueness step needs induction on walk structure.
+- Endpoint classification for T=1 bridges
+- Upper bound on T=1 bridge partition function  
+- General T: walk partition into pairs/triplets at each vertex, discrete Stokes summation, boundary evaluation
 
 ## Fundamental Gap 2: Hammersley-Welsh Bridge Decomposition
 
 **Location:** `paper_bridge_decomp_injection` in `SAWPaperChain.lean`
 
-**Statement:**
-∑_{n≤N} c_n x^n ≤ 2 · (∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}^x)²
-
-**What is proved:**
-- Powerset product identity
-- Bridge decay bounds
-- Walk diagCoord bounds
-- Walk splitting infrastructure (takeUntil, dropUntil)
-- Walk max/min diagCoord infrastructure
-
 **What remains:**
 - Half-plane walk decomposition algorithm (by induction on width)
 - General SAW splitting at first min-diagCoord vertex
 - Injectivity of the decomposition
-- Weight accounting (walk length ≥ sum of bridge lengths)
+- Weight accounting
 
 ## Files Overview
 
@@ -127,11 +111,12 @@ For the infinite strip S_T:
 | SAW.lean | ✅ Proved | Core definitions, constants, algebraic identities |
 | SAWSubmult.lean | ✅ Proved | Submultiplicativity |
 | SAWMain.lean | ✅ Proved | Fekete → connective constant |
-| SAWStripT1Walks.lean | ⚠️ 1 sorry | T=1 strip walk characterization (NEW) |
+| SAWStripT1Exact.lean | ⚠️ 4 sorries | T=1 strip exact partition functions (NEW) |
+| SAWStripT1Walks.lean | ✅ Proved | T=1 walk characterization |
+| SAWStripT1Identity.lean | ⚠️ Depends on T1Exact | T=1 identity from walk enumeration |
 | SAWStripIdentityCorrect.lean | ❌ Sorry | Strip identity (fundamental gap) |
 | SAWRecurrenceProof.lean | ❌ Sorry | Infinite strip identity (fundamental gap) |
 | SAWPaperChain.lean | ❌ Sorry | HW decomposition (fundamental gap) |
-| SAWStripT1Identity.lean | ⚠️ 4 sorries | T=1 identity from walk enumeration |
 | SAWFinal.lean | ✅ Proved | Main theorem assembly |
 | SAWCuttingProof.lean | ✅ Proved | Cutting argument |
 | SAWDecomp.lean | ✅ Proved | Quadratic recurrence |

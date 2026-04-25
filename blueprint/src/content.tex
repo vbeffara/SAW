@@ -5019,6 +5019,70 @@ by explicitly computing the partition functions.
 \end{lemma}
 \begin{proof}\leanok Explicit construction and \texttt{decide}.\end{proof}
 
+\begin{lemma}[Strip-1 path graph structure]\label{lem:strip1_path_graph}
+\lean{strip1_at_most_2_neighbors}
+\leanok
+\uses{def:hex_lattice, def:paper_inf_strip}
+  In PaperInfStrip $1$, each vertex has at most $2$ strip-neighbors.
+  Equivalently, among any $3$ strip-neighbors, at least two are equal.
+\end{lemma}
+\begin{proof}\leanok Case split on vertex type; unfold PaperInfStrip and hexGraph.\end{proof}
+
+\begin{lemma}[Strip-1 position function]\label{lem:strip1_pos}
+\lean{strip1_adj_pos_diff}
+\leanok
+\uses{def:hex_lattice, def:paper_inf_strip}
+  Define $\mathrm{pos}(k, -k, \mathit{true}) = 2k$ and
+  $\mathrm{pos}(k, -k-1, \mathit{false}) = 2k+1$. Adjacent strip-1
+  vertices have positions differing by exactly $\pm 1$. Position is
+  injective on strip-1 vertices.
+\end{lemma}
+\begin{proof}\leanok Case split on adjacency type.\end{proof}
+
+\begin{lemma}[Strip-1 constant sign]\label{lem:strip1_constant_sign}
+\lean{strip1_path_constant_sign}
+\leanok
+\uses{lem:strip1_path_graph, lem:strip1_pos}
+  On a path in the strip of length $\geq 2$, consecutive position
+  differences are all equal (all $+1$ or all $-1$). This follows from
+  the degree-$2$ constraint: at each vertex, reversing direction would
+  require revisiting a vertex.
+\end{lemma}
+\begin{proof}\leanok By the path property and position injectivity: if
+  $d_2 = -d_1$ then the position returns to a previous value, contradicting
+  injectivity via \texttt{getVert\_injOn}.\end{proof}
+
+\begin{lemma}[Strip-1 monotonicity]\label{lem:strip1_monotone}
+\lean{strip1_saw_monotone}
+\leanok
+\uses{lem:strip1_constant_sign, lem:strip1_pos}
+  Position is strictly monotone along any SAW in PaperInfStrip $1$:
+  either all increasing or all decreasing.
+\end{lemma}
+\begin{proof}\leanok From constant sign: if $d = 1$ then
+  $\mathrm{pos}(j) - \mathrm{pos}(i) = j - i > 0$ for $i < j$.\end{proof}
+
+\begin{lemma}[Right/left bridge existence]\label{lem:bridge_existence}
+\lean{exists_right_bridge, exists_left_bridge}
+\leanok
+\uses{def:paper_bridge, lem:strip1_monotone}
+  For each $m \geq 0$, there exists a PaperBridge $1$ of length
+  $2m+1$ ending at $(m, -m-1, \mathit{false})$ (right bridge) and
+  one ending at $(-m-1, m, \mathit{false})$ (left bridge).
+\end{lemma}
+\begin{proof}\leanok By induction on $m$; extend the previous bridge by
+  $2$ steps using monotonicity to ensure new vertices are fresh.\end{proof}
+
+\begin{lemma}[Bridge partition function lower bound]\label{lem:bridge_partition_ge}
+\lean{paper_bridge_partition_1_ge}
+\leanok
+\uses{lem:bridge_existence}
+  $B_1^{x_c} \geq \frac{2x_c}{1 - x_c^2}$.
+\end{lemma}
+\begin{proof}\leanok Inject $\mathrm{Bool} \times \mathbb{N}$ into
+  PaperBridge $1$ via right/left bridges and compare with geometric
+  series.\end{proof}
+
 \subsection*{Remaining gaps}
 
 Two independent sorry chains remain:
@@ -5029,8 +5093,12 @@ Two independent sorry chains remain:
   The algebraic core (pair and triplet cancellation), the direction ratio identities
   ($\mathrm{dir} = j, j^2$), and the $T{=}1$ algebraic identity are proved.
   \textbf{The $T = 1$ case} (\texttt{infinite\_strip\_identity\_T1})
-  is proved from explicit walk enumeration, modulo four sorry'd
-  partition function bounds.
+  is proved from explicit walk enumeration, modulo bridge uniqueness
+  (\texttt{paper\_bridge\_1\_unique\_by\_endpoint}) and endpoint
+  classification.
+  New infrastructure proved: strip-1 path graph structure, position
+  function, constant sign, monotonicity, and explicit bridge constructions
+  for all odd lengths.
   What remains for general $T$: the combinatorial walk partition into
   pairs/triplets at each vertex, and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
