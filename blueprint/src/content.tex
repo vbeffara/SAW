@@ -5083,6 +5083,63 @@ by explicitly computing the partition functions.
   PaperBridge $1$ via right/left bridges and compare with geometric
   series.\end{proof}
 
+\begin{lemma}[Bridge uniqueness by endpoint]\label{lem:bridge_unique}
+\lean{paper_bridge_1_unique_by_endpoint}
+\leanok
+\uses{lem:strip1_pos, lem:strip1_monotone, lem:bridge_length_pos}
+  On the width-1 strip, a PaperBridge~$1$ is uniquely determined by its endpoint.
+\end{lemma}
+\begin{proof}\leanok
+  Both walks have the same length (by \texttt{paper\_bridge\_1\_length\_eq\_pos}).
+  Both are monotone in position (\texttt{strip1\_saw\_monotone}), in the same direction.
+  Positions at each step are determined ($0 \pm i$), so vertices match
+  (\texttt{strip1\_pos\_injective}).
+  Apply \texttt{Walk.ext\_getVert\_le\_length}.
+\end{proof}
+
+\begin{lemma}[Bridge endpoint characterization]\label{lem:bridge_endpoint}
+\lean{paper_bridge_1_right_endpoint, paper_bridge_1_left_endpoint}
+\leanok
+\uses{lem:strip1_monotone, lem:bridge_length_pos}
+  A PaperBridge~$1$ going right ends at $(m, -m{-}1, \mathit{false})$ with length $2m{+}1$.
+  One going left ends at $(-m{-}1, m, \mathit{false})$ with length $2m{+}1$.
+\end{lemma}
+\begin{proof}\leanok
+  By monotonicity, position at each step changes by exactly $1$.
+  The endpoint determines both the direction and the length.
+\end{proof}
+
+\begin{lemma}[Bridge partition function upper bound]\label{lem:bridge_partition_le}
+\lean{paper_bridge_partition_1_le}
+\leanok
+\uses{lem:bridge_unique, lem:bridge_endpoint, lem:bridge_existence}
+  $B_1^{x_c} \leq \frac{2x_c}{1 - x_c^2}$.
+\end{lemma}
+\begin{proof}\leanok
+  By \texttt{paper\_bridge\_1\_unique\_by\_endpoint}, at most one bridge per endpoint.
+  Biject bridges to $\mathbb{N} \sqcup \mathbb{N}$ via endpoint classification,
+  bound by geometric series.
+\end{proof}
+
+\begin{theorem}[Exact bridge partition for $T = 1$]\label{thm:bridge_exact}
+\lean{paper_bridge_partition_1_eq}
+\leanok
+\uses{lem:bridge_partition_ge, lem:bridge_partition_le}
+  $B_1^{x_c} = \frac{2x_c}{1 - x_c^2}$.
+\end{theorem}
+\begin{proof}\leanok By \texttt{le\_antisymm} of the upper and lower bounds.\end{proof}
+
+\begin{lemma}[Bridge length equals position]\label{lem:bridge_length_pos}
+\lean{paper_bridge_1_length_eq_pos}
+\leanok
+\uses{lem:strip1_pos, lem:strip1_monotone}
+  For a PaperBridge~$1$, the walk length equals $|\mathrm{strip1\_pos}(\mathrm{end\_v})|$.
+\end{lemma}
+\begin{proof}\leanok
+  By monotonicity, position changes by $\pm 1$ at each step.
+  At the final step, position equals $\pm\mathrm{length}$.
+\end{proof}
+
 \subsection*{Remaining gaps}
 
 Two independent sorry chains remain:
@@ -5092,19 +5149,18 @@ Two independent sorry chains remain:
   and the finite strip identity (\texttt{strip\_identity\_genuine}).
   The algebraic core (pair and triplet cancellation), the direction ratio identities
   ($\mathrm{dir} = j, j^2$), and the $T{=}1$ algebraic identity are proved.
-  \textbf{The $T = 1$ case} (\texttt{infinite\_strip\_identity\_T1})
-  is proved from explicit walk enumeration, modulo bridge uniqueness
-  (\texttt{paper\_bridge\_1\_unique\_by\_endpoint}) and endpoint
-  classification.
-  New infrastructure proved: strip-1 path graph structure, position
-  function, constant sign, monotonicity, and explicit bridge constructions
-  for all odd lengths.
-  What remains for general $T$: the combinatorial walk partition into
+  \textbf{The $T = 1$ bridge partition function} ($B_1^{x_c} = 2x_c/(1-x_c^2)$) is
+  now \textbf{fully proved} (\texttt{paper\_bridge\_partition\_1\_eq}) from
+  explicit walk enumeration, bridge uniqueness by endpoint, and endpoint
+  classification---all sorry-free.
+  The $T = 1$ infinite strip identity (\texttt{infinite\_strip\_identity\_T1})
+  is proved modulo the $A_{\inf}$ bounds (\texttt{A\_inf\_1\_le/ge}).
+  \textbf{What remains for general $T$}: the combinatorial walk partition into
   pairs/triplets at each vertex, and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
   the canonical bridge decomposition of SAWs giving
   $\sum c_n x^n \leq 2 \prod (1 + B_T)^2$.
   Walk max/min diagCoord infrastructure, SAW diagCoord bounds,
   and the product--powerset identity are proved.
-  What remains: the decomposition algorithm and its injectivity proof.
+  \textbf{What remains}: the decomposition algorithm and its injectivity proof.
 \end{enumerate}

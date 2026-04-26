@@ -1,3 +1,42 @@
+# Summary of changes for run 1e90408d-ee85-400e-84f5-5fb8882b415c
+## Summary of progress
+
+### What was accomplished
+
+I focused on the missing mathematical content of the T=1 strip case, proving several key lemmas that were previously sorry'd in `RequestProject/SAWStripT1Exact.lean`. The following theorems are now **fully proved** (verified sorry-free with `#print axioms`):
+
+#### Proved lemmas in `SAWStripT1Exact.lean` (all sorry-free):
+
+1. **`strip1_increasing_walk_pos`** — For a strictly increasing walk on the width-1 strip, the position at step i equals `strip1_pos(start) + i`. Proved by induction using `strip1_adj_pos_diff` and monotonicity.
+
+2. **`paper_bridge_1_length_eq_pos`** — The length of a PaperBridge 1 equals `|strip1_pos(endpoint)|`. Proved using monotonicity to determine position at each step.
+
+3. **`paper_bridge_1_right_endpoint`** — A PaperBridge 1 going right (positive position) ends at `(m, -m-1, false)` with length `2m+1`. Proved using monotonicity and position analysis.
+
+4. **`paper_bridge_1_left_endpoint`** — The symmetric result for left-going bridges.
+
+5. **`paper_bridge_1_unique_by_endpoint`** — On the width-1 strip, a PaperBridge 1 is uniquely determined by its endpoint. This was the hardest lemma. Proved by showing both walks have the same length (from `paper_bridge_1_length_eq_pos`), the same position at each step (from monotonicity + position determination), the same vertex at each step (from `strip1_pos_injective`), and then applying `SimpleGraph.Walk.ext_getVert_le_length`.
+
+6. **`paper_bridge_partition_1_le`** — Upper bound: `B₁(xc) ≤ 2xc/(1-xc²)`. Proved using bridge uniqueness to biject bridges to ℕ ⊕ ℕ, then bounding by the geometric series.
+
+7. **`paper_bridge_partition_1_eq`** — Exact value: `B₁(xc) = 2xc/(1-xc²)`. Follows from upper and lower bounds.
+
+### Blueprint updates
+
+Updated `blueprint/src/content.tex` to reflect the newly proved results:
+- Added blueprint entries for bridge uniqueness, endpoint characterization, upper bound, exact value, and length-position lemmas
+- Updated the "Remaining gaps" section to note that the T=1 bridge partition function is now fully proved
+
+### What remains (unchanged from before)
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) still depends on three sorry chains:
+
+1. **`strip_identity_genuine`** (finite strip identity / B_paper ≤ 1) — requires the full parafermionic observable proof (vertex relation + discrete Stokes summation)
+2. **`infinite_strip_identity`** (infinite strip identity) — similar to #1, for general T
+3. **`paper_bridge_decomp_injection`** (Hammersley-Welsh decomposition) — the canonical bridge decomposition of SAWs
+
+The T=1 case progress demonstrates the approach: on the width-1 strip (which is a path graph), walks are uniquely determined by their endpoints, allowing exact enumeration. The general-T case requires the more sophisticated parafermionic observable argument from the paper.
+
 # Summary of changes for run 404e8b75-bf49-41fb-a017-7108fb0525dc
 ## Summary of Progress
 
