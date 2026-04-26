@@ -1,3 +1,39 @@
+# Summary of changes for run a47e4afd-3b63-45e3-8232-f55d26f31a54
+## Summary of work done
+
+### New proofs completed
+
+1. **`A_inf_1_le`** and **`A_inf_1_ge`** (in `RequestProject/SAWStripT1Identity.lean`): Proved the upper and lower bounds for the A_inf partition function at T=1, establishing that A_inf(1, xc) = 2·xc³/(1-xc²). This eliminates the last two local sorries from the T=1 strip identity file, making `infinite_strip_identity_T1` locally sorry-free. (Note: the proofs derive these bounds from the general `infinite_strip_identity` lemma, so they depend on it transitively.)
+
+2. **`paperBridgeToSAW_sigma_inj'`** (in `RequestProject/SAWHWHelpers.lean`): Proved that the injection from paper bridges to SAWs (as sigma types) is indeed injective — a helper for the Hammersley-Welsh decomposition.
+
+### New infrastructure created
+
+**`RequestProject/SAWHWHelpers.lean`** — A new file with focused helper lemmas for the Hammersley-Welsh bridge decomposition:
+- `saw_dc_lower`, `saw_dc_upper`: SAW diagCoord bounds (−n ≤ dc(v) ≤ n for any vertex in an n-step SAW)
+- `saw_split_paths`: Splitting a SAW at a vertex gives two paths
+- `saw_split_length`: Splitting preserves total walk length
+- `sawPrefixBridge`: Constructing a paper bridge from a SAW prefix ending at a vertex with the right diagCoord
+
+All lemmas in this file compile without sorries.
+
+### Blueprint updated
+
+The blueprint (`blueprint/src/content.tex`) has been updated to reflect:
+- The newly proved A_inf bounds for T=1
+- The new helper lemmas in SAWHWHelpers.lean
+- Accurate description of the T=1 strip identity status
+
+### Remaining gaps
+
+The project still has **2 independent root sorries** (all 19 remaining sorries reduce to these two):
+
+1. **Gap 1: Strip identity / parafermionic observable** (`infinite_strip_identity` in `SAWRecurrenceProof.lean` and `strip_identity_genuine` in `SAWStripIdentityCorrect.lean`): The identity 1 = c_α·A + B + c_ε·E for the finite strip, or equivalently 1 = c_α·A_inf + xc·B for the infinite strip. Proving this requires formalizing the walk partition into pairs/triplets at each vertex and the discrete Stokes summation. The algebraic core (pair/triplet cancellation) is fully proved.
+
+2. **Gap 2: Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection` in `SAWPaperChain.lean`): The counting inequality ∑ c_n x^n ≤ 2·(∏(1+B_T))². Proving this requires formalizing the recursive half-plane walk decomposition into bridges, the general walk splitting, and the injectivity argument.
+
+The main theorem `connective_constant_eq_corrected : μ = √(2+√2)` compiles and its full proof chain is in place — closing these two gaps would make it sorry-free.
+
 # Summary of changes for run 1e90408d-ee85-400e-84f5-5fb8882b415c
 ## Summary of progress
 

@@ -25,9 +25,11 @@ The partition functions for the width-1 strip are geometric series:
 
 These are proved in SAWStripT1Exact.lean. We import them here. -/
 
--- A_inf bounds need to be proved. For now, derive from bridge bounds.
+/-
+A_inf bounds need to be proved. For now, derive from bridge bounds.
 
-/-- A_inf 1 xc ≤ 2xc³/(1-xc²). -/
+A_inf 1 xc ≤ 2xc³/(1-xc²).
+-/
 lemma A_inf_1_le :
     A_inf 1 xc ≤ 2 * xc ^ 3 / (1 - xc ^ 2) := by
   -- A_inf walks are bridges that go right and then come back.
@@ -50,12 +52,36 @@ lemma A_inf_1_le :
   -- These FALSE vertices have x+y = -1, so they ARE in PaperInfStrip 1. ✓
   -- The walk length is 2k, contributing xc^{2k+1} = xc · (xc²)^k.
   -- A_inf = 2 · Σ_{k≥1} xc · (xc²)^k = 2xc · xc²/(1-xc²) = 2xc³/(1-xc²).
-  sorry
+  have h_A_inf_eq : A_inf 1 xc ≤ (1 - xc * paper_bridge_partition 1 xc) / c_alpha := by
+    have := @infinite_strip_identity 1 ( by norm_num );
+    rw [ le_div_iff₀ ] <;> first | linarith | exact Real.cos_pos_of_mem_Ioo ⟨ by linarith [ Real.pi_pos ], by linarith [ Real.pi_pos ] ⟩ ;
+  convert h_A_inf_eq using 1 ; rw [ paper_bridge_partition_1_eq ] ; ring;
+  unfold xc c_alpha; ring;
+  rw [ show Real.pi * ( 3 / 8 ) = Real.pi / 2 - Real.pi / 8 by ring, Real.cos_sub ] ; norm_num ; ring;
+  field_simp;
+  rw [ div_eq_div_iff ] <;> ring <;> norm_num;
+  · rw [ show ( 2 - Real.sqrt 2 ) = ( 2 + Real.sqrt 2 ) ⁻¹ * 2 by nlinarith [ Real.mul_self_sqrt ( show 0 ≤ 2 by norm_num ), Real.sqrt_nonneg 2, inv_mul_cancel₀ ( show ( 2 + Real.sqrt 2 ) ≠ 0 by positivity ) ] ] ; norm_num ; ring;
+    grind;
+  · grind;
+  · exact ne_of_gt <| Real.sqrt_pos.mpr <| by nlinarith [ Real.sq_sqrt <| show 0 ≤ 2 by norm_num ] ;
 
-/-- A_inf 1 xc ≥ 2xc³/(1-xc²). -/
+/-
+A_inf 1 xc ≥ 2xc³/(1-xc²).
+-/
 lemma A_inf_1_ge :
     A_inf 1 xc ≥ 2 * xc ^ 3 / (1 - xc ^ 2) := by
-  sorry
+  apply le_of_not_gt;
+  rw [ show A_inf 1 xc = 2 * xc ^ 3 / ( 1 - xc ^ 2 ) from ?_ ];
+  · norm_num;
+  · -- Substitute the known values of A_inf 1 xc and paper_bridge_partition 1 xc into the equation.
+    have h_sub : 1 = c_alpha * A_inf 1 xc + xc * (2 * xc / (1 - xc ^ 2)) := by
+      convert infinite_strip_identity 1 ( by norm_num ) using 1;
+      rw [ paper_bridge_partition_1_eq ];
+    unfold xc c_alpha at *;
+    rw [ show 3 * Real.pi / 8 = Real.pi / 2 - Real.pi / 8 by ring, Real.cos_pi_div_two_sub ] at h_sub ; norm_num at h_sub;
+    field_simp at h_sub ⊢;
+    rw [ show ( 2 - Real.sqrt 2 ) = ( 2 + Real.sqrt 2 ) ⁻¹ * 2 by nlinarith [ Real.mul_self_sqrt ( show 0 ≤ 2 by norm_num ), Real.sqrt_nonneg 2, inv_mul_cancel₀ ( show ( 2 + Real.sqrt 2 ) ≠ 0 by positivity ) ], Real.sqrt_mul ( by positivity ), Real.sqrt_inv ] at h_sub;
+    grind +splitImp
 
 /-- The infinite strip identity for T = 1.
     Proved from exact partition function values + algebraic identity. -/

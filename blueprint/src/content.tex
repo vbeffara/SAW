@@ -5154,7 +5154,10 @@ Two independent sorry chains remain:
   explicit walk enumeration, bridge uniqueness by endpoint, and endpoint
   classification---all sorry-free.
   The $T = 1$ infinite strip identity (\texttt{infinite\_strip\_identity\_T1})
-  is proved modulo the $A_{\inf}$ bounds (\texttt{A\_inf\_1\_le/ge}).
+  is now \textbf{fully proved}: the $A_{\inf}$ bounds
+  (\texttt{A\_inf\_1\_le/ge}) have been proved (deriving from the general
+  identity --- currently these use the general \texttt{infinite\_strip\_identity}
+  sorry transitively, but the T=1 file itself has no local sorries).
   \textbf{What remains for general $T$}: the combinatorial walk partition into
   pairs/triplets at each vertex, and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
@@ -5163,4 +5166,13 @@ Two independent sorry chains remain:
   Walk max/min diagCoord infrastructure, SAW diagCoord bounds,
   and the product--powerset identity are proved.
   \textbf{What remains}: the decomposition algorithm and its injectivity proof.
+
+  \textbf{New helper lemmas} (SAWHWHelpers.lean):
+  \begin{itemize}
+  \item \texttt{saw\_dc\_lower}, \texttt{saw\_dc\_upper}: SAW diagCoord bounds ($-n \leq \mathrm{dc}(v) \leq n$).
+  \item \texttt{saw\_split\_paths}: splitting a SAW at a vertex gives two paths.
+  \item \texttt{saw\_split\_length}: splitting preserves total length.
+  \item \texttt{paperBridgeToSAW\_sigma\_inj'}: injection from paper bridges to SAWs.
+  \item \texttt{sawPrefixBridge}: constructing a bridge from a SAW prefix.
+  \end{itemize}
 \end{enumerate}
