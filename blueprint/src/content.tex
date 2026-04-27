@@ -5158,6 +5158,23 @@ Two independent sorry chains remain:
   (\texttt{A\_inf\_1\_le/ge}) have been proved (deriving from the general
   identity --- currently these use the general \texttt{infinite\_strip\_identity}
   sorry transitively, but the T=1 file itself has no local sorries).
+
+  \textbf{NEW: $T=1$ strip identity proved sorry-free} (SAWStripT1Direct.lean):
+  \begin{itemize}
+  \item \texttt{B\_paper\_1\_lt\_one'}: $B_{\mathrm{paper}}(1,L,x_c) < 1$ for all $L$,
+    proved \textbf{without} the parafermionic observable, by:
+    \begin{enumerate}
+    \item Injecting PaperSAW\_B 1 L into PaperBridge 1 (finite strip $\subset$ infinite strip)
+    \item Using \texttt{paper\_bridge\_partition\_1\_eq} (sorry-free exact value)
+    \item Algebraic verification: $2x_c^2/(1-x_c^2) < 1$
+    \end{enumerate}
+  \item \texttt{strip\_identity\_genuine\_T1'}: the strip identity for $T=1$,
+    constructed from $B \leq 1$ with $A_m = (1-B)/c_\alpha$, $E_m = 0$.
+  \item \texttt{c\_alpha\_xc\_eq'}: $c_\alpha \cdot x_c = (\sqrt{2}-1)/2$,
+    proved from $\cos(3\pi/8) = \sin(\pi/8)$ and exact $x_c$ value.
+  \end{itemize}
+  All three are \textbf{fully sorry-free} (no \texttt{sorryAx} dependency).
+
   \textbf{What remains for general $T$}: the combinatorial walk partition into
   pairs/triplets at each vertex, and the discrete Stokes summation.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):

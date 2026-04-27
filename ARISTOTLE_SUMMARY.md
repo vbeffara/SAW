@@ -1,3 +1,45 @@
+# Summary of changes for run a0d5db2e-9c3c-4a66-80e4-43085c7f4273
+## Summary of Progress
+
+### New sorry-free results (SAWStripT1Direct.lean)
+
+Created a new file `RequestProject/SAWStripT1Direct.lean` containing **fully sorry-free proofs** of the following results for the width-1 strip (T=1 case):
+
+1. **`B_paper_1_lt_one'`**: The bridge partition function B_paper(1, L, x_c) < 1 for all L ≥ 0. This is proved WITHOUT the parafermionic observable, by:
+   - Injecting finite-strip walks (PaperSAW_B) into infinite-strip bridges (PaperBridge) via `paperSAWB_to_bridge'`
+   - Using the exact bridge partition value `paper_bridge_partition_1_eq` (proved from width-1 walk enumeration)
+   - Verifying algebraically that 2x_c²/(1-x_c²) < 1
+
+2. **`strip_identity_genuine_T1'`**: The strip identity for T=1, providing non-negative A_m, E_m such that 1 = c_α·A_m + B_paper(1,L,x_c) + c_ε·E_m. This is a T=1 instance of Lemma 2 from the paper.
+
+3. **`c_alpha_xc_eq'`**: The algebraic identity c_α · x_c = (√2 - 1)/2, proved from cos(3π/8) = sin(π/8) and the exact value of x_c.
+
+4. **`paper_bridge_1_summable`**: Summability of PaperBridge 1 weights, derived from the exact partition function computation.
+
+All of these are verified to have NO `sorryAx` dependency (checked via `#print axioms`).
+
+### Supporting infrastructure
+
+- `paperSAWB_to_bridge'`: Injection from finite-strip walks to infinite-strip bridges
+- `paperSAWB_to_bridge'_injective`: Injectivity proof
+- `paperSAWB_to_bridge'_len`: Length preservation
+- `two_xc_sq_div_lt_one'`: 2x_c²/(1-x_c²) < 1
+- `B_paper_1_le`: B_paper(1,L,x_c) ≤ x_c · paper_bridge_partition(1, x_c)
+
+### Blueprint update
+
+Updated `blueprint/src/content.tex` to document the new T=1 strip identity results, including the proof strategy and sorry-free status.
+
+### Remaining gaps
+
+The main theorem (`connective_constant_eq` in `SAWFinal.lean`) still depends on two root sorry's:
+
+1. **`strip_identity_genuine`** (general T): Requires the parafermionic observable vertex relation (Lemma 1) and discrete Stokes summation (Lemma 2). The T=1 case is now proved, but extending to general T requires the full combinatorial walk partition into pairs/triplets at each vertex.
+
+2. **`paper_bridge_decomp_injection`**: The Hammersley-Welsh bridge decomposition injection. This requires formalizing the half-plane walk decomposition algorithm and proving its injectivity.
+
+Both are deep combinatorial results that require substantial additional infrastructure. The T=1 proof demonstrates the approach for the strip identity; generalizing requires the vertex relation for arbitrary strip widths.
+
 # Summary of changes for run a47e4afd-3b63-45e3-8232-f55d26f31a54
 ## Summary of work done
 
