@@ -1,3 +1,48 @@
+# Summary of changes for run a1f39896-ed0e-4ca2-9e66-11f1d7c1f48a
+## Summary of Progress
+
+### New sorry-free results: Direction vectors for the vertex relation (SAWTripletInfra.lean)
+
+Created `RequestProject/SAWTripletInfra.lean` containing **fully sorry-free proofs** of key infrastructure for the vertex relation (Lemma 1 of Duminil-Copin & Smirnov 2012):
+
+**Direction vector identities** (all sorry-free):
+- `dir_ft_same`: Direction from FALSE(x,y) to TRUE(x,y) equals 1
+- `dir_ft_xp1`: Direction from FALSE(x,y) to TRUE(x+1,y) equals j (= exp(i·2π/3))
+- `dir_ft_yp1`: Direction from FALSE(x,y) to TRUE(x,y+1) equals conj(j)
+- `dir_tf_same`: Direction from TRUE(x,y) to FALSE(x,y) equals -1
+- `dir_tf_xm1`: Direction from TRUE(x,y) to FALSE(x-1,y) equals -j
+- `dir_tf_ym1`: Direction from TRUE(x,y) to FALSE(x,y-1) equals -conj(j)
+
+These establish that the direction vectors from each hex vertex to its three neighbors are exactly the cube roots of unity (times ±1), which is the geometric ingredient needed for the vertex relation proof.
+
+**Hex adjacency witnesses** (all sorry-free):
+- `hex_adj_ft`, `hex_adj_ft_xp1`, `hex_adj_ft_yp1`: FALSE→TRUE adjacency
+- `hex_adj_tf`, `hex_adj_tf_xm1`, `hex_adj_tf_ym1`: TRUE→FALSE adjacency
+
+All results verified with `#print axioms` showing no `sorryAx` dependency.
+
+### Blueprint update
+
+Updated `blueprint/src/content.tex` with:
+1. Documentation of the new direction vector lemmas and their role in the vertex relation
+2. Comprehensive "Overall proof structure" section documenting:
+   - The two independent facts needed for the main theorem (Z(xc) = ∞ and Z(x) < ∞ for x < xc)
+   - The full dependency chain for each fact
+   - Clear identification of the **3 root sorry's**: strip identity, infinite strip identity, and HW decomposition
+   - Which results are proved vs sorry'd
+
+### Remaining gaps (unchanged from previous session)
+
+The main theorem `connective_constant_eq` still depends on **3 root sorry's**:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean): The finite strip identity 1 = c_α·A + B + c_ε·E. Requires the vertex relation (pair/triplet partition of walks) and discrete Stokes summation. The T=1 case is proved; general T needs the combinatorial walk partition.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): The infinite strip identity 1 = c_α·A_inf + xc·B_inf. Same proof technique as #1 but for the infinite strip (no escape boundary).
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean): The Hammersley-Welsh bridge decomposition counting inequality. Requires the walk decomposition algorithm and its injectivity proof.
+
+All three are deep combinatorial results. The algebraic cores (pair_cancellation, triplet_cancellation, direction vectors) are fully proved; what remains is the combinatorial infrastructure (walk partitioning, discrete Stokes, bridge decomposition algorithm).
+
 # Summary of changes for run a0d5db2e-9c3c-4a66-80e4-43085c7f4273
 ## Summary of Progress
 

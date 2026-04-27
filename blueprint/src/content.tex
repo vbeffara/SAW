@@ -5193,3 +5193,55 @@ Two independent sorry chains remain:
   \item \texttt{sawPrefixBridge}: constructing a bridge from a SAW prefix.
   \end{itemize}
 \end{enumerate}
+
+\subsection*{Vertex relation infrastructure (SAWTripletInfra.lean)}
+
+\textbf{New sorry-free results} supporting the vertex relation proof:
+
+\begin{lemma}[Direction vectors are cube roots of unity]\label{lem:dir_vectors}
+\lean{dir_ft_same, dir_ft_xp1, dir_ft_yp1, dir_tf_same, dir_tf_xm1, dir_tf_ym1}
+\leanok
+  The direction vectors from each hex vertex to its three neighbors are:
+  \begin{itemize}
+  \item From FALSE$(x,y)$: $+1$, $j$, $\bar{j}$ to TRUE$(x,y)$, TRUE$(x{+}1,y)$, TRUE$(x,y{+}1)$
+  \item From TRUE$(x,y)$: $-1$, $-j$, $-\bar{j}$ to FALSE$(x,y)$, FALSE$(x{-}1,y)$, FALSE$(x,y{-}1)$
+  \end{itemize}
+  These are exactly the factors appearing in the vertex relation (Lemma~1).
+\end{lemma}
+\begin{proof}\leanok Expand \texttt{correctHexEmbed} and \texttt{j}; verify by \texttt{norm\_num}.\end{proof}
+
+\begin{lemma}[Hex adjacency characterization]\label{lem:hex_adj_explicit}
+\lean{hex_adj_ft, hex_adj_ft_xp1, hex_adj_ft_yp1, hex_adj_tf, hex_adj_tf_xm1, hex_adj_tf_ym1}
+\leanok
+  Explicit adjacency witnesses for each of the six edge types in \texttt{hexGraph}.
+\end{lemma}
+\begin{proof}\leanok By definition of \texttt{hexGraph}.\end{proof}
+
+\subsection*{Overall proof structure}
+
+The main theorem \texttt{connective\_constant\_eq} (that $\mu = \sqrt{2+\sqrt{2}}$)
+follows from two independent facts:
+\begin{enumerate}
+\item $Z(x_c) = +\infty$ (divergence at the critical point)
+\item $Z(x) < +\infty$ for $0 < x < x_c$ (convergence below the critical point)
+\end{enumerate}
+
+\textbf{Fact 1} requires:
+\begin{itemize}
+\item The strip identity $1 = c_\alpha A + B + c_\varepsilon E$ (Lemma~2) --- \textbf{sorry}
+\item The infinite strip identity $1 = c_\alpha A_{\inf} + x_c B_{\inf}$ --- \textbf{sorry}
+\item The cutting argument $A_{T+1} - A_T \leq x_c B_{T+1}^2$ --- \textbf{proved}
+\item The bridge recurrence $B_T \leq c_\alpha B_{T+1}^2 + B_{T+1}$ --- proved from above
+\item The bridge lower bound $B_T \geq c/T$ --- proved from recurrence
+\item $\sum_T B_T = +\infty$ since $B_T \geq c/T$ (harmonic divergence)
+\end{itemize}
+
+\textbf{Fact 2} requires:
+\begin{itemize}
+\item The Hammersley--Welsh counting inequality --- \textbf{sorry}
+\item Bridge decay $B_T^x \leq (x/x_c)^T$ --- needs strip identity
+\item Product convergence $\prod(1 + B_T^x) < \infty$ for $x < x_c$
+\end{itemize}
+
+\textbf{Root sorry count: 3} (strip identity, infinite strip identity,
+HW decomposition). All other results are proved from these three.
