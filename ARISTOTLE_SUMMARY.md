@@ -1,3 +1,46 @@
+# Summary of changes for run 020c8ed5-6786-4c2c-aebe-af99b0d670dc
+## Summary of work done
+
+### New file: `RequestProject/SAWVertexCore.lean` (sorry-free)
+Built the walk extension infrastructure needed for the vertex relation proof (Lemma 1):
+- `walkExtend`: Extend a walk by one adjacent step
+- `walkExtend_isPath`: Extension preserves path property when the new vertex is unvisited
+- `pathExtend`, `sawExtend`: Path/SAW-level extension wrappers
+- `sawExtend_in_strip`: Extension preserves strip containment
+- Adjacency lemmas for both FALSE and TRUE hex vertices (`false_adj_true_same`, `true_adj_false_left`, etc.)
+
+These are building blocks for the triplet construction in the vertex relation — extending a walk at a vertex v by one step to each of v's unvisited neighbors.
+
+### Blueprint update: `blueprint/src/content.tex`
+Added sections documenting:
+- Walk extension infrastructure with `\lean{}` and `\leanok` tags
+- Complete proof architecture showing the 2 independent sorry chains
+- Detailed list of what's proved (sorry-free) vs. what remains
+- The exact mathematical content of each sorry chain
+
+### Proof status document: `PROOF_STATUS.md`
+Updated with current status of all sorry chains, file locations, and what's proved vs. remaining.
+
+### Verification
+- All files build successfully (8119 jobs, no errors)
+- New file `SAWVertexCore.lean` is completely sorry-free
+- Main theorem `connective_constant_eq` in `SAWFinal.lean` compiles (depends on `sorryAx` through the 2 sorry chains)
+
+### Remaining sorry chains (2 independent)
+
+1. **Parafermionic observable / strip identity** (`strip_identity_genuine` in SAWStripIdentityCorrect.lean, `infinite_strip_identity` in SAWRecurrenceProof.lean):
+   - Requires formalizing the combinatorial walk partition into pairs/triplets at each vertex (Lemma 1 of the paper)
+   - The algebraic cancellations (`pair_cancellation`, `triplet_cancellation`) are fully proved
+   - The walk extension infrastructure (this session's contribution) provides the construction needed for triplet extensions
+   - What remains: the pair construction (loop reversal at a vertex) and the discrete Stokes summation
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection` in SAWPaperChain.lean):
+   - Requires formalizing the canonical bridge decomposition of SAWs
+   - The subset-product identity, bridge decay, product convergence, and overall summability argument are fully proved
+   - What remains: the decomposition algorithm (splitting SAWs at maximal diagonal excursion, extracting bridges by induction on width) and its injectivity proof
+
+Both sorry chains require substantial new combinatorial infrastructure (walk partitioning, bridge decomposition algorithms) that goes beyond what can be proved in a single subagent call.
+
 # Summary of changes for run d6e4fd91-a66b-46d4-bd9d-5b96c1c24885
 ## Summary of work done
 

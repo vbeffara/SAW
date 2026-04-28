@@ -1,113 +1,93 @@
-# Proof Status: The connective constant of the honeycomb lattice equals √(2+√2)
+# Proof Status: The Connective Constant of the Honeycomb Lattice
 
 ## Main Theorem
+`connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 2)`
 
-**`connective_constant_eq`** in `SAWFinal.lean`: μ = √(2+√2)  
-**Status**: Proved modulo 2 root sorry chains (see below).
+**Status**: Compiles with 2 independent sorry chains. The main theorem depends on `sorryAx`.
 
-## What is Proved (sorry-free)
+## Sorry Chain 1: Parafermionic Observable (Strip Identity)
 
-### Core infrastructure
-- Hexagonal lattice graph (`hexGraph`) with decidable adjacency and local finiteness
-- Self-avoiding walks (`SAW`) with `Fintype` instance
-- SAW counting (`saw_count`) with c₁ = 3, c₂ = 6
+**Location**: `SAWStripIdentityCorrect.lean:361` (`strip_identity_genuine`)
+and `SAWRecurrenceProof.lean:49` (`infinite_strip_identity`)
 
-### Submultiplicativity and connective constant
-- `saw_count_submult'`: c_{n+m} ≤ c_n · c_m
-- `saw_count_vertex_independent`: count is the same from any vertex
-- `fekete_submultiplicative`: Fekete's lemma for submultiplicative sequences
-- `connective_constant_is_limit'`: μ = lim c_n^{1/n}
-- `connective_constant_pos'`: μ > 0
+**What it proves**: For the finite strip S_{T,L} with T ≥ 1, L ≥ 1:
+  B_paper(T, L, xc) ≤ 1
 
-### Algebraic identities
-- `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
-- `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
-- Direction vectors are cube roots of unity
+**Why it's needed**: This is the core bound from Lemma 2 of the paper.
+It implies bridge partition function bounds, the bridge recurrence,
+bridge lower bounds c/T, and ultimately Z(xc) = ∞ (divergence at
+the critical point).
 
-### Vertex relation algebraic infrastructure (NEW)
-- `pair_residual_j_blocked`: 1 + xc·conj(j)·λ = -(xc·j·conj(λ))
-- `pair_residual_conjj_blocked`: 1 + xc·j·conj(λ) = -(xc·conj(j)·λ)
-- `singleton_residual`: 1 = -(xc·j·conj(λ) + xc·conj(j)·λ)
-- `pair_residuals_cancel`: weighted sum of pair residuals
+**What's proved (sorry-free)**:
+- Pair cancellation: `j * conj(λ)⁴ + conj(j) * λ⁴ = 0` ✓
+- Triplet cancellation: `1 + xc * j * conj(λ) + xc * conj(j) * λ = 0` ✓
+- Boundary coefficient positivity: `c_alpha > 0`, `c_eps > 0` ✓
+- Direction vectors are cube roots of unity ✓
+- Walk extension infrastructure (sawExtend, pathExtend) ✓
+- Cutting argument: `A_inf(T+1) - A_inf(T) ≤ xc · B(T+1)²` ✓
+- Bridge recurrence (from infinite_strip_identity) ✓
+- Bridge lower bound: `∃ c > 0, c/T ≤ B(T)` (from recurrence) ✓
+- Z(xc) diverges (from lower bound) ✓
 
-### Strip identity for T = 1
-- `paper_bridge_partition_1_eq`: B₁ = 2xc/(1-xc²) (exact value)
-- `infinite_strip_identity_T1`: the T=1 case proved sorry-free
-- `strip_identity_genuine_T1'`: B_paper(1,L,xc) ≤ 1
+**What remains**:
+- The combinatorial walk partition into pairs and triplets at each vertex
+- The discrete Stokes summation (summing vertex relations over all strip vertices)
+- Boundary contribution evaluation
 
-### Walk infrastructure
-- Walk extension (`extendPath`): extending a SAW by one step
-- Walk splitting at vertices
-- Bridge length bounds (bridge width T → length ≥ T)
-- Walk bipartiteness and diagCoord bounds
+## Sorry Chain 2: Hammersley-Welsh Decomposition
 
-### Cutting argument
-- `cutting_argument_proved`: A_{T+1} - A_T ≤ xc · B_{T+1}²
+**Location**: `SAWPaperChain.lean:258` (`paper_bridge_decomp_injection`)
 
-### Bridge recurrence and lower bound
-- `bridge_recurrence_proved`: B_T ≤ c_α · B_{T+1}² + B_{T+1}
-- `paper_bridge_lower_bound`: ∃ c > 0, B_T ≥ c/T
+**What it proves**: For 0 < x < xc:
+  ∑_{n≤N} c_n x^n ≤ 2 · (∏_{T=1}^N (1 + B_T(x)))²
 
-### Abstract discrete Stokes theorem
-- `discrete_stokes_abstract`: If f is antisymmetric and the vertex
-  relation holds at each interior vertex, then the boundary sum is zero.
+**Why it's needed**: Combined with bridge decay B_T(x) ≤ (x/xc)^T
+and geometric product convergence, this gives Z(x) < ∞ for x < xc.
 
-### Bridge decomposition infrastructure (NEW)
-- `hexDiagCoord`: diagonal coordinate x+y
-- `hexDiagCoord_adj_bound`: adjacent vertices differ by at most 1
-- `finset_powerset_prod_eq'`: ∑_{S⊆range N} ∏_{T∈S} a_T = ∏(1+a_T)
-- `paperBridge_dc_range`: bridge vertices have diagCoord in [-T, 0]
+**What's proved (sorry-free)**:
+- Subset-product identity: `∑_{S⊆range(N)} ∏_{T∈S} a_T = ∏(1+a_T)` ✓
+- Bridge decay: `B_T(x) ≤ (x/xc)^T` for x < xc ✓
+- Product convergence: `∏(1 + r^T)` converges for 0 ≤ r < 1 ✓
+- Upper bound assembly from decay + product convergence ✓
+- Z(x) summability from partial sum bound ✓
 
-### Main theorem assembly (modulo sorry)
-- `Z_xc_diverges_corrected`: Z(xc) = +∞
-- `hw_summable_corrected`: Z(x) < ∞ for x < xc
-- `connective_constant_eq_corrected`: μ = √(2+√2)
+**What remains**:
+- The decomposition algorithm (splitting SAWs at maximal diagonal excursion)
+- Extracting bridges by induction on width
+- Injectivity of the decomposition (reverse procedure)
 
-## Root Sorry Chains (2 remaining)
+## Other Sorries (not on critical path)
 
-### 1. Strip identity / Vertex relation (Lemma 1 + Lemma 2)
+- `SAWZigzag.lean`: `saw_count_even_lower`, `saw_count_odd_lower` —
+  proved in `SAWZigzagBuild.lean` but can't be imported due to
+  circular dependency. These are used for lower bounds on c_n.
+- `SAWBridge.lean:357`: dead code, superseded by `SAWPaperChain`
+- `SAWFiniteStrip.lean`: old strip infrastructure, superseded
+- Various other files with legacy sorry's not on the critical path
 
-**Files**: `SAWStripIdentityCorrect.lean` (strip_identity_genuine),
-`SAWRecurrenceProof.lean` (infinite_strip_identity)
+## Files
 
-**What's needed**: The vertex relation at each interior vertex of the strip.
-This says that walks to the three mid-edges of a vertex can be partitioned
-into pairs and triplets whose weighted contributions cancel. The algebraic
-core (pair_cancellation, triplet_cancellation) is proved. The abstract
-Stokes summation (discrete_stokes_abstract) is proved. What remains is
-the combinatorial walk partition: constructing the bijection between
-walks that forms pairs and triplets.
+### Core definitions
+- `SAW.lean`: Constants, algebraic identities, connective constant definition
+- `SAWSubmult.lean`: Submultiplicativity c_{n+m} ≤ c_n · c_m
 
-**Key insight**: Triplets (both exits free) cancel by triplet_cancellation.
-Pair residuals (one exit blocked) are characterized by pair_residual_j_blocked
-and pair_residual_conjj_blocked. The global cancellation of pair residuals
-uses the pair_cancellation identity.
+### Strip domain
+- `SAWStripIdentityCorrect.lean`: Paper-compatible strip, B_paper definition, **sorry chain 1**
+- `SAWDiagProof.lean`: PaperBridge, partition functions, bridge bounds
+- `SAWCutting.lean`, `SAWCuttingProof.lean`: Cutting argument (proved)
+- `SAWRecurrenceProof.lean`: Bridge recurrence, **sorry chain 2**
 
-### 2. Hammersley-Welsh decomposition
+### Bridge decomposition
+- `SAWPaperChain.lean`: Assembly of divergence + convergence, **sorry chain 2**
+- `SAWDecomp.lean`: Abstract bridge decomposition bounds
+- `SAWHammersleyWelsh.lean`: HW summability framework
 
-**File**: `SAWPaperChain.lean` (paper_bridge_decomp_injection),
-`SAWBridgeDecompCore.lean` (hw_counting_bound)
+### Infrastructure
+- `SAWVertexCore.lean`: Walk extension (sawExtend, pathExtend)
+- `SAWTripletInfra.lean`: Direction vectors, j-rotations
+- `SAWParafermionic.lean`: Walk reconstruction
 
-**What's needed**: The bridge decomposition injection showing that
-∑ c_n x^n ≤ 2 · (∏(1 + B_T))². This requires implementing the
-canonical decomposition of SAWs into bridges with monotone widths,
-and proving the decomposition map is injective.
-
-**Infrastructure available**: hexDiagCoord, adj bound, product-powerset
-identity, bridge diagCoord range, walk splitting at vertices.
-
-## File Organization
-
-- `SAW.lean` — Core definitions, algebraic identities
-- `SAWSubmult.lean` — Submultiplicativity
-- `SAWMain.lean` — Fekete's lemma → connective constant
-- `SAWStripIdentityCorrect.lean` — Strip domain, partition functions, strip identity
-- `SAWDiagProof.lean` — PaperBridge, partition function bounds
-- `SAWCuttingProof.lean` — Cutting argument (proved)
-- `SAWRecurrenceProof.lean` — Bridge recurrence from infinite strip identity
-- `SAWPaperChain.lean` — Main theorem assembly
-- `SAWFinal.lean` — Final theorem
-- `SAWDiscreteStokesProof.lean` — Abstract discrete Stokes theorem (proved)
-- `SAWVertexRelDirect.lean` — Walk extension infrastructure (proved)
-- `SAWVertexPartition.lean` — Pair/triplet residual identities (proved, NEW)
-- `SAWBridgeDecompCore.lean` — HW decomposition infrastructure (NEW)
+### Assembly
+- `SAWMain.lean`: Fekete's lemma → connective constant
+- `SAWBridge.lean`: Bridge definitions, partition function radius
+- `SAWFinal.lean`: Main theorem assembly

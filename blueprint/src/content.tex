@@ -5396,3 +5396,128 @@ New sorry-free results connecting pair/triplet cancellation to geometry:
 \begin{proof}\leanok
   Immediate from \texttt{triplet\_cancellation} by \texttt{linear\_combination}.
 \end{proof}
+
+\section{Walk extension infrastructure (SAWVertexCore.lean)}
+
+\begin{definition}[Walk extension]\label{def:walk_extend}
+\lean{walkExtend, pathExtend, sawExtend}
+\leanok
+\uses{def:saw, def:hex_lattice}
+  Extend a walk (path, SAW) by appending one adjacent step.
+  Given a path $p : v \to w$ and an adjacency $h : w \sim u$ with
+  $u \notin \mathrm{support}(p)$, the extension $p' : v \to u$ is a
+  valid path of length $|p| + 1$.
+\end{definition}
+
+\begin{lemma}[Extension preserves path property]\label{lem:walk_extend_path}
+\lean{walkExtend_isPath}
+\leanok
+\uses{def:walk_extend}
+  If $p$ is a path and $u \notin \mathrm{support}(p)$, then the extension
+  is also a path (its support has no repeated vertices).
+\end{lemma}
+\begin{proof}\leanok
+  The support of the extension is $\mathrm{support}(p) \mathbin{+\!\!+} [u]$.
+  This is duplicate-free since $\mathrm{support}(p)$ is duplicate-free,
+  $[u]$ is duplicate-free, and $u \notin \mathrm{support}(p)$.
+\end{proof}
+
+\begin{lemma}[Extension preserves strip containment]\label{lem:saw_extend_strip}
+\lean{sawExtend_in_strip}
+\leanok
+\uses{def:walk_extend}
+  If a SAW stays in \texttt{PaperInfStrip~T} and the new vertex $u$ is also
+  in the strip, then the extended SAW stays in the strip.
+\end{lemma}
+\begin{proof}\leanok
+  The support of the extension is the union of the original support and $\{u\}$.
+\end{proof}
+
+\section{Current sorry status and proof architecture}
+
+\subsection*{Complete proof chain}
+The main theorem \texttt{connective\_constant\_eq} ($\mu = \sqrt{2 + \sqrt{2}}$)
+is assembled in \texttt{SAWFinal.lean} from:
+\begin{itemize}
+\item \texttt{Z\_xc\_diverges\_corrected}: $Z(x_c) = +\infty$ (the partition function diverges at $x_c$)
+\item \texttt{hw\_summable\_corrected}: $Z(x) < +\infty$ for $0 < x < x_c$ (convergence below $x_c$)
+\end{itemize}
+
+These are combined via \texttt{connective\_constant\_eq\_from\_bounds}, which uses the
+characterization of the connective constant as the reciprocal of the radius of convergence
+of $Z(x)$, proved via Fekete's lemma applied to the submultiplicative sequence $c_n$.
+
+\subsection*{Remaining sorry chains (2 independent)}
+
+\begin{enumerate}
+\item \textbf{Parafermionic observable / strip identity} (\texttt{strip\_identity\_genuine}
+  in SAWStripIdentityCorrect.lean, \texttt{infinite\_strip\_identity} in SAWRecurrenceProof.lean):
+
+  The vertex relation (Lemma~1 of the paper) states that at each vertex $v$ of the strip,
+  the weighted sum of the parafermionic observable over $v$'s three mid-edges is zero:
+  \[
+    (p-v) F(p) + (q-v) F(q) + (r-v) F(r) = 0.
+  \]
+  This is proved by partitioning walks into pairs and triplets with algebraically
+  cancelling contributions. The algebraic cancellations (\texttt{pair\_cancellation}
+  and \texttt{triplet\_cancellation}) are \textbf{fully proved}. What remains is
+  the combinatorial walk partition and the discrete Stokes summation.
+
+  The walk extension infrastructure (\texttt{sawExtend} in SAWVertexCore.lean)
+  provides the key construction for triplet extensions. The pair construction
+  (loop reversal) requires additional infrastructure.
+
+  From the vertex relation, discrete Stokes gives the strip identity
+  $1 = c_\alpha A + B + c_\varepsilon E$, from which $B \leq 1$ follows.
+  The infinite strip identity $1 = c_\alpha A_\infty + x_c B$ then gives the
+  bridge recurrence $B_T \leq c_\alpha B_{T+1}^2 + B_{T+1}$ and the
+  lower bound $B_T \geq c/T$, yielding $Z(x_c) = +\infty$.
+
+\item \textbf{Hammersley--Welsh decomposition}
+  (\texttt{paper\_bridge\_decomp\_injection} in SAWPaperChain.lean):
+
+  Every SAW from the starting vertex can be canonically decomposed into
+  a sequence of bridges with strictly monotone widths. This gives an injection
+  from SAWs into pairs of bridge selections:
+  \[
+    \sum_{n \leq N} c_n x^n \leq 2 \left( \prod_{T=1}^{N} (1 + B_T(x)) \right)^2.
+  \]
+  Combined with the bridge decay $B_T(x) \leq (x/x_c)^T$ and geometric
+  product convergence, this yields $Z(x) < +\infty$ for $0 < x < x_c$.
+
+  The subset--product identity, bridge decay, product convergence, and
+  the overall summability argument are all \textbf{fully proved}. What remains
+  is the decomposition algorithm (splitting SAWs at the vertex of maximal
+  diagonal excursion, extracting bridges by induction on width) and its
+  injectivity proof.
+\end{enumerate}
+
+\subsection*{Proved results (sorry-free)}
+\begin{itemize}
+\item Hexagonal lattice definition and decidable adjacency
+\item SAW definition, finiteness, and count
+\item Submultiplicativity: $c_{n+m} \leq c_n \cdot c_m$
+\item Fekete's lemma: $\mu = \lim c_n^{1/n}$ exists
+\item Connective constant positivity: $\mu > 0$
+\item Key algebraic constants: $x_c$, $\lambda$, $j$, $c_\alpha$, $c_\varepsilon$
+\item Pair cancellation: $j \bar{\lambda}^4 + \bar{j} \lambda^4 = 0$
+\item Triplet cancellation: $1 + x_c j \bar{\lambda} + x_c \bar{j} \lambda = 0$
+\item Boundary coefficient positivity: $c_\alpha > 0$, $c_\varepsilon > 0$
+\item Strip domain definitions and finiteness
+\item PaperBridge definition and properties (length $\geq$ width)
+\item Bridge partition function summability
+\item Bridge partial sum bound: $\sum_{F} x_c^{\ell(b)} \leq 1/x_c$
+  (from $B_\text{paper} \leq 1$, which depends on sorry chain 1)
+\item Cutting argument: $A_{T+1} - A_T \leq x_c B_{T+1}^2$ (proved)
+\item Bridge recurrence: $B_T \leq c_\alpha B_{T+1}^2 + B_{T+1}$
+  (proved from infinite strip identity)
+\item Bridge lower bound: $\exists c > 0,\, c/T \leq B_T$ (from recurrence)
+\item Bridge decay: $B_T(x) \leq (x/x_c)^T$ for $x < x_c$
+\item Product convergence: $\prod(1 + r^T)$ converges for $0 \leq r < 1$
+\item Walk extension infrastructure: \texttt{sawExtend}, \texttt{pathExtend}
+\item Direction vector computations (cube roots of unity)
+\item Hex adjacency characterizations
+\item Diagonal coordinate bounds for SAWs
+\item SAW splitting at vertices
+\item Zigzag walk construction ($c_{2k} \geq 2^k$, in SAWZigzagBuild)
+\end{itemize}
