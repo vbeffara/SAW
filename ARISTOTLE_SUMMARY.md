@@ -1,3 +1,37 @@
+# Summary of changes for run d5809104-113b-4639-95e8-e4b3c25bcecd
+## Summary of Progress
+
+### New Sorry-Free Results
+
+1. **Abstract Discrete Stokes Theorem** (`SAWDiscreteStokesProof.lean`):
+   - Proved `discrete_stokes_abstract`: the key telescoping lemma for the strip identity (Lemma 2 of the paper). Given a finite set V of vertices with symmetric neighbors, if an antisymmetric function f satisfies the vertex relation ∑_{w∈N(v)} f(v,w) = 0 at each v ∈ V, then the boundary sum ∑_{v∈V} ∑_{w∈N(v)\V} f(v,w) = 0.
+   - This reduces the strip identity to the vertex relation at each interior vertex.
+   - Depends only on standard axioms (propext, Classical.choice, Quot.sound).
+
+2. **Walk Extension Infrastructure** (`SAWVertexRelDirect.lean`):
+   - Proved `extendPath`: extending a hex graph path by one step to a fresh vertex.
+   - Proved `extendPath_length`: the extended path has length n+1.
+   - Proved `extendPath_support`: the support is the original support ++ [new vertex].
+   - Proved `extendPath_in_strip`: if the original walk stays in the strip and the new vertex is in the strip, the extended walk stays in the strip.
+   - This is the key construction for the triplet part of the vertex relation.
+
+### Blueprint Updates
+
+- Updated `blueprint/src/content.tex` with the new Stokes theorem entry (including `\lean{}`, `\leanok`, and proof sketch).
+- Updated the "Remaining gaps" section: the discrete Stokes summation is now marked as **proved**.
+- Updated root sorry count from 3 to **2**: the infinite strip identity (which implies the finite strip identity) and the Hammersley-Welsh decomposition.
+- Updated `PROOF_STATUS.md` with comprehensive status of all proved and sorry'd results.
+
+### Overall Proof Status
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) has **2 remaining sorry chains**:
+
+1. **Strip identity / Vertex relation** (`infinite_strip_identity` + `strip_identity_genuine`): The combinatorial walk partition into pairs/triplets at each interior vertex. The algebraic core (pair/triplet cancellation) and the abstract Stokes summation are proved. What remains is constructing the bijection between walks that forms pairs and triplets.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The bridge decomposition injection giving ∑ cₙxⁿ ≤ 2·(∏(1+Bₜ))². This requires implementing the canonical decomposition of SAWs into bridges with monotone widths.
+
+All other results (submultiplicativity, Fekete's lemma, connective constant definition, cutting argument, bridge recurrence, bridge lower bound, divergence/convergence proof assembly) are sorry-free.
+
 # Summary of changes for run a1f39896-ed0e-4ca2-9e66-11f1d7c1f48a
 ## Summary of Progress
 

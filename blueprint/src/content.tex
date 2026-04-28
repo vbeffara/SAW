@@ -3345,6 +3345,29 @@ and lemmas provide the formal skeleton for this proof.
   \textbf{Status: sorry.}
 \end{theorem}
 
+\subsection{Abstract Discrete Stokes Theorem}
+
+\begin{theorem}[Abstract Discrete Stokes]\label{thm:discrete_stokes}
+\lean{discrete_stokes_abstract}
+\leanok
+  Let $V$ be a finite set of vertices, $N$ a symmetric neighbor function,
+  and $f$ an antisymmetric complex-valued function on directed edges.
+  If $\sum_{w \in N(v)} f(v,w) = 0$ for every $v \in V$, then
+  $\sum_{v \in V} \sum_{w \in N(v) \setminus V} f(v,w) = 0$.
+
+  This is the abstract discrete Stokes theorem: if the vertex relation
+  holds at every interior vertex, then the boundary sum is zero.
+  Applied with the parafermionic observable, this gives Lemma~2.
+\end{theorem}
+\begin{proof}
+\leanok
+  The total sum $\sum_V \sum_{N(v)} f = 0$ (by vertex relation).
+  Split each $N(v)$ into interior $(N(v) \cap V)$ and boundary $(N(v) \setminus V)$.
+  The interior sum is zero by antisymmetry: each pair $(v,w)$ with
+  $v, w \in V$ contributes $f(v,w) + f(w,v) = 0$.
+  Therefore the boundary sum is zero.
+\end{proof}
+
 \section{Bridge decomposition algorithm (Hammersley--Welsh)}\label{sec:hw_algorithm}
 
 The bridge decomposition, first introduced by Hammersley and Welsh~\cite{HammersleyWelsh},
@@ -3944,10 +3967,12 @@ retracting (removing the last step). These operations are formalized
 in \texttt{SAWWalkExtension.lean}.
 
 \begin{definition}[Walk extension]\label{def:walkExtend}
-\lean{walkExtend}
+\lean{walkExtend, extendPath}
 \leanok
   Given a walk $p : v \to w$ and an adjacency $w \sim u$,
-  $\texttt{walkExtend}(p, h) : v \to u$ appends one step.
+  $\texttt{walkExtend}(p, h) : v \to u$ (or $\texttt{extendPath}$) appends one step.
+  A sorry-free version with full strip preservation is in
+  \texttt{SAWVertexRelDirect.lean}.
 \end{definition}
 
 \begin{lemma}[Extension preserves path property]\label{lem:walkExtend_isPath}
@@ -5176,7 +5201,9 @@ Two independent sorry chains remain:
   All three are \textbf{fully sorry-free} (no \texttt{sorryAx} dependency).
 
   \textbf{What remains for general $T$}: the combinatorial walk partition into
-  pairs/triplets at each vertex, and the discrete Stokes summation.
+  pairs/triplets at each vertex. The discrete Stokes summation is now
+  \textbf{proved} (\texttt{discrete\_stokes\_abstract} in SAWDiscreteStokesProof.lean):
+  given the vertex relation at each interior vertex, the boundary sum is zero.
 \item \textbf{Hammersley--Welsh decomposition} (\texttt{paper\_bridge\_decomp\_injection}):
   the canonical bridge decomposition of SAWs giving
   $\sum c_n x^n \leq 2 \prod (1 + B_T)^2$.
@@ -5243,5 +5270,8 @@ follows from two independent facts:
 \item Product convergence $\prod(1 + B_T^x) < \infty$ for $x < x_c$
 \end{itemize}
 
-\textbf{Root sorry count: 3} (strip identity, infinite strip identity,
-HW decomposition). All other results are proved from these three.
+\textbf{Root sorry count: 2} (infinite strip identity = strip identity,
+HW decomposition). The infinite strip identity implies the finite strip
+identity. The abstract discrete Stokes theorem is proved; what remains
+is the vertex relation (Lemma~1), which requires the walk partition
+into pairs/triplets. All other results are proved from these two root sorries.
