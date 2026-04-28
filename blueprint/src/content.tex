@@ -5244,6 +5244,66 @@ Two independent sorry chains remain:
 \end{lemma}
 \begin{proof}\leanok By definition of \texttt{hexGraph}.\end{proof}
 
+\begin{lemma}[Direction $j$-rotation at FALSE vertices]\label{lem:false_dir_j}
+\lean{false_dir2_eq_j_dir1, false_dir3_eq_conjj_dir1}
+\leanok
+\uses{def:hex_embed, def:j}
+  For a FALSE vertex $(x,y)$:
+  \begin{align*}
+    \mathrm{embed}(\text{TRUE}(x{+}1,y)) - \mathrm{embed}(\text{FALSE}(x,y))
+      &= j \cdot (\mathrm{embed}(\text{TRUE}(x,y)) - \mathrm{embed}(\text{FALSE}(x,y))), \\
+    \mathrm{embed}(\text{TRUE}(x,y{+}1)) - \mathrm{embed}(\text{FALSE}(x,y))
+      &= \bar{j} \cdot (\mathrm{embed}(\text{TRUE}(x,y)) - \mathrm{embed}(\text{FALSE}(x,y))).
+  \end{align*}
+  This means the three direction vectors from FALSE to its TRUE neighbors
+  are related by $j$-rotation. Combined with \texttt{false\_to\_true\_dir}
+  (the first direction is $1$), the three direction vectors are $1, j, \bar{j}$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Expand \texttt{correctHexEmbed} and \texttt{j}; verify by \texttt{norm\_num}
+  and \texttt{ring}.
+\end{proof}
+
+\begin{lemma}[Direction $j$-rotation at TRUE vertices]\label{lem:true_dir_j}
+\lean{true_dir2_eq_j_dir1, true_dir3_eq_conjj_dir1}
+\leanok
+\uses{def:hex_embed, def:j}
+  For a TRUE vertex $(x,y)$:
+  \begin{align*}
+    \mathrm{embed}(\text{FALSE}(x{-}1,y)) - \mathrm{embed}(\text{TRUE}(x,y))
+      &= j \cdot (\mathrm{embed}(\text{FALSE}(x,y)) - \mathrm{embed}(\text{TRUE}(x,y))), \\
+    \mathrm{embed}(\text{FALSE}(x,y{-}1)) - \mathrm{embed}(\text{TRUE}(x,y))
+      &= \bar{j} \cdot (\mathrm{embed}(\text{FALSE}(x,y)) - \mathrm{embed}(\text{TRUE}(x,y))).
+  \end{align*}
+  The three direction vectors from TRUE to its FALSE neighbors are $-1, -j, -\bar{j}$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Expand \texttt{correctHexEmbed} and \texttt{j}; verify by \texttt{norm\_num}
+  and \texttt{ring}.
+\end{proof}
+
+\begin{lemma}[Key bound: $x_c^2 < 1/2$]\label{lem:xc_sq_lt_half}
+\lean{xc_sq_lt_half}
+\leanok
+\uses{def:xc}
+  $x_c^2 = 1/(2+\sqrt{2}) < 1/2$, since $\sqrt{2} > 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[$2(\sqrt{2}-1) < 1$]\label{lem:two_sqrt2_sub_1}
+\lean{two_sqrt_two_sub_one_lt_one}
+\leanok
+  $2(\sqrt{2}-1) < 1$, equivalently $2\sqrt{2} < 3$, equivalently $8 < 9$.
+  This is the key bound for $B_1^{x_c} < 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
 \subsection*{Overall proof structure}
 
 The main theorem \texttt{connective\_constant\_eq} (that $\mu = \sqrt{2+\sqrt{2}}$)

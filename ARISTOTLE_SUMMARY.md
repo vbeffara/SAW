@@ -1,3 +1,43 @@
+# Summary of changes for run a92f2238-09ab-4c4a-91ec-c04b23a074b5
+## Summary of work done
+
+### New sorry-free Lean files
+
+1. **`RequestProject/SAWStripT1Proof.lean`** — Key algebraic lemmas for the strip identity:
+   - `xc_sq`: xc² = 1/(2+√2) 
+   - `xc_sq_lt_half`: xc² < 1/2 (since √2 > 0)
+   - `one_sub_xc_sq_pos`: 1 - xc² > 0
+   - `two_sqrt_two_sub_one_lt_one`: 2(√2-1) < 1 (equivalently 8 < 9), the key bound for B₁ < 1
+
+2. **`RequestProject/SAWVertexRelProof3.lean`** — Direction factor j-rotation lemmas for the vertex relation (Lemma 1):
+   - `false_dir2_eq_j_dir1`: At FALSE(x,y), direction to TRUE(x+1,y) = j × direction to TRUE(x,y)
+   - `false_dir3_eq_conjj_dir1`: At FALSE(x,y), direction to TRUE(x,y+1) = j̄ × direction to TRUE(x,y)
+   - `true_dir2_eq_j_dir1`: At TRUE(x,y), direction to FALSE(x-1,y) = j × direction to FALSE(x,y)
+   - `true_dir3_eq_conjj_dir1`: At TRUE(x,y), direction to FALSE(x,y-1) = j̄ × direction to FALSE(x,y)
+
+   These prove that the three direction vectors from any hex vertex to its neighbors are related by multiplication by the cube root of unity j = exp(2iπ/3). This is the geometric ingredient needed for the vertex relation: combined with `false_to_true_dir` (direction₁ = 1) and `true_vertex_dir_sum` (directions sum to 0), the three direction vectors from each vertex are exactly 1, j, j̄ (or -1, -j, -j̄).
+
+### Blueprint updates
+
+Updated `blueprint/src/content.tex` with:
+- New lemma entries for the direction j-rotation results (§ Vertex relation infrastructure)
+- New lemma entries for xc² < 1/2 and 2(√2-1) < 1
+- All marked with `\leanok` (sorry-free)
+
+### Analysis of remaining gaps
+
+The project builds successfully. The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on exactly **two independent root sorry chains**:
+
+1. **Strip identity / vertex relation** (`strip_identity_genuine` in SAWStripIdentityCorrect.lean, equivalently `infinite_strip_identity` in SAWRecurrenceProof.lean):
+   - What's proved: algebraic core (pair/triplet cancellation), direction factors (j-rotation), boundary coefficients, discrete Stokes framework, T=1 case
+   - What remains: the combinatorial walk partition into pairs/triplets at each interior vertex, proving exhaustiveness of the partition
+
+2. **Hammersley–Welsh bridge decomposition** (`paper_bridge_decomp_injection` in SAWPaperChain.lean):
+   - What's proved: bridge definitions, bridge length bounds, bridge-to-SAW injection, subset product identity, product convergence, bridge decay
+   - What remains: the recursive half-plane walk decomposition algorithm, splitting at first max-x vertex, injectivity of the reverse procedure, weight accounting
+
+All other 16 sorry statements are either direct consequences of these two root sorries, superseded by proved versions in other files, or use deprecated definitions.
+
 # Summary of changes for run d5809104-113b-4639-95e8-e4b3c25bcecd
 ## Summary of Progress
 
