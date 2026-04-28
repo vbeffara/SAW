@@ -24,6 +24,12 @@
 - `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
 - Direction vectors are cube roots of unity
 
+### Vertex relation algebraic infrastructure (NEW)
+- `pair_residual_j_blocked`: 1 + xc·conj(j)·λ = -(xc·j·conj(λ))
+- `pair_residual_conjj_blocked`: 1 + xc·j·conj(λ) = -(xc·conj(j)·λ)
+- `singleton_residual`: 1 = -(xc·j·conj(λ) + xc·conj(j)·λ)
+- `pair_residuals_cancel`: weighted sum of pair residuals
+
 ### Strip identity for T = 1
 - `paper_bridge_partition_1_eq`: B₁ = 2xc/(1-xc²) (exact value)
 - `infinite_strip_identity_T1`: the T=1 case proved sorry-free
@@ -42,10 +48,15 @@
 - `bridge_recurrence_proved`: B_T ≤ c_α · B_{T+1}² + B_{T+1}
 - `paper_bridge_lower_bound`: ∃ c > 0, B_T ≥ c/T
 
-### Abstract discrete Stokes theorem (NEW)
+### Abstract discrete Stokes theorem
 - `discrete_stokes_abstract`: If f is antisymmetric and the vertex
   relation holds at each interior vertex, then the boundary sum is zero.
-  This is the key telescoping argument for the strip identity.
+
+### Bridge decomposition infrastructure (NEW)
+- `hexDiagCoord`: diagonal coordinate x+y
+- `hexDiagCoord_adj_bound`: adjacent vertices differ by at most 1
+- `finset_powerset_prod_eq'`: ∑_{S⊆range N} ∏_{T∈S} a_T = ∏(1+a_T)
+- `paperBridge_dc_range`: bridge vertices have diagCoord in [-T, 0]
 
 ### Main theorem assembly (modulo sorry)
 - `Z_xc_diverges_corrected`: Z(xc) = +∞
@@ -67,14 +78,23 @@ Stokes summation (discrete_stokes_abstract) is proved. What remains is
 the combinatorial walk partition: constructing the bijection between
 walks that forms pairs and triplets.
 
+**Key insight**: Triplets (both exits free) cancel by triplet_cancellation.
+Pair residuals (one exit blocked) are characterized by pair_residual_j_blocked
+and pair_residual_conjj_blocked. The global cancellation of pair residuals
+uses the pair_cancellation identity.
+
 ### 2. Hammersley-Welsh decomposition
 
-**File**: `SAWPaperChain.lean` (paper_bridge_decomp_injection)
+**File**: `SAWPaperChain.lean` (paper_bridge_decomp_injection),
+`SAWBridgeDecompCore.lean` (hw_counting_bound)
 
 **What's needed**: The bridge decomposition injection showing that
 ∑ c_n x^n ≤ 2 · (∏(1 + B_T))². This requires implementing the
 canonical decomposition of SAWs into bridges with monotone widths,
 and proving the decomposition map is injective.
+
+**Infrastructure available**: hexDiagCoord, adj bound, product-powerset
+identity, bridge diagCoord range, walk splitting at vertices.
 
 ## File Organization
 
@@ -89,3 +109,5 @@ and proving the decomposition map is injective.
 - `SAWFinal.lean` — Final theorem
 - `SAWDiscreteStokesProof.lean` — Abstract discrete Stokes theorem (proved)
 - `SAWVertexRelDirect.lean` — Walk extension infrastructure (proved)
+- `SAWVertexPartition.lean` — Pair/triplet residual identities (proved, NEW)
+- `SAWBridgeDecompCore.lean` — HW decomposition infrastructure (NEW)

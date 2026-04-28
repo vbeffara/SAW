@@ -5335,3 +5335,64 @@ HW decomposition). The infinite strip identity implies the finite strip
 identity. The abstract discrete Stokes theorem is proved; what remains
 is the vertex relation (Lemma~1), which requires the walk partition
 into pairs/triplets. All other results are proved from these two root sorries.
+
+\subsection*{New infrastructure (SAWBridgeDecompCore.lean)}
+
+Hammersley--Welsh bridge decomposition core infrastructure:
+
+\begin{definition}[Diagonal coordinate]\label{def:hex_diag_coord}
+\lean{hexDiagCoord}
+\leanok
+  The diagonal coordinate $\mathrm{dc}(v) = x + y$ for $v = (x, y, b)$.
+  Decreasing $\mathrm{dc}$ corresponds to moving ``right'' in the paper's convention.
+\end{definition}
+
+\begin{lemma}[Adjacent diagCoord bound]\label{lem:hex_dc_adj}
+\lean{hexDiagCoord_adj_bound}
+\leanok
+\uses{def:hex_diag_coord, def:hex_lattice}
+  If $v \sim w$ in \texttt{hexGraph}, then $|\mathrm{dc}(w) - \mathrm{dc}(v)| \leq 1$.
+\end{lemma}
+\begin{proof}\leanok
+  Case split on the six edge types; each changes $x+y$ by at most 1.
+\end{proof}
+
+\begin{lemma}[Product--powerset identity]\label{lem:prod_powerset}
+\lean{finset_powerset_prod_eq'}
+\leanok
+  $\displaystyle\sum_{S \subseteq \{0,\ldots,N-1\}} \prod_{T \in S} a_T
+    = \prod_{T=0}^{N-1} (1 + a_T)$.
+\end{lemma}
+\begin{proof}\leanok
+  By \texttt{Finset.prod\_add} and \texttt{Finset.sum\_comm}.
+\end{proof}
+
+\begin{theorem}[Hammersley--Welsh counting bound]\label{thm:hw_counting}
+\lean{hw_counting_bound}
+\uses{lem:prod_powerset, def:saw_count, def:bridge_partition}
+  For $0 < x < x_c$ and any $N$:
+  $\sum_{n=0}^{N} c_n x^n \leq 2 \left(\prod_{T=1}^{N} (1 + B_T(x))\right)^2.$
+  \textbf{Status: sorry.} Requires the canonical bridge decomposition of SAWs
+  (Hammersley--Welsh 1962, Madras--Slade \S3.1).
+\end{theorem}
+
+\subsection*{Vertex relation algebraic infrastructure (SAWVertexPartition.lean)}
+
+New sorry-free results connecting pair/triplet cancellation to geometry:
+
+\begin{lemma}[Pair residuals from triplet cancellation]\label{lem:pair_residual}
+\lean{pair_residual_j_blocked, pair_residual_conjj_blocked, singleton_residual}
+\leanok
+\uses{thm:triplet_cancel}
+  When one exit direction is blocked at a vertex, the residual contribution
+  from the triplet cancellation identity is:
+  \begin{align*}
+    1 + x_c \bar{j} \lambda &= -x_c j \bar{\lambda}, \\
+    1 + x_c j \bar{\lambda} &= -x_c \bar{j} \lambda.
+  \end{align*}
+  When both exits are blocked:
+  $1 = -(x_c j \bar{\lambda} + x_c \bar{j} \lambda)$.
+\end{lemma}
+\begin{proof}\leanok
+  Immediate from \texttt{triplet\_cancellation} by \texttt{linear\_combination}.
+\end{proof}
