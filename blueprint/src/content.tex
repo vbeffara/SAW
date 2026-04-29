@@ -5516,6 +5516,16 @@ of $Z(x)$, proved via Fekete's lemma applied to the submultiplicative sequence $
 \item Product convergence: $\prod(1 + r^T)$ converges for $0 \leq r < 1$
 \item Walk extension infrastructure: \texttt{sawExtend}, \texttt{pathExtend}
 \item Direction vector computations (cube roots of unity)
+\item Direction rotation: $d_1 = j \cdot d_0$ and $d_2 = \bar{j} \cdot d_0$ at each vertex type
+  (\texttt{hex\_direction\_false\_01/02}, \texttt{hex\_direction\_true\_01/02})
+\item Direction sum identities: $d_0 + d_1 + d_2 = 0$ at each vertex
+  (\texttt{hex\_direction\_sum\_false/true})
+\item Triplet cancellation in geometric form: $d_0 + x_c \bar{\lambda} (j d_0) + x_c \lambda (\bar{j} d_0) = 0$
+  (\texttt{triplet\_cancel\_geometric\_dir})
+\item Pair cancellation in geometric form: $\bar{\lambda}^4 (j d_0) + \lambda^4 (\bar{j} d_0) = 0$
+  (\texttt{pair\_cancel\_geometric\_dir})
+\item Same-cell direction: $\mathrm{embed}(\mathrm{TRUE}(x,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y)) = 1$
+  (\texttt{hex\_same\_cell\_direction/true})
 \item Hex adjacency characterizations
 \item Diagonal coordinate bounds for SAWs
 \item SAW splitting at vertices
@@ -5566,3 +5576,91 @@ of $Z(x)$, proved via Fekete's lemma applied to the submultiplicative sequence $
 \begin{proof}\leanok
   From \texttt{walk\_dc\_bound} with $\mathrm{dc}(\texttt{paperStart}) = 0$.
 \end{proof}
+
+\section{Direction rotation infrastructure (SAWStripProofCore.lean)}
+
+\section{Direction rotation and vertex relation infrastructure (SAWStripProofCore.lean)}
+
+These lemmas establish that direction vectors around each hex vertex
+are related by multiplication by $j$ or $\bar{j}$ (the cube roots of
+unity). They are the geometric foundation of the vertex relation.
+
+\begin{lemma}[Direction rotation for FALSE vertices]\label{lem:dir_rot_false}
+\lean{hex_direction_false_01, hex_direction_false_02}
+\leanok
+\uses{def:hex_lattice}
+  For a FALSE vertex $v = (x, y, \mathit{false})$ with neighbors
+  $w_0, w_1, w_2$:
+  $d_1 = \bar{j} \cdot d_0$ and $d_2 = j \cdot d_0$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation using \texttt{correctHexEmbed}.
+\end{proof}
+
+\begin{lemma}[Direction rotation for TRUE vertices]\label{lem:dir_rot_true}
+\lean{hex_direction_true_01, hex_direction_true_02}
+\leanok
+\uses{def:hex_lattice}
+  For a TRUE vertex $v = (x, y, \mathit{true})$ with neighbors
+  $w_0, w_1, w_2$:
+  $d_1 = j \cdot d_0$ and $d_2 = \bar{j} \cdot d_0$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation using \texttt{correctHexEmbed}.
+\end{proof}
+
+\begin{lemma}[Direction sum]\label{lem:dir_sum}
+\lean{hex_direction_sum_false, hex_direction_sum_true}
+\leanok
+\uses{lem:dir_rot_false, lem:dir_rot_true}
+  $d_0 + d_1 + d_2 = 0$ (cube roots of unity sum to zero).
+\end{lemma}
+\begin{proof}\leanok Direct computation. \end{proof}
+
+\begin{lemma}[Triplet cancellation, geometric form]\label{lem:triplet_geom}
+\lean{triplet_cancel_geometric_dir}
+\leanok
+\uses{thm:triplet_cancel}
+  For any $d_0 \in \mathbb{C}$:
+  $d_0 + x_c \bar{\lambda} (j d_0) + x_c \lambda (\bar{j} d_0) = 0$.
+\end{lemma}
+\begin{proof}\leanok
+  Factor out $d_0$ and apply \texttt{triplet\_cancellation}.
+\end{proof}
+
+\begin{lemma}[Pair cancellation, geometric form]\label{lem:pair_geom}
+\lean{pair_cancel_geometric_dir}
+\leanok
+\uses{thm:pair_cancel}
+  For any $d_0 \in \mathbb{C}$:
+  $\bar{\lambda}^4 (j d_0) + \lambda^4 (\bar{j} d_0) = 0$.
+\end{lemma}
+\begin{proof}\leanok
+  Factor out $d_0$ and apply \texttt{pair\_cancellation}.
+\end{proof}
+
+\begin{lemma}[Same-cell direction]\label{lem:same_cell_dir}
+\lean{hex_same_cell_direction, hex_same_cell_direction_true}
+\leanok
+\uses{def:hex_lattice}
+  $\mathrm{embed}(\mathrm{TRUE}(x,y)) - \mathrm{embed}(\mathrm{FALSE}(x,y)) = 1$ and
+  $\mathrm{embed}(\mathrm{FALSE}(x,y)) - \mathrm{embed}(\mathrm{TRUE}(x,y)) = -1$.
+\end{lemma}
+\begin{proof}\leanok Direct computation. \end{proof}
+
+\section{Vertex relation (Lemma~1 of the paper)}
+
+\begin{definition}[Vertex contribution]\label{def:vertex_contrib}
+\uses{def:hex_lattice, def:saw}
+  For a vertex $v$ with neighbors $w_0, w_1, w_2$:
+  $\mathrm{VR}(v) = \sum_{i=0}^{2} d_i \cdot F(\mathrm{mid}(v, w_i))$.
+\end{definition}
+
+\begin{theorem}[Vertex relation]\label{lem:vertex_relation}
+\uses{lem:triplet_geom, lem:pair_geom, lem:dir_rot_false, lem:dir_rot_true, def:vertex_contrib}
+  For each interior vertex $v$ of $S_{T,L}$, $\mathrm{VR}(v) = 0$.
+
+  \textbf{Status: sorry.} Algebraic cancellations proved. Combinatorial
+  walk-partitioning (classify by mid-edges visited, construct triplets
+  via \texttt{sawExtend}, construct pairs via loop reversal) remains.
+\end{theorem}

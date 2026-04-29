@@ -1,3 +1,44 @@
+# Summary of changes for run 3e8472bf-878a-4016-9446-92d1efe4b8c4
+## Summary of progress
+
+### New sorry-free results (SAWStripProofCore.lean)
+
+Created `RequestProject/SAWStripProofCore.lean` with **10 fully proved lemmas** building the geometric infrastructure needed for the vertex relation (Lemma 1 of the paper). All lemmas are sorry-free and verified by `lean build`:
+
+1. **Direction rotation lemmas** (4 lemmas):
+   - `hex_direction_false_01/02`: For FALSE vertices, the direction vectors to the three TRUE neighbors are related by multiplication by j and conj(j).
+   - `hex_direction_true_01/02`: Similarly for TRUE vertices.
+
+2. **Direction sum identities** (2 lemmas):
+   - `hex_direction_sum_false/true`: The three direction vectors around any vertex sum to zero (geometric consequence of 1 + j + conj(j) = 0).
+
+3. **Cancellation identities in geometric form** (2 lemmas):
+   - `triplet_cancel_geometric_dir`: For any direction d₀: d₀ + xc·conj(λ)·(j·d₀) + xc·λ·(conj(j)·d₀) = 0. This is the per-walk consequence of `triplet_cancellation`.
+   - `pair_cancel_geometric_dir`: For any direction d₀: conj(λ)⁴·(j·d₀) + λ⁴·(conj(j)·d₀) = 0. This is the per-walk consequence of `pair_cancellation`.
+
+4. **Boundary direction computation** (2 lemmas):
+   - `hex_same_cell_direction/true`: The direction between same-cell TRUE/FALSE vertices is ±1.
+
+### Blueprint updates
+
+Updated `blueprint/src/content.tex` with:
+- New section on direction rotation infrastructure with all proved lemmas
+- New section on the vertex relation (Lemma 1), including a detailed proof decomposition showing what remains
+- Updated the list of proved results to include all new lemmas
+- Cleaned up duplicate entries
+
+### Architecture clarification
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) in `RequestProject/SAWFinal.lean` depends on exactly **3 independent sorry's** on the critical path:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — The parafermionic strip identity: ∃ A, E ≥ 0, 1 = c_α·A + B_paper + c_ε·E. Used for B_paper ≤ 1 → bridge decay → Z(x) &lt; ∞ for x &lt; x_c.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The infinite strip identity: 1 = c_α·A_inf + xc·B. Used for the bridge recurrence → bridge lower bound → Z(x_c) = ∞.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh decomposition: ∑ c_n x^n ≤ 2·(∑_S ∏ B_T)². Used for Z(x) &lt; ∞ for x &lt; x_c.
+
+The new geometric lemmas provide the algebraic foundation for resolving sorry #1 and #2 (the vertex relation). The remaining work for these sorry's is the combinatorial walk-partitioning: classifying walks by mid-edges visited, constructing triplet extensions via `sawExtend`, and constructing pairs via loop reversal. Sorry #3 requires the bridge decomposition algorithm (splitting SAWs at the vertex of maximal diagonal coordinate and extracting bridges by induction on width).
+
 # Summary of changes for run 2dc1bcc1-8452-4063-ae14-8271ac408fd1
 ## Summary of Progress
 
