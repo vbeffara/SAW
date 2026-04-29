@@ -1,3 +1,45 @@
+# Summary of changes for run 2dc1bcc1-8452-4063-ae14-8271ac408fd1
+## Summary of Progress
+
+### New Sorry-Free Results
+
+I created a new file `RequestProject/SAWHWDecompAlgo.lean` with several sorry-free lemmas that provide infrastructure for the Hammersley-Welsh bridge decomposition:
+
+1. **`walk_dc_bound`**: For any walk `p : v → w` and vertex `u ∈ support(p)`, the diagonal coordinate satisfies `|dc(u) - dc(v)| ≤ length(p)`. Proved by induction on the walk using `hexDiagCoord_adj_bound`.
+
+2. **`walk_endpoint_dc_bound`**: Corollary for the endpoint: `|dc(w) - dc(v)| ≤ length(p)`.
+
+3. **`saw_dc_lower`**: For an n-step SAW from paperStart, every vertex v has `dc(v) ≥ -n`.
+
+4. **`saw_dc_upper`**: For an n-step SAW from paperStart, every vertex v has `dc(v) ≤ n`.
+
+5. **`PaperInfStrip_mono_width`**: PaperInfStrip is monotone in the width parameter.
+
+6. **`saw_support_length`**: A walk of length n has n+1 vertices in its support.
+
+All lemmas verified to use only standard axioms (no `sorryAx`).
+
+### Blueprint Updates
+
+Updated `blueprint/src/content.tex` with:
+- New lemma entries for `walk_dc_bound`, `saw_dc_lower`, `saw_dc_upper` with `\leanok` markers
+- Updated proved results list with new infrastructure items
+- Documentation of abstract Stokes theorem and interior cancellation
+
+Updated `PROOF_STATUS.md` with current status of both sorry chains, including detailed lists of what's proved and what remains.
+
+### Remaining Sorry Chains (unchanged, 2 independent)
+
+The main theorem `connective_constant_eq` still depends on `sorryAx` through two independent sorry chains:
+
+1. **Strip identity** (`strip_identity_genuine` + `infinite_strip_identity`): The parafermionic observable argument (Lemma 2 of the paper). Requires formalizing the vertex relation (walk partition into pairs/triplets), the discrete Stokes summation over strip vertices, and boundary contribution evaluation. The algebraic core (pair/triplet cancellation) and abstract Stokes theorem are fully proved.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The canonical decomposition of SAWs into bridges with strictly monotone widths. Requires formalizing the decomposition algorithm (splitting at maximal diagonal excursion, extracting bridges by induction on width) and its injectivity. The abstract framework (subset-product identity, bridge decay, product convergence) is fully proved.
+
+### No Renames or Shuffling
+
+Per the user's request, no existing definitions or theorems were renamed or reorganized. All new work was additive.
+
 # Summary of changes for run 020c8ed5-6786-4c2c-aebe-af99b0d670dc
 ## Summary of work done
 

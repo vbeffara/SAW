@@ -5520,4 +5520,49 @@ of $Z(x)$, proved via Fekete's lemma applied to the submultiplicative sequence $
 \item Diagonal coordinate bounds for SAWs
 \item SAW splitting at vertices
 \item Zigzag walk construction ($c_{2k} \geq 2^k$, in SAWZigzagBuild)
+\item Walk diagonal coordinate bound: $|\mathrm{dc}(u) - \mathrm{dc}(v)| \leq \ell(p)$ for $u \in \mathrm{support}(p)$
+  (\texttt{walk\_dc\_bound} in SAWHWDecompAlgo.lean)
+\item SAW diagonal bounds: $-n \leq \mathrm{dc}(v) \leq n$ for any vertex in an $n$-step SAW from paperStart
+  (\texttt{saw\_dc\_lower}, \texttt{saw\_dc\_upper} in SAWHWDecompAlgo.lean)
+\item Translation infrastructure for bridges: \texttt{hexShift}, \texttt{shiftWalk},
+  \texttt{shiftWalk\_length}, \texttt{shiftWalk\_isPath} (SAWHWAlgorithm.lean)
+\item Abstract discrete Stokes theorem for finite graphs (\texttt{discrete\_stokes\_abstract}
+  in SAWDiscreteStokesProof.lean)
+\item Interior cancellation: $(w-v) + (v-w) = 0$ (\texttt{interior\_cancellation}
+  in SAWDiscreteStokes.lean)
 \end{itemize}
+
+\subsection*{New infrastructure (SAWHWDecompAlgo.lean)}
+
+\begin{lemma}[Walk diagonal coordinate bound]\label{lem:walk_dc_bound}
+\lean{walk_dc_bound}
+\leanok
+\uses{def:hex_diag_coord, def:hex_lattice}
+  For a walk $p : v \to w$ and any vertex $u \in \mathrm{support}(p)$:
+  $|\mathrm{dc}(u) - \mathrm{dc}(v)| \leq \ell(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the walk, using the adjacent diagonal coordinate bound.
+\end{proof}
+
+\begin{lemma}[SAW diagonal lower bound]\label{lem:saw_dc_lower}
+\lean{saw_dc_lower}
+\leanok
+\uses{lem:walk_dc_bound}
+  For an $n$-step SAW from \texttt{paperStart} and any vertex $v$ in its support:
+  $-n \leq \mathrm{dc}(v)$.
+\end{lemma}
+\begin{proof}\leanok
+  From \texttt{walk\_dc\_bound} with $\mathrm{dc}(\texttt{paperStart}) = 0$.
+\end{proof}
+
+\begin{lemma}[SAW diagonal upper bound]\label{lem:saw_dc_upper}
+\lean{saw_dc_upper}
+\leanok
+\uses{lem:walk_dc_bound}
+  For an $n$-step SAW from \texttt{paperStart} and any vertex $v$ in its support:
+  $\mathrm{dc}(v) \leq n$.
+\end{lemma}
+\begin{proof}\leanok
+  From \texttt{walk\_dc\_bound} with $\mathrm{dc}(\texttt{paperStart}) = 0$.
+\end{proof}
