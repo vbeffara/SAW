@@ -1,3 +1,46 @@
+# Summary of changes for run f93eb806-e034-4974-9025-de303b3242c1
+## Summary of work done
+
+### Blueprint update
+Updated `blueprint/src/content.tex` with:
+- New section on **boundary direction characterization** (left boundary direction = -1, right boundary direction = +1), linked to Lean proofs
+- Comprehensive **proof status summary** documenting exactly what is proved and what remains for both sorry chains
+
+### New Lean files
+
+**`RequestProject/SAWStripIdentityProof.lean`** — Infrastructure for the strip identity proof:
+- `left_boundary_dir_is_neg_one'`: All left boundary exit edges have direction -1 in ℂ (proved)
+- `right_boundary_dir_is_one'`: All right boundary exit edges have direction +1 in ℂ (proved)
+- `escape_boundary_phase_nonneg'`: Escape boundary phase cos(3θ/8) > 0 (proved)
+
+**`RequestProject/SAWHWDecompCore2.lean`** — Infrastructure for the Hammersley-Welsh decomposition:
+- `diagCoord'`: Diagonal coordinate of a hex vertex
+- `walkMinDC'`: Minimum diagonal coordinate visited by a walk
+- `walkMinDC'_le_of_mem`: The minimum is ≤ diagCoord of any vertex on the walk (proved)
+- `walkMinDC'_attained`: The minimum is attained by some vertex on the walk (proved)
+- `walkDiagWidth'`: Diagonal width of a walk (max - min diagCoord)
+- `walkDiagWidth'_nonneg`: Width is non-negative (proved)
+
+### Bug fix
+Fixed a broken reference in `SAWDiagProof.lean`: changed `paper_fin_strip_finite` to `paper_fin_strip_finite'` (the primed version is the one available from the imports).
+
+### Updated status documentation
+Updated `PROOF_STATUS.md` with a comprehensive description of the 2 independent sorry chains, what is proved, and what remains.
+
+### Current sorry status
+The main theorem `connective_constant_eq` (μ = √(2+√2)) in `SAWFinal.lean` depends on exactly **3 sorry'd lemmas** organized in **2 independent chains**:
+
+1. **Strip identity** (parafermionic observable, Lemma 2 of the paper):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean:361)
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
+   - *Remaining work*: Walk partitioning into pairs/triplets, discrete Stokes summation, boundary evaluation
+
+2. **Hammersley-Welsh decomposition** (bridge decomposition injection):
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean:258)
+   - *Remaining work*: Half-plane walk decomposition algorithm, injectivity proof, walk length accounting
+
+All algebraic ingredients (pair/triplet cancellation), direction computations, boundary coefficients, cutting argument, bridge recurrence, and downstream consequences are fully proved (sorry-free). The full project builds successfully.
+
 # Summary of changes for run 3e8472bf-878a-4016-9446-92d1efe4b8c4
 ## Summary of progress
 

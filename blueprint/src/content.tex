@@ -5664,3 +5664,87 @@ unity). They are the geometric foundation of the vertex relation.
   walk-partitioning (classify by mid-edges visited, construct triplets
   via \texttt{sawExtend}, construct pairs via loop reversal) remains.
 \end{theorem}
+
+\section{Boundary direction characterization}
+
+\begin{lemma}[Left boundary direction]\label{lem:left_bdy_dir}
+\lean{left_boundary_dir_is_neg_one'}
+\leanok
+\uses{def:hex_lattice}
+  For all $x \in \mathbb{Z}$:
+  $\mathrm{embed}(x,-x,\mathit{false}) - \mathrm{embed}(x,-x,\mathit{true}) = -1$.
+  All left boundary exit edges have direction $-1$ in $\mathbb{C}$.
+\end{lemma}
+\begin{proof}\leanok Direct computation from \texttt{correctHexEmbed}. \end{proof}
+
+\begin{lemma}[Right boundary direction]\label{lem:right_bdy_dir}
+\lean{right_boundary_dir_is_one'}
+\leanok
+\uses{def:hex_lattice}
+  For all $x, y \in \mathbb{Z}$:
+  $\mathrm{embed}(x,y,\mathit{true}) - \mathrm{embed}(x,y,\mathit{false}) = 1$.
+  All right boundary exit edges have direction $+1$ in $\mathbb{C}$.
+\end{lemma}
+\begin{proof}\leanok Direct computation from \texttt{correctHexEmbed}. \end{proof}
+
+\section{Proof status summary}
+
+The main theorem \texttt{connective\_constant\_eq} depends on
+two independent sorry chains:
+
+\begin{enumerate}
+\item \textbf{Strip identity} (\texttt{strip\_identity\_genuine} in
+  SAWStripIdentityCorrect.lean, line 361; and \texttt{infinite\_strip\_identity}
+  in SAWRecurrenceProof.lean, line 49):
+
+  The parafermionic observable identity $1 = c_\alpha A + B + c_\varepsilon E$
+  for the finite strip (Lemma~2 of the paper).
+  This gives $B_{\mathrm{paper}} \leq 1$, which is used for both the bridge
+  upper bound and the cutting argument.
+
+  \textbf{What is proved:}
+  \begin{itemize}
+  \item Pair cancellation $j\bar{\lambda}^4 + \bar{j}\lambda^4 = 0$
+  \item Triplet cancellation $1 + x_c j \bar{\lambda} + x_c \bar{j}\lambda = 0$
+  \item Both in geometric form (factored by direction vectors)
+  \item Boundary direction characterization (left = $-1$, right = $+1$)
+  \item Boundary coefficient positivity ($c_\alpha > 0$, $c_\varepsilon > 0$, $\cos(3\theta/8) > 0$)
+  \item Direction sum identity ($d_0 + d_1 + d_2 = 0$ at each vertex)
+  \item Strip domain definitions, finiteness, and SAW length bounds
+  \item Abstract bridge bound from strip identity: if $1 = c_\alpha A + B + c_\varepsilon E$
+    with $A, E \geq 0$, then $B \leq 1$
+  \item All downstream consequences: bridge upper bound, cutting argument,
+    bridge recurrence, bridge lower bound $c/T$, $Z(x_c) = +\infty$
+  \end{itemize}
+
+  \textbf{What remains:}
+  \begin{itemize}
+  \item Walk partitioning into pairs and triplets at each vertex
+  \item Exhaustiveness of the partition (every walk is in exactly one group)
+  \item Discrete Stokes summation (interior cancellation, boundary evaluation)
+  \item Passage to infinite strip limit ($L \to \infty$)
+  \end{itemize}
+
+\item \textbf{Hammersley--Welsh decomposition}
+  (\texttt{paper\_bridge\_decomp\_injection} in SAWPaperChain.lean, line 258;
+  via \texttt{bridge\_decomposition\_injection\_proof} in SAWHWDecomp.lean, line 103):
+
+  Every SAW decomposes into a pair of bridge sequences with monotone widths,
+  giving $\sum_{n \leq N} c_n x^n \leq 2 (\prod (1 + B_T(x)))^2$.
+
+  \textbf{What is proved:}
+  \begin{itemize}
+  \item Subset--product identity $\sum_{S \subseteq \{1,\ldots,N\}} \prod_{T \in S} b_T = \prod (1 + b_T)$
+  \item Bridge decay $B_T(x) \leq (x/x_c)^T$
+  \item Product convergence $\prod(1 + r^T) < \infty$ for $r < 1$
+  \item All downstream: $Z(x) < \infty$ for $x < x_c$, main theorem
+  \end{itemize}
+
+  \textbf{What remains:}
+  \begin{itemize}
+  \item Half-plane walk decomposition algorithm (induction on width)
+  \item General SAW splitting at first vertex of maximal diagonal coordinate
+  \item Injectivity of the decomposition (reverse reconstruction)
+  \item Walk length accounting ($\ell(\gamma) \geq \sum \ell(\text{bridges})$)
+  \end{itemize}
+\end{enumerate}

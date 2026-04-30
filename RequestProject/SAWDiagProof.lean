@@ -89,7 +89,7 @@ lemma paper_bridge_partial_sum_shifted_le (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤
   classical
   -- PaperSAW_B T L is finite (same proof as paper_saw_b_finite)
   haveI : Finite (PaperSAW_B T L) := by
-    have hfin := paper_fin_strip_finite T L
+    have hfin := paper_fin_strip_finite' T L
     have ⟨N, hN⟩ : ∃ N, ∀ s : PaperSAW_B T L, s.len ≤ N := by
       use hfin.toFinset.card; intro s
       have h_supp : s.saw.p.1.support.toFinset ⊆ hfin.toFinset := by
