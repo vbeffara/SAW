@@ -1,3 +1,98 @@
+# Summary of changes for run cc79ab1b-62bf-4642-a385-b3893bbd7ad0
+## Summary of work completed
+
+### New sorry-free Lean files
+
+I created three new Lean files with 14 proved lemmas (no sorry's), building mathematical infrastructure needed for the two remaining sorry chains:
+
+**`RequestProject/SAWHWDecompProved.lean`** — Walk diagonal coordinate infrastructure (6 lemmas):
+- `walkMinDC_le` / `walkMaxDC_ge`: bounds on diagCoord of walk vertices
+- `walkMinDC_achieved` / `walkMaxDC_achieved`: extrema are achieved
+- `walk_dc_bound`: vertices in walks from paperStart have `|dc| ≤ length`
+- `walkDCWidth_le_length`: diagCoord width ≤ walk length
+
+**`RequestProject/SAWVertexRelProof4.lean`** — Path extension (4 lemmas):
+- `extendPath`: extends a path by one edge (preserves self-avoidance)
+- `extendPath_length`: extended path has length + 1
+- `extendPath_support`: extended path support = original ++ [w]
+- `extendSAW`: extends a SAW by one step
+
+**`RequestProject/SAWHWProof.lean`** — HW decomposition helpers (4 lemmas):
+- `saw_dc_bound`: `|hexDiagCoord(u)| ≤ n` for n-step SAW vertices
+- `powerset_prod_ge_one`: powerset product sum ≥ 1 for non-negative functions
+- `saw_count_zero'`: c₀ = 1 (exactly one 0-step SAW)
+- `hw_base_case`: HW inequality holds for N = 0
+
+All lemmas were verified to use only standard axioms (no `sorryAx`).
+
+### Updated documentation
+
+- **`PROOF_STATUS.md`**: Updated with detailed listing of new infrastructure, file organization, and remaining gaps
+- **`blueprint/src/content.tex`**: Added new section "New infrastructure (sorry-free)" documenting the proved lemmas with `\lean{}` and `\leanok` annotations
+
+### Current sorry status
+
+The main theorem `connective_constant_eq` still depends on **3 sorry'd lemmas** in **2 independent chains**:
+
+1. **Strip identity chain** (parafermionic observable):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean:361) — the finite strip identity 1 = c_α·A + B + c_ε·E
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean:49) — the infinite strip version
+
+2. **Hammersley-Welsh decomposition**:
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean:258) — the bridge decomposition counting inequality
+
+### What remains for each sorry
+
+**Strip identity**: The algebraic ingredients (pair/triplet cancellation, boundary coefficients) are fully proved. What's missing is the combinatorial walk partitioning into triplets at each interior vertex, the discrete Stokes summation (interior edge cancellation), and boundary evaluation. The new `extendPath`/`extendSAW` lemmas provide the path extension infrastructure needed for the triplet construction.
+
+**HW decomposition**: The base case (N=0), powerset product bounds, SAW diagCoord bounds, and walk width bounds are proved. What's missing is the constructive half-plane walk decomposition into bridges (by induction on width), the splitting of general SAWs at the vertex of minimum diagCoord, and the injectivity argument.
+
+The project builds successfully with all existing proofs intact.
+
+# Summary of changes for run 420c48b1-4eab-410b-af68-65955dd580e9
+## Summary of work done
+
+### New Lean files
+
+**`RequestProject/SAWParafermionicKey.lean`** — Key reduction lemma (sorry-free):
+- `strip_identity_of_B_le_one`: Proves that `strip_identity_genuine` follows from the simpler statement `B_paper T L xc ≤ 1`. This cleanly separates the algebraic packaging (existential with c_alpha, c_eps) from the core mathematical content (B_paper ≤ 1).
+
+**`RequestProject/SAWVertexRelProved.lean`** — Documentation of the detailed mathematical analysis for the vertex relation (Lemma 1), including four key insights discovered during this session:
+
+1. **Only triplet cancellation needed at interior vertices**: At an interior vertex v, any SAW uses at most 2 of v's 3 mid-edges (entry + exit). Visiting all 3 would require revisiting v, violating self-avoidance. Therefore pair cancellation is NOT needed for the vertex relation — only triplet cancellation.
+
+2. **Complete triplets guaranteed**: A walk visiting only 1 mid-edge of interior v has v ∉ walk. Both extensions through v are valid SAWs because mid-edge extensions only add v to the vertex set (the far vertex of the exit half-edge is not visited).
+
+3. **Winding telescopes for SAWs**: For SAWs in simply connected hex domains, W(a,z) = exit_direction(z) - entry_direction(a). The total rotation telescopes for non-self-intersecting planar paths, making the phase factor path-independent.
+
+4. **No returning walks**: Self-avoiding walks from paperStart cannot return to paperStart. The starting mid-edge contributes exactly -1 (trivial walk only).
+
+### Updated documentation
+
+**`PROOF_STATUS.md`** — Comprehensive update with:
+- Detailed decomposition of the vertex relation proof into 6 concrete steps
+- Key mathematical insights from the analysis
+- Clear description of what remains for both sorry chains
+- File organization diagram
+
+**`blueprint/src/content.tex`** — Updated with:
+- New section "Key reduction: strip identity from B_paper bound" with `strip_identity_of_B_le_one` linked to Lean
+- Subsection documenting the 4 key observations for the vertex relation
+- Updated proof status summary
+
+### Current sorry status
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) still depends on exactly **3 sorry'd lemmas** in **2 independent chains**:
+
+1. **Strip identity chain** (parafermionic observable):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean:361) — now reduced to proving `B_paper T L xc ≤ 1`
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
+
+2. **Hammersley-Welsh decomposition**:
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean:258)
+
+The project builds successfully with all existing proofs intact.
+
 # Summary of changes for run f93eb806-e034-4974-9025-de303b3242c1
 ## Summary of work done
 

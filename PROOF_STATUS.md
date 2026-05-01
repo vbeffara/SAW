@@ -24,27 +24,27 @@ This gives B_paper ≤ 1 (the bridge upper bound).
 **What is proved** (sorry-free):
 - Pair cancellation: j·conj(λ)^4 + conj(j)·λ^4 = 0
 - Triplet cancellation: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
-- Both in geometric form (factored by direction vectors)
 - Boundary direction characterization (left = -1, right = +1 in ℂ)
 - Boundary coefficient positivity (c_α > 0, c_ε > 0, cos(3θ/8) > 0)
 - Direction sum identity (d₀ + d₁ + d₂ = 0 at each vertex)
 - Abstract bridge bound: if 1 = c_α·A + B + c_ε·E with A,E ≥ 0, then B ≤ 1
-- Cutting argument: A_{T+1} - A_T ≤ xc·B_{T+1}²
-- Bridge recurrence: B_T ≤ c_α·B_{T+1}² + B_{T+1}
+- Cutting argument: A_{T+1} - A_T ≤ xc · B_{T+1}² (cutting_argument_proved)
+- Bridge recurrence: B_T ≤ c_α·B_{T+1}² + B_{T+1} (bridge_recurrence_proved)
 - Bridge lower bound: ∃ c > 0, c/T ≤ B_T
 - Z(xc) = +∞ (divergence at critical point)
+- Strip identity for T=1 (strip_identity_genuine_T1', sorry-free)
+- Exact bridge partition: paper_bridge_partition 1 xc = 2xc/(1-xc²)
+- Reduction: strip_identity_genuine ← B_paper ≤ 1
 
 **What remains**:
-- Walk partitioning into pairs/triplets at each vertex
+- Walk partitioning into pairs/triplets at each vertex (vertex relation)
 - Exhaustiveness of the partition
-- Discrete Stokes summation (interior cancellation)
-- Boundary evaluation (winding computation)
+- Discrete Stokes summation (interior cancellation, boundary evaluation)
 - Passage to infinite strip limit (L → ∞)
 
 ### Chain 2: Hammersley-Welsh Decomposition
 
 **Root sorry**: `paper_bridge_decomp_injection` in `SAWPaperChain.lean` (line 258)
-**Via**: `bridge_decomposition_injection_proof` in `SAWHWDecomp.lean` (line 103)
 
 **Mathematical content**: Every SAW decomposes into a pair of bridge sequences
 with monotone widths, giving Σ c_n·x^n ≤ 2·(∏(1+B_T(x)))².
@@ -54,30 +54,37 @@ with monotone widths, giving Σ c_n·x^n ≤ 2·(∏(1+B_T(x)))².
 - Bridge decay: B_T(x) ≤ (x/xc)^T for x < xc
 - Product convergence: ∏(1+r^T) < ∞ for r < 1
 - Z(x) < ∞ for x < xc (from decomposition injection + decay)
+- HW base case: c_0 = 1 ≤ 2 (hw_base_case)
+- Powerset product ≥ 1 (powerset_prod_ge_one)
+- c_0 = 1 (saw_count_zero')
 
 **What remains**:
 - Half-plane walk decomposition algorithm (induction on width)
-- General SAW splitting at first vertex of minimal diagCoord
+- Bridge extraction from ascending half-plane walks
 - Injectivity of the decomposition (reverse reconstruction)
-- Walk length accounting (ℓ(γ) ≥ Σ ℓ(bridges))
+- Walk length accounting (ℓ(γ) = Σ ℓ(bridges))
 
-## New Infrastructure (this session)
+## New Infrastructure (this session, sorry-free)
 
-### SAWHWDecompCore2.lean
-- `diagCoord'`: diagonal coordinate of hex vertex
-- `walkMinDC'`: minimum diagonal coordinate on a walk
-- `walkMinDC'_le_of_mem`: minimum ≤ diagCoord of any vertex on walk ✓
-- `walkMinDC'_attained`: minimum is attained by some vertex ✓
-- `walkDiagWidth'`: diagonal width of a walk
-- `walkDiagWidth'_nonneg`: width is non-negative ✓
+### SAWHWDecompProved.lean — Walk diagCoord infrastructure
+- `walkMinDC_le`: walkMinDC(p) ≤ diagCoord(u) for all u in support ✓
+- `walkMaxDC_ge`: diagCoord(u) ≤ walkMaxDC(p) for all u in support ✓
+- `walkMinDC_achieved`: some vertex achieves the minimum diagCoord ✓
+- `walkMaxDC_achieved`: some vertex achieves the maximum diagCoord ✓
+- `walk_dc_bound`: vertices in walks from paperStart have |dc| ≤ length ✓
+- `walkDCWidth_le_length`: DC width ≤ walk length ✓
 
-### SAWStripIdentityProof.lean
-- `left_boundary_dir_is_neg_one'`: left boundary exit direction = -1 ✓
-- `right_boundary_dir_is_one'`: right boundary exit direction = +1 ✓
-- `escape_boundary_phase_nonneg'`: escape boundary phase has cos(3θ/8) > 0 ✓
+### SAWVertexRelProof4.lean — Path extension
+- `extendPath`: extend a path by one edge (preserves self-avoidance) ✓
+- `extendPath_length`: extended path has length + 1 ✓
+- `extendPath_support`: extended path support = original ++ [w] ✓
+- `extendSAW`: extend a SAW by one step ✓
 
-### Bug fix
-- Fixed `paper_fin_strip_finite` → `paper_fin_strip_finite'` in SAWDiagProof.lean
+### SAWHWProof.lean — HW decomposition helpers
+- `saw_dc_bound`: |hexDiagCoord(u)| ≤ n for n-step SAW vertices ✓
+- `powerset_prod_ge_one`: Σ_{S} ∏_{T∈S} f(T) ≥ 1 for f ≥ 0 ✓
+- `saw_count_zero'`: c_0 = 1 ✓
+- `hw_base_case`: HW inequality for N = 0 ✓
 
 ## File Organization
 
@@ -89,4 +96,10 @@ SAWPaperChain.lean     ← Assembly: Z diverges + Z converges → μ = √(2+√
   ├─ SAWCuttingProof.lean    ← Cutting argument (proved)
   ├─ SAWRecurrenceProof.lean ← SORRY: infinite_strip_identity
   └─ SAWDecomp.lean          ← Quadratic recurrence (proved)
+SAWHWDecompProved.lean ← Walk diagCoord infrastructure (sorry-free)
+SAWVertexRelProof4.lean ← Path extension (sorry-free)
+SAWHWProof.lean         ← HW base case and helpers (sorry-free)
+SAWParafermionicKey.lean ← Reduction: strip_identity_genuine ← B_paper ≤ 1
+SAWStripT1Direct.lean   ← Strip identity for T=1 (sorry-free)
+SAWStripT1Exact.lean    ← Exact bridge partition for T=1 (sorry-free)
 ```

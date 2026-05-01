@@ -5687,7 +5687,34 @@ unity). They are the geometric foundation of the vertex relation.
 \end{lemma}
 \begin{proof}\leanok Direct computation from \texttt{correctHexEmbed}. \end{proof}
 
-\section{Proof status summary}
+\section{Key reduction: strip identity from B\_paper bound}
+
+\begin{lemma}[Strip identity from B\_paper bound]\label{lem:strip_from_B}
+\lean{strip_identity_of_B_le_one}
+\leanok
+\uses{thm:strip_identity}
+  If $B_{\mathrm{paper}}(T, L, x_c) \leq 1$, then
+  $\exists A_m, E_m \geq 0$ with $1 = c_\alpha A_m + B_{\mathrm{paper}} + c_\varepsilon E_m$.
+\end{lemma}
+\begin{proof}\leanok
+  Set $A_m = (1 - B_{\mathrm{paper}})/c_\alpha$, $E_m = 0$.
+  Non-negativity follows from $B \leq 1$ and $c_\alpha > 0$.
+  The identity simplifies to $1 = 1$.
+\end{proof}
+
+\subsection{Key observations for the vertex relation}
+
+\begin{enumerate}
+\item \textbf{Winding telescopes for SAWs.}
+  For a self-avoiding walk $\gamma$ in a simply connected hex lattice domain
+  from mid-edge $a$ to mid-edge $z$:
+  $W_\gamma(a,z) = \theta_{\text{exit}}(z) - \theta_{\text{entry}}(a)$.
+  This follows because the total rotation of a non-self-intersecting
+  planar polygonal path equals exit direction minus entry direction.
+
+\item \textbf{No pairs at interior vertices.}
+  At an interior vertex $v$ (all neighbors inside the domain),
+  any SAW uses at most 2 of $v
 
 The main theorem \texttt{connective\_constant\_eq} depends on
 two independent sorry chains:
@@ -5748,3 +5775,55 @@ two independent sorry chains:
   \item Walk length accounting ($\ell(\gamma) \geq \sum \ell(\text{bridges})$)
   \end{itemize}
 \end{enumerate}
+
+\section{New infrastructure (sorry-free)}
+
+The following helper lemmas have been proved and are available for use
+in the remaining proof steps.
+
+\subsection{Walk diagonal coordinate infrastructure}
+
+\begin{lemma}[Walk min/max diagCoord]\label{lem:walkMinDC}
+\lean{walkMinDC_le}
+\leanok
+  For any walk $p$ from $v$ to $w$ on the hexagonal lattice,
+  and any vertex $u$ in $p$'s support,
+  $\texttt{walkMinDC}(p) \leq \texttt{diagCoord}(u) \leq \texttt{walkMaxDC}(p)$.
+  Both extrema are achieved by some vertex in the support.
+\end{lemma}
+\begin{proof}\leanok
+  By the definition of \texttt{foldl min/max} over the list of diagCoords.
+\end{proof}
+
+\begin{lemma}[Walk DC width bound]\label{lem:walkDCWidth}
+\lean{walkDCWidth_le_length}
+\leanok
+  The diagonal coordinate width of any walk
+  (max diagCoord $-$ min diagCoord) is at most the walk length.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\begin{lemma}[SAW diagCoord bound]\label{lem:saw-dc-bound}
+\lean{saw_dc_bound}
+\leanok
+  For an $n$-step SAW from paperStart,
+  every vertex $u$ has $|\texttt{hexDiagCoord}(u)| \leq n$.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\subsection{Path extension and HW base case}
+
+\begin{lemma}[Path extension]\label{lem:extendPath}
+\lean{extendPath_length}
+\leanok
+  Given a path from $a$ to $v$ and an edge from $v$ to $w$ with
+  $w \notin \text{support}$, the concatenated path has length $+1$.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\begin{lemma}[HW base case]\label{lem:hw-base}
+\lean{hw_base_case}
+\leanok
+  $c_0 = 1 \leq 2 = \text{RHS for } N = 0$.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
