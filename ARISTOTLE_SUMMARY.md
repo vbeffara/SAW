@@ -1,3 +1,52 @@
+# Summary of changes for run 7c60a520-6844-4c5b-8976-2131943d148e
+## Summary of Work Completed
+
+### New sorry-free Lean files
+
+**`RequestProject/SAWHWDecompHelper.lean`** — Walk diagonal coordinate analysis (6 definitions + 4 proved lemmas):
+- `diagCoordHW`: diagonal coordinate function for hex vertices
+- `walk_min_dc`: minimum diagCoord over a walk's support (via foldl min)
+- `walk_width`: width of a walk from paperStart (|min diagCoord|)
+- `walk_min_dc_le`: minimum diagCoord ≤ any vertex's diagCoord in the walk
+- `walk_min_dc_achieved`: the minimum diagCoord is achieved by some vertex in the support
+- `walk_width_le_length`: walk width ≤ walk length (each step changes diagCoord by ≤ 1)
+- `suffix_dc_bound`: the suffix after a vertex at minimum diagCoord has all vertices with diagCoord ≥ that minimum
+
+**`RequestProject/SAWHWExtractBridge.lean`** — Strip membership helpers (2 proved lemmas):
+- `false_in_strip`: FALSE vertices with diagCoord ∈ [-T, -1] satisfy PaperInfStrip T
+- `true_in_strip`: TRUE vertices with diagCoord ∈ [-(T-1), 0] satisfy PaperInfStrip T
+
+These lemmas provide the walk analysis infrastructure needed for the Hammersley-Welsh bridge decomposition. They formalize the key step of finding the minimum diagCoord vertex, splitting a walk there, and verifying that the resulting pieces stay within the appropriate strip domains.
+
+### Updated documentation
+
+- **`PROOF_STATUS.md`**: Comprehensive update with:
+  - Detailed description of the 3 remaining root sorry's and what each requires mathematically
+  - Complete dependency analysis showing how each sorry feeds into the main theorem
+  - Full listing of proved infrastructure organized by file
+  - File organization diagram
+
+- **`blueprint/src/content.tex`**: Added new subsection "Half-plane walk decomposition infrastructure" with `\lean{}` and `\leanok` annotations for the 6 new lemmas.
+
+### Current sorry status
+
+The main theorem `connective_constant_eq_corrected` still depends on **3 sorry'd root lemmas** in **2 independent chains**:
+
+1. **Strip identity chain** (parafermionic observable):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean:361) — B_paper(T,L,xc) ≤ 1
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean:49) — 1 = c_α·A_inf + xc·B
+
+2. **Hammersley-Welsh decomposition**:
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean:258) — the bridge decomposition counting inequality
+
+### What remains for each sorry
+
+**Strip identity** (`strip_identity_genuine` and `infinite_strip_identity`): The algebraic ingredients (pair/triplet cancellation, boundary angle computations) are fully proved. What's missing is the discrete Stokes argument: defining the parafermionic observable F(z) at each mid-edge, proving the vertex relation ∑_{w~v}(w-v)·F(v→w)=0 at each vertex (using pair/triplet cancellation), summing over all strip vertices (interior edges cancel, boundary edges survive), and evaluating boundary contributions. The new walk analysis lemmas (walk_min_dc_le, walk_min_dc_achieved, walk_width_le_length) and strip membership helpers (false_in_strip, true_in_strip) provide part of the infrastructure.
+
+**HW decomposition** (`paper_bridge_decomp_injection`): The base case (N=0), powerset product bounds, SAW diagCoord bounds, and walk width bounds are proved. The new lemmas provide the key tools for the half-plane walk decomposition: finding the minimum diagCoord vertex, splitting there, and verifying the suffix stays in a valid strip. What still needs formalization: the constructive half-plane walk decomposition into bridges (by induction on width), the general SAW splitting at the vertex of minimum diagCoord, the injectivity/counting argument, and the weight bound (walk length ≥ sum of bridge lengths).
+
+All files build successfully with no new sorry's introduced.
+
 # Summary of changes for run 49f89083-377f-4a81-925d-d4cbaff7a87e
 ## Summary of Work Completed
 

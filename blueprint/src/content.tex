@@ -5854,3 +5854,63 @@ in the remaining proof steps.
   since \texttt{hexTranslate} is injective.
 \end{lemma}
 \begin{proof}\leanok\end{proof}
+
+\subsection{Half-plane walk decomposition infrastructure}
+
+The following lemmas support the Hammersley--Welsh bridge decomposition.
+
+\begin{lemma}[Walk minimum diagCoord bound]\label{lem:walk-min-dc-le}
+\lean{walk_min_dc_le}
+\leanok
+  For any walk $p$ from $v$ to $w$, and any vertex $u$ in $p
+s support,
+  $\texttt{walk\_min\_dc}(p) \leq \texttt{diagCoordHW}(u)$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the list, using the property that \texttt{foldl min}
+  gives a value $\leq$ every element of the list.
+\end{proof}
+
+\begin{lemma}[Walk minimum diagCoord achieved]\label{lem:walk-min-dc-achieved}
+\lean{walk_min_dc_achieved}
+\leanok
+  The minimum diagCoord value in a walk is achieved by some vertex
+  in the walk's support.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the support list.
+\end{proof}
+
+\begin{lemma}[Walk width bounded by length]\label{lem:walk-width-le}
+\lean{walk_width_le_length}
+\leanok
+  For a walk from \texttt{paperStart}, the walk width
+  $|\min \texttt{diagCoord}|$ is at most the walk length.
+  Each step changes diagCoord by at most~$1$.
+\end{lemma}
+\begin{proof}\leanok
+  Uses \texttt{hexGraph\_walk\_sum\_bound\_neg} applied to the prefix
+  up to the vertex achieving the minimum.
+\end{proof}
+
+\begin{lemma}[Suffix diagCoord bound]\label{lem:suffix-dc-bound}
+\lean{suffix_dc_bound}
+\leanok
+  The suffix of a walk after a vertex $u$ at minimum diagCoord
+  has all vertices with $\texttt{diagCoord} \geq \texttt{diagCoord}(u)$.
+\end{lemma}
+\begin{proof}\leanok
+  Since $u$ achieves the minimum over the entire walk, and the suffix
+  vertices are a subset of the walk vertices.
+\end{proof}
+
+\begin{lemma}[Strip membership from diagCoord range]\label{lem:strip-from-dc}
+\lean{false_in_strip}
+\lean{true_in_strip}
+\leanok
+  FALSE vertices with diagCoord $\in [-T, -1]$ and TRUE vertices
+  with diagCoord $\in [-(T{-}1), 0]$ satisfy \texttt{PaperInfStrip}~$T$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct from the definition of \texttt{PaperInfStrip}.
+\end{proof}
