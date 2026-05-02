@@ -5827,3 +5827,30 @@ in the remaining proof steps.
   $c_0 = 1 \leq 2 = \text{RHS for } N = 0$.
 \end{lemma}
 \begin{proof}\leanok\end{proof}
+
+\subsection{Translation invariance}
+
+\begin{lemma}[hexTranslate preserves strip membership]\label{lem:translate-strip}
+\lean{hexTranslate_preserves_strip'}
+\leanok
+  For $dx + dy = 0$, if $v \in \texttt{PaperInfStrip}(T)$ then
+  $\texttt{hexTranslate}(dx, dy, v) \in \texttt{PaperInfStrip}(T)$.
+  This is because PaperInfStrip only depends on the diagonal coordinate
+  $v.1 + v.2.1$, which is preserved by translations with $dx + dy = 0$.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\begin{lemma}[Walk translation preserves length]\label{lem:translate-length}
+\lean{translateWalk_length}
+\leanok
+  Translating a walk by $(dx, dy)$ preserves its length.
+\end{lemma}
+\begin{proof}\leanok\end{proof}
+
+\begin{lemma}[Walk translation preserves path property]\label{lem:translate-path}
+\lean{translateWalk_isPath}
+\leanok
+  Translating a path by $(dx, dy)$ yields another path,
+  since \texttt{hexTranslate} is injective.
+\end{lemma}
+\begin{proof}\leanok\end{proof}

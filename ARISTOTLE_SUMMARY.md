@@ -1,3 +1,48 @@
+# Summary of changes for run 49f89083-377f-4a81-925d-d4cbaff7a87e
+## Summary of Work Completed
+
+### New sorry-free Lean file
+
+**`RequestProject/SAWTranslation.lean`** — Translation invariance infrastructure (7 proved lemmas):
+- `hexTranslate_preserves_diagCoord`: translations with dx+dy=0 preserve the diagonal coordinate
+- `hexTranslate_preserves_bool`: translations preserve sublattice type (TRUE/FALSE)
+- `hexTranslate_preserves_strip'`: translations with dx+dy=0 preserve PaperInfStrip membership
+- `hexTranslate_paperStart`: hexTranslate (dx, -dx) sends paperStart to (dx, -dx, true)
+- `hexTranslate_neg_cancel`: hexTranslate is involutive (applying with negated offsets recovers the original)
+- `translateWalk_length`: translating a walk preserves its length
+- `translateWalk_isPath`: translating a path yields a path (uses injectivity of hexTranslate)
+
+These lemmas provide the translation invariance infrastructure needed for the Hammersley-Welsh bridge decomposition, where bridges starting from different vertices at the same diagonal coordinate level need to be compared.
+
+### Updated documentation
+
+- **`PROOF_STATUS.md`**: Comprehensive update with:
+  - Detailed dependency analysis of the 3 remaining sorries
+  - Clear description of what each sorry requires mathematically
+  - Full listing of proved infrastructure (submultiplicativity, Fekete's lemma, bridge bounds, cutting argument, etc.)
+  - File organization diagram
+
+- **`blueprint/src/content.tex`**: Added new subsection "Translation invariance" with `\lean{}` and `\leanok` annotations for the 3 key translation lemmas.
+
+### Current sorry status
+
+The main theorem `connective_constant_eq` still depends on **3 sorry'd lemmas** in **2 independent chains**:
+
+1. **Strip identity chain** (parafermionic observable):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean:361) — the finite strip identity 1 = c_α·A + B + c_ε·E
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean:49) — the infinite strip version 1 = c_α·A + xc·B
+
+2. **Hammersley-Welsh decomposition**:
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean:258) — the bridge decomposition counting inequality
+
+### What remains for each sorry
+
+**Strip identity** (`strip_identity_genuine` and `infinite_strip_identity`): The algebraic ingredients (pair/triplet cancellation, boundary coefficients) are fully proved. What's missing is the discrete Stokes argument: defining the parafermionic observable F(z) at each mid-edge, showing the vertex relation ∑_{w~v}(w-v)·F(v→w)=0 at each vertex (using pair/triplet cancellation), summing over all strip vertices (interior edges cancel, boundary edges survive), and evaluating boundary contributions. The new translation invariance lemmas provide part of the infrastructure for relating observables at different vertices.
+
+**HW decomposition** (`paper_bridge_decomp_injection`): The base case (N=0), powerset product bounds, SAW diagCoord bounds, and walk width bounds are proved. The new walk translation lemmas (translateWalk_length, translateWalk_isPath) provide infrastructure for mapping bridges between different starting vertices. What's missing is: the constructive half-plane walk decomposition into bridges (by induction on width), the splitting of general SAWs at the vertex of minimum diagCoord, and the injectivity/counting argument.
+
+The project builds successfully with all existing proofs intact.
+
 # Summary of changes for run cc79ab1b-62bf-4642-a385-b3893bbd7ad0
 ## Summary of work completed
 
