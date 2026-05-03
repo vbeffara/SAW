@@ -6068,3 +6068,49 @@ s support,
 \begin{proof}\leanok
   Uses $\sigma = 5/8$ and $\cos(5\pi/8) = -\cos(3\pi/8) = -c_\alpha$.
 \end{proof}
+
+\subsection{Strip identity reduction}
+
+\begin{theorem}[Boundary sum identity implies strip identity]\label{thm:boundary-strip}
+\lean{strip_identity_from_B_bound}
+\leanok
+  If $B^{x_c}_{T,L} \leq 1$, then $\exists A_m, E_m \geq 0$ such that
+  $1 = c_\alpha A_m + B^{x_c}_{T,L} + c_\varepsilon E_m$.
+\end{theorem}
+\begin{proof}\leanok
+  Set $A_m = (1 - B^{x_c}_{T,L})/c_\alpha$ and $E_m = 0$.
+\end{proof}
+
+\subsection{T=1 infinite strip identity}
+
+\begin{theorem}[$T=1$ infinite strip identity]\label{thm:inf-strip-T1}
+\lean{infinite_strip_identity_T1_clean}
+\uses{lem:A-inf-1-exact, lem:bridge-partition-1}
+  $1 = c_\alpha \cdot A^{x_c}_1 + x_c \cdot B^{x_c}_1$ where
+  $B^{x_c}_1 = 2x_c/(1-x_c^2)$ and $A^{x_c}_1 = 2x_c^3/(1-x_c^2)$.
+\end{theorem}
+\begin{proof}
+  From exact partition function values (Lemma~\ref{lem:A-inf-1-exact} and
+  Lemma~\ref{lem:bridge-partition-1}) and algebraic verification.
+  Proved modulo \texttt{A\_inf\_1\_exact}.
+\end{proof}
+
+\begin{lemma}[Exact $A^{x_c}_1$]\label{lem:A-inf-1-exact}
+  $A^{x_c}_1 = 2x_c^3/(1-x_c^2)$.
+\end{lemma}
+\begin{proof}
+  The width-1 strip is a doubly-infinite path graph. By monotonicity
+  (\texttt{strip1\_saw\_monotone}), every SAW goes entirely left or right.
+  A walk of length $2k$ ($k \geq 1$) ends at TRUE$(\pm k, \mp k)$.
+  So $A^{x_c}_1 = 2 \sum_{k=1}^\infty x_c^{2k+1} = 2x_c^3/(1-x_c^2)$.
+  \textbf{Status: sorry.}
+\end{proof}
+
+\begin{lemma}[Exact bridge partition for $T=1$]\label{lem:bridge-partition-1}
+\lean{paper_bridge_partition_1_eq}
+\leanok
+  $B^{x_c}_1 = 2x_c/(1-x_c^2)$.
+\end{lemma}
+\begin{proof}\leanok
+  Computed in \texttt{SAWStripT1Exact.lean} using the path graph structure.
+\end{proof}

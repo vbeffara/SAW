@@ -1,3 +1,48 @@
+# Summary of changes for run f8b594e8-acb8-43fb-992e-080a3e728b6c
+## Summary of Work Completed
+
+### New files created
+
+**`RequestProject/SAWStripProofDirect.lean`** — Proof reduction for the strip identity:
+- Defines `DirBdryEdge` (directed boundary edge structure) and `BdryType` (boundary classification)
+- Proves `B_paper_le_one_from_boundary_sum`: B_paper ≤ 1 follows from the boundary sum identity
+- Proves `strip_identity_from_B_bound`: strip_identity_genuine follows from B_paper ≤ 1
+- Proves `strip_identity_genuine_from_boundary`: combines the above to show strip_identity_genuine follows from boundary_sum_identity
+- States `boundary_sum_identity` as the clean target for the parafermionic observable proof (sorry)
+- This cleanly reduces the `strip_identity_genuine` sorry to a single, well-scoped `boundary_sum_identity` lemma
+
+**`RequestProject/SAWInfStripT1.lean`** — T=1 infinite strip identity (partially proved):
+- States `A_inf_1_exact`: A_inf(1, xc) = 2xc³/(1-xc²) (sorry — needs walk enumeration)
+- Proves `infinite_strip_identity_T1_clean`: 1 = c_α·A_inf(1,xc) + xc·B(1,xc), using A_inf_1_exact and paper_bridge_partition_1_eq + algebraic verification
+- Does NOT depend on the general sorry'd `infinite_strip_identity` — this is a genuinely independent proof path for T=1
+
+### Updated documentation
+
+**`PROOF_STATUS.md`** — Comprehensive update with:
+- Clear identification of the 3 root sorry lemmas and their roles
+- Full dependency graph showing how they feed into the main theorem
+- Detailed listing of all proved infrastructure
+- Status of each proof component
+
+**`blueprint/src/content.tex`** — Updated with:
+- `strip_identity_from_B_bound` (proved, with `\leanok`)
+- T=1 infinite strip identity structure (theorems and lemmas with status)
+- Exact bridge partition for T=1 (proved, with `\leanok`)
+
+### Current sorry status
+
+The main theorem `connective_constant_eq` still depends on **3 root sorry lemmas** in an ordered dependency chain:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1, equivalent to `boundary_sum_identity` in SAWStripProofDirect.lean. This is the fundamental parafermionic observable result (Lemma 2 of the paper). Required for bridge summability.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B for the infinite strip. Required for the bridge recurrence and Z(xc) divergence. The T=1 case is proved modulo `A_inf_1_exact`.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — the Hammersley-Welsh counting inequality. Requires #1 for bridge summability.
+
+### Key insight from this session
+
+The three root sorries are **not independent** — they must be resolved in order: #1 enables #3 (through summability), and #1 enables the passage-to-limit argument for #2. The fundamental barrier is #1 (the parafermionic observable argument), which requires formalizing the discrete Stokes theorem and walk pairing/tripling at each vertex. The algebraic ingredients (`pair_cancellation`, `triplet_cancellation`) are already proved; what remains is the combinatorial infrastructure for walk classification and the finite sum rearrangement.
+
 # Summary of changes for run 6c2da238-6729-44af-b0a2-525b4e93a911
 ## Summary of Work Completed
 
