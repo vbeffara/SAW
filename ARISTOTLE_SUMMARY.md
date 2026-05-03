@@ -1,3 +1,128 @@
+# Summary of changes for run 6c2da238-6729-44af-b0a2-525b4e93a911
+## Summary of Work Completed
+
+### New sorry-free Lean files created
+
+**`RequestProject/SAWWalkSplit.lean`** — Walk splitting and monotonicity infrastructure (5 proved lemmas):
+- `walk_split_lengths'`: Walk length = prefix length + suffix length ✓
+- `PaperFinStrip_mono_L`: finite strip monotone in L ✓
+- `PaperSAW_B_widen`: injection from narrow to wide strip ✓
+- `PaperSAW_B_widen_injective`: the injection is injective ✓
+- `B_paper_mono_L`: B_paper(T,L,x) monotone increasing in L ✓
+
+This is key infrastructure for the limit argument (taking L → ∞ in the strip identity).
+
+**`RequestProject/SAWVertexRelation.lean`** — Parafermionic vertex relation infrastructure (8 proved lemmas):
+- `hexDir_antisymm'`: direction vectors are antisymmetric ✓
+- `interior_edge_cancel'`: interior edge contributions cancel (key for discrete Stokes) ✓
+- `right_boundary_dir`: right boundary direction = +1 ✓
+- `left_boundary_dir`: left boundary direction = -1 ✓
+- `starting_dir'`: starting mid-edge direction = -1 ✓
+- `cos_sigma_pi'`: cos(σπ) = -c_alpha ✓
+- `left_boundary_phase_re`: Re(exp(-iσπ)) = -c_alpha ✓
+- `right_boundary_phase_re`: Re(exp(0)) = 1 ✓
+
+These are the computational ingredients for evaluating boundary terms in the strip identity. The full proof outline (vertex relation → discrete Stokes → boundary evaluation → strip identity) is documented in the file.
+
+**`RequestProject/SAWHWProofNew.lean`** — Hammersley-Welsh proof infrastructure (4 proved definitions/lemmas):
+- `HalfPlaneSAW`: definition of half-plane SAW ✓
+- `HalfPlaneSAW.width`: width of half-plane SAW ✓
+- `HalfPlaneSAW.width_zero_iff`: characterization of width 0 ✓
+- `bridge_product_expansion`: powerset product = ∏(1 + B_T) ✓
+
+**`RequestProject/SAWHWDecompProof2.lean`** — HW decomposition proof helpers (5 proved lemmas):
+- `ShiftedBridge`: definition of shifted bridge ✓
+- `shifted_bridge_length_ge`: shifted bridge has length ≥ width ✓
+- `SAW_min_achieved`: minimum diagCoord is achieved ✓
+- `SAW_suffix_above_min`: suffix after min vertex stays above min ✓
+- `SAW_prefix_above_min`: prefix up to min vertex stays above min ✓
+
+### Updated documentation
+- **`blueprint/src/content.tex`**: Added two new subsections documenting the new lemmas with `\lean{}` and `\leanok` annotations
+- **`PROOF_STATUS.md`**: Comprehensive update with current sorry status, detailed dependency analysis, and proved infrastructure listing
+
+### Current sorry status
+
+The main theorem `connective_constant_eq_corrected` still depends on **3 sorry'd root lemmas** in **2 independent chains**:
+
+1. **Parafermionic observable chain** (Lemma 2 of the paper):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B
+   - Note: `infinite_strip_identity` implies `strip_identity_genuine` (shown in SAWParafermionicProof.lean)
+
+2. **Hammersley-Welsh decomposition** (Section 3 of the paper):
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean) — the bridge counting inequality
+
+### What the new infrastructure provides
+
+The new lemmas fill important gaps toward the root sorries:
+
+**For the parafermionic identity (strip_identity_genuine):**
+- All COMPUTATIONAL ingredients are now proved: boundary direction factors (+1, -1), phase computations (cos(σπ) = -c_alpha), interior edge cancellation
+- The remaining gap is purely COMBINATORIAL: constructing the walk pairing/tripling at each vertex, and the global discrete Stokes summation
+
+**For the monotone convergence argument (infinite_strip_identity from strip_identity_genuine):**
+- B_paper monotonicity in L is proved (B_paper_mono_L)
+- PaperFinStrip monotonicity is proved
+- Walk splitting infrastructure is proved
+
+**For the HW decomposition (paper_bridge_decomp_injection):**
+- ShiftedBridge definition and length bound proved
+- Half-plane SAW definition and width characterization proved
+- Walk splitting at minimum diagCoord vertex proved (prefix and suffix both stay above minimum)
+- Powerset product identity proved
+
+All 4 new files compile without any sorry statements.
+
+# Summary of changes for run 558a86a7-4bb6-4fa2-8e9b-b1bf29e1e179
+## Summary of Work Completed
+
+### New sorry-free Lean files created
+
+**`RequestProject/SAWBridgeDecompNew.lean`** — Bridge decomposition infrastructure (5 definitions + 5 proved lemmas):
+- `walk_max_dc`: maximum diagCoord over a walk's support
+- `le_walk_max_dc`: max diagCoord ≥ diagCoord of any vertex in the support ✓
+- `walk_max_dc_achieved`: the max diagCoord is achieved by some vertex ✓
+- `walk_max_dc_ge_start`, `walk_max_dc_ge_end`: max ≥ start/end diagCoord ✓
+- `walk_max_dc_le_start_add_length`: max diagCoord ≤ starting diagCoord + walk length ✓
+- `Finset.sum_powerset_prod_eq_prod_add_one`: the identity ∑_{S⊆F} ∏_{i∈S} aᵢ = ∏_{i∈F} (1+aᵢ), which is key for converting the powerset sum in the HW bound to a product ✓
+
+**`RequestProject/SAWFiniteToInfinite.lean`** — Finite-to-infinite strip connection (3 proved lemmas):
+- `paperSAWB_to_bridge`: map from PaperSAW_B T L → PaperBridge T ✓
+- `paperSAWB_to_bridge_injective`: this map is injective ✓
+- `paperSAWB_to_bridge_length`: the map preserves walk length ✓
+- `B_paper_le_xc_mul_bridge`: B_paper(T,L,xc) ≤ xc · paper_bridge_partition(T,xc) ✓  
+  (Note: this proof uses paper_bridge_partial_sum_le which transitively depends on `strip_identity_genuine`)
+
+**`RequestProject/SAWStripT1L1.lean`** — Algebraic bounds at xc (2 proved lemmas):
+- `three_xc_sq_lt_one`: 3·xc² < 1, since 2+√2 > 3 ✓
+- `two_xc_sq_lt_one`: 2·xc² < 1 (consequence) ✓
+
+### Updated documentation
+- **`blueprint/src/content.tex`**: Added three new subsections documenting the new lemmas with `\lean{}` and `\leanok` annotations
+- **`PROOF_STATUS.md`**: Comprehensive update with current sorry status, new infrastructure listing, and dependency analysis
+
+### Current sorry status
+
+The main theorem `connective_constant_eq_corrected` still depends on **3 sorry'd root lemmas** in **2 independent chains**:
+
+1. **Parafermionic observable chain** (Lemmas 1–2 of the paper):
+   - `strip_identity_genuine` (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+   - `infinite_strip_identity` (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B
+
+2. **Hammersley-Welsh decomposition** (Section 3 of the paper):
+   - `paper_bridge_decomp_injection` (SAWPaperChain.lean) — the bridge counting inequality
+
+### What the new infrastructure provides
+
+The new lemmas fill in important gaps:
+- **Walk max diagCoord analysis** (`walk_max_dc`, `le_walk_max_dc`, etc.) provides the infrastructure for splitting SAWs at the vertex of maximum diagCoord, which is the first step of the HW bridge decomposition.
+- **Powerset product identity** (`sum_powerset_prod_eq_prod_add_one`) connects the powerset sum in the HW bound to the product ∏(1+B_T), bridging the formal statement and the standard product representation.
+- **Finite-to-infinite injection** (`paperSAWB_to_bridge_injective`) establishes the key map from finite-strip walks to infinite-strip bridges, needed for deriving strip_identity_genuine from infinite_strip_identity (once the import cycle is resolved).
+- **Algebraic bounds** (`three_xc_sq_lt_one`) verify that 3xc² < 1, which is used for T=1 strip computations.
+
+All new files build successfully with no sorry's.
+
 # Summary of changes for run 7c60a520-6844-4c5b-8976-2131943d148e
 ## Summary of Work Completed
 

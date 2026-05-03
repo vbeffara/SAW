@@ -5914,3 +5914,157 @@ s support,
 \begin{proof}\leanok
   Direct from the definition of \texttt{PaperInfStrip}.
 \end{proof}
+
+\subsection{Bridge decomposition infrastructure}
+
+The following lemmas support the Hammersley--Welsh bridge decomposition
+(the upper bound $\mu \leq \sqrt{2+\sqrt{2}}$).
+
+\begin{lemma}[Walk maximum diagCoord bound]\label{lem:walk-max-dc-le}
+\lean{le_walk_max_dc}
+\leanok
+  For any walk $p$ and any vertex $u$ in $p
+s support,
+  $\texttt{diagCoordHW}(u) \leq \texttt{walk\_max\_dc}(p)$.
+\end{lemma}
+\begin{proof}\leanok
+  By the property that \texttt{foldl max} gives a value $\geq$ every element.
+\end{proof}
+
+\begin{lemma}[Walk maximum diagCoord achieved]\label{lem:walk-max-dc-achieved}
+\lean{walk_max_dc_achieved}
+\leanok
+  The maximum diagCoord value in a walk is achieved by some vertex
+  in the walk's support.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the support list.
+\end{proof}
+
+\begin{lemma}[Walk max diagCoord $\leq$ start $+$ length]\label{lem:walk-max-dc-bound}
+\lean{walk_max_dc_le_start_add_length}
+\leanok
+  For a walk from $v$ to $w$, the maximum diagCoord is at most
+  $\texttt{diagCoord}(v) + \text{length}$.
+\end{lemma}
+\begin{proof}\leanok
+  Uses \texttt{hexGraph\_walk\_sum\_bound\_pos} applied to the prefix
+  up to the vertex achieving the maximum.
+\end{proof}
+
+\begin{lemma}[Powerset product identity]\label{lem:powerset-prod}
+\lean{Finset.sum_powerset_prod_eq_prod_add_one}
+\leanok
+  For a finite set $F$ and function $a$,
+  $\sum_{S \subseteq F} \prod_{i \in S} a_i = \prod_{i \in F} (1 + a_i)$.
+\end{lemma}
+\begin{proof}\leanok
+  This is \texttt{Finset.prod\_one\_add} from Mathlib.
+\end{proof}
+
+\subsection{Finite strip to infinite strip connection}
+
+\begin{lemma}[PaperSAW\_B to PaperBridge injection]\label{lem:sawb-to-bridge}
+\lean{paperSAWB_to_bridge_injective}
+\leanok
+  The map from finite-strip right-boundary walks (PaperSAW\_B $T$ $L$)
+  to infinite-strip bridges (PaperBridge $T$) is injective.
+\end{lemma}
+\begin{proof}\leanok
+  The map preserves the endpoint and walk, which determine the SAW uniquely.
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}} \leq x_c \cdot B_{\infty}$]\label{lem:bpaper-le-bridge}
+\lean{B_paper_le_xc_mul_bridge}
+\leanok
+  For the finite strip, $B_{\text{paper}}(T,L,x_c) \leq x_c \cdot
+  \texttt{paper\_bridge\_partition}(T, x_c)$.
+\end{lemma}
+\begin{proof}\leanok
+  Each finite-strip walk of length $n$ has weight $x_c^{n+1} = x_c \cdot x_c^n$.
+  The injection from PaperSAW\_B to PaperBridge gives the bound.
+\end{proof}
+
+\subsection{Algebraic bounds at $x_c$}
+
+\begin{lemma}[$3x_c^2 < 1$]\label{lem:three-xc-sq}
+\lean{three_xc_sq_lt_one}
+\leanok
+  Since $x_c = 1/\sqrt{2+\sqrt{2}}$, we have $x_c^2 = 1/(2+\sqrt{2})$,
+  and $3/(2+\sqrt{2}) < 1$ because $2+\sqrt{2} > 3$ (equivalently $\sqrt{2} > 1$).
+\end{lemma}
+\begin{proof}\leanok
+  Algebraic computation using properties of $\sqrt{2}$.
+\end{proof}
+
+\subsection{Walk splitting and monotonicity}
+
+\begin{lemma}[Walk length splits]\label{lem:walk-split}
+\lean{walk_split_lengths'}
+\leanok
+  For a walk $p$ from $v$ to $w$ and a vertex $u$ in its support,
+  $|p| = |p[v \to u]| + |p[u \to w]|$.
+\end{lemma}
+\begin{proof}\leanok
+  Uses the take/drop specification and length\_append.
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}}$ monotone in $L$]\label{lem:bpaper-mono}
+\lean{B_paper_mono_L}
+\leanok
+  For $L_1 \leq L_2$, $B_{\text{paper}}(T, L_1, x) \leq B_{\text{paper}}(T, L_2, x)$.
+  The finite strip $S_{T,L_1} \subset S_{T,L_2}$, so every walk in the
+  smaller strip is also in the larger strip.
+\end{lemma}
+\begin{proof}\leanok
+  Uses the injection \texttt{PaperSAW\_B\_widen} from $L_1$ to $L_2$.
+\end{proof}
+
+\begin{lemma}[PaperFinStrip monotone in $L$]\label{lem:strip-mono-L}
+\lean{PaperFinStrip_mono_L}
+\leanok
+  $\text{PaperFinStrip}(T, L_1) \subseteq \text{PaperFinStrip}(T, L_2)$ for $L_1 \leq L_2$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct from the integer bounds in the strip definition.
+\end{proof}
+
+\subsection{Vertex relation infrastructure}
+
+\begin{lemma}[Interior edge cancellation]\label{lem:interior-cancel}
+\lean{interior_edge_cancel'}
+\leanok
+  For any edge $(v,w)$ and complex value $F$,
+  $(\text{embed}(w) - \text{embed}(v)) \cdot F + (\text{embed}(v) - \text{embed}(w)) \cdot F = 0$.
+  This is the key cancellation for interior edges in discrete Stokes.
+\end{lemma}
+\begin{proof}\leanok
+  By \texttt{ring}.
+\end{proof}
+
+\begin{lemma}[Right boundary direction]\label{lem:right-dir}
+\lean{right_boundary_dir}
+\leanok
+  The direction from FALSE$(x,y)$ to TRUE$(x,y)$ is $+1$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation from \texttt{correctHexEmbed}.
+\end{proof}
+
+\begin{lemma}[Left boundary direction]\label{lem:left-dir}
+\lean{left_boundary_dir}
+\leanok
+  The direction from TRUE$(x,y)$ to FALSE$(x,y)$ is $-1$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation from \texttt{correctHexEmbed}.
+\end{proof}
+
+\begin{lemma}[Left boundary phase]\label{lem:left-phase}
+\lean{left_boundary_phase_re}
+\leanok
+  $\text{Re}(\exp(-i\sigma\pi)) = -c_\alpha$.
+\end{lemma}
+\begin{proof}\leanok
+  Uses $\sigma = 5/8$ and $\cos(5\pi/8) = -\cos(3\pi/8) = -c_\alpha$.
+\end{proof}
