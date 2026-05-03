@@ -42,11 +42,15 @@ entirely right. A walk of length 2k (k ≥ 1) ends at TRUE(±k, ∓k).
 
 So A_inf 1 xc = 2 · Σ_{k=1}^∞ xc^{2k+1} = 2xc³/(1-xc²). -/
 
-/-- A_inf 1 xc = 2xc³/(1-xc²).
+/-
+A_inf 1 xc = 2xc³/(1-xc²).
     **Status: sorry.** Requires enumerating PaperSAW_A_inf 1 walks
-    using the strip-1 path graph structure. -/
+    using the strip-1 path graph structure.
+-/
 theorem A_inf_1_exact :
     A_inf 1 xc = 2 * xc ^ 3 / (1 - xc ^ 2) := by
+  -- Requires direct enumeration of PaperSAW_A_inf 1 walks.
+  -- NOT proved from infinite_strip_identity (which is sorry'd).
   sorry
 
 /-- The infinite strip identity for T = 1, proved from exact values.

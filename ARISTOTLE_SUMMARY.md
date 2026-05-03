@@ -1,3 +1,53 @@
+# Summary of changes for run 1f3e3918-b576-4dbb-a676-6f258a14829f
+## Summary of Work Completed
+
+### New files created (fully proved, 0 sorries)
+
+**`RequestProject/SAWVertexIdentity.lean`** — Key algebraic identity for the vertex relation:
+- `vertex_phase_identity`: Proved e^{-i5π/8} + xc·e^{iπ/4} + xc·e^{iπ/2} = 0. This is the algebraic core of the vertex relation (Lemma 1 of the paper), encoding that at each hex lattice vertex, the direction-weighted phase contributions cancel. It is equivalent to the triplet cancellation multiplied by e^{-i5π/8}.
+- `vertex_phase_from_triplet`: Derives vertex_phase_identity from triplet_cancellation.
+- `right_boundary_re_coeff`: Re coefficient for right boundary walks = 1 (winding = 0).
+- `left_boundary_re_coeff`: cos((1-σ)π) = c_alpha (winding = ±π for left boundary).
+- `escape_boundary_re_coeff_pos`: cos((1-σ)·2π/3) = c_eps (winding = ±2π/3 for escape boundary).
+- `escape_boundary_re_coeff_neg`: cos((1-σ)·(-2π/3)) = c_eps.
+
+**`RequestProject/SAWBoundarySum.lean`** — Boundary sum infrastructure:
+- `hexDirAngle`: Definition of direction angles for hex lattice edges (6 cases: 0, ±π/3, ±2π/3, π).
+- `hex_dir_cos_pos`: For any hex edge (v,w), cos(3θ(v→w)/8) > 0. This establishes that all boundary contributions in the parafermionic observable have positive real parts.
+- `right_boundary_cos_one`: cos(3·0/8) = 1, the coefficient for right boundary edges.
+- `starting_edge_angle`: The direction from paperStart to hexOrigin is π.
+
+### Updated documentation
+
+**`PROOF_STATUS.md`** — Comprehensive update reflecting:
+- Detailed listing of all newly proved algebraic ingredients for the vertex relation
+- Clear identification of the remaining combinatorial infrastructure needed
+- Correct dependency structure for the three root sorry lemmas
+- Status of each proof component
+
+**`blueprint/src/content.tex`** — Added new proved results:
+- `vertex_phase_identity` theorem with `\leanok`
+- `left_boundary_re_coeff` lemma with `\leanok`
+- `right_boundary_re_coeff` lemma with `\leanok`
+- `escape_boundary_re_coeff_pos` lemma with `\leanok`
+- `hex_dir_cos_pos` lemma with `\leanok`
+
+### Current sorry status
+
+The main theorem `connective_constant_eq` still depends on **3 root sorry lemmas**:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1. All *algebraic* ingredients are now proved (pair/triplet cancellation, vertex phase identity, boundary coefficients, direction cosine positivity). The remaining gap is the *combinatorial* infrastructure: defining the parafermionic observable at each mid-edge, grouping walks into pairs/triplets at each vertex, and the discrete Stokes summation.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B for the infinite strip. Follows from #1 by taking L→∞.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh counting inequality. Requires combinatorial bridge decomposition of SAWs.
+
+### Key insight from analysis
+
+The vertex relation contribution for each base walk β ending at a neighbor of vertex v (with v unvisited) is **exactly zero**, factoring as:
+  e^{i(3/8)α} · [e^{-i5π/8} + xc·(e^{iπ/4} + e^{iπ/2})] = 0
+where the bracket equals zero by `vertex_phase_identity`. This means the vertex relation holds **walk-by-walk**, not just as a sum. This is a stronger statement than what was previously formalized and provides a cleaner path to the full proof.
+
 # Summary of changes for run f8b594e8-acb8-43fb-992e-080a3e728b6c
 ## Summary of Work Completed
 

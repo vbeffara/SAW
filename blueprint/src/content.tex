@@ -58,6 +58,72 @@ hexagonal lattice.
 \leanok
 \end{proof}
 
+\begin{theorem}[Vertex phase identity]\label{thm:vertex_phase}
+\lean{vertex_phase_identity}
+\leanok
+\uses{thm:triplet_cancel}
+  The key algebraic identity for the vertex relation:
+  $e^{-5i\pi/8} + x_c \cdot e^{i\pi/4} + x_c \cdot e^{i\pi/2} = 0.$
+  This is equivalent to the triplet cancellation multiplied by $e^{-5i\pi/8}$.
+  It encodes the fact that at each vertex of the strip, the total contribution
+  of any base walk to the vertex-relation sum is zero: the entry-side
+  contribution and the two exit-side contributions cancel algebraically.
+\end{theorem}
+\begin{proof}
+\leanok
+  Multiplying $1 + x_c j \bar{\lambda} + x_c \bar{j} \lambda = 0$ by
+  $e^{-5i\pi/8}$ and simplifying the exponentials gives the result.
+\end{proof}
+
+\begin{lemma}[Left boundary coefficient]\label{lem:left_boundary_re}
+\lean{left_boundary_re_coeff}
+\leanok
+  $\cos((1-\sigma)\pi) = c_\alpha = \cos(3\pi/8)$.
+  This is the real-part coefficient for walks exiting through the left boundary
+  of the strip (winding $= \pm\pi$).
+\end{lemma}
+\begin{proof}
+\leanok
+  Unfold $\sigma = 5/8$; then $(1-5/8)\pi = 3\pi/8$.
+\end{proof}
+
+\begin{lemma}[Right boundary coefficient]\label{lem:right_boundary_re}
+\lean{right_boundary_re_coeff}
+\leanok
+  $\mathrm{Re}[e^{i \cdot 0} \cdot e^{-i\sigma \cdot 0}] = 1$.
+  The coefficient for right boundary walks is $1$ (winding $= 0$).
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Escape boundary coefficient]\label{lem:escape_boundary_re}
+\lean{escape_boundary_re_coeff_pos}
+\leanok
+  $\cos((1-\sigma) \cdot 2\pi/3) = c_\varepsilon = \cos(\pi/4)$.
+  This is the coefficient for walks exiting through the escape boundary
+  (winding $= \pm 2\pi/3$).
+\end{lemma}
+\begin{proof}
+\leanok
+  Unfold $\sigma = 5/8$; then $(1-5/8) \cdot 2\pi/3 = \pi/4$.
+\end{proof}
+
+\begin{lemma}[Hex direction cosine positivity]\label{lem:hex_dir_cos}
+\lean{hex_dir_cos_pos}
+\leanok
+\uses{lem:boundary_cos}
+  For any edge $(v,w)$ of the hexagonal lattice,
+  $\cos(3\theta(v{\to}w)/8) > 0$ where $\theta(v{\to}w)$ is the
+  direction angle. This follows from \texttt{boundary\_cos\_pos}
+  since all hex angles are in $[-\pi,\pi]$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case split on the 6 possible edge directions and apply
+  \texttt{boundary\_cos\_pos}.
+\end{proof}
+
 \begin{lemma}[Local finiteness]\label{lem:locally_finite}
 \lean{hexGraph_locallyFinite'}
 \leanok
