@@ -1,34 +1,12 @@
 # Proof Status: SAW Connective Constant
 
 ## Main Theorem
-`connective_constant_eq` (SAWFinal.lean): μ = √(2+√2)
+`connective_constant_eq_corrected` (SAWPaperChain.lean): μ = √(2+√2)
 
 **Status: Depends on `sorryAx`** — three root sorry lemmas remain in the code,
-but only **two are logically independent** (see below).
+reducing to **two logically independent** mathematical results.
 
-## Logical Structure
-
-The three sorry lemmas in the critical path are:
-
-1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
-2. `infinite_strip_identity` (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B
-3. `paper_bridge_decomp_injection` (SAWPaperChain.lean) — HW decomposition
-
-### Key Observation: #1 follows from #2
-
-As proved in `SAWParafermionicProof.lean` (theorem `strip_identity_from_infinite'`):
-- From `infinite_strip_identity`: xc·paper_bridge_partition(T,xc) ≤ 1
-- From `B_paper_le_xc_bridge'`: B_paper(T,L,xc) ≤ xc·paper_bridge_partition(T,xc)
-- Therefore: B_paper(T,L,xc) ≤ 1, which is `strip_identity_genuine`
-
-So the three sorry lemmas reduce to **two logically independent** results:
-- **`infinite_strip_identity`** — the parafermionic observable identity for the infinite strip
-- **`paper_bridge_decomp_injection`** — the Hammersley-Welsh bridge decomposition
-
-However, due to Lean's import ordering (strip_identity_genuine is upstream of
-infinite_strip_identity), both remain as sorry in the code.
-
-## Root Sorry Lemmas
+## Critical Sorry Lemmas
 
 ### 1. `strip_identity_genuine` (SAWStripIdentityCorrect.lean)
 **Statement:** For the finite strip S_{T,L}, ∃ A_m E_m ≥ 0, 1 = c_α·A_m + B_paper T L xc + c_ε·E_m
@@ -63,6 +41,17 @@ infinite_strip_identity), both remain as sorry in the code.
 - Proving injectivity of the decomposition
 - Weight accounting (walk length ≥ sum of bridge lengths, giving x^n ≤ ∏ x^{ℓ_i} for x ≤ 1)
 
+### 4. `A_inf_1_exact` (SAWInfStripT1.lean) — minor
+**Statement:** A_inf 1 xc = 2·xc³/(1-xc²)
+**Required for:** infinite_strip_identity_T1_clean (T=1 special case only)
+**Not on critical path** of the main theorem (only for the T=1 special case)
+
+## Logical Structure
+
+The three code-level sorry lemmas reduce to **two logically independent** mathematical results:
+- **Parafermionic observable identity** (#1 and #2): Lemma 2 of Duminil-Copin & Smirnov 2012
+- **Hammersley-Welsh bridge decomposition** (#3): Hammersley & Welsh, 1962
+
 ## Dependency Structure
 
 ```
@@ -78,7 +67,7 @@ infinite_strip_identity (#2)
 paper_bridge_decomp_injection (#3) + paper_bridge_decay (from #1)
   → hw_summable_corrected → Z(x) < ∞ for x < xc
 
-Z_xc_diverges + hw_summable → connective_constant_eq
+Z_xc_diverges + hw_summable → connective_constant_eq_corrected
 ```
 
 ## Proved Infrastructure (sorry-free)
@@ -105,7 +94,7 @@ Z_xc_diverges + hw_summable → connective_constant_eq
 - Non-negativity lemmas ✓
 
 ### Finite-to-Infinite Strip Connection
-- B_paper ≤ xc · paper_bridge_partition: proved ✓ (SAWFiniteToInfinite.lean)
+- B_paper ≤ xc · paper_bridge_partition: proved ✓ (SAWParafermionicProof.lean)
 - B_paper monotone in L: proved ✓ (SAWWalkSplit.lean)
 
 ### Vertex Relation Algebra (SAWVertexIdentity.lean)
@@ -139,17 +128,20 @@ Z_xc_diverges + hw_summable → connective_constant_eq
 
 ## What Remains for the Full Proof
 
-Two logically independent mathematical results need to be formalized:
+Two independent mathematical results need to be formalized:
 
 1. **Parafermionic observable identity** (Lemma 2 of Duminil-Copin & Smirnov 2012):
-   This requires formalizing the walk partitioning at each vertex (into pairs and
-   triplets), proving the vertex relation holds using pair_cancellation and
-   triplet_cancellation, summing over all vertices (discrete Stokes theorem: interior
-   mid-edges cancel, boundary survives), and evaluating the boundary contributions.
+   Requires formalizing:
+   - Walk partitioning at each vertex into pairs and triplets
+   - Proving the vertex relation (using pair_cancellation and triplet_cancellation)
+   - Discrete Stokes summation (interior mid-edges cancel, boundary survives)
+   - Boundary evaluation
    All algebraic ingredients are proved; the combinatorial walk infrastructure remains.
 
 2. **Hammersley-Welsh bridge decomposition** (Hammersley & Welsh, 1962):
-   This requires defining the canonical decomposition of any SAW into bridges
-   (split at first max-diagCoord vertex, recursively decompose half-plane walks),
-   proving injectivity (the decomposition uniquely determines the walk), and
-   doing the weight accounting. This is purely combinatorial, independent of #1.
+   Requires formalizing:
+   - Splitting a SAW at the first vertex with maximum diagCoord
+   - Half-plane walk decomposition into bridges of strictly decreasing widths
+   - Injectivity of the decomposition (reconstruction argument)
+   - Weight accounting
+   This is purely combinatorial, independent of #1.

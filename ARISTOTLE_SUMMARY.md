@@ -1,3 +1,41 @@
+# Summary of changes for run 14ce5bca-3c7d-499d-9552-a388ab4a1125
+## Summary of Work Done
+
+### Analysis and Investigation
+I performed a thorough analysis of the three remaining sorry lemmas blocking the main theorem `connective_constant_eq_corrected` (μ = √(2+√2)):
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B  
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh bound
+
+### Key Finding: Logical Dependency Analysis
+These three code-level sorry lemmas reduce to **two logically independent** mathematical results:
+- The **parafermionic observable identity** (Lemma 2 of Duminil-Copin & Smirnov 2012) — for sorries #1 and #2
+- The **Hammersley-Welsh bridge decomposition** (Hammersley & Welsh, 1962) — for sorry #3
+
+Sorry #1 follows logically from sorry #2 (proved in `SAWParafermionicProof.lean` as `strip_identity_from_infinite'`), but due to Lean's import ordering constraints, both remain as separate sorry statements.
+
+### New Infrastructure Built
+- **`RequestProject/SAWVertexRelProof5.lean`**: New file providing walk extension infrastructure for the vertex relation proof (Lemma 1 of the paper). Includes:
+  - `walkExtendOne`: extends a walk by one step (sorry-free)
+  - `walkExtendOne_length`: length of extended walk (sorry-free)
+  - `walkExtendOne_isPath`: extended path is still a path (sorry-free, proved)
+  - `walksThrough`: predicate for vertex being in walk support (sorry-free)
+  - Detailed documentation of the pair/triplet partition structure needed for the vertex relation
+
+### Documentation Updates
+- **PROOF_STATUS.md**: Completely rewritten with accurate dependency analysis, clear documentation of what's proved vs. sorry'd, and the logical structure showing 3 code sorries = 2 independent mathematical results.
+
+### Project State
+The project builds successfully with no errors. The main theorem `connective_constant_eq_corrected` in `SAWPaperChain.lean` depends on `sorryAx` through the three sorry lemmas listed above. The complete proof architecture (submultiplicativity → Fekete → bridge infrastructure → cutting argument → recurrence → main theorem) is verified. All algebraic ingredients for the parafermionic argument (pair/triplet cancellation, boundary coefficients, direction cosine positivity) are proved.
+
+### What Remains
+Two independent mathematical results need formalization:
+
+1. **Parafermionic observable** (for `infinite_strip_identity` and `strip_identity_genuine`): Requires formalizing walk partitioning into pairs/triplets at each vertex, proving the vertex relation using pair_cancellation and triplet_cancellation, and discrete Stokes summation. The new file `SAWVertexRelProof5.lean` provides initial infrastructure for this.
+
+2. **Hammersley-Welsh decomposition** (for `paper_bridge_decomp_injection`): Requires defining the canonical bridge decomposition (split SAW at first max-diagCoord vertex, decompose half-plane walks into bridges of decreasing widths), proving injectivity, and weight accounting.
+
 # Summary of changes for run 8a3d8a6d-11df-4a30-99b5-f3adbb1dcbd0
 ## Summary of Work Done
 
