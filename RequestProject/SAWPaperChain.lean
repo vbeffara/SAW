@@ -313,6 +313,6 @@ theorem connective_constant_eq_corrected :
     connective_constant = Real.sqrt (2 + Real.sqrt 2) :=
   connective_constant_eq_from_bounds
     Z_xc_diverges_corrected
-    (fun x hx hxc => hw_summable_corrected hx hxc)
+    (fun _ hx hxc => hw_summable_corrected hx hxc)
 
 end

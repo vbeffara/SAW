@@ -1,3 +1,45 @@
+# Summary of changes for run 8a3d8a6d-11df-4a30-99b5-f3adbb1dcbd0
+## Summary of Work Done
+
+### Analysis and Documentation
+
+I performed a thorough analysis of the three remaining sorry lemmas blocking the main theorem `connective_constant_eq` (μ = √(2+√2)):
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B  
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh bound
+
+### Key Finding: Logical Dependency Reduction
+
+I identified and documented that **sorry #1 follows from sorry #2** (already proved in `SAWParafermionicProof.lean` as `strip_identity_from_infinite'`). The chain is:
+- `infinite_strip_identity` → `xc_bridge_le_one'` (xc · paper_bridge_partition ≤ 1)
+- `B_paper_le_xc_bridge'` (B_paper ≤ xc · paper_bridge_partition, proved)  
+- Therefore: B_paper ≤ 1, which is `strip_identity_genuine`
+
+This means the three code-level sorry lemmas reduce to **two logically independent** mathematical results:
+- The **parafermionic observable identity** (Lemma 2 of Duminil-Copin & Smirnov 2012)
+- The **Hammersley-Welsh bridge decomposition** (Hammersley & Welsh, 1962)
+
+However, due to Lean's import ordering constraints (strip_identity_genuine is upstream of infinite_strip_identity), both remain as separate sorry statements in the code.
+
+### Code Changes
+
+- **PROOF_STATUS.md**: Completely rewritten with accurate dependency analysis, clear documentation of what's proved vs. sorry'd, and the logical structure showing 3 code sorries = 2 independent mathematical results
+- **SAWPaperChain.lean**: Fixed unused variable warning (`x` → `_` in `connective_constant_eq_corrected`)
+- **SAWInfStripT1.lean**: Reverted an invalid proof that circularly used the sorry'd `infinite_strip_identity`
+
+### Project State
+
+The project builds successfully with no errors. The main theorem `connective_constant_eq` in `SAWFinal.lean` depends on `sorryAx` through the three sorry lemmas listed above. The complete proof architecture (submultiplicativity → Fekete → bridge infrastructure → cutting argument → recurrence → main theorem) is verified. All algebraic ingredients for the parafermionic argument (pair/triplet cancellation, boundary coefficients, direction cosine positivity) are proved. The T=1 special case of the strip identity is fully proved (sorry-free).
+
+### What Remains
+
+Two independent mathematical results need formalization:
+
+1. **Parafermionic observable** (for `infinite_strip_identity`): Requires formalizing walk partitioning into pairs/triplets at each vertex, proving the vertex relation, and discrete Stokes summation. All algebraic ingredients exist.
+
+2. **Hammersley-Welsh decomposition** (for `paper_bridge_decomp_injection`): Requires defining the canonical bridge decomposition (split SAW at first max-diagCoord vertex, recursively decompose half-plane walks), proving injectivity, and weight accounting. Purely combinatorial.
+
 # Summary of changes for run 39bd00cd-abc7-42b1-9359-1b98fafb1bb9
 ## Summary of Work Done
 
