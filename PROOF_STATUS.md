@@ -15,26 +15,27 @@
 **What's proved:**
 - T=1 case: `strip_identity_genuine_T1'` (SAWStripT1Direct.lean) ✓
 - Algebraic ingredients: `pair_cancellation`, `triplet_cancellation` ✓
-- Vertex phase identity: `vertex_phase_identity` ✓ (NEW: SAWVertexIdentity.lean)
-  - e^{-i5π/8} + xc·e^{iπ/4} + xc·e^{iπ/2} = 0
-  - This is the algebraic core of the vertex relation (Lemma 1)
-- Boundary coefficients: ✓ (NEW: SAWVertexIdentity.lean)
-  - Left boundary: cos((1-σ)π) = c_alpha ✓
-  - Right boundary: Re[1] = 1 ✓
-  - Escape boundary: cos((1-σ)·2π/3) = c_eps ✓
+- Vertex phase identity: `vertex_phase_identity` ✓ (SAWVertexIdentity.lean)
+- Boundary coefficients: ✓ (SAWVertexIdentity.lean)
 - Boundary cos positivity: `boundary_cos_pos` ✓
-- Hex direction cos positivity: `hex_dir_cos_pos` ✓ (NEW: SAWBoundarySum.lean)
-- Reduction to `boundary_sum_identity`: SAWStripProofDirect.lean ✓
+- Hex direction cos positivity: `hex_dir_cos_pos` ✓ (SAWBoundarySum.lean)
 **What remains:**
-- Defining the parafermionic observable F at each mid-edge
+- Defining the parafermionic observable F at each mid-edge with correct winding
 - Proving that the vertex relation holds for each vertex (using the walk grouping)
 - Proving interior edge cancellation in the vertex sum
 - Computing the boundary sum
+**Technical issue (winding convention):** The walkWindingInt definition in SAWObservableProof.lean
+uses integer multiples of π/3 as the winding unit. While this works for triplet cancellation
+(which involves λ^{±1}), the pair cancellation identity j·conj(λ)^4 + conj(j)·λ^4 = 0
+requires a winding difference of ±4 units between entering and exiting mid-edges at a vertex,
+but a single SAW turn changes the winding by only ±1 unit. The correct winding convention
+for the Duminil-Copin & Smirnov observable needs to be identified and implemented. This
+is the key remaining technical obstacle for the parafermionic approach.
 
 ### 2. `infinite_strip_identity` (SAWRecurrenceProof.lean)
 **Statement:** 1 = c_α · A_inf T xc + xc · paper_bridge_partition T xc
 **Required for:** bridge_recurrence → paper_bridge_lower_bound → Z_xc_diverges
-**Proof approach:** Pass finite strip identity to L→∞ limit (or apply parafermionic to infinite strip)
+**Proof approach:** Parafermionic observable on infinite strip (no escape boundary)
 **What's proved:**
 - T=1 case (modulo A_inf_1_exact): `infinite_strip_identity_T1_clean` (SAWInfStripT1.lean)
 - A_inf_1_exact: sorry (needs walk enumeration in strip-1 path graph)
@@ -46,25 +47,10 @@
 **Statement:** ∑ c_n x^n ≤ 2·(∑_{S} ∏_{T∈S} B_{T+1}(x))²
 **Required for:** hw_summable_corrected → Z(x) < ∞ for x < xc
 **Proof approach:** Hammersley-Welsh bridge decomposition
-**Note:** This requires bridge summability (from #1) for the bound to be meaningful.
-
-## Newly Proved Lemmas (This Session)
-
-### SAWVertexIdentity.lean (NEW FILE, fully proved)
-- `vertex_phase_identity`: e^{-i5π/8} + xc·e^{iπ/4} + xc·e^{iπ/2} = 0
-  This is the key algebraic identity for the vertex relation, equivalent to
-  triplet_cancellation multiplied by e^{-i5π/8}.
-- `vertex_phase_from_triplet`: derives vertex_phase_identity from triplet_cancellation
-- `right_boundary_re_coeff`: Re coefficient for right boundary = 1
-- `left_boundary_re_coeff`: cos((1-σ)π) = c_alpha
-- `escape_boundary_re_coeff_pos`: cos((1-σ)·2π/3) = c_eps
-- `escape_boundary_re_coeff_neg`: cos((1-σ)·(-2π/3)) = c_eps
-
-### SAWBoundarySum.lean (NEW FILE, fully proved)
-- `hexDirAngle`: direction angle definition for hex edges
-- `hex_dir_cos_pos`: cos(3θ/8) > 0 for all hex edge directions
-- `right_boundary_cos_one`: cos(3·0/8) = 1 for right boundary edges
-- `starting_edge_angle`: direction angle from paperStart to hexOrigin = π
+**What remains:**
+- Defining the canonical bridge decomposition (cut SAW at diagonal height records)
+- Proving injectivity of the decomposition
+- Bounding the weight by the product formula
 
 ## Dependency Structure
 
@@ -110,11 +96,11 @@ Both Z_xc_diverges + hw_summable → connective_constant_eq
 - Non-negativity lemmas ✓
 - B_paper ≤ 1 from strip identity ✓ (depends on sorry)
 
-### Vertex Relation Algebra (SAWVertexIdentity.lean) — NEW
+### Vertex Relation Algebra (SAWVertexIdentity.lean)
 - `vertex_phase_identity` ✓
 - Boundary coefficient lemmas ✓
 
-### Boundary Sum Infrastructure (SAWBoundarySum.lean) — NEW
+### Boundary Sum Infrastructure (SAWBoundarySum.lean)
 - `hexDirAngle` definition ✓
 - `hex_dir_cos_pos` ✓
 - Boundary direction lemmas ✓
@@ -152,21 +138,23 @@ Both Z_xc_diverges + hw_summable → connective_constant_eq
 
 ## What Remains for the Full Proof
 
-The three root sorry lemmas (#1, #2, #3) are deeply mathematical results:
+The three root sorry lemmas (#1, #2, #3) represent three independent
+deep mathematical results:
 
-1. **Parafermionic observable (B_paper ≤ 1)**: All algebraic ingredients are proved
-   (pair/triplet cancellation, vertex phase identity, boundary coefficients, direction
-   cosine positivity). What remains is the combinatorial infrastructure:
-   - Defining the observable at each mid-edge as a sum over walks
-   - Grouping walks at each vertex into pairs/triplets that cancel
-   - Proving exhaustiveness of the grouping
-   - The discrete Stokes summation (interior cancellation + boundary evaluation)
+1. **Parafermionic observable (B_paper ≤ 1)**: The key technical obstacle
+   is the winding convention. The existing walkWindingInt definition
+   (integer units of π/3) does not correctly capture the pair cancellation
+   identity, which requires winding differences of ±4 units. The correct
+   winding convention needs to incorporate the lattice geometry more
+   carefully. All other algebraic ingredients (pair/triplet cancellation,
+   boundary coefficients, direction cosine positivity) are proved.
 
-2. **Infinite strip identity**: Follows from #1 by taking L→∞ or by applying the
-   parafermionic argument directly to the infinite strip.
+2. **Infinite strip limit (1 = c_α·A + xc·B)**: Follows from #1 by
+   taking L→∞ in the finite strip identity, or by applying the
+   parafermionic argument directly to the infinite strip. The T=1 case
+   is proved modulo A_inf_1_exact (walk enumeration).
 
-3. **Hammersley-Welsh decomposition**: A combinatorial argument about decomposing SAWs
-   into bridges at height records. Requires:
-   - Defining the canonical bridge decomposition
-   - Proving injectivity of the decomposition
-   - Bounding the weight by the product formula
+3. **Hammersley-Welsh decomposition**: A purely combinatorial argument
+   about decomposing SAWs into bridges at diagonal height records. 
+   Independent of #1 and #2 but requires #1 for the final summability
+   conclusion.

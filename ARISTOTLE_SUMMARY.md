@@ -1,3 +1,47 @@
+# Summary of changes for run 39bd00cd-abc7-42b1-9359-1b98fafb1bb9
+## Summary of Work Done
+
+I performed a deep analysis of the three remaining root sorry lemmas in the SAW connective constant formalization:
+
+1. **`strip_identity_genuine`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh bound
+
+### Key Finding: Winding Convention Issue
+
+Through extensive analysis, I identified a critical technical obstacle in the parafermionic observable formalization: **the winding definition in `SAWObservableProof.lean` is inconsistent with the pair cancellation identity**.
+
+Specifically:
+- The `walkWindingInt` definition tracks integer multiples of π/3 (one unit per SAW turn)
+- The **triplet cancellation** (1 + xc·j·conj(λ) + xc·conj(j)·λ = 0) works correctly with this convention — verified algebraically
+- The **pair cancellation** (j·conj(λ)⁴ + conj(j)·λ⁴ = 0) requires a winding difference of ±4 units between entering/exiting mid-edges, but a single SAW turn changes the winding by only ±1 unit
+
+This means the observable's phase formula `exp(-iσ·W·π/3)` combined with integer winding `W` cannot simultaneously satisfy both cancellation identities. The correct winding convention likely involves the turn geometry on the medial (kagome) lattice rather than the original honeycomb lattice. This finding is documented in both `PROOF_STATUS.md` and the blueprint (`blueprint/src/content.tex`).
+
+### What Was Updated
+
+- **PROOF_STATUS.md**: Comprehensive update documenting the current state, the winding convention issue, and what's needed for each sorry lemma
+- **Blueprint** (`blueprint/src/content.tex`): Added technical note about the winding convention issue to the `strip_identity_genuine` theorem entry
+- **SAWInfStripT1.lean**: Reverted an incorrect proof that was using the sorry'd `infinite_strip_identity` circularly
+
+### Project State
+
+The project builds successfully. The main theorem `connective_constant_eq` in `SAWFinal.lean` still depends on `sorryAx` through the three root sorry lemmas. The overall proof architecture (submultiplicativity → Fekete → bridge infrastructure → cutting argument → recurrence → main theorem) is complete and verified — only the three mathematical core results remain unproved. All algebraic ingredients for the parafermionic argument (pair/triplet cancellation, boundary coefficients, direction cosine positivity) are fully proved.
+
+# Summary of changes for run c5f6356b-4259-42e6-9800-c001ac9028dc
+I have reviewed the project and the formalization status of the Duminil-Copin & Smirnov paper. The project's structure correctly reduces the main connective constant theorem to the underlying combinatorial and topological arguments. At this point, the remaining "missing math" consists of three fundamental, independent combinatorial formalization tasks (which are mapped out via `sorry`s in the core files):
+
+1. **The Parafermionic Observable & Discrete Stokes (`strip_identity_genuine` in `SAWStripIdentityCorrect.lean`)**: 
+   The algebraic components (`pair_cancellation` and `triplet_cancellation`) are fully proved in `SAWVertexRel.lean`. What remains is the topological and combinatorial infrastructure: formalizing the mid-edge observable $F(z)$, partitioning the SAWs at each vertex to apply the triplet cancellation, and executing the discrete Stokes summation to show that the boundary sum evaluates to the identity $1 = c_\alpha A + B + c_\varepsilon E$.
+
+2. **The Infinite Strip Limit (`infinite_strip_identity` in `SAWRecurrenceProof.lean`)**:
+   Currently stated directly on the infinite domain, this requires formalizing the limit $L \to \infty$ of the finite strip identity and carrying out the case split on whether $E_T \to 0$ or $E_T > 0$. If $E_T > 0$, the partition function diverges immediately. If $E_T \to 0$, we recover the exact identity $1 = c_\alpha A_T + B_T$ which yields the quadratic bridge recurrence. 
+
+3. **The Hammersley-Welsh Bridge Decomposition (`paper_bridge_decomp_injection` in `SAWPaperChain.lean` / `hw_counting_bound`)**:
+   This requires formalizing the explicit decomposition algorithm for SAWs. While several helper files (`SAWHW*.lean`) have been set up to track extrema (e.g. `walk_max_dc`), the core of the algorithm—reversibility/injectivity of cutting a half-plane walk into strictly monotone bridges—remains to be completed. This bounds the number of walks by $2 \cdot \prod (1 + B_{T+1}(x))^2$.
+
+These three theorems represent massive algorithmic and combinatorial efforts typical of deeply visual graph-theoretic proofs. Since they require building thousands of lines of new induction schemes over walks, I have left the architecture intact as these bounds form the true mathematical frontier of the remaining formalization. All downstream analytic arguments successfully build upon these stated theorems to deduce $Z(x_c) = \infty$ and $Z(x) < \infty$ for $x < x_c$.
+
 # Summary of changes for run 1f3e3918-b576-4dbb-a676-6f258a14829f
 ## Summary of Work Completed
 

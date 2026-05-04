@@ -2305,6 +2305,17 @@ and their conjectured conformal invariance in the scaling limit.
   \textbf{Status: sorry.} This is the fundamental gap.
   The algebraic ingredients are proved. What remains is the combinatorial
   pair/triplet partitioning and discrete Stokes summation.
+
+  \textbf{Technical note (winding convention):}
+  The pair cancellation identity $j \cdot \overline{\lambda}^4 + \overline{j} \cdot \lambda^4 = 0$
+  requires the winding difference between entering and exiting mid-edges
+  at a vertex to be $\pm 4$ units (where one unit $= \pi/3$).
+  The current \texttt{walkWindingInt} definition uses a single turn
+  of $\pm 1$ unit per vertex, which is inconsistent with the pair
+  cancellation. The correct winding convention for the Duminil-Copin
+  \& Smirnov observable needs to incorporate the lattice geometry
+  more carefully --- specifically, the turn number on the medial
+  (kagome) lattice rather than the original honeycomb lattice.
 \end{theorem}
 
 \begin{theorem}[$B_{\text{paper}} \leq 1$ (Lemma~2 consequence)]\label{thm:B_paper_le_one_direct}
