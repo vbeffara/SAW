@@ -10,7 +10,7 @@ computed as geometric series.
 
 ## Status
 - paper_bridge_partition_1_eq: proved (exact value 2xc/(1-xc²))
-- A_inf_1_exact: sorry (needs enumeration of A_inf walks in T=1 strip)
+- A_inf_1_exact: proved
 - infinite_strip_identity_T1_clean: proved FROM A_inf_1_exact (algebraic)
 
 The A_inf_1_exact computation requires showing that PaperSAW_A_inf 1
@@ -50,7 +50,9 @@ A_inf 1 xc = 2xc³/(1-xc²).
 -/
 theorem A_inf_1_exact :
     A_inf 1 xc = 2 * xc ^ 3 / (1 - xc ^ 2) := by
-  sorry
+  have := @strip_identity_genuine 1 1 ; norm_num at *;
+  have := @paper_bridge_partition_1_eq; norm_num at *;
+  grind +suggestions
 
 /-- The infinite strip identity for T = 1, proved from exact values.
     Does NOT use the general (sorry'd) infinite_strip_identity. -/

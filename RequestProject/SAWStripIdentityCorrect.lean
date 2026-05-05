@@ -330,7 +330,7 @@ paperStart through mid-edge a, d_first = 0 for all walks. So:
   0 = Re(boundary sum) = -1 + B_paper + (non-negative terms)
   ⟹ B_paper ≤ 1. -/
 
-/-- **The genuine strip identity** (Lemma 2 of Duminil-Copin & Smirnov 2012).
+/- **The genuine strip identity** (Lemma 2 of Duminil-Copin & Smirnov 2012).
 
     For the finite strip S_{T,L} with T ≥ 1 and L ≥ 1, we have:
       1 = c_α · A + B_paper T L xc + c_ε · E
@@ -354,11 +354,43 @@ paperStart through mid-edge a, d_first = 0 for all walks. So:
     The algebraic ingredients (pair_cancellation, triplet_cancellation,
     boundary_cos_pos) are proved. What remains is the combinatorial
     infrastructure: partitioning walks into pairs/triplets at each vertex,
-    proving exhaustiveness, and the discrete Stokes summation. -/
+    proving exhaustiveness, and the discrete Stokes summation.
+
+    The proof decomposes into two pieces:
+    (a) B_paper_le_one_strip: a sorry'd helper capturing the full
+        parafermionic observable argument (Lemma 2 of the paper).
+    (b) Constructing the existential from B_paper ≤ 1. -/
+
+/-- **B_paper(T,L,xc) ≤ 1** — the core bound from the parafermionic observable.
+
+    This is the key consequence of Lemma 2 of Duminil-Copin & Smirnov (2012).
+    The proof uses the parafermionic observable F(z) at each mid-edge z
+    of the strip S_{T,L}. The vertex relation (pair_cancellation +
+    triplet_cancellation) gives a discrete contour integral identity.
+    Summing over all vertices (discrete Stokes), interior mid-edges cancel
+    and only boundary mid-edges survive.
+
+    Boundary evaluation:
+    - Starting mid-edge: F(a) = 1, direction = -1, contributes -1
+    - Right boundary (β): winding = 0, contributes B_paper
+    - Left boundary (α): winding = ±π, contributes c_α · A_mid ≥ 0
+    - Escape boundary (ε∪ε̄): winding = ±2π/3, contributes c_ε · E_mid ≥ 0
+    Total: 0 = -1 + B_paper + c_α·A_mid + c_ε·E_mid
+    Therefore: B_paper ≤ 1.
+
+    **Status: sorry.** Encapsulates the full discrete Stokes argument.
+    All algebraic ingredients are proved. -/
+lemma B_paper_le_one_strip (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    B_paper T L xc ≤ 1 := by
+  sorry
+
 lemma strip_identity_genuine (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  sorry
+  exact ⟨(1 - B_paper T L xc) / c_alpha, 0,
+    div_nonneg (sub_nonneg.mpr (B_paper_le_one_strip T L hT hL)) c_alpha_pos.le,
+    le_refl _,
+    by simp [mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]⟩
 
 /-- **B_paper(T,L,xc) ≤ 1** — follows from the genuine strip identity.
 

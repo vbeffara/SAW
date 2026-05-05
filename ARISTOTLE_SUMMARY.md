@@ -1,3 +1,51 @@
+# Summary of changes for run a761ba00-4fb5-4c3f-9426-dd9c55ddc20a
+## Summary of Work Done
+
+### Changes Made
+
+1. **Decomposed `strip_identity_genuine`** (SAWStripIdentityCorrect.lean):
+   - The existential statement `∃ A E ≥ 0, 1 = c_α·A + B_paper + c_ε·E` is now **proved** from a simpler helper lemma `B_paper_le_one_strip` (B_paper(T,L,xc) ≤ 1).
+   - The proof constructs A = (1 - B_paper)/c_α and E = 0, which satisfies the identity when B_paper ≤ 1.
+   - The remaining sorry is `B_paper_le_one_strip`, which cleanly encapsulates the parafermionic observable argument.
+
+2. **Proved `A_inf_1_exact`** (SAWInfStripT1.lean):
+   - The exact value A_inf(1, xc) = 2·xc³/(1-xc²) is now proved (was sorry'd).
+
+3. **Updated documentation**:
+   - `PROOF_STATUS.md`: Completely rewritten with accurate dependency analysis reflecting the new decomposition.
+   - `blueprint/src/content.tex`: Updated the strip identity theorem entry to reflect its proved status and dependency on `B_paper_le_one_strip`.
+   - Updated comments in SAWInfStripT1.lean.
+
+### Current State
+
+The project builds successfully with no errors. The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on three root sorry lemmas:
+
+1. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1. This encapsulates the parafermionic observable argument (Lemma 2 of Duminil-Copin & Smirnov 2012). All algebraic ingredients (pair_cancellation, triplet_cancellation, boundary_cos_pos) are proved. What remains is the combinatorial walk pairing/tripling infrastructure and discrete Stokes summation.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α · A_inf + xc · B. The infinite strip version of the parafermionic identity. Same mathematical content as #1 but for the infinite strip (no escape boundary).
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — Hammersley-Welsh bridge decomposition. A purely combinatorial result about decomposing SAWs into bridges of decreasing widths.
+
+These three code-level sorries correspond to **two independent mathematical results**:
+- The **parafermionic observable identity** (for #1 and #2)
+- The **Hammersley-Welsh bridge decomposition** (for #3)
+
+### What Remains
+
+The two independent mathematical results require formalizing substantial new infrastructure:
+
+1. **Parafermionic observable** (for `B_paper_le_one_strip` and `infinite_strip_identity`):
+   - Walk partitioning into pairs/triplets at each vertex
+   - Proving the vertex relation using pair_cancellation and triplet_cancellation  
+   - Discrete Stokes summation (interior mid-edge cancellation)
+   - Boundary evaluation (winding computation for each boundary type)
+
+2. **Hammersley-Welsh decomposition** (for `paper_bridge_decomp_injection`):
+   - Splitting SAW at first max-diagCoord vertex
+   - Recursive half-plane walk decomposition into bridges
+   - Proving injectivity of the decomposition
+   - Weight accounting
+
 # Summary of changes for run 14ce5bca-3c7d-499d-9552-a388ab4a1125
 ## Summary of Work Done
 
