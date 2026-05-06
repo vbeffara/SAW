@@ -5588,6 +5588,12 @@ of $Z(x)$, proved via Fekete's lemma applied to the submultiplicative sequence $
 \item Bridge lower bound: $\exists c > 0,\, c/T \leq B_T$ (from recurrence)
 \item Bridge decay: $B_T(x) \leq (x/x_c)^T$ for $x < x_c$
 \item Product convergence: $\prod(1 + r^T)$ converges for $0 \leq r < 1$
+\item Iterated submultiplicativity: $c_{km} \leq c_m^k$ (\texttt{saw\_count\_mul\_le\_pow}
+  in SAWVertexRelation.lean)
+\item General submultiplicativity bound: $c_n \leq M(m) \cdot c_m^{\lfloor n/m \rfloor}$
+  (\texttt{saw\_count\_submult\_bound} in SAWVertexRelation.lean)
+\item Summability from root bound: $Z(x) < \infty$ when $\exists m: c_m x^m < 1$
+  (\texttt{partition\_summable\_of\_small\_root} in SAWVertexRelation.lean)
 \item Walk extension infrastructure: \texttt{sawExtend}, \texttt{pathExtend}
 \item Direction vector computations (cube roots of unity)
 \item Direction rotation: $d_1 = j \cdot d_0$ and $d_2 = \bar{j} \cdot d_0$ at each vertex type
@@ -6228,4 +6234,47 @@ s support,
   Assuming $Z(x_c) < \infty$ for contradiction, bridge summability follows
   from Lemma~\ref{lem:bridge-sum-Z-direct}, contradicting the harmonic divergence
   $\sum c/T = \infty$. \textbf{Status: sorry} (depends on infinite\_strip\_identity).
+\end{proof}
+
+\section{Iterated submultiplicativity (proved)}\label{sec:submult-iter}
+
+\begin{lemma}[Iterated submultiplicativity]\label{lem:submult-iter}
+\lean{saw_count_mul_le_pow}
+\leanok
+\uses{lem:submult}
+  For all $m, k \in \mathbb{N}$: $c_{km} \leq c_m^k$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on $k$. Base case: $c_0 = 1 \leq 1 = c_m^0$.
+  Inductive step: $c_{(k+1)m} = c_{km + m} \leq c_{km} \cdot c_m
+  \leq c_m^k \cdot c_m = c_m^{k+1}$.
+\end{proof}
+
+\begin{lemma}[General submultiplicativity bound]\label{lem:submult-bound}
+\lean{saw_count_submult_bound}
+\leanok
+\uses{lem:submult-iter}
+  For all $m \geq 1$ and $n \in \mathbb{N}$:
+  $c_n \leq M(m) \cdot c_m^{\lfloor n/m \rfloor}$
+  where $M(m) = \max(c_0, \ldots, c_{m-1})$.
+\end{lemma}
+\begin{proof}\leanok
+  Write $n = \lfloor n/m \rfloor \cdot m + (n \bmod m)$. Then
+  $c_n \leq c_{\lfloor n/m\rfloor \cdot m} \cdot c_{n \bmod m}
+  \leq c_m^{\lfloor n/m\rfloor} \cdot M(m)$.
+\end{proof}
+
+\begin{theorem}[Summability from root bound]\label{thm:summable-root}
+\lean{partition_summable_of_small_root}
+\leanok
+\uses{lem:submult-bound}
+  If $0 < x$ and there exists $m \geq 1$ with $c_m \cdot x^m < 1$,
+  then $Z(x) = \sum_n c_n x^n < \infty$.
+\end{theorem}
+\begin{proof}\leanok
+  Set $\rho = c_m x^m < 1$. By Lemma~\ref{lem:submult-bound},
+  $c_n x^n \leq M(m) \cdot (c_m x^m)^{\lfloor n/m \rfloor} \cdot x^{n \bmod m}
+  \leq M(m) \cdot x^{m-1} \cdot \rho^{\lfloor n/m \rfloor}$.
+  The series $\sum \rho^{\lfloor n/m \rfloor}$ converges (it is
+  dominated by $m \cdot \sum_q \rho^q$ which is a geometric series).
 \end{proof}

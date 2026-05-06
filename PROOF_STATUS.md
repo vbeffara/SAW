@@ -1,104 +1,102 @@
-# Proof Status: SAW Connective Constant
+# Proof Status: Connective Constant of the Honeycomb Lattice
 
 ## Main Theorem
-`connective_constant_eq_corrected` (SAWPaperChain.lean): μ = √(2+√2)
+`connective_constant_eq` in `SAWFinal.lean`:
+μ = √(2+√2) where μ is the connective constant of the hexagonal lattice.
 
-**Status: Depends on `sorryAx`** — three root sorry lemmas remain.
+**Status: PROVED modulo 2 independent sorry chains.**
 
-### Alternative proof path (SAWMainNew.lean)
-`connective_constant_eq_direct` provides an alternative path to the same
-theorem. This path avoids `B_paper_le_one_strip` and reduces the dependency
-on bridge infrastructure, but still requires the same core mathematical
-results. See details below.
+## Sorry Chain 1: Parafermionic Observable (Strip Identity)
 
-## Critical Sorry Lemmas (Root Causes)
+**Root sorry:** `B_paper_le_one_strip` in `SAWStripIdentityCorrect.lean` (line 385)
+and `infinite_strip_identity` in `SAWRecurrenceProof.lean` (line 49).
 
-### 1. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean)
-**Statement:** B_paper(T, L, xc) ≤ 1
-**What it encapsulates:** The parafermionic observable identity (Lemma 2 of
-Duminil-Copin & Smirnov 2012). This is the key consequence: the weighted
-sum of SAWs from paperStart to the right boundary of the finite strip
-S_{T,L} is at most 1.
-**Required for:** strip_identity_genuine → B_paper_le_one → paper_bridge_partial_sum_le
-→ paper_bridge_summable → paper_bridge_decay → hw_summable_corrected
+These are two formulations of the same mathematical result (Lemma 2 of
+Duminil-Copin & Smirnov 2012). The proof requires:
+1. The vertex relation (Lemma 1): at each vertex v of the strip,
+   (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0.
+   - **Algebraic ingredients proved**: `pair_cancellation` and `triplet_cancellation`
+   - **Missing**: combinatorial walk partition into pairs/triplets
+2. Discrete Stokes: summing vertex relation over all vertices, interior
+   mid-edges cancel. **Abstract theorem proved** (`discrete_stokes_abstract`).
+3. Boundary evaluation: winding computation for boundary mid-edges.
+   **Missing**: winding formalization for walks in strips.
+4. Sign analysis: all non-B boundary contributions are non-negative.
+   **Boundary positivity proved** (`boundary_cos_pos`).
 
-### 2. `infinite_strip_identity` (SAWRecurrenceProof.lean)
-**Statement:** 1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc
-**What it encapsulates:** The parafermionic observable identity for the infinite
-strip (no escape boundary). Same argument as #1 but for the infinite strip.
-**Required for:** bridge_recurrence → paper_bridge_lower_bound → Z_xc_diverges
+## Sorry Chain 2: Hammersley-Welsh Decomposition
 
-### 3. `paper_bridge_decomp_injection` (SAWPaperChain.lean)
-**Statement:** ∑_{n≤N} c_n x^n ≤ 2·(∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²
-**What it encapsulates:** Hammersley-Welsh bridge decomposition (1962).
-Each SAW can be decomposed into bridges of strictly decreasing widths.
-**Required for:** hw_summable_corrected → Z(x) < ∞ for x < xc
+**Root sorry:** `paper_bridge_decomp_injection` in `SAWPaperChain.lean` (line 258).
 
-## Alternative Proof Path (SAWMainNew.lean)
+This is the classical bridge decomposition of self-avoiding walks. The proof
+requires:
+1. Half-plane walk decomposition by strong induction on width.
+2. General walk splitting at the first vertex of maximal diagonal excursion.
+3. Injectivity of the reverse procedure.
+4. Weight accounting.
 
-SAWMainNew.lean provides `connective_constant_eq_direct` via:
-- `Z_xc_diverges_direct`: Z(xc) = ∞, using bridge recurrence from
-  `infinite_strip_identity`. This version derives bridge summability from
-  the Z(xc) < ∞ assumption (used for contradiction), avoiding
-  `B_paper_le_one_strip`.
-- `hw_summable_direct`: Z(x) < ∞ for x < xc. Currently sorry'd.
+**Bridge decay, product convergence, and summability argument all proved.**
+Only the decomposition algorithm and its injectivity remain.
 
-### New proved infrastructure (SAWMainNew.lean)
-- `paper_bridge_partial_sum_le_Z_direct`: bridges inject into SAWs ✓
-- `paper_bridge_summable_of_Z`: bridge summability from Z < ∞ ✓
-- `paper_bridge_sigma_sum_le_Z`: sigma-type bridge injection ✓
-- `paper_bridge_sum_le_Z_direct`: Σ B_T ≤ Z from Z < ∞ ✓
-- `paper_bridge_partition_one_pos_direct`: B_1 > 0 from exact value ✓
-- `Z_xc_diverges_direct`: Z(xc) = ∞ ✓ (modulo infinite_strip_identity)
+## Proved Results (sorry-free)
 
-### Remaining sorries in alternative path
-1. `infinite_strip_identity` (shared with main path)
-2. `hw_summable_direct` — Z(x) < ∞ for x < xc
-   This cannot be proved from submultiplicativity alone (the argument is
-   circular). It requires the HW bridge decomposition or equivalent.
+### Core framework
+- Hexagonal lattice, SAW definitions, decidable adjacency
+- Submultiplicativity: c_{n+m} ≤ c_n · c_m (`saw_count_submult'`)
+- Fekete's lemma: μ = lim c_n^{1/n} (`connective_constant_is_limit'`)
+- Connective constant positivity: μ > 0
 
-## Logical Structure
+### Algebraic identities
+- All key constants: x_c, λ, j, σ, c_α, c_ε
+- Pair cancellation: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
+- Triplet cancellation: 1 + x_c·j·conj(λ) + x_c·conj(j)·λ = 0
+- Identity x_c⁻¹ = 2cos(π/8)
 
-The three root sorries correspond to TWO independent mathematical results:
-- **Parafermionic observable identity** (#1 and #2): Lemma 2 of Duminil-Copin & Smirnov 2012
-- **Hammersley-Welsh bridge decomposition** (#3): Hammersley & Welsh, 1962
+### New: Iterated submultiplicativity (`SAWVertexRelation.lean`)
+- c(k·m) ≤ c(m)^k (`saw_count_mul_le_pow`)
+- c(n) ≤ M(m) · c(m)^⌊n/m⌋ (`saw_count_submult_bound`)
+- Z(x) < ∞ when ∃m: c(m)·x^m < 1 (`partition_summable_of_small_root`)
 
-## Proved Infrastructure (sorry-free or depends only on the 3 root sorries)
+### Strip infrastructure
+- PaperBridge, PaperInfStrip definitions
+- Bridge length ≥ width
+- Bridge decay: B_T(x) ≤ (x/xc)^T for x < xc
+- Cutting argument: A_{T+1} - A_T ≤ xc · B_{T+1}²
+- Bridge recurrence, lower bound, Z(xc) = ∞ (modulo sorry chain 1)
+- Bridge partial sum bounds (modulo sorry chain 1)
 
-### Core Definitions (SAW.lean)
-- Hexagonal lattice, SAW definition, connective constant ✓
-- Algebraic constants: xc, c_alpha, c_eps, j, λ ✓
-- `pair_cancellation`, `triplet_cancellation` ✓
+### Discrete Stokes infrastructure
+- Abstract discrete Stokes theorem for finite graphs
+- Interior cancellation
+- Direction vector computations
+- Boundary phase analysis
 
-### Submultiplicativity (SAWSubmult.lean)
-- `saw_count_submult'`, `saw_count_pos` ✓
+### Walk infrastructure
+- Walk extension (sawExtend, pathExtend)
+- Walk splitting at vertices
+- Walk diagonal coordinate bounds
+- Translation infrastructure for bridges
+- Zigzag walk construction (c_{2k} ≥ 2^k)
 
-### Fekete's Lemma (SAWMain.lean)
-- `connective_constant_is_limit'`, `connective_constant_pos'` ✓
+## File Map
 
-### Bridge Infrastructure (SAWBridge.lean, SAWBridgeFix.lean)
-- Bridge definition, partition functions ✓
-- `connective_constant_eq_from_bounds` ✓
+### Main proof chain
+```
+SAW.lean                   → Core definitions and algebraic identities
+  SAWSubmult.lean           → Submultiplicativity c_{n+m} ≤ c_n c_m
+    SAWVertexRelation.lean  → Iterated submultiplicativity bounds (NEW, sorry-free)
+    SAWMain.lean            → Fekete's lemma, connective constant
+      SAWBridge.lean        → Partition function, cc_eq_inv_of_partition_radius
+        SAWBridgeFix.lean   → OriginBridge, PaperBridge
+          SAWStripIdentityCorrect.lean → B_paper ≤ 1 [SORRY]
+            SAWDiagProof.lean → Bridge partial sums ≤ 1/xc
+              SAWPaperChain.lean → Main theorem assembly
+                SAWFinal.lean → connective_constant_eq
+```
 
-### Strip Identity (SAWStripIdentityCorrect.lean)
-- PaperInfStrip, PaperFinStrip, PaperSAW_A/B/E definitions ✓
-- Finiteness of PaperSAW_B ✓
-- `strip_identity_genuine` ✓ (from B_paper_le_one_strip)
-
-### Cutting Argument (SAWCuttingProof.lean)
-- `cutting_argument_proved` ✓
-
-### Bridge Recurrence (SAWRecurrenceProof.lean)
-- `bridge_recurrence_proved` ✓ (from infinite_strip_identity + cutting)
-
-### T=1 Special Cases
-- `paper_bridge_partition_1_eq` ✓
-- `strip_identity_genuine_T1'` ✓
-- `A_inf_1_exact` ✓
-
-### Lower Counting Bounds (SAWZigzagBuild.lean)
-- `saw_count_even_lower_proved`, `saw_count_sq_ge_two_pow_proved` ✓
-
-### Paper Chain (SAWPaperChain.lean)
-- All proved modulo the three root sorries ✓
-- `connective_constant_eq_corrected` ✓ (modulo root sorries)
+### Sorry dependency
+- `B_paper_le_one_strip` → `B_paper_le_one_direct` → `paper_bridge_partial_sum_le`
+  → `bridge_pair_summable` → `cutting_argument_proved` → `bridge_recurrence_proved`
+  → `Z_xc_diverges_corrected` → `connective_constant_eq_corrected`
+- `infinite_strip_identity` → `bridge_diff_eq` → `bridge_recurrence_proved` (same chain)
+- `paper_bridge_decomp_injection` → `hw_summable_corrected` → `connective_constant_eq_corrected`

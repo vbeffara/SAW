@@ -1,3 +1,41 @@
+# Summary of changes for run 40664762-fb83-494f-aab8-3bd8adf43aec
+## Summary of work done
+
+### New mathematical content: `RequestProject/SAWVertexRelation.lean`
+
+Created a new file with three sorry-free lemmas that formalize iterated submultiplicativity bounds for SAW counts:
+
+1. **`saw_count_mul_le_pow`**: Proves c(k·m) ≤ c(m)^k by induction on k, using the proved `saw_count_submult'`.
+
+2. **`saw_count_submult_bound`**: Proves the general bound c(n) ≤ M(m) · c(m)^⌊n/m⌋, where M(m) = max(c(0),...,c(m-1)). This decomposes n = ⌊n/m⌋·m + (n mod m) and applies submultiplicativity to each factor.
+
+3. **`partition_summable_of_small_root`**: Proves Z(x) = Σ c_n x^n < ∞ whenever there exists m ≥ 1 with c(m)·x^m < 1. This provides an alternative route to partition function convergence via the root test, independent of the Hammersley-Welsh decomposition.
+
+All three lemmas are fully proved (no sorry, verified with `#print axioms`). The file imports only `SAWSubmult` and does not duplicate any existing statements.
+
+### Blueprint updates: `blueprint/src/content.tex`
+
+- Added a new section "Iterated submultiplicativity (proved)" with three blueprint entries for the new lemmas, including proper `\lean{}`, `\leanok`, `\uses{}` annotations and proof descriptions.
+- Updated the "Proved results (sorry-free)" list to include the three new results.
+
+### Proof status documentation: `PROOF_STATUS.md`
+
+Updated the proof status document to accurately describe:
+- The two remaining independent sorry chains (parafermionic observable / strip identity, and Hammersley-Welsh decomposition)
+- What is proved vs. pending in each chain
+- The complete file dependency map
+- The new iterated submultiplicativity results
+
+### Architecture analysis
+
+The project has two root sorry chains blocking the main theorem `connective_constant_eq`:
+
+1. **Strip identity** (`B_paper_le_one_strip` / `infinite_strip_identity`): The parafermionic observable argument (Lemma 2 of the paper). Algebraic ingredients (pair/triplet cancellation) and the abstract discrete Stokes theorem are proved. Missing: the combinatorial walk partition into pairs/triplets and winding evaluation at boundary mid-edges.
+
+2. **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): The canonical bridge decomposition of SAWs. Bridge decay, product convergence, and the summability framework are proved. Missing: the decomposition algorithm (splitting at maximal diagonal excursion, extracting bridges by induction on width) and its injectivity proof.
+
+Both sorry chains were attempted with the theorem proving subagent but are too deep for automated proof - they require substantial combinatorial infrastructure that doesn't yet exist in the formalization.
+
 # Summary of changes for run 8d5b5556-4812-4a79-8671-ffdcb80a6fe4
 ## Summary of Work Done
 
