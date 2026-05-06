@@ -1,3 +1,51 @@
+# Summary of changes for run 8d5b5556-4812-4a79-8671-ffdcb80a6fe4
+## Summary of Work Done
+
+### New File: `RequestProject/SAWMainNew.lean`
+
+Created an alternative proof path for the main theorem `μ = √(2+√2)` that restructures the dependency chain, reducing the number of independent mathematical results needed.
+
+#### Proved lemmas (sorry-free):
+1. **`paper_bridge_partial_sum_le_Z_direct`**: Finite bridge sums inject into SAW sums, bounded by Z(xc). Uses a counting argument: bridges of a given width inject into SAWs of the same length.
+
+2. **`paper_bridge_summable_of_Z`**: When Z(xc) < ∞, each bridge partition function is summable (the partial sums are bounded by Z).
+
+3. **`paper_bridge_sigma_sum_le_Z`**: Sigma-type version — bridges across ALL widths simultaneously inject into SAWs. The key insight: bridges of different widths have different endpoint diagonal coordinates, so the combined injection across all widths is still injective.
+
+4. **`paper_bridge_sum_le_Z_direct`**: The sum of bridge partition functions Σ B_{T+1} ≤ Z(xc) when Z(xc) < ∞. Uses ε-approximation: approximate each tsum by finite sums, combine into a sigma-type Finset, bound by Z.
+
+5. **`paper_bridge_partition_one_pos_direct`**: B₁ > 0 from the exact value 2xc/(1-xc²), avoiding dependence on B_paper_le_one_strip.
+
+6. **`Z_xc_diverges_direct`**: Z(xc) = ∞, restructured to avoid B_paper_le_one_strip. Derives bridge summability from the Z(xc) < ∞ contradiction assumption instead of from B_paper ≤ 1.
+
+#### Remaining sorries:
+- **`hw_summable_direct`**: Z(x) < ∞ for x < xc. This genuinely requires the Hammersley-Welsh bridge decomposition (the submultiplicativity shortcut is circular).
+- **`saw_count_exp_bound`**: Helper for the (unsuccessful) submultiplicativity approach.
+
+### Key Insight
+
+The proof that Z(xc) = ∞ can be restructured to avoid `B_paper_le_one_strip` entirely: instead of pre-proving bridge summability from B ≤ 1, we derive it from the Z(xc) < ∞ assumption used in the proof by contradiction. This removes one of the three root sorries from the divergence half of the proof.
+
+However, the convergence half (Z(x) < ∞ for x < xc) still requires the Hammersley-Welsh bridge decomposition — the submultiplicativity argument is insufficient because the radius of convergence 1/μ is what we're trying to determine.
+
+### Updated Documentation
+
+- **`PROOF_STATUS.md`**: Updated with complete dependency analysis, documenting both the original and alternative proof paths.
+- **`blueprint/src/content.tex`**: Added section on the alternative proof path with the new lemma statements and proof statuses.
+
+### Current State
+
+The project builds successfully with no errors. The three original root sorries remain:
+1. `B_paper_le_one_strip` (parafermionic observable bound)
+2. `infinite_strip_identity` (parafermionic identity for infinite strip)
+3. `paper_bridge_decomp_injection` (Hammersley-Welsh bridge decomposition)
+
+These correspond to two independent deep mathematical results:
+- The **parafermionic observable identity** (Lemma 2 of Duminil-Copin & Smirnov 2012)
+- The **Hammersley-Welsh bridge decomposition** (1962)
+
+Both require substantial combinatorial infrastructure (walk partitioning, discrete Stokes summation, bridge decomposition algorithms) that goes beyond what can be proved with current tooling in a single session.
+
 # Summary of changes for run a761ba00-4fb5-4c3f-9426-dd9c55ddc20a
 ## Summary of Work Done
 

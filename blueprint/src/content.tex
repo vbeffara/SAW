@@ -6188,3 +6188,44 @@ s support,
 \begin{proof}\leanok
   Computed in \texttt{SAWStripT1Exact.lean} using the path graph structure.
 \end{proof}
+
+%% ===== Alternative proof path (SAWMainNew.lean) =====
+
+\section{Alternative proof path}\label{sec:alt-proof}
+
+\begin{lemma}[Bridge sigma sum $\leq Z$]\label{lem:bridge-sigma-sum}
+\lean{paper_bridge_sigma_sum_le_Z}
+\leanok
+  For any finite set $F$ of sigma-type bridges $\bigsqcup_T \mathrm{PaperBridge}(T{+}1)$,
+  $\sum_{b \in F} x_c^{\ell(b)} \leq Z(x_c)$.
+\end{lemma}
+\begin{proof}\leanok
+  Each bridge injects into a SAW from paperStart. Bridges of different widths
+  have different endpoint diagCoord, so the combined injection is also injective.
+  The sum is therefore bounded by $Z(x_c) = \sum_n c_n x_c^n$.
+\end{proof}
+
+\begin{lemma}[Bridge sum $\leq Z$ (direct)]\label{lem:bridge-sum-Z-direct}
+\lean{paper_bridge_sum_le_Z_direct}
+\leanok
+  $\sum_{T < N} B^{x_c}_{T+1} \leq Z(x_c)$ when $Z(x_c) < \infty$.
+\end{lemma}
+\begin{proof}\leanok
+  Each $B_{T+1}$ is a summable tsum (from \texttt{paper\_bridge\_summable\_of\_Z}).
+  Approximate each by finite sums, combine into a sigma-type Finset,
+  and use Lemma~\ref{lem:bridge-sigma-sum}.
+\end{proof}
+
+\begin{theorem}[$Z(x_c) = \infty$ (direct)]\label{thm:Z-xc-diverges-direct}
+\lean{Z_xc_diverges_direct}
+\uses{lem:infinite-strip-identity, lem:bridge-sum-Z-direct}
+  $Z(x_c) = \infty$.
+\end{theorem}
+\begin{proof}
+  From the infinite strip identity (Lemma~\ref{lem:infinite-strip-identity}),
+  derive the bridge recurrence $B_T \leq \alpha B_{T+1}^2 + B_{T+1}$.
+  This gives $B_T \geq c/T$ for all $T \geq 1$.
+  Assuming $Z(x_c) < \infty$ for contradiction, bridge summability follows
+  from Lemma~\ref{lem:bridge-sum-Z-direct}, contradicting the harmonic divergence
+  $\sum c/T = \infty$. \textbf{Status: sorry} (depends on infinite\_strip\_identity).
+\end{proof}
