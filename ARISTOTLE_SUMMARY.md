@@ -1,3 +1,51 @@
+# Summary of changes for run 91f45a05-1418-4f9c-8c4f-339478d0f47f
+## Summary of work done
+
+### New mathematical content
+
+#### `RequestProject/SAWWalkPartition.lean` (sorry-free)
+Four fully proved lemmas providing walk partition infrastructure for the vertex relation:
+
+1. **`diagCoord_adj_bound`**: Adjacent vertices on the hex lattice have diagonal coordinate (x+y) differing by at most 1.
+2. **`false_vertex_adj`**: Complete neighbor classification for FALSE sublattice vertices — neighbors are exactly (x,y,true), (x+1,y,true), (x,y+1,true).
+3. **`true_vertex_adj`**: Complete neighbor classification for TRUE sublattice vertices — neighbors are exactly (x,y,false), (x-1,y,false), (x,y-1,false).
+4. **`saw_count_zero`**: c₀ = 1 (the only 0-step SAW is the trivial walk).
+
+#### `RequestProject/SAWHWWalkSplit.lean` (sorry-free)
+Six fully proved results providing walk splitting infrastructure for the Hammersley-Welsh bridge decomposition:
+
+1. **`walk_min_diagCoord`** (definition): The minimum diagonal coordinate over all vertices in a walk's support.
+2. **`walk_min_diagCoord_le_start`**: The minimum diagCoord is at most the start vertex's diagCoord.
+3. **`walk_min_diagCoord_bound`**: Every vertex in the walk has diagCoord ≥ the minimum.
+4. **`walk_min_diagCoord_achieved`**: The minimum diagCoord is achieved by some vertex in the support.
+5. **`saw_count_one`**: c₁ = 3 (each 1-step SAW goes to one of the origin's 3 neighbors).
+6. **`saw_count_two`**: c₂ = 6 (from each neighbor, 2 further non-origin neighbors exist).
+
+### Blueprint updates: `blueprint/src/content.tex`
+Added two new sections with 10 blueprint entries:
+- "Walk partition infrastructure" section with 6 entries (diagCoord bound, neighbor classifications, c₀, c₁, c₂)
+- "Walk splitting infrastructure" section with 4 entries (walk_min_diagCoord definition and 3 properties)
+All entries include `\lean{}`, `\leanok`, `\uses{}` annotations and proof descriptions.
+
+### Proof status documentation: `PROOF_STATUS.md`
+Comprehensive update documenting:
+- The three remaining sorry statements and their interdependencies
+- What is proved vs. missing for each sorry chain
+- The complete list of sorry-free results including new additions
+- Updated file dependency map
+
+### Architecture analysis
+
+The project has exactly 3 sorry statements blocking the main theorem `connective_constant_eq`:
+
+1. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean:385) — the core strip identity from the parafermionic observable (Lemma 2)
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean:49) — the infinite strip version of Lemma 2
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean:258) — the Hammersley-Welsh bridge decomposition
+
+Sorries 1 and 2 form one independent chain (parafermionic observable); Sorry 3 is a separate chain (combinatorial decomposition). The new files provide infrastructure toward both chains: the neighbor classification and diagCoord bounds are needed for the vertex relation (Sorry 1/2), while the walk splitting lemmas are needed for the bridge decomposition (Sorry 3).
+
+The algebraic ingredients for the vertex relation (pair_cancellation, triplet_cancellation, boundary_cos_pos) are all fully proved. The remaining gap for Sorries 1/2 is the combinatorial walk partition into pairs/triplets at each vertex and the discrete Stokes summation. For Sorry 3, the remaining gap is the bridge decomposition algorithm (half-plane walk induction on width) and its injectivity proof.
+
 # Summary of changes for run 40664762-fb83-494f-aab8-3bd8adf43aec
 ## Summary of work done
 

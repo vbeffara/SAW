@@ -6278,3 +6278,111 @@ s support,
   The series $\sum \rho^{\lfloor n/m \rfloor}$ converges (it is
   dominated by $m \cdot \sum_q \rho^q$ which is a geometric series).
 \end{proof}
+
+\section{Walk partition infrastructure (proved)}\label{sec:walk-partition}
+
+\begin{lemma}[DiagCoord adjacency bound]\label{lem:diagcoord-adj}
+\lean{diagCoord_adj_bound}
+\leanok
+\uses{def:hex_lattice}
+  Adjacent vertices on the hexagonal lattice have diagonal coordinate
+  $x + y$ differing by at most~$1$: if $v \sim w$ then $|d(w) - d(v)| \leq 1$.
+\end{lemma}
+\begin{proof}\leanok
+  Case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[FALSE vertex neighbors]\label{lem:false-neighbors}
+\lean{false_vertex_adj}
+\leanok
+\uses{def:hex_lattice}
+  The neighbors of a FALSE vertex $(x,y,\mathtt{false})$ are exactly
+  $(x,y,\mathtt{true})$, $(x{+}1,y,\mathtt{true})$, $(x,y{+}1,\mathtt{true})$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation from the adjacency definition.
+\end{proof}
+
+\begin{lemma}[TRUE vertex neighbors]\label{lem:true-neighbors}
+\lean{true_vertex_adj}
+\leanok
+\uses{def:hex_lattice}
+  The neighbors of a TRUE vertex $(x,y,\mathtt{true})$ are exactly
+  $(x,y,\mathtt{false})$, $(x{-}1,y,\mathtt{false})$, $(x,y{-}1,\mathtt{false})$.
+\end{lemma}
+\begin{proof}\leanok
+  Direct computation from the adjacency definition.
+\end{proof}
+
+\begin{lemma}[SAW count $c_0 = 1$]\label{lem:c0}
+\lean{saw_count_zero}
+\leanok
+\uses{def:saw}
+  The number of $0$-step self-avoiding walks is $c_0 = 1$.
+\end{lemma}
+\begin{proof}\leanok
+  The only $0$-step walk is the trivial walk at the origin.
+\end{proof}
+
+\begin{lemma}[SAW count $c_1 = 3$]\label{lem:c1}
+\lean{saw_count_one}
+\leanok
+\uses{def:saw,lem:false-neighbors}
+  The number of $1$-step self-avoiding walks is $c_1 = 3$.
+\end{lemma}
+\begin{proof}\leanok
+  Each $1$-step walk goes to one of the $3$ neighbors of the origin.
+\end{proof}
+
+\begin{lemma}[SAW count $c_2 = 6$]\label{lem:c2}
+\lean{saw_count_two}
+\leanok
+\uses{def:saw,lem:false-neighbors,lem:true-neighbors}
+  The number of $2$-step self-avoiding walks is $c_2 = 6$.
+\end{lemma}
+\begin{proof}\leanok
+  From each of the $3$ neighbors, there are $2$ further neighbors
+  that are not the origin, giving $3 \times 2 = 6$.
+\end{proof}
+
+\section{Walk splitting infrastructure (proved)}\label{sec:walk-split}
+
+\begin{definition}[Walk minimum diagCoord]\label{def:walk-min-diag}
+\lean{walk_min_diagCoord}
+\leanok
+\uses{def:hex_lattice}
+  The minimum diagonal coordinate $\min\{d(v) : v \in \gamma\}$
+  over all vertices in the support of a walk~$\gamma$.
+\end{definition}
+
+\begin{lemma}[Min diagCoord $\leq$ start]\label{lem:min-diag-start}
+\lean{walk_min_diagCoord_le_start}
+\leanok
+\uses{def:walk-min-diag}
+  The minimum diagCoord of a walk is at most the diagCoord of its starting vertex.
+\end{lemma}
+\begin{proof}\leanok
+  The starting vertex is in the support.
+\end{proof}
+
+\begin{lemma}[Min diagCoord bounds all vertices]\label{lem:min-diag-bound}
+\lean{walk_min_diagCoord_bound}
+\leanok
+\uses{def:walk-min-diag}
+  For every vertex $u$ in the support of a walk~$\gamma$,
+  $\texttt{walk\_min\_diagCoord}(\gamma) \leq d(u)$.
+\end{lemma}
+\begin{proof}\leanok
+  The minimum of a list is at most any element of the list.
+\end{proof}
+
+\begin{lemma}[Min diagCoord is achieved]\label{lem:min-diag-achieved}
+\lean{walk_min_diagCoord_achieved}
+\leanok
+\uses{def:walk-min-diag}
+  There exists a vertex in the support of~$\gamma$ whose diagCoord
+  equals $\texttt{walk\_min\_diagCoord}(\gamma)$.
+\end{lemma}
+\begin{proof}\leanok
+  The minimum of a non-empty list is achieved.
+\end{proof}

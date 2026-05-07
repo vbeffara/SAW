@@ -4,39 +4,50 @@
 `connective_constant_eq` in `SAWFinal.lean`:
 μ = √(2+√2) where μ is the connective constant of the hexagonal lattice.
 
-**Status: PROVED modulo 2 independent sorry chains.**
+**Status: PROVED modulo 3 sorry statements in 2 independent sorry chains.**
 
 ## Sorry Chain 1: Parafermionic Observable (Strip Identity)
 
-**Root sorry:** `B_paper_le_one_strip` in `SAWStripIdentityCorrect.lean` (line 385)
-and `infinite_strip_identity` in `SAWRecurrenceProof.lean` (line 49).
+### Sorry 1: `B_paper_le_one_strip` in `SAWStripIdentityCorrect.lean` (line 385)
+B_paper(T,L,xc) ≤ 1 for the finite strip S_{T,L}.
 
-These are two formulations of the same mathematical result (Lemma 2 of
-Duminil-Copin & Smirnov 2012). The proof requires:
-1. The vertex relation (Lemma 1): at each vertex v of the strip,
-   (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0.
-   - **Algebraic ingredients proved**: `pair_cancellation` and `triplet_cancellation`
-   - **Missing**: combinatorial walk partition into pairs/triplets
-2. Discrete Stokes: summing vertex relation over all vertices, interior
-   mid-edges cancel. **Abstract theorem proved** (`discrete_stokes_abstract`).
-3. Boundary evaluation: winding computation for boundary mid-edges.
-   **Missing**: winding formalization for walks in strips.
-4. Sign analysis: all non-B boundary contributions are non-negative.
-   **Boundary positivity proved** (`boundary_cos_pos`).
+### Sorry 2: `infinite_strip_identity` in `SAWRecurrenceProof.lean` (line 49)
+1 = c_α · A_inf(T,xc) + xc · paper_bridge_partition(T,xc).
+
+These are two formulations of Lemma 2 of Duminil-Copin & Smirnov (2012).
+Sorry 1 implies Sorry 2 (by taking limits), but the code structure
+currently treats them as independent.
+
+**What is proved:**
+- Algebraic identities: pair_cancellation, triplet_cancellation
+- Abstract discrete Stokes theorem (discrete_stokes_abstract)
+- Direction vector computations at hex vertices
+- Boundary phase analysis (boundary_cos_pos)
+- xc properties, strip domain definitions
+- B_paper ≤ 1 follows from infinite_strip_identity (SAWParafermionicProof.lean)
+- Bridge recurrence follows from infinite_strip_identity + cutting argument
+
+**What is missing:**
+- The combinatorial walk partition into pairs/triplets at each vertex
+- The discrete Stokes summation for the hex lattice strip
+- Winding evaluation for boundary mid-edges
 
 ## Sorry Chain 2: Hammersley-Welsh Decomposition
 
-**Root sorry:** `paper_bridge_decomp_injection` in `SAWPaperChain.lean` (line 258).
+### Sorry 3: `paper_bridge_decomp_injection` in `SAWPaperChain.lean` (line 258)
+∑_{n≤N} c_n x^n ≤ 2 · (∏_{T=1}^N (1+B_T(x)))²
 
-This is the classical bridge decomposition of self-avoiding walks. The proof
-requires:
-1. Half-plane walk decomposition by strong induction on width.
-2. General walk splitting at the first vertex of maximal diagonal excursion.
-3. Injectivity of the reverse procedure.
-4. Weight accounting.
+**What is proved:**
+- Bridge decay: B_T(x) ≤ (x/xc)^T (uses Sorry 1)
+- Product convergence: ∏(1+B_T(x)) < ∞ for x < xc
+- Summability framework: Z(x) < ∞ follows from the injection + decay
+- Bridge positivity, bridge-to-SAW injection bounds
 
-**Bridge decay, product convergence, and summability argument all proved.**
-Only the decomposition algorithm and its injectivity remain.
+**What is missing:**
+- The bridge decomposition algorithm (half-plane walk induction on width)
+- General walk splitting at first vertex of minimal diagCoord
+- Injectivity of the decomposition
+- Weight accounting (walk length = sum of bridge lengths + skips)
 
 ## Proved Results (sorry-free)
 
@@ -52,10 +63,24 @@ Only the decomposition algorithm and its injectivity remain.
 - Triplet cancellation: 1 + x_c·j·conj(λ) + x_c·conj(j)·λ = 0
 - Identity x_c⁻¹ = 2cos(π/8)
 
-### New: Iterated submultiplicativity (`SAWVertexRelation.lean`)
+### Iterated submultiplicativity (`SAWVertexRelation.lean`)
 - c(k·m) ≤ c(m)^k (`saw_count_mul_le_pow`)
 - c(n) ≤ M(m) · c(m)^⌊n/m⌋ (`saw_count_submult_bound`)
 - Z(x) < ∞ when ∃m: c(m)·x^m < 1 (`partition_summable_of_small_root`)
+
+### Walk partition infrastructure (`SAWWalkPartition.lean`) — NEW
+- DiagCoord adjacency bound: |d(w)-d(v)| ≤ 1 (`diagCoord_adj_bound`)
+- FALSE vertex neighbors: explicit 3-element list (`false_vertex_adj`)
+- TRUE vertex neighbors: explicit 3-element list (`true_vertex_adj`)
+- SAW count c_0 = 1 (`saw_count_zero`)
+
+### Walk splitting infrastructure (`SAWHWWalkSplit.lean`) — NEW
+- Walk minimum diagCoord: definition and basic properties
+- Min diagCoord ≤ start (`walk_min_diagCoord_le_start`)
+- Min diagCoord bounds all vertices (`walk_min_diagCoord_bound`)
+- Min diagCoord is achieved (`walk_min_diagCoord_achieved`)
+- SAW count c_1 = 3 (`saw_count_one`)
+- SAW count c_2 = 6 (`saw_count_two`)
 
 ### Strip infrastructure
 - PaperBridge, PaperInfStrip definitions
@@ -84,19 +109,16 @@ Only the decomposition algorithm and its injectivity remain.
 ```
 SAW.lean                   → Core definitions and algebraic identities
   SAWSubmult.lean           → Submultiplicativity c_{n+m} ≤ c_n c_m
-    SAWVertexRelation.lean  → Iterated submultiplicativity bounds (NEW, sorry-free)
+    SAWVertexRelation.lean  → Iterated submultiplicativity bounds
+    SAWWalkPartition.lean   → Walk partition helpers (NEW)
+    SAWHWWalkSplit.lean     → Walk splitting helpers (NEW)
     SAWMain.lean            → Fekete's lemma, connective constant
       SAWBridge.lean        → Partition function, cc_eq_inv_of_partition_radius
         SAWBridgeFix.lean   → OriginBridge, PaperBridge
-          SAWStripIdentityCorrect.lean → B_paper ≤ 1 [SORRY]
+          SAWStripIdentityCorrect.lean → B_paper ≤ 1 [SORRY 1]
             SAWDiagProof.lean → Bridge partial sums ≤ 1/xc
-              SAWPaperChain.lean → Main theorem assembly
-                SAWFinal.lean → connective_constant_eq
+              SAWCuttingProof.lean → Cutting argument
+                SAWRecurrenceProof.lean → Bridge recurrence [SORRY 2]
+                  SAWPaperChain.lean → Main theorem assembly [SORRY 3]
+                    SAWFinal.lean → connective_constant_eq
 ```
-
-### Sorry dependency
-- `B_paper_le_one_strip` → `B_paper_le_one_direct` → `paper_bridge_partial_sum_le`
-  → `bridge_pair_summable` → `cutting_argument_proved` → `bridge_recurrence_proved`
-  → `Z_xc_diverges_corrected` → `connective_constant_eq_corrected`
-- `infinite_strip_identity` → `bridge_diff_eq` → `bridge_recurrence_proved` (same chain)
-- `paper_bridge_decomp_injection` → `hw_summable_corrected` → `connective_constant_eq_corrected`
