@@ -3330,7 +3330,7 @@ and lemmas provide the formal skeleton for this proof.
 \end{definition}
 
 \begin{lemma}[FALSE same-cell direction]\label{lem:hex_dir_false}
-\lean{hexDir_false_same}
+\lean{hexDir_ff_tt}
 \leanok
 \uses{def:hex_dir}
   $\texttt{hexDir}((x,y,\text{false}), (x,y,\text{true})) = 1$.
@@ -3340,7 +3340,7 @@ and lemmas provide the formal skeleton for this proof.
 \end{proof}
 
 \begin{lemma}[TRUE same-cell direction]\label{lem:hex_dir_true}
-\lean{hexDir_true_same}
+\lean{hexDir_tt_ff}
 \leanok
 \uses{def:hex_dir}
   $\texttt{hexDir}((x,y,\text{true}), (x,y,\text{false})) = -1$.
@@ -6112,7 +6112,7 @@ s support,
 \subsection{Vertex relation infrastructure}
 
 \begin{lemma}[Interior edge cancellation]\label{lem:interior-cancel}
-\lean{interior_edge_cancel'}
+\lean{interior_edge_cancellation}
 \leanok
   For any edge $(v,w)$ and complex value $F$,
   $(\text{embed}(w) - \text{embed}(v)) \cdot F + (\text{embed}(v) - \text{embed}(w)) \cdot F = 0$.
@@ -6123,7 +6123,7 @@ s support,
 \end{proof}
 
 \begin{lemma}[Right boundary direction]\label{lem:right-dir}
-\lean{right_boundary_dir}
+\lean{right_boundary_hexDir}
 \leanok
   The direction from FALSE$(x,y)$ to TRUE$(x,y)$ is $+1$.
 \end{lemma}
@@ -6239,7 +6239,7 @@ s support,
 \section{Iterated submultiplicativity (proved)}\label{sec:submult-iter}
 
 \begin{lemma}[Iterated submultiplicativity]\label{lem:submult-iter}
-\lean{saw_count_mul_le_pow}
+\lean{saw_count_iter_submult}
 \leanok
 \uses{lem:submult}
   For all $m, k \in \mathbb{N}$: $c_{km} \leq c_m^k$.
@@ -6250,8 +6250,20 @@ s support,
   \leq c_m^k \cdot c_m = c_m^{k+1}$.
 \end{proof}
 
+\begin{lemma}[Submultiplicativity with remainder]\label{lem:submult-remainder}
+\lean{saw_count_submult_with_remainder}
+\leanok
+\uses{lem:submult-iter}
+  For all $m, q, r \in \mathbb{N}$:
+  $c_{qm+r} \leq c_m^q \cdot c_r$.
+\end{lemma}
+\begin{proof}\leanok
+  $c_{qm+r} \leq c_{qm} \cdot c_r \leq c_m^q \cdot c_r$ by
+  submultiplicativity and Lemma~\ref{lem:submult-iter}.
+\end{proof}
+
 \begin{lemma}[General submultiplicativity bound]\label{lem:submult-bound}
-\lean{saw_count_submult_bound}
+\lean{saw_count_div_mod_bound}
 \leanok
 \uses{lem:submult-iter}
   For all $m \geq 1$ and $n \in \mathbb{N}$:
@@ -6265,7 +6277,7 @@ s support,
 \end{proof}
 
 \begin{theorem}[Summability from root bound]\label{thm:summable-root}
-\lean{partition_summable_of_small_root}
+\lean{partition_summable_of_geometric}
 \leanok
 \uses{lem:submult-bound}
   If $0 < x$ and there exists $m \geq 1$ with $c_m \cdot x^m < 1$,

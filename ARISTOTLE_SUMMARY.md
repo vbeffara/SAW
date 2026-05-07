@@ -1,3 +1,98 @@
+# Summary of changes for run 75add4e5-eff1-41f5-9bda-32b97e6e5f88
+## Summary of Changes
+
+### New File: `RequestProject/SAWObservableNew.lean`
+Created a new file providing **direction vector infrastructure** for the parafermionic observable proof. All lemmas are fully proved (no sorry's):
+
+1. **`hexDir`**: Direction vector D(v,w) = embed(w) - embed(v) for hex lattice edges
+2. **`hexDir_tt_ff`**: Direction from TRUE(x,y) to FALSE(x,y) is -1
+3. **`hexDir_ff_tt`**: Direction from FALSE(x,y) to TRUE(x,y) is +1
+4. **`hexDir_start`**: Direction from paperStart to hexOrigin is -1
+5. **`hexDir_neg`**: D(w,v) = -D(v,w) for all vertex pairs
+6. **`interior_edge_cancellation`**: D(v,w)·f + D(w,v)·f = 0 — the key cancellation for the discrete Stokes argument
+7. **`right_boundary_hexDir`** and **`left_boundary_hexDir`**: Boundary edge directions (+1 and -1)
+
+These formalize the core of the discrete Stokes telescoping: interior mid-edges cancel because opposite direction vectors sum to zero.
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive rewrite documenting:
+- The exact proof architecture (which sorry implies what)
+- Detailed analysis of what's proved vs. missing for each sorry
+- Clear enumeration of the 3 remaining sorry's and their mathematical content
+- File organization and import structure
+
+### Updated: `blueprint/src/content.tex`
+Fixed `\lean{}` references to point to correct Lean declaration names:
+- `hexDir_false_same` → `hexDir_ff_tt` (proved in SAWObservableNew.lean)
+- `hexDir_true_same` → `hexDir_tt_ff` (proved in SAWObservableNew.lean)
+- `interior_edge_cancel'` → `interior_edge_cancellation` (proved in SAWObservableNew.lean)
+- `right_boundary_dir` → `right_boundary_hexDir` (proved in SAWObservableNew.lean)
+
+### Remaining Sorry's in the Main Proof Chain
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) depends on exactly **3 sorry's** in **2 independent chains**:
+
+**Chain 1 — Parafermionic Observable (Lemma 2):**
+1. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean, line 385) — B_paper(T,L,xc) ≤ 1
+2. `infinite_strip_identity` (SAWRecurrenceProof.lean, line 49) — 1 = c_α·A_inf + xc·B
+
+Both require formalizing the **vertex relation** (pair/triplet walk partition at each vertex) and the **discrete Stokes summation** for the hex lattice strip, plus the **boundary winding evaluation**. The algebraic ingredients (pair_cancellation, triplet_cancellation) are proved. The direction vector infrastructure (hexDir, interior_edge_cancellation) is now also proved. What remains is the combinatorial walk grouping and the winding computation.
+
+**Chain 2 — Hammersley-Welsh Decomposition:**
+3. `paper_bridge_decomp_injection` (SAWPaperChain.lean, line 258) — ∑ c_n x^n ≤ 2·(∏(1+B_T))²
+
+This requires the half-plane walk decomposition by induction on width, the bridge extraction algorithm, translation invariance, and injectivity of the reconstruction. Walk splitting infrastructure (takeUntil, dropUntil) exists but the full decomposition remains to be formalized.
+
+### What Was NOT Changed
+- No existing definitions or theorems were renamed or reorganized
+- The proof chain structure remains the same
+- All pre-existing files compile without modification
+- The project builds successfully with `lake build`
+
+# Summary of changes for run 9c5e2b73-f975-472f-b973-7c6decd7e3f9
+## Summary of Changes
+
+### New File: `RequestProject/SAWIterSubmult.lean`
+Created a new file formalizing **iterated submultiplicativity** and **geometric summability** — key infrastructure for the proof of the main theorem. All 4 theorems are fully proved (no sorry's):
+
+1. **`saw_count_iter_submult`**: c_{km} ≤ c_m^k — iterated submultiplicativity by induction on k
+2. **`saw_count_submult_with_remainder`**: c_{qm+r} ≤ c_m^q · c_r — with remainder term
+3. **`saw_count_div_mod_bound`**: c_n ≤ c_m^{⌊n/m⌋} · c_{n%m} — division-mod bound
+4. **`partition_summable_of_geometric`**: If c_m · x^m < 1 then Z(x) = Σ c_n x^n < ∞ — summability from a geometric root bound
+
+These formalize the standard argument that connects submultiplicativity to summability of the partition function, and correspond to Sections 3 of SAW.tex (the proof of Theorem 1).
+
+### Blueprint Updates: `blueprint/src/content.tex`
+- Updated `\lean{}` references for iterated submultiplicativity lemmas to point to the new proved declarations
+- Added new entry for `saw_count_submult_with_remainder` (Lemma: Submultiplicativity with remainder)
+- All blueprint entries for these lemmas now have `\leanok` for both statement and proof
+
+### Documentation: `PROOF_STATUS.md`
+Updated the proof status document to reflect:
+- The newly proved iterated submultiplicativity results
+- Clear enumeration of the 3 remaining sorry's in the main proof chain
+- Organization of the file structure
+
+### Remaining Sorry's in the Main Proof Chain
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) depends on exactly **3 sorry's** in **2 independent sorry chains**:
+
+**Chain 1 — Parafermionic Observable (Lemma 2 of the paper):**
+1. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1
+2. `infinite_strip_identity` (SAWRecurrenceProof.lean) — 1 = c_α·A_inf + xc·B
+
+These both require formalizing the vertex relation (pair/triplet walk partition at each vertex) and the discrete Stokes summation. The algebraic ingredients (pair_cancellation, triplet_cancellation, boundary_cos_pos) are all proved.
+
+**Chain 2 — Hammersley-Welsh Decomposition:**
+3. `paper_bridge_decomp_injection` (SAWPaperChain.lean) — the counting inequality for the upper bound
+
+This requires the half-plane walk decomposition by induction on width and the injectivity argument. Infrastructure for walk splitting, translation, and bridge definitions exists but the full decomposition remains to be formalized.
+
+### What Was NOT Changed
+- No existing definitions or theorems were renamed or reorganized
+- No existing files were modified (except the blueprint and status docs)
+- The proof chain structure remains the same
+
 # Summary of changes for run 91f45a05-1418-4f9c-8c4f-339478d0f47f
 ## Summary of work done
 
