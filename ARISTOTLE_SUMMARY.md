@@ -1,3 +1,59 @@
+# Summary of changes for run d543471e-d29e-43ed-bdab-3b86d2a1d354
+## Summary of Changes
+
+### New File: `RequestProject/SAWVertexRelKey.lean`
+Created a new file providing **key algebraic identities for the parafermionic observable** vertex relation. All lemmas are fully proved (no sorry's):
+
+1. **`two_xc_cos_pi_eight_eq_one`**: The fundamental identity 2·xc·cos(π/8) = 1, connecting the critical fugacity to the hex lattice geometry. Uses Mathlib's `Real.cos_pi_div_eight`.
+
+2. **`xc_inv_eq_two_cos_pi_eight`**: Equivalent formulation xc⁻¹ = 2·cos(π/8).
+
+3. **`starting_vertex_relation`**: The triplet cancellation at the starting vertex: -1 + 2·xc·cos(π/8) = 0. This shows that the trivial walk contribution (-1) plus the two one-step walk contributions cancel.
+
+4. **`cos_three_pi_eight_eq`**: cos(3π/8) = sin(π/8).
+
+5. **`c_alpha_eq_sin`**: c_alpha = sin(π/8).
+
+6. **`left_boundary_phase`**: cos(σπ) = -c_alpha, computing the boundary phase for left boundary mid-edges.
+
+7. **`right_boundary_phase`**: cos(σ·0) = 1, computing the boundary phase for right boundary mid-edges.
+
+8. **`boundary_sum_structure`**: Abstract lemma: if 0 = -1 + B + c_α·A with A ≥ 0, then B ≤ 1. This is the key extraction step from the discrete Stokes identity to the B_paper ≤ 1 bound.
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive rewrite with accurate documentation of:
+- The exact proof architecture (dependency tree of the main theorem)
+- Detailed analysis of what's proved vs. missing for each sorry
+- Clear enumeration of the 3 remaining sorry's and their mathematical content
+- Note that the alternative proof path in SAWMainNew.lean (avoiding HW decomposition via submultiplicativity alone) is **incomplete**: `hw_summable_direct` cannot be proved from submultiplicativity + Z(xc)=∞ alone — the upper bound μ ≤ 1/xc genuinely requires either the HW decomposition or an equivalent argument.
+
+### Updated: `blueprint/src/content.tex`
+Added three new proved lemmas to the blueprint:
+- `lem:two_xc_cos` — the identity 2xc·cos(π/8) = 1
+- `lem:start_vertex_rel` — the starting vertex triplet cancellation
+- `lem:boundary_sum` — abstract boundary sum bound
+
+### Remaining Sorry's
+
+The main theorem `connective_constant_eq` (μ = √(2+√2)) depends on exactly **3 sorry's** in **2 independent chains**:
+
+**Chain 1 — Parafermionic Observable (Lemma 2):**
+1. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean, line 385)
+2. `infinite_strip_identity` (SAWRecurrenceProof.lean, line 49)
+
+Both require formalizing the **vertex relation** (walk pair/triplet partition at each vertex) and the **discrete Stokes summation** for the hex lattice strip, plus the **boundary winding evaluation**. The algebraic core is fully proved (pair_cancellation, triplet_cancellation, two_xc_cos_pi_eight_eq_one, boundary_sum_structure). What remains is the combinatorial walk grouping infrastructure.
+
+**Chain 2 — Hammersley-Welsh Decomposition:**
+3. `paper_bridge_decomp_injection` (SAWPaperChain.lean, line 258)
+
+Requires the half-plane walk decomposition by induction on width, bridge extraction, and injectivity of the reconstruction. Walk splitting infrastructure (takeUntil, dropUntil, hexShift) exists but the full decomposition remains to be formalized.
+
+### What Was NOT Changed
+- No existing definitions or theorems were renamed or reorganized
+- The proof chain structure remains the same
+- All pre-existing files compile without modification
+- The project builds successfully with `lake build`
+
 # Summary of changes for run 75add4e5-eff1-41f5-9bda-32b97e6e5f88
 ## Summary of Changes
 

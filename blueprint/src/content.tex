@@ -336,6 +336,49 @@ We set $x_c := 1/\sqrt{2+\sqrt{2}}$ and $j = e^{i2\pi/3}$.
 \leanok
 \end{proof}
 
+\begin{lemma}[$2x_c\cos(\pi/8)=1$]\label{lem:two_xc_cos}
+\lean{two_xc_cos_pi_eight_eq_one}
+\leanok
+\uses{def:xc}
+  The fundamental identity connecting the critical fugacity to the hexagonal geometry:
+  $2x_c \cos(\pi/8) = 1$.
+  Equivalently, $x_c^{-1} = 2\cos(\pi/8)$.
+  This identity encodes the triplet cancellation at the starting vertex.
+\end{lemma}
+\begin{proof}
+\leanok
+  Substitute $x_c = 1/\sqrt{2+\sqrt{2}}$ and $\cos(\pi/8) = \sqrt{2+\sqrt{2}}/2$
+  (Mathlib: \texttt{Real.cos\_pi\_div\_eight}); the product telescopes to $1$.
+\end{proof}
+
+\begin{lemma}[Starting vertex relation]\label{lem:start_vertex_rel}
+\lean{starting_vertex_relation}
+\leanok
+\uses{lem:two_xc_cos}
+  $-1 + 2x_c\cos(\pi/8) = 0$.
+  This is the triplet cancellation at the starting vertex:
+  the trivial walk ($-1$) plus two one-step walks ($+x_c\cos(\pi/8)$ each)
+  cancel at the starting vertex.
+\end{lemma}
+\begin{proof}
+\leanok
+  Immediate from \texttt{two\_xc\_cos\_pi\_eight\_eq\_one}.
+\end{proof}
+
+\begin{lemma}[Boundary sum bound]\label{lem:boundary_sum}
+\lean{boundary_sum_structure}
+\leanok
+\uses{lem:c_alpha_pos}
+  If $0 = -1 + B + c_\alpha A$ with $A \geq 0$, then $B \leq 1$.
+  This is the abstract form of the consequence of the discrete Stokes identity:
+  once the boundary sum is shown to equal zero, the bound on $B$ follows.
+\end{lemma}
+\begin{proof}
+\leanok
+  Since $c_\alpha > 0$ and $A \geq 0$, we have $c_\alpha A \geq 0$,
+  so $B = 1 - c_\alpha A \leq 1$.
+\end{proof}
+
 \begin{lemma}[Positivity of $c_\alpha$]\label{lem:c_alpha_pos}
 \lean{c_alpha_pos}
 \leanok
