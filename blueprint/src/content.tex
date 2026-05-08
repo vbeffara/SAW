@@ -6441,3 +6441,76 @@ s support,
 \begin{proof}\leanok
   The minimum of a non-empty list is achieved.
 \end{proof}
+
+\section{Hammersley--Welsh bridge decomposition}\label{sec:hw-decomp}
+
+The upper bound $\mu \leq \sqrt{2+\sqrt{2}}$ is proved using the
+Hammersley--Welsh bridge decomposition. Every SAW $\gamma$ from the
+origin is decomposed into a sequence of bridges with strictly
+monotone widths. The key counting inequality is:
+\[
+  \sum_{n \leq N} c_n x^n \;\leq\; 2 \prod_{T=1}^{N} (1 + B_T(x))^2.
+\]
+
+\begin{lemma}[Walk weight $\leq$ bridge product]\label{lem:weight-le-product}
+\lean{saw_weight_le_bridge_product}
+\leanok
+  If $0 < x < 1$ and $\sum_i w_i \leq n$, then
+  $x^n \leq \prod_i x^{w_i}$.
+  This is because $x < 1$ implies $x^n$ is decreasing in $n$,
+  and $n \geq \sum w_i$ gives $x^n \leq x^{\sum w_i} = \prod x^{w_i}$.
+\end{lemma}
+\begin{proof}\leanok
+  By \texttt{pow\_le\_pow\_of\_le\_one} and induction on the list of widths.
+\end{proof}
+
+\begin{theorem}[HW counting inequality]\label{thm:hw-counting}
+\lean{paper_bridge_decomp_injection}
+\uses{lem:weight-le-product}
+  For $0 < x < x_c$ and $N \in \mathbb{N}$:
+  \[
+    \sum_{n=0}^{N} c_n x^n \leq 2 \left(\sum_{S \subseteq \{0,\ldots,N-1\}}
+    \prod_{T \in S} B_{T+1}(x)\right)^2.
+  \]
+  \textbf{Status: sorry.} The proof requires:
+  \begin{enumerate}
+    \item Splitting each SAW at the first vertex of minimal diagCoord.
+    \item Recursively extracting bridges from each half-plane walk.
+    \item Showing the decomposition is injective (given first vertex choice).
+    \item Applying the weight bound (Lemma~\ref{lem:weight-le-product}).
+  \end{enumerate}
+\end{theorem}
+
+\section{Vertex relation and strip identity}\label{sec:vertex-strip}
+
+The lower bound $\mu \geq \sqrt{2+\sqrt{2}}$ and the bridge recurrence
+both depend on the \emph{strip identity} (Lemma~2 of the paper).
+
+\begin{theorem}[Strip identity ($B \leq 1$)]\label{thm:B-le-one}
+\lean{B_paper_le_one_strip}
+\uses{thm:pair_cancel, thm:triplet_cancel, lem:boundary_cos}
+  For the finite strip $S_{T,L}$ with $T \geq 1$, $L \geq 1$:
+  $B_{\text{paper}}(T,L,x_c) \leq 1$.
+
+  \textbf{Status: sorry.} The proof requires:
+  \begin{enumerate}
+    \item The vertex relation at each interior vertex (pair/triplet cancellation).
+    \item Discrete Stokes: summing vertex relations, interior edges cancel.
+    \item Boundary evaluation: starting mid-edge contributes $-1$,
+          right boundary contributes $B$, other boundaries have positive
+          real part.
+    \item Conclusion: $0 = -1 + B + \text{positive} \Rightarrow B \leq 1$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Infinite strip identity]\label{thm:inf-strip}
+\lean{infinite_strip_identity}
+\uses{thm:B-le-one}
+  For the infinite strip $S_T$ with $T \geq 1$:
+  $1 = c_\alpha \cdot A_{\inf}(T, x_c) + x_c \cdot B(T, x_c)$.
+
+  \textbf{Status: sorry.} Follows from the finite strip identity
+  by taking $L \to \infty$: the escape boundary contribution vanishes,
+  and the left/right boundary partition functions converge monotonically
+  to their infinite-strip limits.
+\end{theorem}

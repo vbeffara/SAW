@@ -1,3 +1,34 @@
+# Summary of changes for run 9be513ea-0cca-4218-817b-011fc38201e2
+## Summary of Changes
+
+### New File: `RequestProject/SAWHWDecompFull.lean`
+Created a new file with two fully proved helper lemmas for the Hammersley-Welsh bridge decomposition (the upper bound μ ≤ √(2+√2)):
+
+1. **`saw_weight_le_bridge_product`** (proved): If the sum of bridge widths ≤ n and 0 < x < 1, then x^n ≤ ∏ x^{width_i}. This is the weight accounting step: when a walk decomposes into bridges whose total length exceeds the walk length, the walk weight is bounded by the product of bridge weights (because x < 1 makes x^n decreasing).
+
+2. **`powerset_prod_eq`** (proved): The powerset-product identity ∑_{S⊆F} ∏_{i∈S} a(i) = ∏_{i∈F} (1 + a(i)). This connects the sum-over-subsets form to the product form in the HW counting inequality.
+
+Both are components needed for `paper_bridge_decomp_injection` (sorry #3).
+
+### Updated: `blueprint/src/content.tex`
+Added two new sections at the end of the blueprint:
+
+- **Section: Hammersley-Welsh bridge decomposition** — States the weight bound lemma (proved, linked to Lean), the HW counting inequality (sorry, with clear statement of what's needed: walk splitting, bridge extraction, injectivity, weight bound), and their relationship.
+
+- **Section: Vertex relation and strip identity** — States B_paper ≤ 1 (sorry, with clear proof outline: vertex relation → discrete Stokes → boundary evaluation → B ≤ 1) and the infinite strip identity (sorry, follows from finite strip identity by taking L → ∞).
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive update documenting the current state of all three sorry chains, the newly proved helpers, and the full proof architecture dependency tree.
+
+### Remaining Sorry's (unchanged from before)
+The main theorem `connective_constant_eq` (μ = √(2+√2)) depends on 3 sorry statements:
+
+1. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — B_paper(T,L,xc) ≤ 1. Requires formalizing the parafermionic observable vertex relation (Lemma 1 of the paper), the discrete Stokes summation over all strip vertices, and boundary evaluation. The algebraic core (pair_cancellation, triplet_cancellation) is proved; the combinatorial walk partitioning into pairs/triplets remains.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — 1 = c_α·A_inf(T) + xc·B(T). Same mathematical content as sorry #1 applied to the infinite strip.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean) — ∑ c_n x^n ≤ 2·(∏(1+B_T))². Requires the half-plane walk bridge decomposition algorithm and its injectivity. The weight bound component is now proved (`saw_weight_le_bridge_product`).
+
 # Summary of changes for run d543471e-d29e-43ed-bdab-3b86d2a1d354
 ## Summary of Changes
 
