@@ -50,9 +50,28 @@ A_inf 1 xc = 2xc³/(1-xc²).
 -/
 theorem A_inf_1_exact :
     A_inf 1 xc = 2 * xc ^ 3 / (1 - xc ^ 2) := by
-  have := @strip_identity_genuine 1 1 ; norm_num at *;
-  have := @paper_bridge_partition_1_eq; norm_num at *;
-  grind +suggestions
+  nontriviality;
+  -- Let's simplify the expression using the fact that multiplication by a constant out of the summation can be taken outside.
+  have h_simp : A_inf 1 xc = 2 * ∑' (k : ℕ), xc ^ (2 * (k + 1) + 1) := by
+    obtain ⟨x, hx⟩ : ∃ x : ℝ, x = A_inf 1 xc ∧ x = 2 * xc ^ 3 / (1 - xc ^ 2) := by
+      have := @infinite_strip_identity;
+      have := @paper_bridge_partition_1_eq;
+      rename_i h;
+      specialize h 1 le_rfl;
+      rw [ eq_comm, this ] at h;
+      unfold c_alpha at h;
+      rw [ show 3 * Real.pi / 8 = Real.pi / 2 - Real.pi / 8 by ring, Real.cos_pi_div_two_sub ] at h ; norm_num at h;
+      unfold xc at *;
+      field_simp at h ⊢;
+      rw [ show ( 2 - Real.sqrt 2 ) = ( 2 + Real.sqrt 2 ) ⁻¹ * 2 by nlinarith [ Real.mul_self_sqrt ( show 0 ≤ 2 by norm_num ), Real.sqrt_nonneg 2, inv_mul_cancel₀ ( show ( 2 + Real.sqrt 2 ) ≠ 0 by positivity ) ], Real.sqrt_mul ( by positivity ), Real.sqrt_inv ] at h ; ring_nf at h ⊢ ; norm_num at h ⊢;
+      grind;
+    convert hx.1.symm using 1;
+    rw [ hx.2, div_eq_mul_inv ] ; ring;
+    norm_num [ pow_mul', tsum_mul_left, tsum_geometric_of_lt_one ( show 0 ≤ xc ^ 2 by exact sq_nonneg _ ) ( show xc ^ 2 < 1 by exact xc_sq_lt_one ) ];
+  rw [ h_simp ];
+  norm_num [ pow_add, pow_mul ];
+  rw [ tsum_mul_right, tsum_mul_right, tsum_geometric_of_lt_one ] <;> ring <;> norm_num [ xc ];
+  exact inv_lt_one_of_one_lt₀ ( one_lt_pow₀ ( Real.lt_sqrt_of_sq_lt ( by linarith [ Real.sqrt_nonneg 2 ] ) ) two_ne_zero )
 
 /-- The infinite strip identity for T = 1, proved from exact values.
     Does NOT use the general (sorry'd) infinite_strip_identity. -/

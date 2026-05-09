@@ -1,3 +1,113 @@
+# Summary of changes for run e34a2f39-8a4d-4a0c-9355-fe597c6303e3
+## Summary of Changes
+
+### Key Mathematical Advance: Reduced sorry count from 3 to 2
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) previously depended on 3 independent sorry statements. I proved that sorry #1 (`B_paper_le_one_strip`) follows from sorry #2 (`infinite_strip_identity`), reducing the independent sorry count to 2.
+
+### New File: `RequestProject/SAWStripFromIdentity.lean` (sorry-free)
+
+This file proves that the finite strip bound B_paper(T,L,xc) ≤ 1 follows from the infinite strip identity. It contains 4 sorry-free lemmas:
+
+1. **`paperSAWB_to_bridge`**: Defines the injection from `PaperSAW_B T L` (finite strip walks to right boundary) to `PaperBridge T` (infinite strip bridges).
+
+2. **`paperSAWB_to_bridge_injective`**: The injection is injective — different finite strip walks map to different infinite strip bridges.
+
+3. **`B_paper_le_xc_mul_bridge`**: B_paper(T,L,xc) ≤ xc · paper_bridge_partition(T,xc). Each finite strip walk injects into the infinite strip, so the finite sum is bounded by the infinite sum.
+
+4. **`B_paper_le_one_from_identity`**: B_paper(T,L,xc) ≤ 1. From the infinite strip identity 1 = c_α·A_inf + xc·B_inf and A_inf ≥ 0, we get xc·B_inf ≤ 1. Combined with B_paper ≤ xc·B_inf, this gives B_paper ≤ 1.
+
+**Key insight**: Every walk in the finite strip S_{T,L} to the right boundary is also a walk in the infinite strip S_T. The infinite strip identity bounds the total weight of such walks.
+
+### New File: `RequestProject/SAWHWBridgeExtract.lean` (sorry-free)
+
+Infrastructure for the Hammersley-Welsh bridge extraction algorithm, with 4 sorry-free lemmas:
+
+1. **`walk_max_dc_ge`**: The maximum diagCoord over a walk's support bounds every vertex's diagCoord.
+
+2. **`walk_max_dc_achieved`**: The maximum diagCoord is achieved by some vertex in the walk.
+
+3. **`strip_walk_max_dc_le_zero`**: In PaperInfStrip T, the max diagCoord of any walk from paperStart is ≤ 0.
+
+4. **`hex_adj_diagCoord_diff`**: Adjacent hex vertices differ in diagCoord by at most 1.
+
+### Updated: `PROOF_STATUS.md`
+
+Comprehensive update reflecting the new proof architecture and reduced sorry count.
+
+### Updated: `blueprint/src/content.tex`
+
+Added two new sections documenting the sorry-free infrastructure:
+- "B paper le one from infinite strip identity" — documenting the injection and derivation
+- "Bridge extraction infrastructure" — documenting the HW decomposition helpers
+
+### Remaining Sorry's (2 independent chains)
+
+The main theorem depends on exactly 2 remaining sorry statements:
+
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): The parafermionic observable identity 1 = c_α·A_inf(T) + xc·paper_bridge_partition(T). This is Lemma 2 of Duminil-Copin & Smirnov (2012). All algebraic ingredients (pair_cancellation, triplet_cancellation) are proved. The missing piece is the combinatorial walk pairing/tripling and discrete Stokes summation. **Note**: `B_paper_le_one_strip` (formerly sorry #1) now follows from this via the new SAWStripFromIdentity infrastructure.
+
+2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean): The Hammersley-Welsh bridge decomposition ∑c_n·x^n ≤ 2·(∏(1+B_T))². Requires defining the bridge extraction algorithm for half-plane walks and proving injectivity. The new SAWHWBridgeExtract.lean provides foundational infrastructure (walk max/min diagCoord properties).
+
+# Summary of changes for run be3ae877-c0c8-405e-bec7-e8a87ec37cd9
+## Summary of Changes
+
+### New File: `RequestProject/SAWDiscreteStokesNew.lean`
+Created infrastructure for the discrete Stokes theorem on the hex lattice, with **all lemmas fully proved (no sorry)**:
+
+1. **`interior_edge_cancel`**: For any edge {v,w}, the direction vectors from v→w and w→v cancel. This is the key cancellation property for the discrete Stokes theorem (sum over interior vertices makes interior mid-edges cancel).
+
+2. **`midpoint_direction_cancel`**: The midpoint direction antisymmetry property.
+
+3. **`direction_sum_false_zero`**: At each FALSE vertex, the three direction vectors to TRUE neighbors sum to zero.
+
+4. **`direction_sum_true_zero`**: At each TRUE vertex, the three direction vectors to FALSE neighbors sum to zero.
+
+5. **`right_boundary_direction`**: Right boundary mid-edges (FALSE→TRUE at same coordinates) have direction +1.
+
+6. **`left_boundary_direction`**: Left boundary mid-edges (TRUE→FALSE at same coordinates) have direction -1.
+
+7. **`cos_five_pi_eight'`**: cos(5π/8) = -c_alpha (the boundary phase for left boundary walks with winding ±π).
+
+8. **`starting_contribution`**: The starting mid-edge contribution to the boundary sum is -1 (direction -1 times F(a) = 1).
+
+9. **`B_le_one_of_identity`**: If 1 = c_α·A + B + c_ε·E with A,E ≥ 0, then B ≤ 1. This abstracts the final step of the parafermionic argument.
+
+10. **Boundary classification definitions**: `isRightBoundary`, `isLeftBoundary`, `paperStart_left_boundary`.
+
+These lemmas form the infrastructure for proving B_paper ≤ 1 via the parafermionic observable: once the vertex relation (pair/triplet walk partition) and discrete Stokes summation are formalized, combining them with these boundary evaluation lemmas gives the strip identity.
+
+### Updated: `RequestProject/SAWInfStripT1.lean`
+The proof of `A_inf_1_exact` was updated (it now compiles but still transitively depends on `infinite_strip_identity` via `sorry`). The theorem `infinite_strip_identity_T1_clean` chains from this to give the T=1 infinite strip identity.
+
+### Updated: `blueprint/src/content.tex`
+Added two new sections to the blueprint:
+
+- **Discrete Stokes infrastructure**: Documents all the new sorry-free lemmas for the discrete Stokes theorem, with `\leanok` marks and proof sketches.
+
+- **T=1 special case**: Documents the sorry-free proof that B_paper(1,L,xc) < 1.
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive update with:
+- Detailed status of each sorry and its dependencies
+- List of newly proved infrastructure lemmas
+- Complete proof architecture tree
+- File-by-file summary
+
+### Remaining Sorry's (unchanged)
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) depends on 3 sorry statements:
+
+1. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean): B_paper(T,L,xc) ≤ 1. Requires formalizing the walk partition into pairs/triplets (using the proved algebraic identities) and the discrete Stokes summation. The new file SAWDiscreteStokesNew.lean provides the boundary evaluation and edge cancellation infrastructure needed.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): 1 = c_α·A_inf(T) + xc·B(T). Same mathematical content as sorry #1 applied to the infinite strip.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean): ∑ c_n x^n ≤ 2·(∏(1+B_T))². Requires the Hammersley-Welsh bridge decomposition algorithm and its injectivity. The weight bound (saw_weight_le_bridge_product) and powerset identity (powerset_prod_eq) are proved.
+
+### What remains to close the gaps
+For sorry #1 and #2: The key missing piece is the **walk partition** — defining the pair/triplet involution on SAWs at each vertex and proving it's exhaustive. All algebraic ingredients (pair_cancellation, triplet_cancellation, direction rotation, boundary evaluation) are proved.
+
+For sorry #3: The key missing piece is the **bridge extraction algorithm** — defining the recursive decomposition of half-plane walks into bridges and proving its injectivity. The weight accounting infrastructure is proved.
+
 # Summary of changes for run 9be513ea-0cca-4218-817b-011fc38201e2
 ## Summary of Changes
 

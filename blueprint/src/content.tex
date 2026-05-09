@@ -6514,3 +6514,204 @@ both depend on the \emph{strip identity} (Lemma~2 of the paper).
   and the left/right boundary partition functions converge monotonically
   to their infinite-strip limits.
 \end{theorem}
+
+\section{Discrete Stokes infrastructure}
+
+The following lemmas form the infrastructure for the discrete Stokes
+theorem on the hexagonal lattice.
+
+\begin{lemma}[Interior edge cancellation]\label{lem:interior-cancel}
+\lean{interior_edge_cancel}
+\leanok
+  For any edge $\{v,w\}$ in the hexagonal lattice, the direction vectors
+  from $v$ to $w$ and from $w$ to $v$ cancel:
+  $(\text{embed}(w) - \text{embed}(v)) + (\text{embed}(v) - \text{embed}(w)) = 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Immediate from algebraic cancellation.
+\end{proof}
+
+\begin{lemma}[Direction sum at FALSE vertex]\label{lem:dir-sum-false}
+\lean{direction_sum_false_zero}
+\leanok
+  At a FALSE vertex $v = (x,y,\mathit{false})$, the three direction
+  vectors to its TRUE neighbors sum to zero:
+  $\sum_{w \sim v} (\text{embed}(w) - \text{embed}(v)) = 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct computation from the hex lattice embedding.
+\end{proof}
+
+\begin{lemma}[Direction sum at TRUE vertex]\label{lem:dir-sum-true}
+\lean{direction_sum_true_zero}
+\leanok
+  At a TRUE vertex $v = (x,y,\mathit{true})$, the three direction
+  vectors to its FALSE neighbors sum to zero.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Boundary phase: $\cos(5\pi/8) = -c_\alpha$]\label{lem:cos-5pi8}
+\lean{cos_five_pi_eight'}
+\leanok
+  $\cos(5\pi/8) = -c_\alpha$. This gives the phase for left boundary
+  walks with winding $\pm\pi$.
+\end{lemma}
+\begin{proof}
+\leanok
+  By the identity $\cos(\pi - \theta) = -\cos(\theta)$.
+\end{proof}
+
+\begin{lemma}[Abstract $B \leq 1$ from identity]\label{lem:B-le-1-abstract}
+\lean{B_le_one_of_identity}
+\leanok
+\uses{def:c-alpha, def:c-eps}
+  If there exist non-negative reals $A, E$ with
+  $1 = c_\alpha \cdot A + B + c_\varepsilon \cdot E$,
+  then $B \leq 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Since $c_\alpha, c_\varepsilon > 0$ and $A, E \geq 0$,
+  we have $B = 1 - c_\alpha A - c_\varepsilon E \leq 1$.
+\end{proof}
+
+\begin{lemma}[Starting mid-edge contribution]\label{lem:starting-contrib}
+\lean{starting_contribution}
+\leanok
+  The contribution of the starting mid-edge to the boundary sum is $-1$:
+  $(\text{embed}(\text{hexOrigin}) - \text{embed}(\text{paperStart})) \cdot 1 = -1$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct computation.
+\end{proof}
+
+\begin{lemma}[Right boundary direction]\label{lem:right-dir}
+\lean{right_boundary_direction}
+\leanok
+  For right boundary mid-edges (FALSE$\to$TRUE at same coordinates),
+  the direction is $+1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\begin{lemma}[Left boundary direction]\label{lem:left-dir}
+\lean{left_boundary_direction}
+\leanok
+  For left boundary mid-edges (TRUE$\to$FALSE at same coordinates),
+  the direction is $-1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\end{proof}
+
+\section{T=1 special case}
+
+\begin{theorem}[$B_{\text{paper}}(1,L,x_c) < 1$]\label{thm:B-1-lt-1}
+\lean{B_paper_1_lt_one'}
+\leanok
+  For $T = 1$ and all $L$: $B_{\text{paper}}(1,L,x_c) < 1$.
+  This is the sorry-free $T{=}1$ case of Theorem~\ref{thm:B-le-one}.
+\end{theorem}
+\begin{proof}
+\leanok
+\uses{lem:bridge-1-summable}
+  In the width-1 strip, the bridge partition function can be computed
+  exactly as $2x_c/(1-x_c^2)$. Then $B_{\text{paper}} \leq x_c \cdot
+  2x_c/(1-x_c^2) = 2x_c^2/(1-x_c^2) < 1$.
+\end{proof}
+
+\section{B paper le one from infinite strip identity (new)}
+
+\begin{lemma}[Injection from finite to infinite strip]
+\label{lem:finite-to-infinite-injection}
+\lean{paperSAWB_to_bridge_injective}
+\leanok
+  There is an injective map from $\text{PaperSAW\_B}(T,L)$ (walks in the
+  finite strip to the right boundary) to $\text{PaperBridge}(T)$ (walks
+  in the infinite strip to the right boundary) that preserves walk length.
+\end{lemma}
+\begin{proof}
+\leanok
+  Map each finite strip walk to the same walk viewed in the infinite strip.
+  The map is injective because a walk is determined by its path.
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}} \leq x_c \cdot B_\infty$]
+\label{lem:B-paper-le-xc-bridge}
+\lean{B_paper_le_xc_mul_bridge}
+\leanok
+  $B_{\text{paper}}(T,L,x_c) \leq x_c \cdot \text{paper\_bridge\_partition}(T,x_c)$.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:finite-to-infinite-injection}
+  Factor out $x_c$ from $B_{\text{paper}} = \sum x_c^{n+1} = x_c \sum x_c^n$.
+  The injection gives $\sum_{\text{finite}} x_c^n \leq \sum_{\text{infinite}} x_c^n$.
+\end{proof}
+
+\begin{lemma}[$B_{\text{paper}} \leq 1$ from infinite strip identity]
+\label{lem:B-paper-le-one-from-identity}
+\lean{B_paper_le_one_from_identity}
+\leanok
+  If the infinite strip identity holds ($1 = c_\alpha A_\infty + x_c B_\infty$),
+  then $B_{\text{paper}}(T,L,x_c) \leq 1$.
+\end{lemma}
+\begin{proof}
+\leanok
+\uses{lem:B-paper-le-xc-bridge}
+  From the identity: $x_c B_\infty = 1 - c_\alpha A_\infty \leq 1$ (since $A_\infty \geq 0$).
+  Combined with $B_{\text{paper}} \leq x_c B_\infty$: $B_{\text{paper}} \leq 1$.
+\end{proof}
+
+\section{Bridge extraction infrastructure (new)}
+
+\begin{lemma}[Max diagCoord bound]
+\label{lem:walk-max-dc-ge}
+\lean{walk_max_dc_ge}
+\leanok
+  For any walk $p$ and vertex $u$ in its support, $\text{diagCoord}(u) \leq \text{walk\_max\_dc}(p)$.
+\end{lemma}
+\begin{proof}
+\leanok
+  By definition of $\text{walk\_max\_dc}$ as foldl max.
+\end{proof}
+
+\begin{lemma}[Max diagCoord achieved]
+\label{lem:walk-max-dc-achieved}
+\lean{walk_max_dc_achieved}
+\leanok
+  The maximum diagCoord is achieved by some vertex in the walk's support.
+\end{lemma}
+\begin{proof}
+\leanok
+  The foldl max over a nonempty list equals some element.
+\end{proof}
+
+\begin{lemma}[Strip walk max diagCoord]
+\label{lem:strip-walk-max-dc}
+\lean{strip_walk_max_dc_le_zero}
+\leanok
+  For a SAW in $\text{PaperInfStrip}(T)$ starting from paperStart,
+  $\text{walk\_max\_dc} \leq 0$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Every vertex in the strip has diagCoord $\leq 0$.
+\end{proof}
+
+\begin{lemma}[Adjacent diagCoord difference]
+\label{lem:hex-adj-diagcoord}
+\lean{hex_adj_diagCoord_diff}
+\leanok
+  Adjacent hex vertices have diagCoord difference at most 1.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case analysis on the adjacency relation.
+\end{proof}
