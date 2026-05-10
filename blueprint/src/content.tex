@@ -6715,3 +6715,70 @@ theorem on the hexagonal lattice.
 \leanok
   Case analysis on the adjacency relation.
 \end{proof}
+
+\section{Bridge length bounds (new)}
+
+\begin{lemma}[Bipartiteness]
+\label{lem:bipartite}
+\lean{hexGraph_adj_flip_bool}
+\leanok
+  Adjacent vertices in hexGraph have different sublattice types:
+  if $v \sim w$ then $w.\mathit{bool} = \lnot v.\mathit{bool}$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[TRUE$\to$FALSE diagCoord change]
+\label{lem:true-false-dc}
+\lean{true_to_false_dc_change}
+\leanok
+  A TRUE$\to$FALSE edge decreases diagCoord by 0 or 1.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[FALSE$\to$TRUE diagCoord change]
+\label{lem:false-true-dc}
+\lean{false_to_true_dc_change}
+\leanok
+  A FALSE$\to$TRUE edge increases diagCoord by 0 or 1.
+\end{lemma}
+\begin{proof}
+\leanok
+  Case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[Tight bridge length bound]
+\label{lem:bridge-tight-length}
+\lean{paper_bridge_length_ge_tight}
+\leanok
+\uses{lem:true-false-dc, lem:false-true-dc, lem:bipartite}
+  A PaperBridge of width $T \geq 1$ has length $\geq 2T-1$.
+  This improves the crude bound $\geq T$ from \texttt{paper\_bridge\_length\_ge}.
+\end{lemma}
+\begin{proof}
+\leanok
+  The walk starts at TRUE (paperStart) and ends at FALSE (diagCoord $= -T$).
+  By bipartiteness, the walk alternates TRUE$\leftrightarrow$FALSE.
+  Each TRUE$\to$FALSE step decreases diagCoord by at most 1.
+  In $n$ steps starting from TRUE, there are $\lceil n/2 \rceil$
+  TRUE$\to$FALSE transitions. The total diagCoord decrease is at most
+  $\lceil n/2 \rceil$. Since we need a decrease of $T$:
+  $\lceil n/2 \rceil \geq T$, so $n \geq 2T-1$.
+\end{proof}
+
+\begin{lemma}[Powerset product identity]
+\label{lem:powerset-prod}
+\lean{Finset.sum_powerset_prod_eq_prod_add_one}
+\leanok
+  For a commutative semiring and a finset $F$:
+  $\sum_{S \subseteq F} \prod_{i \in S} a_i = \prod_{i \in F} (1 + a_i)$.
+\end{lemma}
+\begin{proof}
+\leanok
+  Direct application of Mathlib's \texttt{Finset.prod\_one\_add}.
+\end{proof}

@@ -90,6 +90,6 @@ The powerset product identity:
 lemma Finset.sum_powerset_prod_eq_prod_add_one {α : Type*} [CommSemiring α]
     (F : Finset ι) (a : ι → α) :
     ∑ S ∈ F.powerset, ∏ i ∈ S, a i = ∏ i ∈ F, (1 + a i) := by
-  exact?
+  rw [Finset.prod_one_add]
 
 end

@@ -136,8 +136,8 @@ lemma paper_bridge_partial_sum_le (T : ℕ) (hT : 1 ≤ T)
     (F : Finset (PaperBridge T)) :
     ∑ b ∈ F, xc ^ b.walk.1.length ≤ 1 / xc := by
   have hL : ∃ L : ℕ, 1 ≤ L ∧ ∀ b ∈ F, ∀ v ∈ b.walk.1.support, PaperFinStrip T L v := by
-    have hL_exists : ∀ b ∈ F, ∃ L_b : ℕ, 1 ≤ L_b ∧ ∀ v ∈ b.walk.1.support, PaperFinStrip T L_b v := by
-      exact?;
+    have hL_exists : ∀ b ∈ F, ∃ L_b : ℕ, 1 ≤ L_b ∧ ∀ v ∈ b.walk.1.support, PaperFinStrip T L_b v :=
+      fun b _ => paper_bridge_in_fin_strip T b;
     choose! L hL₁ hL₂ using hL_exists;
     use Finset.sup F L + 1;
     simp_all +decide [ PaperFinStrip ];

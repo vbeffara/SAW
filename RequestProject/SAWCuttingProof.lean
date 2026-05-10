@@ -40,8 +40,8 @@ Summability of A_inf(T) from A_inf(T+1) via the widen injection.
 lemma A_inf_summable_of_succ {T : ℕ}
     (h : Summable (fun s : PaperSAW_A_inf (T + 1) => xc ^ (s.walk.1.length + 1))) :
     Summable (fun s : PaperSAW_A_inf T => xc ^ (s.walk.1.length + 1)) := by
-  have h_inj : Function.Injective (fun s : PaperSAW_A_inf T => PaperSAW_A_inf_widen s) := by
-    exact?;
+  have h_inj : Function.Injective (fun s : PaperSAW_A_inf T => PaperSAW_A_inf_widen s) :=
+    PaperSAW_A_inf_widen_injective T
   convert h.comp_injective h_inj using 1
 
 /-

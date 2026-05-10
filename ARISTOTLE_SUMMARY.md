@@ -1,3 +1,108 @@
+# Summary of changes for run 0d740163-1b1a-4575-95b4-21c302f2c08a
+## Summary of Changes
+
+### New Infrastructure: `SAWObservableStokes.lean` (sorry-free)
+
+Created a new file providing edge direction computations for the hexagonal lattice — the first step toward formalizing the discrete Stokes argument needed for Lemma 2 of the paper:
+
+- **`hexEdgeDirC`**: Direction vector of a hex edge as a complex number (unit length)
+- **`hexEdgeDirC_F_T_same`**: FALSE→TRUE same-coordinate edge has direction 1 (angle 0)
+- **`hexEdgeDirC_T_F_same`**: TRUE→FALSE same-coordinate edge has direction −1 (angle π)
+- **`hexEdgeDirC_sum_zero_false`**: Three direction vectors from a FALSE vertex sum to zero
+- **`hexEdgeDirC_sum_zero_true`**: Three direction vectors from a TRUE vertex sum to zero
+- **`hexEdgeDirC_start`**: Direction from paperStart to hexOrigin is −1
+- **`hexEdgeDirC_antisymm`**: Direction is antisymmetric: dir(v,w) = −dir(w,v)
+
+These lemmas formalize the geometric properties of the hex lattice embedding needed for the vertex relation and discrete Stokes summation.
+
+### Documentation Updated: `PROOF_STATUS.md`
+
+Completely rewritten with:
+- Clear identification of the 3 root sorries and their mathematical content
+- Detailed dependency analysis showing how Sorry #2 (`B_paper_le_one_strip`) feeds into BOTH the lower and upper bounds
+- Complete proof architecture tree
+- New infrastructure section for `SAWObservableStokes.lean`
+- Detailed roadmap for what remains to prove each sorry
+- Classification of non-critical-path sorries
+
+### Build Status
+
+The main theorem `connective_constant_eq_corrected` in `SAWPaperChain.lean` (μ = √(2+√2)) builds successfully with exactly **3 root sorries**:
+
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean:49) — The parafermionic observable identity for the infinite strip
+2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean:385) — B ≤ 1 from Lemma 2
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean:258) — Hammersley-Welsh decomposition
+
+### What Remains
+
+All three sorries represent the core mathematical content of the paper:
+
+- **Sorries #1 and #2** both follow from the parafermionic observable / discrete Stokes argument (Lemma 2). The algebraic ingredients (`pair_cancellation`, `triplet_cancellation`, `boundary_cos_pos`) and edge direction infrastructure (`hexEdgeDirC_*`) are fully proved. What remains is: (a) formalizing the walk partition into pairs/triplets at each vertex, (b) the discrete Stokes summation showing interior cancellation, (c) boundary winding evaluation, and (d) the limit argument L→∞ for the infinite strip.
+
+- **Sorry #3** requires formalizing the Hammersley-Welsh bridge extraction algorithm, proving its injectivity, and establishing the weight accounting inequality. Infrastructure for half-plane walks, bridge extraction, and translation symmetry exists across several files but is incomplete.
+
+# Summary of changes for run 334e348b-08b0-4422-bb9c-5c8347a1050d
+## Summary of Changes
+
+### Code Cleanup
+- **`SAWCuttingProof.lean`**: Replaced `exact?` call with the proper term `PaperSAW_A_inf_widen_injective T` in `A_inf_summable_of_succ`.
+- **`SAWDiagProof.lean`**: Replaced `exact?` call with `paper_bridge_in_fin_strip T b` in `paper_bridge_partial_sum_le`.
+
+### Documentation Updated
+- **`PROOF_STATUS.md`**: Completely rewritten with clear identification of the 3 root sorries, their mathematical content, the proof architecture dependency tree, and classification of all other sorries as non-critical-path.
+
+### Build Status
+The main theorem `connective_constant_eq_corrected` in `SAWPaperChain.lean` (μ = √(2+√2)) builds successfully with exactly **3 root sorries**:
+
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean:49) — The parafermionic observable identity for the infinite strip: `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`. Required for the lower bound Z(xc) = ∞.
+
+2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean:385) — The core bound `B_paper T L xc ≤ 1` from Lemma 2 of the paper. Required for bridge decay, which feeds into the upper bound.
+
+3. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean:258) — The Hammersley-Welsh counting inequality. Required for the upper bound Z(x) < ∞.
+
+### What Remains
+
+Both sorry chains (#1+#2 and #3) require deep mathematical formalization:
+
+- **Sorries #1 and #2** (parafermionic observable): These both follow from the discrete Stokes identity for the strip domain. The algebraic ingredients (pair_cancellation, triplet_cancellation, boundary_cos_pos) are fully proved. What remains is formalizing: (a) the walk partition into pairs/triplets at each vertex, (b) the discrete Stokes summation showing interior mid-edge cancellation, (c) the boundary winding evaluation, and (d) the limit argument L→∞ for the infinite strip.
+
+- **Sorry #3** (Hammersley-Welsh decomposition): Requires formalizing the bridge extraction algorithm for half-plane walks, proving its injectivity, and establishing the weight accounting inequality. Infrastructure for this (walk splitting, bridge extraction, translation symmetry) exists in SAWHWDecompHelper.lean and related files but is incomplete.
+
+All three sorries represent the core mathematical content of the paper (Lemma 2 and the Hammersley-Welsh argument). The entire proof architecture surrounding them — algebraic identities, bridge definitions, cutting arguments, partition function analysis, submultiplicativity, Fekete's lemma, lower bounds, and the main theorem assembly — is fully proved.
+
+# Summary of changes for run 650134d8-24cd-49e1-9e50-2380440b5ce7
+## Summary of Changes
+
+### New Sorry-Free Results
+
+1. **`RequestProject/SAWBridgeLength.lean`** (new file, fully proved):
+   - `hexGraph_adj_flip_bool`: Adjacent vertices in hexGraph have different sublattice types (w.2.2 = !v.2.2)
+   - `true_to_false_dc_change`: TRUE→FALSE edges decrease diagCoord by 0 or 1
+   - `false_to_true_dc_change`: FALSE→TRUE edges increase diagCoord by 0 or 1
+   - `paper_bridge_length_ge_tight`: **PaperBridge of width T has length ≥ 2T−1** — this tightens the existing bound of T from `paper_bridge_length_ge`. The proof exploits the bipartite structure: walks alternate TRUE↔FALSE, and only TRUE→FALSE steps can decrease diagCoord. With ⌈n/2⌉ such steps needed to decrease diagCoord by T, we get n ≥ 2T−1.
+
+2. **`RequestProject/SAWBridgeDecompNew.lean`** (powerset identity fixed):
+   - `Finset.sum_powerset_prod_eq_prod_add_one`: The identity ∑_{S⊆F} ∏_{i∈S} a_i = ∏_{i∈F}(1+a_i) is now proved using Mathlib's `Finset.prod_one_add` (was previously `exact?`/sorry).
+
+### Blueprint Updated
+- `blueprint/src/content.tex`: Added entries for all new results with `\leanok` markers:
+  - Bipartiteness lemma
+  - TRUE→FALSE and FALSE→TRUE diagCoord change lemmas
+  - Tight bridge length bound (2T−1)
+  - Powerset product identity
+
+### Proof Status Updated
+- `PROOF_STATUS.md`: Updated to reflect current state with new results listed.
+
+### Remaining Sorry Chains (unchanged)
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) still depends on two independent sorry chains:
+
+1. **Parafermionic Observable** (`infinite_strip_identity` / `B_paper_le_one_strip`): The strip identity 1 = c_α·A + B + c_ε·E from Lemma 2 of the paper. Requires formalizing the discrete Stokes summation of the vertex relation over all strip vertices.
+
+2. **Hammersley-Welsh Decomposition** (`paper_bridge_decomp_injection`): The bridge decomposition bound Z(x) ≤ 2·∏(1+B_T)². Requires the canonical bridge decomposition algorithm and its injectivity proof.
+
+Both are deep mathematical results requiring substantial additional formalization. The algebraic ingredients for both (pair/triplet cancellation, powerset product identity, bridge length bounds) are fully proved.
+
 # Summary of changes for run e34a2f39-8a4d-4a0c-9355-fe597c6303e3
 ## Summary of Changes
 
