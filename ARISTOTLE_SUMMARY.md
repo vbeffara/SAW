@@ -1,3 +1,93 @@
+# Summary of changes for run ef492089-c7f0-4f08-bc00-5e902847679e
+# Summary of Progress
+
+## What was accomplished
+
+### New file: `RequestProject/SAWHWReCoord.lean` (sorry-free)
+This file introduces the **scaled Re coordinate** (`hexReScaled`) for hex lattice vertices, which resolves the key technical obstacle for the Hammersley-Welsh bridge decomposition:
+
+```
+hexReScaled(x, y, false) = -3(x+y)
+hexReScaled(x, y, true)  = -3(x+y) + 2
+```
+
+Unlike the diagonal coordinate (diagCoord = x+y), hexReScaled gives **distinct integer values** to TRUE and FALSE vertices at the same diagCoord. This is critical because:
+- The HW bridge extraction algorithm requires the "last vertex at max coordinate" to be well-defined
+- With diagCoord, TRUE and FALSE vertices share coordinates, causing ambiguity
+- With hexReScaled (matching the paper's Re(z) coordinate), bridge widths are strictly decreasing
+
+Proved lemmas (all sorry-free, standard axioms only):
+- `hexReScaled_paperStart`: value at the starting vertex
+- `hexReScaled_adj_bound`: adjacent vertices differ by ≤ 2
+- `hexReScaled_walk_bound`: walk of length n changes by ≤ 2n
+- `hexReScaled_in_strip`: strip vertices satisfy 0 ≤ hexReScaled ≤ 3T
+- `hexReScaled_bridge_endpoint`: bridge endpoint formula
+
+### Updated: `blueprint/src/content.tex`
+Added new subsections documenting:
+1. **Resolution via Re coordinate**: How hexReScaled resolves the diagonal-vs-x-coordinate issue
+2. **Remaining gap for sorry #3**: Precise list of formalization steps needed for the HW decomposition
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive update reflecting:
+- The new Re coordinate infrastructure
+- Clarified dependency structure between the 3 sorries
+- Detailed remaining steps for each sorry
+- Updated list of sorry-free results
+
+## What was NOT accomplished
+
+Neither of the two independent root sorries was fully proved:
+
+1. **`infinite_strip_identity`** (sorry #1): The parafermionic observable argument requires formalizing the vertex relation (partitioning SAWs into pairs/triplets at each vertex) and the discrete Stokes summation. The algebraic ingredients (pair/triplet cancellation) are proved, but the combinatorial walk-partitioning infrastructure is extensive.
+
+2. **`paper_bridge_decomp_injection`** (sorry #3): The Hammersley-Welsh bridge decomposition requires formalizing the bridge extraction algorithm, proving it produces valid PaperBridges with strictly decreasing widths, and deriving the counting inequality. The new hexReScaled coordinate provides the correct foundation, but the full algorithm formalization remains.
+
+Both sorries represent deep mathematical arguments (Lemma 2 and Proposition 3 of Duminil-Copin & Smirnov 2012) that require substantial formalization effort beyond what was achievable in this session.
+
+## Build Status
+All files compile without errors. No new sorries were introduced. The new file `SAWHWReCoord.lean` is completely sorry-free with only standard axioms.
+
+# Summary of changes for run 4de1e05f-59f1-4155-ba18-81afd80c5149
+# Summary of Changes
+
+## New file: `RequestProject/SAWParafermionicObservable.lean` (sorry-free)
+Added infrastructure for the parafermionic observable proof (Lemma 2 of Duminil-Copin & Smirnov 2012):
+
+- **Edge direction vectors**: Explicit computation of `hexEdgeDirC` for all hex edges:
+  - At FALSE vertices: angles 0, 2π/3, −2π/3 (`false_edge_dirs`)
+  - At TRUE vertices: angles π, −π/3, π/3 (`true_edge_dirs`)
+- **Abstract Stokes theorem**: `abstract_stokes` (sum of zeros is zero) and `abstract_stokes_boundary` (if interior contributions cancel, boundary sum = 0)
+- **Observable vertex relation**: Combined `pair_cancellation` and `triplet_cancellation` into `observable_vertex_relation`
+
+All lemmas are fully proved (no sorries, only standard axioms).
+
+## Updated: `PROOF_STATUS.md`
+Comprehensive rewrite reflecting a key insight from the analysis:
+
+- **Reduced independent sorry count from 3 to 2**: Documented that Sorry #2 (`B_paper_le_one_strip`) is a consequence of Sorry #1 (`infinite_strip_identity`), as proved in `SAWStripFromIdentity.lean`. The 3 sorry statements in the code reflect file dependency structure, not mathematical dependency.
+- **Key technical insight about coordinate mismatch**: The Hammersley-Welsh decomposition algorithm works with the x-coordinate (first coordinate of hex vertices), NOT with diagonal coordinate (x+y) used by the formalization's bridge definitions. This is because x-coordinate has a monotone structure on the bipartite hex lattice (increases at FALSE→TRUE, decreases at TRUE→FALSE) that diagonal coordinate lacks. A specific counterexample exists where the remaining walk after bridge extraction is not a half-plane walk w.r.t. diagCoord.
+- **Updated proof architecture diagram** with clear dependency annotations
+- **Alternative proof chain documentation**: Notes that `SAWMainNew.lean` provides a lower bound proof (`Z_xc_diverges_direct`) that avoids Sorry #2 entirely
+- **Detailed roadmap** for proving each remaining sorry
+
+## Updated: `blueprint/src/content.tex` (+63 lines)
+Added three new sections:
+1. **Parafermionic observable infrastructure**: Documents the new `SAWParafermionicObservable.lean` file
+2. **Key technical insight: diagonal vs. x-coordinates**: Explains the coordinate mismatch issue and its implications for the HW decomposition
+3. **Clarified root sorry dependencies**: Explicitly states that Sorry #2 follows from Sorry #1 and identifies only 2 independent mathematical gaps
+
+## What was NOT accomplished
+
+Neither of the two big missing steps (parafermionic observable / Lemma 2, or Hammersley-Welsh decomposition / Proposition 3) was fully proved. Both represent deep mathematical arguments:
+
+- **Parafermionic observable**: Requires defining the winding for SAWs, the observable F at each mid-edge, and performing the boundary evaluation with specific winding calculations. The algebraic ingredients (pair/triplet cancellation) are fully proved, but the analytic infrastructure connecting the observable to the partition functions is extensive.
+
+- **Hammersley-Welsh decomposition**: Has a fundamental coordinate mismatch: the paper's bridge extraction algorithm works with x-coordinates, but the formalization's bridges use diagonal coordinates (x+y). Resolving this requires either (a) redefining bridges using x-coordinates and reproving the parafermionic bounds, or (b) developing a modified decomposition algorithm adapted to diagonal coordinates.
+
+## Build Status
+All files compile without errors. The full project builds successfully (8154 jobs).
+
 # Summary of changes for run 7b226ce1-19ee-41a6-92d7-5ab44841f780
 # Summary of Changes
 

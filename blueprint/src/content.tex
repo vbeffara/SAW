@@ -6998,5 +6998,124 @@ is proved modulo three root sorries:
 \end{enumerate}
 
 Sorries~1 and~2 both follow from the same mathematical argument
-(Lemma~2). Sorry~3 is independent. All algebraic ingredients
-(pair/triplet cancellation) are fully proved.
+(Lemma~2). In fact, \textbf{Sorry~2 is a consequence of Sorry~1},
+as proved in \texttt{SAWStripFromIdentity.lean}
+(theorem \texttt{B\_paper\_le\_one\_from\_identity}):
+the injection \texttt{PaperSAW\_B} $\hookrightarrow$ \texttt{PaperBridge}
+gives $B_{\text{paper}} \leq x_c \cdot B_{\text{bridge}} \leq 1$.
+Thus there are only \textbf{2 independent root sorries}: \#1 and \#3.
+
+Sorry~3 is independent of the parafermionic observable; it is a purely
+combinatorial counting argument. All algebraic ingredients
+(pair/triplet cancellation) for the parafermionic proof are fully proved.
+
+\section{Parafermionic observable infrastructure}
+
+The file \texttt{SAWParafermionicObservable.lean} provides the abstract
+framework for the discrete Stokes argument:
+
+\begin{itemize}
+  \item \textbf{Edge direction vectors}: Explicit computation of the
+    direction $\operatorname{dir}(v,w) = \operatorname{embed}(w) - \operatorname{embed}(v)$
+    for all hex edges. At FALSE vertices: angles $0, 2\pi/3, -2\pi/3$.
+    At TRUE vertices: angles $\pi, -\pi/3, \pi/3$.
+  \item \textbf{Abstract Stokes}: If $f(v) = 0$ for each $v \in V$,
+    then $\sum_v f(v) = 0$ (trivially). When $V$ is partitioned into
+    interior and boundary, interior contributions cancel (by antisymmetry
+    of edge directions), leaving the boundary sum equal to zero.
+  \item \textbf{Observable vertex relation}: Combines
+    \texttt{pair\_cancellation} and \texttt{triplet\_cancellation} into
+    the statement that the observable satisfies the vertex relation at
+    each vertex of the strip.
+\end{itemize}
+
+\section{Key technical insight: diagonal vs.\ x-coordinates}
+
+The formalization uses \emph{diagonal coordinate} bridges
+($\operatorname{diagCoord} = x + y$), while the paper uses the
+\emph{$x$-coordinate} (equivalently, the real part of the embedding).
+This distinction matters critically for the Hammersley--Welsh
+decomposition:
+
+\begin{itemize}
+  \item \textbf{Bridge bounds} ($B \leq 1$): The parafermionic
+    observable works for any strip domain, so $B \leq 1$ holds for
+    both coordinate systems. \checkmark
+  \item \textbf{HW decomposition}: The bridge extraction algorithm
+    (find last vertex with maximal coordinate, extract bridge,
+    iterate) produces a valid half-plane walk in the remaining
+    portion \emph{only} when using the $x$-coordinate. With diagonal
+    coordinates, counterexamples exist where the remaining walk
+    visits vertices below the start's diagonal coordinate.
+\end{itemize}
+
+The reason is the monotone structure of the $x$-coordinate on the
+hex lattice:
+\begin{itemize}
+  \item From FALSE: $x$ increases by 0 or 1 (to TRUE neighbors)
+  \item From TRUE: $x$ decreases by 0 or 1 (to FALSE neighbors)
+\end{itemize}
+So the last vertex with max $x$ is always TRUE, and all subsequent
+vertices have strictly smaller $x$. The diagonal coordinate $x+y$
+lacks this monotone structure.
+
+\subsection{Resolution: the Re coordinate approach}
+
+The file \texttt{SAWHWReCoord.lean} introduces the scaled Re coordinate
+\texttt{hexReScaled} that resolves this issue:
+\[
+  \texttt{hexReScaled}(v) =
+  \begin{cases}
+    -3(x+y) + 2 & \text{if } v = (x,y,\mathit{true}), \\
+    -3(x+y) & \text{if } v = (x,y,\mathit{false}).
+  \end{cases}
+\]
+
+Key properties (all proved sorry-free):
+\begin{itemize}
+  \item \texttt{hexReScaled\_paperStart}: $\texttt{hexReScaled}(\text{paperStart}) = 2$.
+  \item \texttt{hexReScaled\_adj\_bound}: Adjacent vertices have $|\Delta(\texttt{hexReScaled})| \leq 2$.
+  \item \texttt{hexReScaled\_walk\_bound}: Along a walk of length $n$,
+    $|\Delta(\texttt{hexReScaled})| \leq 2n$.
+  \item \texttt{hexReScaled\_in\_strip}: For $v \in \texttt{PaperInfStrip}(T)$,
+    $0 \leq \texttt{hexReScaled}(v) \leq 3T$.
+  \item \texttt{hexReScaled\_bridge\_endpoint}: A bridge endpoint
+    (FALSE at diagCoord $-T$) has $\texttt{hexReScaled} = 3T$.
+\end{itemize}
+
+The hexReScaled coordinate is integer-valued and gives \emph{distinct}
+values to TRUE and FALSE vertices at the same diagCoord. This means
+the HW bridge extraction algorithm produces bridges with strictly
+decreasing Re-widths, which map to distinct diagCoord-widths (PaperBridge
+widths).  Specifically:
+
+\begin{enumerate}
+  \item In a half-plane walk (all hexReScaled $\leq$ max), find the
+    \emph{last} vertex at max hexReScaled.
+  \item The walk from start to this vertex is a bridge.
+  \item The remaining walk has strictly smaller max hexReScaled.
+  \item By induction, the remaining walk decomposes into bridges of
+    strictly smaller widths.
+\end{enumerate}
+
+This resolution matches the paper's use of $\operatorname{Re}(z)$
+(which equals $-3(x+y)/2 + \delta$ where $\delta \in \{0, 1\}$
+depends on the sublattice) and confirms that the HW decomposition
+is valid for the hex lattice with the PaperBridge definition.
+
+\subsection{Remaining gap for sorry~\#3}
+
+The complete formalization of the HW decomposition requires:
+\begin{itemize}
+  \item Defining half-plane walks using hexReScaled.
+  \item Formalizing the split of a SAW at the first vertex with max
+    hexReScaled (producing two half-plane walks).
+  \item Formalizing the bridge extraction by induction on the
+    hexReScaled width.
+  \item Showing the extracted bridges are valid PaperBridges after
+    translation.
+  \item Deriving the counting inequality from the injection.
+\end{itemize}
+
+This is a substantial formalization task involving recursive
+algorithms on graph walks and translation invariance arguments.

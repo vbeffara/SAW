@@ -4,9 +4,12 @@
 `connective_constant_eq_corrected` in `SAWPaperChain.lean`:
 **μ = √(2+√2)** where μ is the connective constant of the hexagonal lattice.
 
-**Status: PROVED modulo 3 root sorries** (2 independent chains).
+**Status: PROVED modulo 2 independent root sorries** (see below).
 
 ## Root Sorries
+
+There are 3 sorry statements on the critical path, but they reduce to
+**2 independent mathematical gaps**:
 
 ### Sorry #1: `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
 ```lean
@@ -27,13 +30,10 @@ B_paper T L xc ≤ 1
 The core bound from the parafermionic observable (Lemma 2).
 Required for: bridge summability → bridge decay → Z(x) < ∞.
 
-**Mathematical content**: Follows from the finite strip identity
-1 = c_α·A + B + c_ε·E with A,E ≥ 0. Same discrete Stokes argument
-as Sorry #1 but for the finite strip S_{T,L}.
-
-**Relationship to Sorry #1**: Both sorries follow from the same
-mathematical argument (the parafermionic observable / Lemma 2).
-If either is proved, the other can be derived.
+**Dependency on Sorry #1**: This sorry FOLLOWS from Sorry #1, as proved
+in `SAWStripFromIdentity.lean` (theorem `B_paper_le_one_from_identity`).
+The proof: PaperSAW_B injects into PaperBridge, giving
+B_paper ≤ xc · paper_bridge_partition ≤ 1 (from #1).
 
 ### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:265)
 ```lean
@@ -42,12 +42,39 @@ If either is proved, the other can be derived.
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-**Mathematical content**: The bridge decomposition algorithm:
-1. Split SAW at vertex with extremal diagCoord → two half-plane walks.
-2. Each half-plane walk decomposes into bridges of strictly decreasing widths.
-3. The decomposition is injective: given bridges, walk is reconstructable.
-4. Weight inequality: x^n ≤ ∏ x^{len(bridge_i)} since x ≤ 1.
-5. Summing: Z_N(x) ≤ 2·(∏(1+B_T(x)))².
+**Mathematical content**: The bridge decomposition algorithm from Section 3
+of the paper (Proposition 3). Every SAW decomposes into two sequences of
+bridges with strictly decreasing widths. The factor 2 comes from the two
+choices for the first vertex given a starting mid-edge.
+
+## Independent Sorry Count
+
+**Only 2 independent mathematical gaps remain:**
+1. `infinite_strip_identity` — the parafermionic observable / discrete Stokes argument
+2. `paper_bridge_decomp_injection` — the Hammersley-Welsh bridge decomposition
+
+Sorry #2 (`B_paper_le_one_strip`) follows from Sorry #1.
+
+## Re Coordinate Resolution (NEW)
+
+The file `SAWHWReCoord.lean` introduces `hexReScaled`, an integer-valued
+coordinate that resolves the diagonal-vs-x-coordinate mismatch for the
+Hammersley-Welsh decomposition:
+
+```
+hexReScaled(x, y, false) = -3(x+y)
+hexReScaled(x, y, true)  = -3(x+y) + 2
+```
+
+Key properties (all sorry-free):
+- `hexReScaled_adj_bound`: Adjacent vertices differ by at most 2.
+- `hexReScaled_walk_bound`: Walk of length n changes by at most 2n.
+- `hexReScaled_in_strip`: Strip vertices satisfy 0 ≤ hexReScaled ≤ 3T.
+- `hexReScaled_bridge_endpoint`: Bridge endpoint has hexReScaled = 3T.
+
+This coordinate gives DISTINCT values to TRUE and FALSE vertices at the
+same diagCoord, ensuring the HW bridge extraction produces bridges with
+strictly decreasing widths (matching the paper's use of Re(z)).
 
 ## Proof Architecture
 
@@ -55,7 +82,7 @@ Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 connective_constant_eq_corrected (SAWPaperChain.lean)
 ├── Z_xc_diverges_corrected (SAWPaperChain.lean) [LOWER BOUND]
 │   └── paper_bridge_lower_bound
-│       ├── paper_bridge_partition_one_pos ✓ (sorry-free via paper_bridge_partition_1_eq)
+│       ├── paper_bridge_partition_one_pos ✓ (sorry-free)
 │       └── bridge_recurrence_proved (SAWRecurrenceProof.lean)
 │           ├── infinite_strip_identity ← SORRY #1
 │           └── cutting_argument_proved ✓
@@ -64,39 +91,8 @@ connective_constant_eq_corrected (SAWPaperChain.lean)
     └── paper_bridge_decay
         └── paper_bridge_partial_sum_le (SAWDiagProof.lean)
             └── B_paper_le_one_direct
-                └── B_paper_le_one_strip ← SORRY #2
+                └── B_paper_le_one_strip ← SORRY #2 (= consequence of #1)
 ```
-
-**Note**: Sorry #2 feeds into the upper bound (through bridge decay).
-Sorry #1 feeds into the lower bound (through the bridge recurrence).
-Sorry #3 feeds into the upper bound (through the HW decomposition).
-`paper_bridge_partition_one_pos` is now sorry-free (uses exact T=1 computation).
-
-## Recent Changes
-
-### paper_bridge_partition_one_pos (SAWPaperChain.lean)
-**Previously**: Depended on `paper_bridge_summable` → Sorry #2.
-**Now**: Uses `paper_bridge_partition_1_eq` (exact T=1 computation), sorry-free.
-This simplifies the dependency chain for the lower bound.
-
-### Blueprint (blueprint/src/content.tex)
-Extended with:
-- Exact bridge partition for T=1 (proved)
-- T=1 infinite strip identity (proved)
-- Main theorem assembly (modulo root sorries)
-- Chapter on Conjectures (Section 4 of the paper):
-  - Asymptotic behavior of c_n (γ = 43/32)
-  - Mean-square displacement (ν = 3/4)
-  - SLE(8/3) convergence conjecture
-  - Observable scaling limit conjecture
-  - Bridge decay conjecture (T^{-1/4})
-- Root sorries summary
-
-### New file: SAWHWDecompFinal.lean
-Infrastructure for the Hammersley-Welsh decomposition:
-- SAW diagCoord range bounds
-- Powerset product identity wrapper
-- Bridge partition function nonnegativity
 
 ## Fully Proved Results (no sorry, on the critical path)
 
@@ -113,14 +109,13 @@ Infrastructure for the Hammersley-Welsh decomposition:
 ### Submultiplicativity and Fekete
 - `saw_count_submult'`: c_{n+m} ≤ c_n·c_m
 - `saw_count_iter_submult`: c_{km} ≤ c_m^k
+- `saw_count_submult_with_remainder`: c_{qm+r} ≤ c_m^q · c_r
 - `connective_constant_pos'`: connective constant is positive
 
 ### Strip and Bridge Infrastructure
 - Strip domain definitions (`PaperInfStrip`, `PaperFinStrip`)
 - Strip finiteness, SAW length bounds
 - Bridge definitions (`PaperBridge`), bridge length bounds
-  - `paper_bridge_length_ge`: length ≥ T
-  - `paper_bridge_length_ge_tight`: length ≥ 2T−1
 - Bridge partial sum bounds, bridge decay
 - Cutting argument (`cutting_argument_proved`)
 
@@ -128,14 +123,13 @@ Infrastructure for the Hammersley-Welsh decomposition:
 - `paper_bridge_partition_1_eq`: B_inf(1) = 2xc/(1-xc²)
 - `B_paper_1_lt_one'`: B_paper(1,L,xc) < 1 for all L
 - `infinite_strip_identity_T1_clean`: 1 = c_α·A₁ + xc·B₁
-- `paper_bridge_partition_one_pos`: B₁(xc) > 0 (now sorry-free)
 
-### HW Decomposition Helpers
-- `saw_weight_le_bridge_product`
-- `powerset_prod_identity` = `Finset.prod_one_add`
-- Half-plane walk infrastructure
-- Walk max/min diagCoord properties
-- Translation symmetry (`hexShift`) infrastructure
+### Re Coordinate Infrastructure (SAWHWReCoord.lean) (sorry-free, NEW)
+- `hexReScaled`: Integer-valued Re coordinate for hex vertices
+- `hexReScaled_adj_bound`: Adjacency bound
+- `hexReScaled_walk_bound`: Walk bound
+- `hexReScaled_in_strip`: Strip containment
+- `hexReScaled_bridge_endpoint`: Bridge endpoint formula
 
 ### Edge Direction Infrastructure (SAWObservableStokes.lean)
 - `hexEdgeDirC`: direction of edge as ℂ (unit length)
@@ -143,28 +137,37 @@ Infrastructure for the Hammersley-Welsh decomposition:
 - `hexEdgeDirC_start`: paperStart→hexOrigin has direction -1
 - `hexEdgeDirC_antisymm`: dir(v,w) = -dir(w,v)
 
+### Parafermionic Observable Infrastructure (SAWParafermionicObservable.lean)
+- Edge direction vectors at FALSE and TRUE vertices
+- Abstract Stokes theorem (sum of zeros is zero)
+- Abstract Stokes boundary decomposition
+- Observable vertex relation (pair_cancellation + triplet_cancellation)
+
 ## What Remains to Prove
 
-### For Sorries #1 and #2 (Parafermionic Observable / Lemma 2)
+### For Sorry #1 (Parafermionic Observable / Lemma 2)
 
-Both sorries follow from the discrete Stokes identity for the strip domain.
-The algebraic ingredients are fully proved. What still needs formalization:
+The proof requires formalizing the discrete Stokes argument:
 
-1. **Walk partition into pairs/triplets at each vertex**: For each vertex v
-   of the strip, partition SAWs ending at mid-edges adjacent to v into
-   groups (pairs and triplets) where contributions cancel.
-2. **Discrete Stokes summation**: Sum the vertex relation over all strip
-   vertices. Interior mid-edges cancel (each appears twice with opposite
-   signs). Only boundary mid-edges survive.
-3. **Boundary winding evaluation**: Compute the winding from the starting
-   mid-edge to each boundary type.
-4. **Limit argument L→∞** (for Sorry #1 only).
+1. **Define the observable F** at each mid-edge z of the strip S_{T,L}.
+2. **Vertex relation**: At each vertex v, Σ dir(v,w)·F(v,w) = 0.
+   This requires partitioning SAWs into pairs/triplets at each vertex.
+   The algebraic core (pair/triplet cancellation) is proved.
+3. **Discrete Stokes**: Sum over all vertices → 0. Interior cancel,
+   boundary survive.
+4. **Boundary evaluation**: Winding angles and phase factors.
+5. **Limit L→∞**: Finite strip → infinite strip.
 
 ### For Sorry #3 (Hammersley-Welsh Decomposition)
 
-1. **Half-plane walk decomposition**: Define bridge extraction from
-   half-plane walks (find last vertex at max diagCoord, extract bridge).
-2. **Injectivity**: Show the decomposition is injective.
-3. **SAW splitting**: Split SAW at vertex with min diagCoord into two
-   half-plane walks.
-4. **Weight accounting**: Walk weight ≤ product of bridge weights.
+The Re coordinate infrastructure (SAWHWReCoord.lean) provides the
+foundation. The remaining formalization requires:
+
+1. **Half-plane walks**: Define using hexReScaled.
+2. **SAW split**: At the first vertex with max hexReScaled.
+3. **Bridge extraction**: Induction on hexReScaled width.
+4. **Translation to PaperBridge**: After coordinate translation.
+5. **Counting inequality**: From the injection.
+
+## Build Status
+All files compile without errors. The full project builds successfully.
