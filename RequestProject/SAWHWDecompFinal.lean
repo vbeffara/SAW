@@ -1,24 +1,13 @@
 /-
-# Hammersley-Welsh Bridge Decomposition: Final Proof
+# Hammersley-Welsh Bridge Decomposition — Infrastructure
 
-This file proves `paper_bridge_decomp_injection` using the
-bridge decomposition from Section 3 of Duminil-Copin & Smirnov (2012).
-
-## Strategy
-
-We prove the bound ∑_{n≤N} c_n x^n ≤ 2·(∏_{T=1}^N (1+B_T(x)))² by showing
-that each SAW from paperStart decomposes into two sequences of "generalized
-bridges" with strictly decreasing widths. The key steps:
-
-1. Split each SAW at its first vertex of minimum diagCoord
-2. Each half decomposes into bridges by induction on width
-3. Each generalized bridge maps injectively to a PaperBridge
-4. The weight factorizes correctly
+Additional infrastructure for the HW bridge decomposition argument.
+Connects the existing walk splitting lemmas to the bridge decomposition.
 -/
 
 import Mathlib
-import RequestProject.SAWHWDecompNew
-import RequestProject.SAWHWAlgorithm
+import RequestProject.SAWHWCore
+import RequestProject.SAWBridgeDecompNew
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -26,68 +15,37 @@ noncomputable section
 
 set_option maxHeartbeats 800000
 
-/-! ## Walk maximum diagCoord -/
+/-! ## SAW diagCoord range bounds -/
 
-/-- The maximum diagCoord among vertices in a walk's support. -/
-def walkMaxDiagCoord {v w : HexVertex} (p : hexGraph.Walk v w) : ℤ :=
-  (p.support.map diagCoord).foldl max (diagCoord v)
+/-- For SAWs from paperStart, vertices have diagCoordZ in [-n, n]. -/
+lemma saw_dc_bounded {n : ℕ} (s : SAW paperStart n)
+    (v : HexVertex) (hv : v ∈ s.p.1.support) :
+    -(n : ℤ) ≤ diagCoordZ v ∧ diagCoordZ v ≤ n := by
+  have hb := walk_diagCoordZ_bound s.p.1 v hv
+  simp [diagCoordZ_paperStart] at hb
+  constructor <;> linarith [hb.1, hb.2, s.l]
 
-lemma walkMaxDiagCoord_ge {v w : HexVertex} (p : hexGraph.Walk v w)
-    (u : HexVertex) (hu : u ∈ p.support) :
-    diagCoord u ≤ walkMaxDiagCoord p := by
-  have h_foldl_max : ∀ {l : List ℤ} {x : ℤ}, x ∈ l → x ≤ List.foldl max (diagCoord v) l := by
-    intros l x hx; induction' l using List.reverseRecOn with l IH <;> aesop;
-  exact h_foldl_max ( List.mem_map.mpr ⟨ u, hu, rfl ⟩ )
+/-- The "strip width" of a SAW is at most n. -/
+lemma saw_width_le_length {n : ℕ} (s : SAW paperStart n) :
+    walkMinDiagCoord s.p.1 ≥ -(n : ℤ) := by
+  have hmin := walkMinDiagCoord_achieved s.p.1
+  obtain ⟨u, hu, hueq⟩ := hmin
+  rw [← hueq]
+  exact (saw_dc_bounded s u hu).1
 
-/-- Half-plane walk width = max diagCoord - start diagCoord. -/
-def halfPlaneWidth {v w : HexVertex} (p : hexGraph.Walk v w)
-    (h_hp : ∀ u ∈ p.support, diagCoord v ≤ diagCoord u) : ℕ :=
-  (walkMaxDiagCoord p - diagCoord v).toNat
+/-! ## The powerset product identity -/
 
-/-
-The width is 0 iff the walk stays at the starting diagCoord.
--/
-lemma halfPlaneWidth_zero_iff {v w : HexVertex} (p : hexGraph.Walk v w)
-    (h_hp : ∀ u ∈ p.support, diagCoord v ≤ diagCoord u) :
-    halfPlaneWidth p h_hp = 0 ↔ ∀ u ∈ p.support, diagCoord u = diagCoord v := by
-  constructor
-  · intro h u hu
-    have h1 := h_hp u hu
-    have h2 := walkMaxDiagCoord_ge p u hu
-    unfold halfPlaneWidth at h
-    omega
-  · intro h
-    unfold halfPlaneWidth
-    have : walkMaxDiagCoord p = diagCoord v := by
-      have := walkMaxDiagCoord_ge p v (SimpleGraph.Walk.start_mem_support p)
-      have : ∀ u ∈ p.support, diagCoord u ≤ diagCoord v := by
-        intro u hu; exact le_of_eq (h u hu)
-      unfold walkMaxDiagCoord
-      induction p with
-      | nil => simp [List.foldl]
-      | cons h' p' ih =>
-        simp [SimpleGraph.Walk.support_cons, List.map_cons, List.foldl] at this ⊢
-        unfold walkMaxDiagCoord at *; simp_all +decide [ List.map ] ;
-    omega
+/-- ∑_{S ⊆ range(N)} ∏_{T ∈ S} f(T) = ∏_{T ∈ range(N)} (1 + f(T)). -/
+lemma powerset_prod_identity' (N : ℕ) (f : ℕ → ℝ) :
+    ∑ S ∈ (Finset.range N).powerset, ∏ T ∈ S, f T =
+    ∏ T ∈ Finset.range N, (1 + f T) :=
+  Finset.sum_powerset_prod_eq_prod_add_one _ _
 
-/-! ## Key bound: saw_count n ≤ 3 · 2^{n-1} for n ≥ 1 -/
+/-! ## Bridge partition bounds -/
 
-/-
-Upper bound: each vertex has at most 3 neighbors.
--/
-lemma saw_count_upper_bound' (n : ℕ) (hn : 1 ≤ n) :
-    saw_count n ≤ 3 * 2 ^ (n - 1) := by
-  convert saw_count_upper_bound n hn using 1;
-  norm_cast
-
-/-! ## Bridge decomposition injection
-
-The main theorem of this file. We prove it by decomposing SAWs into
-bridge sequences. -/
-
--- The bridge decomposition injection paper_bridge_decomp_injection
--- is stated and used in SAWPaperChain.lean. The infrastructure above
--- (walkMaxDiagCoord, halfPlaneWidth, saw_count_upper_bound') supports
--- its proof.
+/-- Bridge partition function is nonneg for positive x. -/
+lemma bridge_partition_nonneg' (T : ℕ) (x : ℝ) (hx : 0 < x) :
+    0 ≤ paper_bridge_partition T x :=
+  tsum_nonneg fun _ => pow_nonneg hx.le _
 
 end

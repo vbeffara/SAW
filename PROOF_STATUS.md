@@ -33,11 +33,9 @@ as Sorry #1 but for the finite strip S_{T,L}.
 
 **Relationship to Sorry #1**: Both sorries follow from the same
 mathematical argument (the parafermionic observable / Lemma 2).
-If either is proved, the other can be derived (Sorry #1 from
-Sorry #2 via a limit argument; Sorry #2 from Sorry #1 via
-paper_bridge_partition ≤ 1/xc).
+If either is proved, the other can be derived.
 
-### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:258)
+### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:265)
 ```lean
 ∑_{n≤N} c_n x^n ≤ 2·(∑_{S⊆range(N)} ∏_{T∈S} B_{T+1}(x))²
 ```
@@ -57,8 +55,7 @@ Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 connective_constant_eq_corrected (SAWPaperChain.lean)
 ├── Z_xc_diverges_corrected (SAWPaperChain.lean) [LOWER BOUND]
 │   └── paper_bridge_lower_bound
-│       ├── paper_bridge_partition_one_pos
-│       │   └── paper_bridge_summable ← depends on Sorry #2
+│       ├── paper_bridge_partition_one_pos ✓ (sorry-free via paper_bridge_partition_1_eq)
 │       └── bridge_recurrence_proved (SAWRecurrenceProof.lean)
 │           ├── infinite_strip_identity ← SORRY #1
 │           └── cutting_argument_proved ✓
@@ -70,24 +67,36 @@ connective_constant_eq_corrected (SAWPaperChain.lean)
                 └── B_paper_le_one_strip ← SORRY #2
 ```
 
-**Note**: Sorry #2 feeds into BOTH the lower and upper bounds (through
-bridge summability for the lower bound, and bridge decay for the upper
-bound). Sorry #1 feeds only into the lower bound. Sorry #3 feeds only
-into the upper bound.
+**Note**: Sorry #2 feeds into the upper bound (through bridge decay).
+Sorry #1 feeds into the lower bound (through the bridge recurrence).
+Sorry #3 feeds into the upper bound (through the HW decomposition).
+`paper_bridge_partition_one_pos` is now sorry-free (uses exact T=1 computation).
 
-## New Infrastructure (SAWObservableStokes.lean, sorry-free)
+## Recent Changes
 
-Edge direction computations for the hex lattice:
-- `hexEdgeDirC`: direction of edge as ℂ (unit length)
-- `hexEdgeDirC_F_T_same`: FALSE→TRUE same-coordinate has direction 1
-- `hexEdgeDirC_T_F_same`: TRUE→FALSE same-coordinate has direction -1
-- `hexEdgeDirC_sum_zero_false`: 3 directions from FALSE vertex sum to 0
-- `hexEdgeDirC_sum_zero_true`: 3 directions from TRUE vertex sum to 0
-- `hexEdgeDirC_start`: paperStart→hexOrigin has direction -1
-- `hexEdgeDirC_antisymm`: dir(v,w) = -dir(w,v)
+### paper_bridge_partition_one_pos (SAWPaperChain.lean)
+**Previously**: Depended on `paper_bridge_summable` → Sorry #2.
+**Now**: Uses `paper_bridge_partition_1_eq` (exact T=1 computation), sorry-free.
+This simplifies the dependency chain for the lower bound.
 
-This infrastructure is the first step toward formalizing the discrete
-Stokes argument needed for Sorries #1 and #2.
+### Blueprint (blueprint/src/content.tex)
+Extended with:
+- Exact bridge partition for T=1 (proved)
+- T=1 infinite strip identity (proved)
+- Main theorem assembly (modulo root sorries)
+- Chapter on Conjectures (Section 4 of the paper):
+  - Asymptotic behavior of c_n (γ = 43/32)
+  - Mean-square displacement (ν = 3/4)
+  - SLE(8/3) convergence conjecture
+  - Observable scaling limit conjecture
+  - Bridge decay conjecture (T^{-1/4})
+- Root sorries summary
+
+### New file: SAWHWDecompFinal.lean
+Infrastructure for the Hammersley-Welsh decomposition:
+- SAW diagCoord range bounds
+- Powerset product identity wrapper
+- Bridge partition function nonnegativity
 
 ## Fully Proved Results (no sorry, on the critical path)
 
@@ -115,14 +124,11 @@ Stokes argument needed for Sorries #1 and #2.
 - Bridge partial sum bounds, bridge decay
 - Cutting argument (`cutting_argument_proved`)
 
-### Bipartite Structure
-- `hexGraph_adj_flip_bool`: adjacent vertices differ in sublattice type
-- `true_to_false_dc_change`: TRUE→FALSE edges decrease diagCoord by 0 or 1
-- `false_to_true_dc_change`: FALSE→TRUE edges increase diagCoord by 0 or 1
-
 ### T=1 Special Case (sorry-free)
 - `paper_bridge_partition_1_eq`: B_inf(1) = 2xc/(1-xc²)
 - `B_paper_1_lt_one'`: B_paper(1,L,xc) < 1 for all L
+- `infinite_strip_identity_T1_clean`: 1 = c_α·A₁ + xc·B₁
+- `paper_bridge_partition_one_pos`: B₁(xc) > 0 (now sorry-free)
 
 ### HW Decomposition Helpers
 - `saw_weight_le_bridge_product`
@@ -131,59 +137,34 @@ Stokes argument needed for Sorries #1 and #2.
 - Walk max/min diagCoord properties
 - Translation symmetry (`hexShift`) infrastructure
 
-### Lower Bound Infrastructure
-- Zigzag SAW construction (sorry-free)
-- `saw_count_even_lower_proved`: 2^k ≤ c_{2k}
-- c_n ≥ √2^n
+### Edge Direction Infrastructure (SAWObservableStokes.lean)
+- `hexEdgeDirC`: direction of edge as ℂ (unit length)
+- `hexEdgeDirC_sum_zero_false/true`: 3 directions from vertex sum to 0
+- `hexEdgeDirC_start`: paperStart→hexOrigin has direction -1
+- `hexEdgeDirC_antisymm`: dir(v,w) = -dir(w,v)
 
 ## What Remains to Prove
 
 ### For Sorries #1 and #2 (Parafermionic Observable / Lemma 2)
 
 Both sorries follow from the discrete Stokes identity for the strip domain.
-The algebraic ingredients (pair_cancellation, triplet_cancellation,
-boundary_cos_pos) are fully proved. The edge direction infrastructure
-(hexEdgeDirC) is now in SAWObservableStokes.lean.
+The algebraic ingredients are fully proved. What still needs formalization:
 
-**What still needs formalization:**
 1. **Walk partition into pairs/triplets at each vertex**: For each vertex v
    of the strip, partition SAWs ending at mid-edges adjacent to v into
    groups (pairs and triplets) where contributions cancel.
 2. **Discrete Stokes summation**: Sum the vertex relation over all strip
    vertices. Interior mid-edges cancel (each appears twice with opposite
    signs). Only boundary mid-edges survive.
-3. **Boundary winding evaluation**: For the finite strip, compute the
-   winding from the starting mid-edge to each boundary type:
-   - Right boundary (β): winding = 0, coefficient = 1
-   - Left boundary (α): winding = ±π, coefficient = c_α = cos(3π/8)
-   - Escape boundary (ε∪ε̄): winding = ±2π/3, coefficient = c_ε = cos(π/4)
-   - Starting mid-edge: F(a) = 1, contributes -1
-4. **Limit argument L→∞** (for Sorry #1 only): Show A_paper → A_inf,
-   B_paper → xc·paper_bridge_partition, E_paper → E_inf → 0 or handle
-   both cases (E_inf > 0 and E_inf = 0).
+3. **Boundary winding evaluation**: Compute the winding from the starting
+   mid-edge to each boundary type.
+4. **Limit argument L→∞** (for Sorry #1 only).
 
 ### For Sorry #3 (Hammersley-Welsh Decomposition)
 
-**What still needs formalization:**
-1. **Half-plane walk definition**: SAWs where the start has extremal diagCoord.
-2. **Bridge extraction algorithm**: Find the last vertex with minimum
-   diagCoord, extract the prefix as a PaperBridge, identify the suffix
-   as a smaller half-plane walk.
-3. **Injectivity**: Given the set of bridge widths and the bridges
-   themselves, the original walk can be uniquely reconstructed.
-4. **Weight accounting**: The walk weight x^n ≤ ∏ x^{len(bridge_i)}
-   since x ≤ 1 and n ≥ ∑ len(bridge_i).
-5. **General SAW splitting**: Split at vertex with extremal diagCoord
-   into two half-plane walks. Factor of 2 from starting vertex choice.
-
-## Non-critical-path sorries
-
-Several files contain sorry'd lemmas that are NOT on the critical path
-(not imported by the main theorem). These include duplicates, earlier
-attempts, and infrastructure that was superseded by the correct
-paper-bridge architecture. Files: SAWZigzag.lean, SAWFiniteStrip.lean,
-SAWHWDecomp.lean, SAWHWAlgorithm.lean, SAWBridgeDecomp.lean,
-SAWBridgeDecompCore.lean, SAWHammersleyWelsh.lean, SAWHWBridge.lean,
-SAWHWInject.lean, SAWHWDecompFull.lean, SAWHWDecompNew.lean,
-SAWStripIdentity.lean, SAWStokesSkeleton.lean, SAWStripProofDirect.lean,
-SAWMainNew.lean, SAWCutting.lean.
+1. **Half-plane walk decomposition**: Define bridge extraction from
+   half-plane walks (find last vertex at max diagCoord, extract bridge).
+2. **Injectivity**: Show the decomposition is injective.
+3. **SAW splitting**: Split SAW at vertex with min diagCoord into two
+   half-plane walks.
+4. **Weight accounting**: Walk weight ≤ product of bridge weights.

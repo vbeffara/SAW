@@ -1,3 +1,57 @@
+# Summary of changes for run 7b226ce1-19ee-41a6-92d7-5ab44841f780
+# Summary of Changes
+
+## Blueprint Updates (blueprint/src/content.tex, +218 lines)
+
+Substantially extended the blueprint with content from SAW.tex Sections 3-4:
+
+### New sections added:
+1. **Exact bridge partition for T=1** (proved): Links `paper_bridge_partition_1_eq` with full proof description.
+2. **T=1 infinite strip identity** (proved): Links `infinite_strip_identity_T1_clean` — the sorry-free T=1 case.
+3. **Main theorem assembly**: Full dependency tree showing how the main theorem is proved modulo root sorries, with links to all key Lean declarations (`Z_xc_diverges_corrected`, `hw_summable_corrected`, `connective_constant_eq_corrected`, `paper_bridge_decay`, `paper_bridge_recurrence_derived`, `paper_bridge_partition_one_pos`).
+4. **Chapter: Conjectures** (new chapter, from Section 4 of SAW.tex):
+   - Asymptotic behavior of c_n with entropic exponent γ = 43/32
+   - Mean-square displacement with Flory exponent ν = 3/4
+   - **Conjecture: SLE(8/3) convergence** — linked to `sle_convergence_conjecture` in SAWConjectures.lean
+   - **Conjecture: Observable scaling limit** — (Φ'(z)/Φ'(b))^{5/8}
+   - **Bridge decay conjecture**: B_T ~ T^{-1/4}
+5. **Root sorries summary**: Clear enumeration of the 3 remaining sorries with their dependencies.
+
+## Code Improvements
+
+### `paper_bridge_partition_one_pos` (SAWPaperChain.lean) — dependency fix
+- **Before**: Depended on `paper_bridge_summable` which transitively depended on Sorry #2 (`B_paper_le_one_strip`).
+- **After**: Uses `paper_bridge_partition_1_eq` (the exact T=1 computation), making it fully sorry-free.
+- **Impact**: The lower bound chain now only depends on Sorry #1 (`infinite_strip_identity`), not Sorry #2. This simplifies the dependency structure.
+- Added import of `SAWStripT1Exact` to SAWPaperChain.lean.
+- Verified: `#print axioms paper_bridge_partition_one_pos` shows no `sorryAx`.
+
+### New file: `SAWHWDecompFinal.lean`
+Infrastructure for the Hammersley-Welsh bridge decomposition:
+- SAW diagCoord range bounds (`saw_dc_bounded`, `saw_width_le_length`)
+- Powerset product identity wrapper (`powerset_prod_identity'`)
+- Bridge partition function nonnegativity
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive update reflecting:
+- The improved dependency chain (paper_bridge_partition_one_pos now sorry-free)
+- Updated proof architecture diagram
+- Description of recent changes
+- Detailed roadmap for proving each root sorry
+
+## Proof Status
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) builds successfully with exactly **3 root sorries**:
+
+1. **`infinite_strip_identity`** — parafermionic observable for infinite strip
+2. **`B_paper_le_one_strip`** — B ≤ 1 from Lemma 2 of the paper
+3. **`paper_bridge_decomp_injection`** — Hammersley-Welsh counting inequality
+
+Both the strip identity sorries (#1, #2) require formalizing the discrete Stokes argument — the algebraic ingredients (pair/triplet cancellation) are fully proved, but the combinatorial walk partitioning and summation remain. Sorry #3 requires formalizing the bridge decomposition algorithm and its injectivity. These represent the core mathematical arguments of the paper and each would require substantial new infrastructure (defining the parafermionic observable with mid-edge formalism, or the full bridge extraction algorithm with injectivity proof).
+
+## Build Status
+All files compile without errors. The full project builds successfully (8153 jobs).
+
 # Summary of changes for run 0d740163-1b1a-4575-95b4-21c302f2c08a
 ## Summary of Changes
 

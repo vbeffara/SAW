@@ -22,6 +22,7 @@ import RequestProject.SAWDiagProof
 import RequestProject.SAWDecomp
 import RequestProject.SAWCuttingProof
 import RequestProject.SAWRecurrenceProof
+import RequestProject.SAWStripT1Exact
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -114,11 +115,17 @@ noncomputable def paperBridge_width1 : PaperBridge 1 where
   end_right := by constructor <;> decide
   in_strip := by intro v hv; simp at hv; rcases hv with rfl | rfl <;> decide
 
-/-- paper_bridge_partition 1 xc > 0: there exists at least one bridge of width 1. -/
+/-- paper_bridge_partition 1 xc > 0: the exact value is 2xc/(1-xc²) > 0. -/
 lemma paper_bridge_partition_one_pos : 0 < paper_bridge_partition 1 xc := by
-  exact lt_of_lt_of_le (pow_pos xc_pos _)
-    (Summable.le_tsum (paper_bridge_summable 1 (by norm_num))
-      paperBridge_width1 (fun b _ => pow_nonneg xc_pos.le _))
+  rw [paper_bridge_partition_1_eq]
+  have hxc : (0 : ℝ) < xc := xc_pos
+  have hxc2 : xc ^ 2 < 1 := by
+    rw [show xc = 1 / Real.sqrt (2 + Real.sqrt 2) from rfl]
+    rw [div_pow, one_pow]
+    rw [div_lt_one (by positivity)]
+    rw [Real.sq_sqrt (by positivity)]
+    linarith [Real.sqrt_nonneg 2]
+  exact div_pos (mul_pos two_pos hxc) (sub_pos.mpr hxc2)
 
 /-! ## Bridge recurrence and lower bound -/
 

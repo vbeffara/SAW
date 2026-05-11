@@ -6782,3 +6782,221 @@ theorem on the hexagonal lattice.
 \leanok
   Direct application of Mathlib's \texttt{Finset.prod\_one\_add}.
 \end{proof}
+
+\section{Exact bridge partition for $T=1$ (proved)}\label{sec:bridge-T1-exact}
+
+\begin{theorem}[Exact bridge partition for $T=1$]
+\label{thm:bridge-partition-1-exact}
+\lean{paper_bridge_partition_1_eq}
+\leanok
+  The bridge partition function for width~$1$ has the exact value:
+  \[
+    B_1^{x_c} = \frac{2x_c}{1 - x_c^2}.
+  \]
+\end{theorem}
+\begin{proof}
+\leanok
+  By exact enumeration of all PaperBridges of width~$1$ in
+  \texttt{SAWStripT1Exact.lean}. The width-$1$ strip admits a geometric
+  series structure: the partition function equals $\sum_{k\geq 0}(x_c^2)^k\cdot 2x_c
+  = 2x_c/(1-x_c^2)$.
+\end{proof}
+
+\begin{theorem}[$T=1$ infinite strip identity (proved)]
+\label{thm:inf-strip-T1-proved}
+\lean{infinite_strip_identity_T1_clean}
+\leanok
+\uses{thm:bridge-partition-1-exact}
+  For $T=1$: $1 = c_\alpha \cdot A_1^{x_c} + x_c \cdot B_1^{x_c}$.
+  This is the sorry-free $T{=}1$ case of the infinite strip identity.
+\end{theorem}
+\begin{proof}
+\leanok
+  Plug in the exact values of $A_1^{x_c}$ and $B_1^{x_c}$ and verify
+  algebraically.
+\end{proof}
+
+\section{Main theorem assembly (proved modulo root sorries)}
+\label{sec:main-assembly}
+
+\begin{theorem}[Paper bridge positivity (proved)]
+\label{thm:bridge-partition-pos}
+\lean{paper_bridge_partition_one_pos}
+\leanok
+\uses{thm:bridge-partition-1-exact}
+  $B_1^{x_c} > 0$. This is immediate from the exact value
+  $2x_c/(1-x_c^2) > 0$.
+\end{theorem}
+\begin{proof}
+\leanok
+  By \texttt{paper\_bridge\_partition\_1\_eq} and positivity of $x_c$
+  and $1 - x_c^2 > 0$.
+\end{proof}
+
+\begin{theorem}[Bridge recurrence (proved modulo infinite strip identity)]
+\label{thm:bridge-recurrence-proved}
+\lean{paper_bridge_recurrence_derived}
+\uses{thm:inf-strip, lem:cutting-argument}
+  There exists $\alpha > 0$ such that for all $T$:
+  \[
+    B_T^{x_c} \leq \alpha \cdot (B_{T+1}^{x_c})^2 + B_{T+1}^{x_c}.
+  \]
+  Derived from the infinite strip identity + cutting argument.
+\end{theorem}
+\begin{proof}
+\uses{thm:inf-strip}
+  From two instances of the strip identity at widths $T$ and $T{+}1$:
+  \[
+    B_T - B_{T+1} = \frac{c_\alpha}{x_c}(A_{T+1} - A_T)
+    \leq \frac{c_\alpha}{x_c} \cdot x_c \cdot B_{T+1}^2
+    = c_\alpha \cdot B_{T+1}^2.
+  \]
+\end{proof}
+
+\begin{theorem}[$Z(x_c) = \infty$ (proved modulo root sorries)]
+\label{thm:Z-xc-div-proved}
+\lean{Z_xc_diverges_corrected}
+\uses{thm:bridge-recurrence-proved, thm:bridge-partition-pos}
+  The partition function diverges at $x_c$: $Z(x_c) = \sum_n c_n x_c^n = \infty$.
+\end{theorem}
+\begin{proof}
+\uses{thm:bridge-recurrence-proved, thm:bridge-partition-pos}
+  From the bridge recurrence and positivity: $B_T^{x_c} \geq c/T$ for
+  all $T \geq 1$ and some $c > 0$. Since each bridge is a SAW,
+  $Z(x_c) \geq \sum_T B_T^{x_c} \geq c \sum_T 1/T = \infty$.
+\end{proof}
+
+\begin{theorem}[Bridge decay (proved modulo $B \leq 1$)]
+\label{thm:bridge-decay-proved}
+\lean{paper_bridge_decay}
+\uses{thm:B-le-one}
+  For $0 < x < x_c$ and $T \geq 1$:
+  \[
+    B_T^x \leq \left(\frac{x}{x_c}\right)^T \cdot \frac{1}{x_c}.
+  \]
+\end{theorem}
+\begin{proof}
+\uses{thm:B-le-one}
+  Since bridges of width $T$ have length $\geq T$:
+  $x^n \leq (x/x_c)^T \cdot x_c^n$. Summing and using $B_T^{x_c} \leq 1/x_c$.
+\end{proof}
+
+\begin{theorem}[$Z(x) < \infty$ for $x < x_c$ (proved modulo HW injection)]
+\label{thm:Z-summable-proved}
+\lean{hw_summable_corrected}
+\uses{thm:hw-counting, thm:bridge-decay-proved}
+  For $0 < x < x_c$: $Z(x) = \sum_n c_n x^n < \infty$.
+\end{theorem}
+\begin{proof}
+\uses{thm:hw-counting, thm:bridge-decay-proved}
+  By the HW counting inequality:
+  $Z_N(x) \leq 2\bigl(\prod_{T=1}^N (1 + B_T^x)\bigr)^2$.
+  Using bridge decay $B_T^x \leq (x/x_c)^T/x_c$, the product converges
+  since $x/x_c < 1$. So $Z_N(x) \leq M$ uniformly, giving summability.
+\end{proof}
+
+\begin{theorem}[Main theorem (proved modulo 3 root sorries)]
+\label{thm:main-proved}
+\lean{connective_constant_eq_corrected}
+\uses{thm:Z-xc-div-proved, thm:Z-summable-proved}
+  $\mu = \sqrt{2 + \sqrt{2}}$.
+\end{theorem}
+\begin{proof}
+\uses{thm:Z-xc-div-proved, thm:Z-summable-proved}
+  From $Z(x_c) = \infty$ ($\mu \geq \sqrt{2{+}\sqrt{2}}$) and
+  $Z(x) < \infty$ for $x < x_c$ ($\mu \leq \sqrt{2{+}\sqrt{2}}$),
+  the radius of convergence is exactly $x_c = 1/\sqrt{2{+}\sqrt{2}}$,
+  so $\mu = x_c^{-1} = \sqrt{2{+}\sqrt{2}}$.
+\end{proof}
+
+
+\chapter{Conjectures}\label{chap:conjectures}
+
+In this chapter, we record the conjectures from Section~4 of the paper,
+which concern the finer asymptotic behavior of self-avoiding walks and
+their conjectured conformal invariance.
+
+\section{Asymptotic behavior of $c_n$}
+
+Nienhuis proposed the more precise asymptotic formula
+\[
+  c_n \sim A \cdot n^{\gamma - 1} \cdot \mu^n,
+\]
+with the \emph{entropic exponent} $\gamma = 43/32$. Here $\sim$ means
+that the ratio of the two sides is $n^{o(1)}$ (or perhaps tends to a
+constant). Moreover, the \emph{mean-square displacement} is conjectured
+to satisfy
+\[
+  \langle |\gamma(n)|^2 \rangle
+  = \frac{1}{c_n} \sum_{\gamma : n\text{-step SAW}} |\gamma(n)|^2
+  = n^{2\nu + o(1)},
+\]
+with the \emph{Flory exponent} $\nu = 3/4$.
+
+Despite the precision of these predictions, the best rigorous bounds on
+$\gamma$ and~$\nu$ are very far apart and several decades old.
+
+\begin{conjecture}[Conformal invariance of SAW]\label{conj:SLE}
+\lean{sle_convergence_conjecture}
+\leanok
+\uses{def:hex_lattice, def:saw}
+  Let $\Omega \neq \mathbb{C}$ be a simply connected domain with two
+  distinct boundary points $a, b$. For $x = x_c$, the law of the SAW
+  $\gamma_\delta$ in $(\Omega_\delta, a_\delta, b_\delta)$ converges as
+  $\delta \to 0$ to chordal SLE($8/3$) in $\Omega$ from $a$ to~$b$.
+\end{conjecture}
+
+\begin{conjecture}[Scaling limit of the observable]\label{conj:observable_limit}
+\uses{def:observable}
+  Let $\Omega$ be simply connected with smooth boundary near $b$,
+  and let $F_\delta$ be the parafermionic observable in
+  $(\Omega_\delta, a_\delta)$. Then
+  \[
+    \lim_{\delta \to 0} \frac{F_\delta(z_\delta)}{F_\delta(b_\delta)}
+    = \left(\frac{\Phi'(z)}{\Phi'(b)}\right)^{5/8},
+  \]
+  where $\Phi$ is a conformal map from $\Omega$ to the upper half-plane
+  mapping $a \to \infty$ and $b \to 0$.
+\end{conjecture}
+
+\section{Bridge decay conjecture}
+
+\begin{remark}[Conjectured bridge decay]\label{rem:bridge-decay-conj}
+\uses{thm:bridge_bound, thm:bridge_lower}
+  The proof provides bounds $c/T \leq B_T^{x_c} \leq 1$.
+  Precise behavior is conjectured to be $B_T^{x_c} \sim T^{-1/4}$
+  as $T \to \infty$. More precisely, for walks from $0$ to $T + iyT$
+  in the strip $S_T$:
+  \[
+    \sum_{\gamma \subset S_T :\, 0 \to T + iyT} x_c^{\ell(\gamma)}
+    \approx T^{-5/4} H(0, 1 + iy)^{5/4},
+  \]
+  where $H$ is the boundary derivative of the Poisson kernel.
+  Integrating over $y$ gives $B_T^{x_c} \sim T^{-1/4}$.
+\end{remark}
+
+\section{Root sorries and proof status}
+
+The main theorem \texttt{connective\_constant\_eq\_corrected}
+is proved modulo three root sorries:
+
+\begin{enumerate}
+  \item \textbf{\texttt{infinite\_strip\_identity}} (SAWRecurrenceProof.lean):
+    The infinite strip identity $1 = c_\alpha A_T^{x_c} + x_c B_T^{x_c}$.
+    Follows from the parafermionic observable (Lemma~2) applied to
+    the infinite strip.
+
+  \item \textbf{\texttt{B\_paper\_le\_one\_strip}} (SAWStripIdentityCorrect.lean):
+    $B_{\text{paper}}(T,L,x_c) \leq 1$. The finite strip version of
+    Lemma~2. Requires the discrete Stokes argument: vertex relation at
+    each vertex, interior cancellation, and boundary evaluation.
+
+  \item \textbf{\texttt{paper\_bridge\_decomp\_injection}} (SAWPaperChain.lean):
+    The Hammersley--Welsh counting inequality
+    $\sum_{n \leq N} c_n x^n \leq 2(\prod_{T=1}^N(1+B_T^x))^2$.
+    Requires the bridge decomposition algorithm and its injectivity.
+\end{enumerate}
+
+Sorries~1 and~2 both follow from the same mathematical argument
+(Lemma~2). Sorry~3 is independent. All algebraic ingredients
+(pair/triplet cancellation) are fully proved.
