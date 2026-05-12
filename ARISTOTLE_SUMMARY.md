@@ -1,3 +1,65 @@
+# Summary of changes for run 6a85ef5e-be80-484e-833e-5ad3d4212121
+# Session Summary
+
+## What was accomplished
+
+### New sorry-free helper lemmas (SAWHWDecompDirect.lean)
+Created a new file `RequestProject/SAWHWDecompDirect.lean` with 6 fully proved helper lemmas for the Hammersley-Welsh decomposition bound. All verified to be genuinely sorry-free (no `sorryAx` dependency):
+
+1. **`rhs_ge_two'`**: The RHS of the HW bound `2 * (∑ S ∈ powerset, ∏ T ∈ S, β_{T+1})²` is always ≥ 2.
+2. **`saw_count_zero'`**: `saw_count 0 = 1` (the trivial walk).
+3. **`decomp_injection_N0'`**: The HW bound holds trivially for N = 0.
+4. **`powerset_prod_eq'`**: The key algebraic identity `∑_{S⊆range N} ∏_{T∈S} β_T = ∏_{T<N} (1 + β_T)`, converting the powerset sum to a product form. This is essential for the exponential bound in `hw_summable_corrected`.
+5. **`paperBridge_width1b`**: Construction of a second explicit PaperBridge of width 1 (complementing the existing `paperBridge_width1`).
+6. **`paperBridge_width1_ne_width1b`**: Proof that the two width-1 bridges are distinct.
+
+### Updated documentation
+- Updated `PROOF_STATUS.md` with comprehensive dependency graph, new helper lemma status, and detailed remaining steps for each root sorry.
+
+### Verification
+- All files compile without errors (8049+ build jobs).
+- No new sorry statements introduced.
+- All new lemmas verified to use only standard axioms (propext, Classical.choice, Quot.sound — no sorryAx).
+
+## What was NOT accomplished
+
+Neither of the two independent root sorries was fully proved:
+
+1. **`infinite_strip_identity`** (Sorry #1): Requires the full parafermionic observable / discrete Stokes argument. The algebraic identities (pair_cancellation, triplet_cancellation) are proved, but the combinatorial walk partitioning into pairs/triplets at each vertex, and the boundary winding evaluation, remain to be formalized.
+
+2. **`paper_bridge_decomp_injection`** (Sorry #3): Requires formalizing the Hammersley-Welsh bridge decomposition algorithm — splitting SAWs at the minimum diagCoord vertex, extracting bridges by induction on width using the hexReScaled coordinate, proving injectivity of the decomposition, and deriving the counting inequality. The new helper lemmas in `SAWHWDecompDirect.lean` provide foundational pieces (powerset-product identity, base case, RHS bound), but the core decomposition algorithm remains.
+
+Both results are deep mathematical theorems (Lemma 2 and Proposition 3 of Duminil-Copin & Smirnov 2012) that each require substantial new formalization infrastructure. The project maintains its existing proof architecture with the same 2 independent mathematical gaps on the critical path.
+
+# Summary of changes for run cd2ae41c-a6ec-4107-a561-132dff0578c3
+# Summary of Session
+
+## What was attempted
+
+I systematically analyzed both remaining root sorries in the formalization of the Duminil-Copin–Smirnov theorem (μ = √(2+√2) for the honeycomb lattice):
+
+1. **`infinite_strip_identity`** (Sorry #1): The parafermionic observable identity for the infinite strip. This requires the full discrete Stokes argument, including defining the observable, proving the vertex relation (using the already-proved pair_cancellation and triplet_cancellation), summing over all vertices, and evaluating boundary contributions.
+
+2. **`paper_bridge_decomp_injection`** (Sorry #3): The Hammersley-Welsh bridge decomposition counting inequality. This requires formalizing the bridge extraction algorithm, proving the decomposition gives bridges with strictly decreasing widths, establishing the injection, and deriving the counting bound.
+
+Multiple proof strategies were attempted for both, including direct subagent attempts with detailed proof sketches, decomposition into helper lemmas, alternative proof approaches (submultiplicativity, induction on N, transfer matrix), and computational verification for small cases. Both results are deep mathematical theorems (Lemma 2 and Proposition 3 of the paper) that require substantial infrastructure not yet present in the formalization.
+
+## What was accomplished
+
+- **Updated `PROOF_STATUS.md`**: Comprehensive update reflecting the current state, dependency structure between the 3 sorries, and detailed remaining steps for each sorry.
+- **Verified build**: Confirmed the full project compiles successfully with 8155 build jobs.
+- **Thorough analysis**: Documented why both sorries are genuinely necessary and cannot be bypassed by simpler arguments. In particular, analyzed the claim in `SAWMainNew.lean` that the upper bound can be proved via submultiplicativity alone (it cannot — the Cauchy-Hadamard root test only gives convergence for x < 1/μ, not for all x < xc).
+
+## What was NOT accomplished
+
+Neither of the two independent root sorries was fully proved:
+
+1. **`infinite_strip_identity`**: Requires formalizing the combinatorial SAW partition into pairs/triplets at each vertex (the algebraic cancellation identities are proved, but the walk-partitioning infrastructure is missing).
+
+2. **`paper_bridge_decomp_injection`**: Requires formalizing the bridge decomposition algorithm (walk splitting at min diagCoord, half-plane bridge extraction by induction on width, translation to PaperBridge, injection proof).
+
+Both represent deep mathematical arguments that require extensive formalization infrastructure beyond what was achievable in this session. The project maintains its existing proof architecture with 3 sorry statements on the critical path (reducible to 2 independent mathematical gaps), and all files compile without errors.
+
 # Summary of changes for run ef492089-c7f0-4f08-bc00-5e902847679e
 # Summary of Progress
 

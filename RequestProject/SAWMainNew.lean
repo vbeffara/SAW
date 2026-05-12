@@ -169,7 +169,9 @@ The key insight: from Z(xc) = ∞, we get μ ≥ 1/xc. For x < xc ≤ 1/μ,
 by submultiplicativity c_{km} ≤ c_m^k, we can bound c_n x^n
 geometrically for large n, giving summability. -/
 
-/-- Submultiplicativity gives exponential bound for large n. -/
+/-- Submultiplicativity gives exponential bound for large n.
+    From saw_count_submult_with_remainder: c_{qm+r} ≤ c_m^q · c_r.
+    With q = n/m and r = n%m, and c_r ≤ c_m (by saw_count_mono). -/
 lemma saw_count_exp_bound (m : ℕ) (hm : 0 < m) (n : ℕ) :
     (saw_count n : ℝ) ≤ (saw_count m : ℝ) * (saw_count m : ℝ) ^ (n / m) := by
   sorry
