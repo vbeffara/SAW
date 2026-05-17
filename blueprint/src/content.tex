@@ -5080,18 +5080,28 @@ by explicitly computing the partition functions.
 \begin{proof} Explicit bridge construction. \end{proof}
 
 \begin{lemma}[$A_{\inf}$ for $T = 1$: upper bound]\label{lem:A_inf_1_le}
-\lean{A_inf_1_le}
+\lean{A_inf_1_upper}
+\leanok
 \uses{def:ABE_inf}
   $A_1^{x_c} \leq \frac{2x_c^3}{1 - x_c^2}$.
+  Proved sorry-free using walk classification on the $T=1$ strip
+  (monotonicity in \texttt{strip1\_pos}), endpoint injectivity, and geometric
+  series bound.
 \end{lemma}
-\begin{proof} Walk enumeration. \end{proof}
+\begin{proof}\leanok Walk enumeration via \texttt{A\_inf\_1\_endpoint\_injective}. \end{proof}
 
 \begin{lemma}[$A_{\inf}$ for $T = 1$: lower bound]\label{lem:A_inf_1_ge}
-\lean{A_inf_1_ge}
+\lean{A_inf_1_lower_independent}
+\leanok
 \uses{def:ABE_inf}
   $A_1^{x_c} \geq \frac{2x_c^3}{1 - x_c^2}$.
+  Proved sorry-free by constructing explicit walks
+  \texttt{strip1\_walk\_to\_pos} and \texttt{strip1\_walk\_to\_neg}
+  for each nonzero integer $k$, establishing a bijection
+  \texttt{A\_inf\_1\_equiv} between $\texttt{PaperSAW\_A\_inf}~1$ and
+  $\{k \in \mathbb{Z} \mid k \neq 0\}$, and computing the geometric series.
 \end{lemma}
-\begin{proof} Explicit walk construction. \end{proof}
+\begin{proof}\leanok Explicit walk construction + bijection + geometric series. \end{proof}
 
 \begin{theorem}[Infinite strip identity for $T = 1$]\label{thm:strip_T1_identity}
 \lean{infinite_strip_identity_T1}
