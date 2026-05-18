@@ -6347,7 +6347,8 @@ s support,
 \section{Walk partition infrastructure (proved)}\label{sec:walk-partition}
 
 \begin{lemma}[DiagCoord adjacency bound]\label{lem:diagcoord-adj}
-\lean{diagCoord_adj_bound}
+\lean{diagCoord_adj_le}
+\lean{diagCoord_adj_ge}
 \leanok
 \uses{def:hex_lattice}
   Adjacent vertices on the hexagonal lattice have diagonal coordinate
@@ -6355,6 +6356,28 @@ s support,
 \end{lemma}
 \begin{proof}\leanok
   Case analysis on the adjacency relation.
+\end{proof}
+
+\begin{lemma}[Walk diagCoord bound]\label{lem:walk-diagcoord-bound}
+\lean{walk_diagCoord_bound}
+\leanok
+\uses{lem:diagcoord-adj}
+  For any walk $p$ of length $n$ from vertex $v$ to $w$,
+  $|\mathrm{diagCoord}(w) - \mathrm{diagCoord}(v)| \leq n$.
+\end{lemma}
+\begin{proof}\leanok
+  By induction on the walk, using the diagCoord adjacency bound.
+\end{proof}
+
+\begin{lemma}[Walk support diagCoord bound]\label{lem:walk-support-diagcoord}
+\lean{walk_support_diagCoord_bound}
+\leanok
+\uses{lem:walk-diagcoord-bound}
+  Every vertex $u$ in the support of a walk from $v$ of length $n$
+  satisfies $|\mathrm{diagCoord}(u) - \mathrm{diagCoord}(v)| \leq n$.
+\end{lemma}
+\begin{proof}\leanok
+  Apply \texttt{walk\_diagCoord\_bound} to the prefix $v \to u$.
 \end{proof}
 
 \begin{lemma}[FALSE vertex neighbors]\label{lem:false-neighbors}

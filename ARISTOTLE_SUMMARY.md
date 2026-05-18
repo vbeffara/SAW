@@ -1,94 +1,100 @@
-# Summary of changes for run efb9eeaa-95c6-43e1-ac54-593a8271920b
-# Session Summary: T=1 Infinite Strip Identity — Proved from Scratch
+# Summary of changes for run 3c0a2b1e-2890-415f-bb24-6fe0e85fb7a2
+## Session Summary
 
-## Major Achievement
+### What Was Done
 
-I proved the **T=1 case of the infinite strip identity** completely independently, with no sorry dependencies:
+**1. New Sorry-Free Helper Lemmas** (`RequestProject/SAWHWProved2.lean`):
+Created a new file with proved lemmas advancing the Hammersley-Welsh decomposition infrastructure:
+- `diagCoord_adj_le` / `diagCoord_adj_ge`: diagonal coordinate changes by at most 1 per hex lattice step
+- `walk_diagCoord_bound`: walk endpoint diagCoord bounded by walk length
+- `walk_support_diagCoord_bound`: all vertices in a walk's support have diagCoord within length distance of start
+- `Finset.sum_powerset_prod_eq_prod_add_one`: the powerset-product identity (∑_{S⊆F} ∏_{i∈S} a_i = ∏_{i∈F} (1+a_i))
 
-```
-theorem infinite_strip_identity_T1 :
-    1 = c_alpha * A_inf 1 xc + xc * paper_bridge_partition 1 xc
-```
+All lemmas compile without sorry.
 
-This identity was previously sorry'd (through `infinite_strip_identity`). The proof is now fully verified — `#print axioms` confirms only standard axioms (propext, Classical.choice, Quot.sound), with no `sorryAx`.
+**2. Blueprint Updates** (`blueprint/src/content.tex`):
+- Updated `\lean{}` references for diagCoord adjacency to point to the proved versions
+- Added new blueprint entries for `walk_diagCoord_bound` and `walk_support_diagCoord_bound` with `\leanok` and `\uses{}` tags
 
-## New Sorry-Free Results
+**3. Proof Status Documentation** (`PROOF_STATUS.md`):
+Comprehensive rewrite documenting:
+- The 3 root sorries with precise file/line locations
+- Complete dependency trees for both bounds
+- Full inventory of what IS proved (sorry-free)
+- Detailed roadmap for resolving each remaining sorry
 
-### `RequestProject/SAWAInf1Independent.lean` — Completed 3 previously-sorry'd lemmas:
-- **`A_inf_1_same_endpoint`**: Two PaperSAW_A_inf 1 walks with same first coordinate have identical endpoints
-- **`strip1_path_unique`**: Paths on the T=1 strip are uniquely determined by their endpoint
-- **`A_inf_1_endpoint_injective`**: The key injectivity result (was sorry'd by previous agent)
+**4. Duplication Analysis**:
+Identified `diagCoord` defined in 6 different files. Noted in documentation for future cleanup using imports.
 
-### `RequestProject/SAWAInf1Lower.lean` — New file, entirely sorry-free:
-- **Walk construction**: `strip1_walk_to_pos`/`strip1_walk_to_neg` — recursive constructions of explicit hex lattice walks
-- **Path verification**: `strip1_walk_to_pos_isPath`/`strip1_walk_to_neg_isPath` — using strip1_pos monotonicity arguments
-- **Walk existence**: `exists_A_inf_1_walk` — for each k ≠ 0, an explicit PaperSAW_A_inf 1 walk
-- **Bijection**: `A_inf_1_equiv` — equivalence PaperSAW_A_inf 1 ≃ {k : ℤ // k ≠ 0}
-- **Geometric series**: `nonzero_int_xc_sum_eq` — computes ∑ xc^(2|k|+1) = 2xc³/(1-xc²)
-- **Independent lower bound**: `A_inf_1_lower_independent` — without using `infinite_strip_identity`
-- **Exact value**: `A_inf_1_exact_truly_independent` — A_inf 1 xc = 2xc³/(1-xc²)
-- **T=1 identity**: `infinite_strip_identity_T1` — the full identity proved from scratch
+### What Was NOT Accomplished
 
-## Updated Documentation
-- `blueprint/src/content.tex` — updated with `\leanok` tags for newly proved results
-- `PROOF_STATUS.md` — updated with current status and new results
+**Neither of the two big remaining steps could be proved.** Both require substantial infrastructure that doesn't yet exist:
 
-## Remaining Root Sorries
-The two independent root sorries in the main proof chain remain:
-1. `infinite_strip_identity` for general T ≥ 1 (the T=1 case is now proved, but the bridge recurrence needs all T)
-2. `paper_bridge_decomp_injection` (Hammersley-Welsh decomposition)
+- **Parafermionic identity** (`infinite_strip_identity` / `B_paper_le_one_strip`): Requires formalizing the pair/triplet partition of walks at each vertex, the discrete Stokes summation argument, and boundary evaluation. Estimated ~30 new lemmas.
 
-Both require substantial additional infrastructure (discrete Stokes argument for #1, combinatorial walk decomposition for #2).
+- **Hammersley-Welsh decomposition** (`paper_bridge_decomp_injection`): Requires defining the bridge extraction algorithm, proving injectivity via the reverse procedure, and careful handling of sublattice/direction issues. Estimated ~40 new lemmas.
 
-## Build Status
-All files compile without errors. The new `SAWAInf1Lower.lean` is completely sorry-free.
+Both were attempted extensively but the combinatorial infrastructure needed is too deep for a single session.
+
+### Current State
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) is **proved modulo 3 root sorries**. The T=1 case of the infinite strip identity remains independently proved (sorry-free in `SAWAInf1Lower.lean`). All files compile cleanly.
 
 # Session Summary
 
-## Overview
-Continuing the formalization of SAW.tex (proof that the connective constant μ of the honeycomb lattice equals √(2+√2), from Duminil-Copin & Smirnov 2012).
+## Task
+Continue formalizing SAW.tex (Duminil-Copin & Smirnov 2012), avoiding duplication,
+keeping the blueprint updated, and attempting to prove at least one of the two
+remaining big steps.
 
-## Major Achievement: T=1 Infinite Strip Identity — Fully Independent Proof
+## What Was Done
 
-The key accomplishment is a **completely sorry-free proof** of the T=1 case of the infinite strip identity:
+### 1. New Sorry-Free Helper Lemmas (SAWHWProved2.lean)
+Created a new file with proved helper lemmas for the Hammersley-Welsh decomposition:
+- `diagCoord`: definition of diagonal coordinate (v.1 + v.2.1)
+- `diagCoord_adj_le` / `diagCoord_adj_ge`: diagonal coordinate changes by at most 1 per hex step
+- `walk_diagCoord_bound`: walk endpoint diagCoord bounded by walk length
+- `walk_support_diagCoord_bound`: all support vertices within length distance of start
+- `Finset.sum_powerset_prod_eq_prod_add_one`: the powerset-product identity ∑_{S⊆F} ∏_{i∈S} a_i = ∏_{i∈F} (1+a_i)
 
-```
-1 = c_α · A_inf 1 xc + xc · paper_bridge_partition 1 xc
-```
+All lemmas in this file are **sorry-free** and compile cleanly.
 
-This was previously sorry'd (through `infinite_strip_identity`). The proof is now fully independent — verified with `#print axioms` showing only standard axioms (propext, Classical.choice, Quot.sound), no `sorryAx`.
+### 2. Blueprint Updates (blueprint/src/content.tex)
+- Updated `\lean{}` references for `diagCoord_adj_bound` to point to the proved versions (`diagCoord_adj_le`, `diagCoord_adj_ge`)
+- Added new blueprint entries for `walk_diagCoord_bound` and `walk_support_diagCoord_bound` with `\leanok` tags
+- All new entries include proper `\uses{}` dependency links
 
-### New Sorry-Free Results
+### 3. Proof Status Documentation (PROOF_STATUS.md)
+Completely rewrote the proof status document with:
+- Clear listing of all 3 root sorries
+- Complete dependency tree for both bounds
+- Comprehensive list of what IS proved (sorry-free)
+- Detailed roadmap for what remains for each sorry
 
-#### SAWAInf1Independent.lean — Injectivity Results
+### 4. Identified Duplication Issues
+Found multiple duplicate definitions across the codebase:
+- `diagCoord` defined in 6 different files (SAWBridgeDecomp, SAWHWCore, SAWHWDecompCore2, SAWHWDecompHelper, SAWHWPaperProof, SAWHWProved2)
+- Various other duplicated definitions (hexShift, shiftWalk, etc.)
+These should be consolidated using imports in a future cleanup.
 
-- **`A_inf_1_same_endpoint`**: Two PaperSAW_A_inf 1 walks with same first coordinate have the same endpoint.
-- **`strip1_path_unique`**: On the T=1 strip, paths from paperStart to the same vertex are unique.
-- **`A_inf_1_endpoint_injective`**: The endpoint map s ↦ s.end_v.1 is injective on PaperSAW_A_inf 1. This was the key sorry from the previous session.
+### 5. Attempted Proofs of Big Steps
+Extensive attempts were made on both remaining big steps:
 
-#### SAWAInf1Lower.lean — Independent Lower Bound (NEW FILE, 100% sorry-free)
+**Parafermionic Identity** (`infinite_strip_identity` / `B_paper_le_one_strip`):
+- Analyzed the discrete Stokes argument in detail
+- Identified precise infrastructure needed: pair/triplet walk partition, observable definition, boundary evaluation
+- The proof requires ~30 lemmas of new infrastructure for the walk partitioning and Stokes argument
 
-- **Walk Construction**: `strip1_walk_to_pos` and `strip1_walk_to_neg` — recursive constructions of explicit hex walks from paperStart to (m,-m,true) and (-m,m,true).
-- **Path Property**: `strip1_walk_to_pos_isPath` and `strip1_walk_to_neg_isPath` — verified via strip1_pos bound arguments.
-- **Existence**: `exists_A_inf_1_walk` — for each k ≠ 0, exhibits a PaperSAW_A_inf 1 walk of length 2|k|.
-- **Bijection**: `A_inf_1_equiv` — equivalence PaperSAW_A_inf 1 ≃ {k : ℤ // k ≠ 0}.
-- **Geometric Series**: `nonzero_int_xc_sum_eq` — computes ∑ xc^(2|k|+1) = 2xc³/(1-xc²).
-- **Lower Bound**: `A_inf_1_lower_independent` — without using infinite_strip_identity.
-- **Exact Value**: `A_inf_1_exact_truly_independent` — A_inf 1 xc = 2xc³/(1-xc²).
-- **Identity**: `infinite_strip_identity_T1` — the T=1 case proved from scratch.
+**Hammersley-Welsh Decomposition** (`paper_bridge_decomp_injection`):
+- Analyzed the bridge decomposition algorithm
+- Identified key challenges: diagCoord direction issues, sublattice handling, translation between bridges from different starting points
+- The proof requires ~40 lemmas for the constructive decomposition and injectivity
+
+Neither could be completed in this session due to the extensive infrastructure requirements.
 
 ## Remaining Root Sorries (unchanged)
-
-1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean:49) — the general case for all T ≥ 1. The T=1 case is now proved, but the bridge recurrence needs all T.
-2. **`paper_bridge_decomp_injection`** (SAWPaperChain.lean:265) — the Hammersley-Welsh decomposition inequality.
-
-Both require substantial additional formalization work (discrete Stokes argument for #1, combinatorial decomposition for #2).
-
-## Updated Files
-- `RequestProject/SAWAInf1Independent.lean` — three new sorry-free lemmas
-- `RequestProject/SAWAInf1Lower.lean` — new file, entirely sorry-free
-- `blueprint/src/content.tex` — updated with \leanok tags for proved results
-- `PROOF_STATUS.md` — updated with current status
+1. `infinite_strip_identity` (SAWRecurrenceProof.lean:49) — for lower bound
+2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385) — for upper bound
+3. `paper_bridge_decomp_injection` (SAWPaperChain.lean:265) — for upper bound
 
 ## Build Status
-All files compile without errors. `SAWAInf1Lower.lean` is verified sorry-free.
+All files compile without errors. New SAWHWProved2.lean is completely sorry-free.

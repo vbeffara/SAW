@@ -15,58 +15,122 @@
 The parafermionic observable identity for the infinite strip, for all T ≥ 1.
 Required for: Z(xc) = ∞ (lower bound μ ≥ √(2+√2)).
 
-**T=1 case: PROVED INDEPENDENTLY** (see below).
-
 ### Sorry #2: `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385)
-Follows from Sorry #1.
+```lean
+B_paper T L xc ≤ 1
+```
+The core bound from the parafermionic observable for the finite strip.
+Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound.
+Follows from Sorry #1 by taking L → ∞, but also independently captures
+the discrete Stokes argument (Lemma 2 of the paper).
 
 ### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:265)
+```lean
+∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
+  2 * (∑ S ∈ (Finset.range N).powerset,
+    ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2
+```
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-## ✅ New Results: T=1 Identity PROVED INDEPENDENTLY
-
-### SAWAInf1Independent.lean — Endpoint injectivity (sorry-free)
-
-- **`A_inf_1_same_endpoint`** ✓: Two PaperSAW_A_inf 1 walks with same first coordinate have the same endpoint.
-- **`strip1_path_unique`** ✓: On the T=1 strip, two paths from paperStart to the same vertex are equal.
-- **`A_inf_1_endpoint_injective`** ✓: The endpoint map s ↦ s.end_v.1 is injective on PaperSAW_A_inf 1.
-- **`A_inf_1_upper`** ✓: A_inf 1 xc ≤ 2xc³/(1-xc²), using endpoint injectivity + geometric series.
-
-### SAWAInf1Lower.lean — Independent lower bound (sorry-free)
-
-All results in this file are **completely sorry-free** and do NOT depend on `infinite_strip_identity`.
-
-- **`strip1_walk_to_pos`** ✓: Recursive construction of walks from paperStart to (m,-m,true) of length 2m.
-- **`strip1_walk_to_neg`** ✓: Symmetric construction for negative direction.
-- **`strip1_walk_to_pos_isPath`** ✓: Constructed walks are paths (no repeated vertices).
-- **`strip1_walk_to_neg_isPath`** ✓: Same for negative direction.
-- **`exists_A_inf_1_walk`** ✓: For each k ≠ 0, explicit PaperSAW_A_inf 1 walk to (k,-k,true).
-- **`A_inf_1_equiv`** ✓: Bijection PaperSAW_A_inf 1 ≃ {k : ℤ // k ≠ 0} via endpoint map.
-- **`nonzero_int_xc_sum_eq`** ✓: Geometric series computation ∑ xc^(2|k|+1) = 2xc³/(1-xc²).
-- **`A_inf_1_lower_independent`** ✓: A_inf 1 xc ≥ 2xc³/(1-xc²).
-- **`A_inf_1_exact_truly_independent`** ✓: A_inf 1 xc = 2xc³/(1-xc²).
-- **`infinite_strip_identity_T1`** ✓: 1 = c_α · A_inf 1 xc + xc · B₁^xc, proved independently!
-
-### Verification
-All axioms are standard (propext, Classical.choice, Quot.sound). No `sorryAx`.
-Verified via `#print axioms infinite_strip_identity_T1`.
-
 ## Proof Architecture
 
+The main theorem depends on two independent bounds:
+
+### Lower Bound: μ ≥ √(2+√2) via Z(xc) = ∞
 ```
 connective_constant_eq_corrected (SAWPaperChain.lean)
-├── Z_xc_diverges_corrected [LOWER BOUND]
-│   └── paper_bridge_lower_bound
-│       └── bridge_recurrence_proved
-│           └── infinite_strip_identity ← SORRY #1 (T=1 case PROVED)
-└── hw_summable_corrected [UPPER BOUND]
-    ├── paper_bridge_decomp_injection ← SORRY #3
-    └── paper_bridge_decay
-        └── paper_bridge_partial_sum_le
-            └── B_paper_le_one_direct
-                └── B_paper_le_one_strip ← SORRY #2 (= consequence of #1)
+└── Z_xc_diverges_corrected [Z(xc) = ∞]
+    └── paper_bridge_lower_bound [B_T ≥ c/T]
+        └── bridge_recurrence_proved [B_T ≤ α·B_{T+1}² + B_{T+1}]
+            └── infinite_strip_identity ← SORRY #1
 ```
 
+### Upper Bound: μ ≤ √(2+√2) via Z(x) < ∞ for x < xc
+```
+connective_constant_eq_corrected (SAWPaperChain.lean)
+└── hw_summable_corrected [Z(x) < ∞]
+    ├── paper_bridge_decomp_injection ← SORRY #3
+    └── paper_bridge_decay [B_T(x) ≤ (x/xc)^T / xc]
+        └── paper_bridge_partial_sum_le [partial sums ≤ 1/xc]
+            └── B_paper_le_one_strip ← SORRY #2
+```
+
+## ✅ What IS Proved (sorry-free)
+
+### Core Algebraic Identities (SAW.lean)
+- `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0
+- `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
+- `sqrt_two_add_sqrt_two_eq`: √(2+√2) = 2cos(π/8)
+- `c_alpha_pos`, `c_eps_pos`: boundary coefficients are positive
+
+### Combinatorial Infrastructure
+- `saw_count_submult'` (SAWSubmult.lean): c_{n+m} ≤ c_n·c_m
+- `saw_count_vertex_independent` (SAWSubmult.lean): c_n is independent of starting vertex
+- `saw_count_pos` (SAW.lean): c_n > 0 for all n
+- `connective_constant` (SAW.lean): definition and basic properties
+
+### Strip Domain Infrastructure (SAWStripIdentityCorrect.lean)
+- `PaperInfStrip`, `PaperFinStrip`: strip domain definitions
+- `PaperSAW_A`, `PaperSAW_B`, `PaperSAW_E`: walk partition functions
+- `correctHexEmbed`: correct hex lattice embedding
+- `boundary_cos_pos`: all boundary angles have positive cosine
+- `starting_direction`: starting mid-edge direction is -1
+
+### Bridge Infrastructure (SAWDiagProof.lean)
+- `PaperBridge`: bridge definition with diagonal coordinates
+- `paper_bridge_partition`: bridge partition function
+- `paper_bridge_length_ge`: bridge of width T has length ≥ T
+- `paper_bridge_in_fin_strip`: bridges fit in finite strips
+
+### Cutting Argument (SAWCuttingProof.lean)
+- `cutting_argument_proved`: A_inf(T+1) - A_inf(T) ≤ xc·B(T+1)²
+- All helper lemmas (prefix/suffix bridge extraction, walk splitting)
+
+### Bridge Recurrence (SAWRecurrenceProof.lean, modulo sorry #1)
+- `bridge_diff_eq`: B(T) - B(T+1) = c_α/xc · (A(T+1) - A(T))
+- `bridge_recurrence_proved`: B(T) ≤ c_α·B(T+1)² + B(T+1)
+
+### Lower Bound Infrastructure (SAWDecomp.lean)
+- `quadratic_recurrence_lower_bound`: from recurrence → B_T ≥ c/T
+- `harmonic_not_summable`: ∑ 1/n diverges
+- `not_summable_of_lower_bound`: comparison with harmonic series
+
+### Bridge Decay (SAWPaperChain.lean, modulo sorry #2)
+- `paper_bridge_decay`: B_T(x) ≤ (x/xc)^T / xc for x < xc
+- `paper_bridge_summable`: bridges are summable for T ≥ 1
+
+### Helper Lemmas (SAWHWProved2.lean, sorry-free)
+- `diagCoord_adj_le/ge`: diagonal coordinate changes by at most 1 per step
+- `walk_diagCoord_bound`: walk endpoint within length distance
+- `walk_support_diagCoord_bound`: all support vertices within length distance
+- `Finset.sum_powerset_prod_eq_prod_add_one`: powerset-product identity
+
+### T=1 Identity (SAWAInf1Lower.lean, sorry-free, INDEPENDENT)
+- `infinite_strip_identity_T1`: 1 = c_α·A_inf(1) + xc·B₁
+- Complete explicit computation for T=1 strip
+
+## What Remains
+
+### To prove Sorry #1 (Parafermionic Identity):
+1. Define the parafermionic observable F(z) at mid-edges
+2. Formalize the pair/triplet partition of walks at each vertex
+3. Show each pair/triplet contributes 0 (using pair_cancellation + triplet_cancellation)
+4. Sum over all vertices (discrete Stokes theorem)
+5. Evaluate boundary contributions
+6. Conclude: 1 = c_α·A + B + c_ε·E for finite strip
+7. Take L → ∞ to get infinite strip identity
+
+### To prove Sorry #2 (B_paper ≤ 1):
+Same as Sorry #1 steps 1-6 (it's the direct consequence of the finite strip identity).
+
+### To prove Sorry #3 (HW Decomposition):
+1. Define the bridge decomposition algorithm for half-plane walks
+2. Prove the decomposition produces bridges of strictly decreasing widths
+3. Define the full SAW decomposition (split at min diagCoord vertex)
+4. Prove injectivity of the decomposition (reverse procedure)
+5. Prove the weight bound (walk length ≥ sum of bridge lengths)
+6. Derive the counting inequality
+
 ## Build Status
-All files compile without errors. The new SAWAInf1Lower.lean is completely sorry-free.
+All files in the main proof chain compile without errors.
