@@ -1,3 +1,52 @@
+# Summary of changes for run 01f66c80-070b-488b-b22d-d8455caaa9a5
+## Summary of Changes
+
+### New Sorry-Free Proofs: `RequestProject/SAWStripProofNew.lean`
+
+Created a new file with two fully proved lemmas that establish the algebraic core of the vertex relation (Lemma 1 of the paper) for the parafermionic observable:
+
+- **`false_vertex_triplet_zero`**: At any FALSE vertex of the hex lattice, for any accumulated winding W, the triplet contribution to the vertex relation vanishes:
+  ```
+  1 · windingPhase(W) + j · windingPhase(W-1) · xc + conj(j) · windingPhase(W+1) · xc = 0
+  ```
+
+- **`true_vertex_triplet_zero`**: The analogous result at TRUE vertices:
+  ```
+  (-1) · windingPhase(W) + (-j) · windingPhase(W-1) · xc + (-conj(j)) · windingPhase(W+1) · xc = 0
+  ```
+
+These lemmas are the algebraic engine of the discrete Stokes argument: they show that at each vertex of the strip, the direction-weighted observable contributions from any walk and its one-step extensions cancel, regardless of the walk's accumulated winding. They connect `triplet_cancellation` (the abstract algebraic identity) to the concrete vertex geometry via `windingPhase` (the complex phase for a given winding in units of π/3).
+
+Both lemmas compile without sorry and use only standard axioms (propext, Classical.choice, Quot.sound).
+
+### Blueprint Updates: `blueprint/src/content.tex`
+
+Added entries for:
+- `windingPhase` definition with `\leanok`
+- `false_vertex_triplet_zero` lemma with `\leanok` and proof
+- `true_vertex_triplet_zero` lemma with `\leanok` and proof
+- Proper `\uses{}` dependency tags linking to `triplet_cancellation`
+
+### Documentation Updates: `PROOF_STATUS.md`
+
+Completely rewritten with:
+- Clear statement that there are only **2 independent root sorries** (#1/#2 parafermionic, #3 HW decomposition)
+- New section documenting the vertex relation infrastructure
+- Updated roadmap showing which steps of the parafermionic proof are now complete
+- Detailed list of remaining gaps for each sorry
+
+### What Remains
+
+The main theorem `connective_constant_eq_corrected` (μ = √(2+√2)) is proved modulo 2 independent root sorries:
+
+1. **Parafermionic identity** (Sorry #1/#2): The algebraic ingredients (pair cancellation, triplet cancellation, vertex triplet zero at both vertex types) are all fully proved. What remains is the combinatorial discrete Stokes argument: properly defining the observable at each mid-edge, showing interior edges cancel in the vertex relation sum, handling "blocked extensions" via pair cancellation, and evaluating boundary contributions.
+
+2. **Hammersley-Welsh decomposition** (Sorry #3): Requires formalizing the bridge extraction algorithm, proving its injectivity, and deriving the counting inequality. Infrastructure exists in multiple files but the main combinatorial construction is not yet complete.
+
+### No T=1 Special Case Work
+
+This session focused entirely on the general case (arbitrary T, L), establishing the vertex relation infrastructure for general strips rather than exploiting the T=1 special case.
+
 # Summary of changes for run 3c0a2b1e-2890-415f-bb24-6fe0e85fb7a2
 ## Session Summary
 

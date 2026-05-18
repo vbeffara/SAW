@@ -4531,6 +4531,51 @@ $j \overline{\lambda}^4 + \bar{j} \lambda^4 = 0$
   $e^{-i\sigma\pi/3} = \lambda$.
 \end{proof}
 
+\begin{definition}[Winding phase]\label{def:winding_phase}
+\lean{windingPhase}
+\leanok
+\uses{def:sigma}
+  The complex phase $\texttt{windingPhase}(W) = e^{-i\sigma W\pi/3}$
+  for integer winding $W$ (in units of $\pi/3$).
+\end{definition}
+
+\begin{lemma}[FALSE vertex triplet zero]\label{lem:false_vertex_triplet}
+\lean{false_vertex_triplet_zero}
+\leanok
+\uses{thm:triplet_cancel, def:winding_phase}
+  At a FALSE vertex entering from the same-cell TRUE neighbor,
+  the triplet contribution to the vertex relation is zero:
+  \[
+    1 \cdot \texttt{windingPhase}(W)
+    + j \cdot \texttt{windingPhase}(W{-}1) \cdot x_c
+    + \bar{j} \cdot \texttt{windingPhase}(W{+}1) \cdot x_c = 0.
+  \]
+  This holds for \emph{any} integer $W$, capturing that triplet
+  cancellation works regardless of the accumulated winding of the walk.
+\end{lemma}
+\begin{proof}
+\leanok
+  Factor out $\texttt{windingPhase}(W)$; the bracket reduces to
+  $1 + x_c j \bar{\lambda} + x_c \bar{j} \lambda = 0$
+  by \texttt{triplet\_cancellation}.
+\end{proof}
+
+\begin{lemma}[TRUE vertex triplet zero]\label{lem:true_vertex_triplet}
+\lean{true_vertex_triplet_zero}
+\leanok
+\uses{lem:false_vertex_triplet}
+  At a TRUE vertex, the triplet contribution is zero:
+  \[
+    (-1) \cdot \texttt{windingPhase}(W)
+    + (-j) \cdot \texttt{windingPhase}(W{-}1) \cdot x_c
+    + (-\bar{j}) \cdot \texttt{windingPhase}(W{+}1) \cdot x_c = 0.
+  \]
+\end{lemma}
+\begin{proof}
+\leanok
+  Factor out $-1$; apply \texttt{false\_vertex\_triplet\_zero}.
+\end{proof}
+
 \section{Hammersley--Welsh decomposition: infrastructure}\label{sec:hw_infra}
 
 The following helper lemmas for the Hammersley--Welsh bridge decomposition

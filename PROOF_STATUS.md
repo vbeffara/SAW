@@ -21,8 +21,7 @@ B_paper T L xc ≤ 1
 ```
 The core bound from the parafermionic observable for the finite strip.
 Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound.
-Follows from Sorry #1 by taking L → ∞, but also independently captures
-the discrete Stokes argument (Lemma 2 of the paper).
+**Note**: Sorry #2 is a consequence of Sorry #1 (by taking L → ∞).
 
 ### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:265)
 ```lean
@@ -32,6 +31,8 @@ the discrete Stokes argument (Lemma 2 of the paper).
 ```
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
+
+**There are only 2 independent root sorries: #1/#2 (parafermionic) and #3 (HW).**
 
 ## Proof Architecture
 
@@ -63,6 +64,16 @@ connective_constant_eq_corrected (SAWPaperChain.lean)
 - `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
 - `sqrt_two_add_sqrt_two_eq`: √(2+√2) = 2cos(π/8)
 - `c_alpha_pos`, `c_eps_pos`: boundary coefficients are positive
+
+### Vertex Relation Infrastructure (SAWStripProofNew.lean) — NEW
+- `false_vertex_triplet_zero`: triplet cancellation at FALSE vertices
+  For any winding W: 1·windingPhase(W) + j·windingPhase(W-1)·xc + conj(j)·windingPhase(W+1)·xc = 0
+- `true_vertex_triplet_zero`: triplet cancellation at TRUE vertices
+  For any winding W: (-1)·windingPhase(W) + (-j)·windingPhase(W-1)·xc + (-conj(j))·windingPhase(W+1)·xc = 0
+
+These lemmas establish that the triplet contribution to the vertex relation
+(Lemma 1 of the paper) vanishes for ANY accumulated winding. They are the
+algebraic core of the parafermionic observable argument.
 
 ### Combinatorial Infrastructure
 - `saw_count_submult'` (SAWSubmult.lean): c_{n+m} ≤ c_n·c_m
@@ -106,31 +117,28 @@ connective_constant_eq_corrected (SAWPaperChain.lean)
 - `walk_support_diagCoord_bound`: all support vertices within length distance
 - `Finset.sum_powerset_prod_eq_prod_add_one`: powerset-product identity
 
-### T=1 Identity (SAWAInf1Lower.lean, sorry-free, INDEPENDENT)
-- `infinite_strip_identity_T1`: 1 = c_α·A_inf(1) + xc·B₁
-- Complete explicit computation for T=1 strip
-
 ## What Remains
 
-### To prove Sorry #1 (Parafermionic Identity):
-1. Define the parafermionic observable F(z) at mid-edges
-2. Formalize the pair/triplet partition of walks at each vertex
-3. Show each pair/triplet contributes 0 (using pair_cancellation + triplet_cancellation)
-4. Sum over all vertices (discrete Stokes theorem)
+### To prove Sorry #1/#2 (Parafermionic Identity):
+The algebraic ingredients are fully proved (pair/triplet cancellation, winding
+phase triplet identity at both vertex types). What remains is the combinatorial
+discrete Stokes argument:
+1. ✅ Define the winding phase and prove triplet cancellation at vertices
+2. Define the observable at each mid-edge of the strip
+3. Show the vertex relation holds at each interior vertex (requires handling
+   blocked extensions via pair cancellation — the hard combinatorial step)
+4. Sum vertex relations: interior mid-edges cancel (discrete Stokes)
 5. Evaluate boundary contributions
-6. Conclude: 1 = c_α·A + B + c_ε·E for finite strip
-7. Take L → ∞ to get infinite strip identity
-
-### To prove Sorry #2 (B_paper ≤ 1):
-Same as Sorry #1 steps 1-6 (it's the direct consequence of the finite strip identity).
+6. Conclude: 1 = c_α·A + B + c_ε·E, hence B ≤ 1
 
 ### To prove Sorry #3 (HW Decomposition):
-1. Define the bridge decomposition algorithm for half-plane walks
-2. Prove the decomposition produces bridges of strictly decreasing widths
-3. Define the full SAW decomposition (split at min diagCoord vertex)
-4. Prove injectivity of the decomposition (reverse procedure)
-5. Prove the weight bound (walk length ≥ sum of bridge lengths)
+1. Define half-plane walks using hexReScaled coordinate
+2. Formalize walk splitting at minimum hexReScaled vertex
+3. Formalize bridge extraction by induction on hexReScaled width
+4. Show extracted bridges are valid PaperBridges after translation
+5. Prove injectivity of the decomposition
 6. Derive the counting inequality
 
 ## Build Status
 All files in the main proof chain compile without errors.
+New `SAWStripProofNew.lean` is completely sorry-free.
