@@ -1,3 +1,33 @@
+# Summary of changes for run 58dc2a17-c549-4401-b87f-0420bbceacbe
+## Summary: Hammersley-Welsh Bridge Decomposition Analysis
+
+I conducted an extensive analysis of the Hammersley-Welsh bridge decomposition proof (`paper_bridge_decomp_injection` in `SAWPaperChain.lean`), which is Sorry #3 in the proof of the connective constant theorem.
+
+### What I accomplished
+
+1. **Key infrastructure lemma** (`SAWHWReCoord.lean`, sorry-free): I proved two new lemmas that are essential prerequisites for the bridge decomposition:
+   - `hexReScaled_adj_ne`: The `hexReScaled` coordinate **strictly changes at every step** of a walk in hexGraph. This is THE key property that resolves the fundamental "flat walk" obstacle for the bridge decomposition on the hexagonal lattice. With the simpler `diagCoord`, adjacent vertices can have the same coordinate (4 out of 6 edge directions preserve `diagCoord`), which breaks the inductive bridge extraction. With `hexReScaled`, every step changes the coordinate, enabling clean induction on walk height.
+   - `hexReScaled_mod3`: The hexReScaled values are always ≡ 0 or 2 (mod 3), with TRUE vertices at ≡ 2 and FALSE vertices at ≡ 0. This structural property is needed to map hexReScaled bridges back to PaperBridges.
+
+2. **Updated documentation** (`PROOF_STATUS.md`): I updated the proof status document with a detailed analysis of the approach needed to close Sorry #3, including the specific formalization steps required.
+
+### Why the sorry remains
+
+The Hammersley-Welsh bridge decomposition inequality is an extremely deep combinatorial result. Fully formalizing it requires:
+1. Defining half-space walks using the hexReScaled coordinate
+2. Implementing the bridge extraction algorithm (splitting walks at last max-hexReScaled vertex)
+3. Proving the decomposition is injective (the key: each walk is uniquely reconstructible from its bridge sequence)
+4. Proving the weight bound (walk length ≥ sum of bridge lengths)
+5. Handling the translation from hexReScaled bridges to PaperBridges (the mod-3 structure determines which bridges correspond to PaperBridges)
+
+This is a substantial multi-file formalization project. The mathematical argument itself involves careful handling of walk splitting, descent segments between bridges, and the interplay between the hexReScaled coordinate system and the PaperBridge strip constraints. I investigated multiple alternative approaches (submultiplicativity bounds, transfer matrix methods, direct computation) and confirmed that the bridge decomposition is the **only known method** to establish the upper bound μ ≤ √(2+√2).
+
+### Project status
+
+- All files compile successfully
+- The `SAWHWReCoord.lean` file is completely sorry-free with the new lemmas
+- The main theorem chain (`connective_constant_eq_corrected`) still has 2 independent root sorries: #1/#2 (parafermionic) and #3 (HW decomposition)
+
 # Summary of changes for run 01f66c80-070b-488b-b22d-d8455caaa9a5
 ## Summary of Changes
 

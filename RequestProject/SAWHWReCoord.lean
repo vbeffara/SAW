@@ -54,6 +54,28 @@ lemma hexReScaled_walk_bound {v w : HexVertex} (p : hexGraph.Walk v w) :
     simp [SimpleGraph.Walk.length_cons]
     omega
 
+/-- hexReScaled strictly changes at every step: adjacent vertices have different
+    hexReScaled values. This is the key property that resolves the "flat walk"
+    issue for the bridge decomposition on the hexagonal lattice.
+
+    Proof: The adjacency rules give hexReScaled changes of exactly {-2, -1, +1, +2},
+    never 0. Specifically:
+    - TRUE → FALSE: changes are {-2, -2, +1}
+    - FALSE → TRUE: changes are {+2, +2, -1} -/
+lemma hexReScaled_adj_ne {v w : HexVertex} (h : hexGraph.Adj v w) :
+    hexReScaled v ≠ hexReScaled w := by
+  rcases v with ⟨vx, vy, vb⟩; rcases w with ⟨wx, wy, wb⟩
+  rcases h with ⟨hv, hw, h3 | h3 | h3⟩ | ⟨hv, hw, h3 | h3 | h3⟩ <;>
+    obtain ⟨h1, h2⟩ := h3 <;> simp_all [hexReScaled] <;> omega
+
+/-- hexReScaled values are always ≡ 0 or 2 (mod 3).
+    TRUE vertices have hexReScaled ≡ 2 (mod 3).
+    FALSE vertices have hexReScaled ≡ 0 (mod 3). -/
+lemma hexReScaled_mod3 (v : HexVertex) :
+    hexReScaled v % 3 = if v.2.2 then 2 else 0 := by
+  simp [hexReScaled]
+  cases v.2.2 <;> simp <;> omega
+
 /-- Bridge endpoint has hexReScaled = 3T. -/
 lemma hexReScaled_bridge_endpoint {v : HexVertex}
     (hd : v.1 + v.2.1 = -(T : ℤ)) (hf : v.2.2 = false) :

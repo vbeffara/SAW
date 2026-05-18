@@ -32,6 +32,26 @@ Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
+**Detailed analysis of the approach (SAWHWReCoord.lean)**:
+The key to the bridge decomposition on the hexagonal lattice is the
+`hexReScaled` coordinate, which STRICTLY changes at every step of the walk
+(proved as `hexReScaled_adj_ne`). This resolves the "flat walk" issue that
+arises with the simpler `diagCoord` (which can stay constant along edges).
+
+Key proved properties of `hexReScaled`:
+- `hexReScaled_adj_ne`: hexReScaled strictly changes at every walk step
+- `hexReScaled_adj_bound`: changes are in {-2, -1, +1, +2}
+- `hexReScaled_mod3`: values are always ≡ 0 or 2 (mod 3)
+- `hexReScaled_in_strip`: PaperInfStrip T maps to hexReScaled ∈ [0, 3T]
+- `hexReScaled_bridge_endpoint`: PaperBridge of width T ends at hexReScaled 3T
+
+To complete the proof, one needs to formalize:
+1. Walk splitting at the minimum-hexReScaled vertex
+2. Half-space walk decomposition into bridges by induction on hexReScaled height
+3. Bridge extraction and translation to PaperBridges
+4. Injectivity of the decomposition (each walk uniquely determines its bridge sequence)
+5. Weight bound (walk length ≥ sum of bridge lengths, hence x^n ≤ ∏ x^{bridge_len})
+
 **There are only 2 independent root sorries: #1/#2 (parafermionic) and #3 (HW).**
 
 ## Proof Architecture
@@ -65,15 +85,9 @@ connective_constant_eq_corrected (SAWPaperChain.lean)
 - `sqrt_two_add_sqrt_two_eq`: √(2+√2) = 2cos(π/8)
 - `c_alpha_pos`, `c_eps_pos`: boundary coefficients are positive
 
-### Vertex Relation Infrastructure (SAWStripProofNew.lean) — NEW
+### Vertex Relation Infrastructure (SAWStripProofNew.lean)
 - `false_vertex_triplet_zero`: triplet cancellation at FALSE vertices
-  For any winding W: 1·windingPhase(W) + j·windingPhase(W-1)·xc + conj(j)·windingPhase(W+1)·xc = 0
 - `true_vertex_triplet_zero`: triplet cancellation at TRUE vertices
-  For any winding W: (-1)·windingPhase(W) + (-j)·windingPhase(W-1)·xc + (-conj(j))·windingPhase(W+1)·xc = 0
-
-These lemmas establish that the triplet contribution to the vertex relation
-(Lemma 1 of the paper) vanishes for ANY accumulated winding. They are the
-algebraic core of the parafermionic observable argument.
 
 ### Combinatorial Infrastructure
 - `saw_count_submult'` (SAWSubmult.lean): c_{n+m} ≤ c_n·c_m
@@ -81,12 +95,11 @@ algebraic core of the parafermionic observable argument.
 - `saw_count_pos` (SAW.lean): c_n > 0 for all n
 - `connective_constant` (SAW.lean): definition and basic properties
 
-### Strip Domain Infrastructure (SAWStripIdentityCorrect.lean)
-- `PaperInfStrip`, `PaperFinStrip`: strip domain definitions
-- `PaperSAW_A`, `PaperSAW_B`, `PaperSAW_E`: walk partition functions
-- `correctHexEmbed`: correct hex lattice embedding
-- `boundary_cos_pos`: all boundary angles have positive cosine
-- `starting_direction`: starting mid-edge direction is -1
+### HexReScaled Coordinate (SAWHWReCoord.lean)
+- `hexReScaled_adj_ne`: strict change at every step (key for bridge decomposition)
+- `hexReScaled_mod3`: mod-3 structure of hexReScaled values
+- `hexReScaled_in_strip`: strip constraints in hexReScaled coordinates
+- `hexReScaled_bridge_endpoint`: bridge endpoints in hexReScaled coordinates
 
 ### Bridge Infrastructure (SAWDiagProof.lean)
 - `PaperBridge`: bridge definition with diagonal coordinates
@@ -96,16 +109,13 @@ algebraic core of the parafermionic observable argument.
 
 ### Cutting Argument (SAWCuttingProof.lean)
 - `cutting_argument_proved`: A_inf(T+1) - A_inf(T) ≤ xc·B(T+1)²
-- All helper lemmas (prefix/suffix bridge extraction, walk splitting)
 
 ### Bridge Recurrence (SAWRecurrenceProof.lean, modulo sorry #1)
-- `bridge_diff_eq`: B(T) - B(T+1) = c_α/xc · (A(T+1) - A(T))
 - `bridge_recurrence_proved`: B(T) ≤ c_α·B(T+1)² + B(T+1)
 
 ### Lower Bound Infrastructure (SAWDecomp.lean)
 - `quadratic_recurrence_lower_bound`: from recurrence → B_T ≥ c/T
 - `harmonic_not_summable`: ∑ 1/n diverges
-- `not_summable_of_lower_bound`: comparison with harmonic series
 
 ### Bridge Decay (SAWPaperChain.lean, modulo sorry #2)
 - `paper_bridge_decay`: B_T(x) ≤ (x/xc)^T / xc for x < xc
@@ -114,31 +124,29 @@ algebraic core of the parafermionic observable argument.
 ### Helper Lemmas (SAWHWProved2.lean, sorry-free)
 - `diagCoord_adj_le/ge`: diagonal coordinate changes by at most 1 per step
 - `walk_diagCoord_bound`: walk endpoint within length distance
-- `walk_support_diagCoord_bound`: all support vertices within length distance
 - `Finset.sum_powerset_prod_eq_prod_add_one`: powerset-product identity
 
 ## What Remains
 
 ### To prove Sorry #1/#2 (Parafermionic Identity):
-The algebraic ingredients are fully proved (pair/triplet cancellation, winding
-phase triplet identity at both vertex types). What remains is the combinatorial
+The algebraic ingredients are fully proved. What remains is the combinatorial
 discrete Stokes argument:
 1. ✅ Define the winding phase and prove triplet cancellation at vertices
 2. Define the observable at each mid-edge of the strip
-3. Show the vertex relation holds at each interior vertex (requires handling
-   blocked extensions via pair cancellation — the hard combinatorial step)
+3. Show the vertex relation holds at each interior vertex
 4. Sum vertex relations: interior mid-edges cancel (discrete Stokes)
 5. Evaluate boundary contributions
 6. Conclude: 1 = c_α·A + B + c_ε·E, hence B ≤ 1
 
 ### To prove Sorry #3 (HW Decomposition):
+The hexReScaled coordinate infrastructure is in place (`hexReScaled_adj_ne` etc.).
+The remaining formalization steps are:
 1. Define half-plane walks using hexReScaled coordinate
 2. Formalize walk splitting at minimum hexReScaled vertex
-3. Formalize bridge extraction by induction on hexReScaled width
+3. Formalize bridge extraction by induction on hexReScaled height
 4. Show extracted bridges are valid PaperBridges after translation
 5. Prove injectivity of the decomposition
 6. Derive the counting inequality
 
 ## Build Status
 All files in the main proof chain compile without errors.
-New `SAWStripProofNew.lean` is completely sorry-free.
