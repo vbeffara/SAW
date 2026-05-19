@@ -1,3 +1,50 @@
+# Summary of changes for run d872f603-f5d7-402c-a906-9a54d75b48ba
+## Hammersley-Welsh Bridge Decomposition: Progress Report
+
+### What was accomplished
+
+I worked on the Hammersley-Welsh bridge decomposition (`paper_bridge_decomp_injection` in `SAWPaperChain.lean`), which is Sorry #3 in the proof of the connective constant theorem μ = √(2+√2).
+
+#### New sorry-free file: `RequestProject/SAWHWStructural.lean`
+
+Created a new file with **8 fully proved structural lemmas** that are essential for the bridge decomposition. All lemmas compile without sorry and use only standard axioms (propext, Classical.choice, Quot.sound).
+
+The key results are:
+
+1. **`dc_step_from_true`** / **`dc_step_from_false`**: On the hex lattice, diagCoord (= x+y) can only *decrease or stay* at TRUE→FALSE steps, and only *increase or stay* at FALSE→TRUE steps. This is the fundamental monotonicity property of the bipartite hex lattice.
+
+2. **`true_only_false_neighbor_at_dc`**: A TRUE vertex's only neighbor at the same or higher diagCoord is the FALSE vertex in the same unit cell.
+
+3. **`path_interior_has_neighbors`**: Any non-endpoint vertex in a path has both a predecessor and a successor, and they are distinct.
+
+4. **`no_true_at_min_dc_in_strip`**: In any SAW from dc > -T staying in [-T, 0], TRUE vertices at dc = -T **cannot appear** as intermediate vertices. Proof: such a vertex would force its predecessor AND successor to be the same FALSE vertex (the only valid neighbor in the strip), contradicting self-avoidance.
+
+5. **`no_false_at_zero_dc`**: Similarly, FALSE vertices at dc = 0 cannot appear as intermediate vertices in bridges from paperStart.
+
+6. **`bridge_satisfies_paper_inf_strip`** (the main result): Any SAW from paperStart to a FALSE vertex at dc = -T, with all vertices having dc ∈ [-T, 0], **automatically satisfies PaperInfStrip T** for ALL vertices. This means the bridge decomposition produces valid PaperBridges without needing explicit PaperInfStrip verification.
+
+This last result resolves the fundamental bipartite-structure obstacle for the bridge decomposition: PaperInfStrip has different constraints for TRUE vertices (dc ∈ [-(T-1), 0]) and FALSE vertices (dc ∈ [-T, -1]), which are tighter than just "dc ∈ [-T, 0]". The structural lemmas show that self-avoidance on the hex lattice automatically enforces these tighter constraints.
+
+#### Updated documentation
+
+Updated `PROOF_STATUS.md` with the new structural lemmas and their role in the proof.
+
+### What remains (`paper_bridge_decomp_injection`)
+
+The main sorry remains. This is the Hammersley-Welsh bridge decomposition counting inequality — a deep combinatorial theorem. The structural lemmas proved above resolve the most fundamental obstacle (PaperInfStrip compatibility), but the full proof still requires:
+
+1. **Walk splitting** at the first vertex of minimum diagCoord (uses `max_dc_is_true'` from `SAWHWDecompInject.lean`)
+2. **Half-plane walk decomposition** into PaperBridges by induction on width, with the "forgotten edge" trick ensuring strictly decreasing bridge widths
+3. **Injectivity** of the decomposition (different SAWs produce different bridge tuples)
+4. **Weight bound** (walk length ≥ sum of bridge lengths, hence x^n ≤ ∏ x^{bridge_len} for x < 1)
+5. **Counting argument** relating the injection to the powerset-product formula
+
+Steps 2-3 are the most complex, requiring substantial walk manipulation infrastructure (splitting walks at given vertices, reversing, translating, and composing while preserving self-avoidance).
+
+### Build status
+
+All files compile without errors. The new `SAWHWStructural.lean` is completely sorry-free.
+
 # Summary of changes for run 605b1afe-57e7-4ec1-82ad-78f1bb41d3ad
 ## Hammersley-Welsh Bridge Decomposition: Progress Report
 

@@ -32,7 +32,24 @@ Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-**Detailed analysis of the approach**:
+**Key progress** (SAWHWStructural.lean, sorry-free):
+
+The following critical structural lemmas have been proved, establishing that
+the bridge decomposition automatically produces valid PaperBridges:
+
+- `dc_step_from_true`: From TRUE vertices, diagCoord can only decrease or stay
+- `dc_step_from_false`: From FALSE vertices, diagCoord can only increase or stay
+- `true_only_false_neighbor_at_dc`: TRUE vertex's only neighbor at same dc is FALSE(same cell)
+- `path_interior_has_neighbors`: Non-endpoint path vertices have distinct predecessor and successor
+- `no_true_at_min_dc_in_strip`: TRUE vertices at dc = -T cannot be intermediate vertices in bridges (they would force revisiting FALSE at same dc, violating self-avoidance)
+- `no_false_at_zero_dc`: FALSE vertices at dc = 0 cannot be intermediate vertices in bridges from paperStart
+- `bridge_satisfies_paper_inf_strip`: **KEY RESULT**: Any SAW from paperStart to a FALSE vertex at dc = -T, staying in dc ∈ [-T, 0], automatically satisfies PaperInfStrip T for ALL vertices. This means the bridge decomposition produces valid PaperBridges without needing to verify PaperInfStrip constraints explicitly.
+
+These lemmas resolve the fundamental bipartite-structure obstacle: on the hex lattice,
+TRUE and FALSE vertices have different PaperInfStrip constraints, but self-avoidance
+automatically enforces the tighter constraints.
+
+**Detailed analysis of the remaining approach**:
 
 Two complementary coordinate systems are available:
 
