@@ -32,22 +32,28 @@ Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-**Detailed analysis of the approach (SAWHWReCoord.lean)**:
-The key to the bridge decomposition on the hexagonal lattice is the
-`hexReScaled` coordinate, which STRICTLY changes at every step of the walk
-(proved as `hexReScaled_adj_ne`). This resolves the "flat walk" issue that
-arises with the simpler `diagCoord` (which can stay constant along edges).
+**Detailed analysis of the approach**:
 
-Key proved properties of `hexReScaled`:
-- `hexReScaled_adj_ne`: hexReScaled strictly changes at every walk step
-- `hexReScaled_adj_bound`: changes are in {-2, -1, +1, +2}
-- `hexReScaled_mod3`: values are always ≡ 0 or 2 (mod 3)
-- `hexReScaled_in_strip`: PaperInfStrip T maps to hexReScaled ∈ [0, 3T]
-- `hexReScaled_bridge_endpoint`: PaperBridge of width T ends at hexReScaled 3T
+Two complementary coordinate systems are available:
+
+1. **hexReScaled** (SAWHWReCoord.lean): STRICTLY changes at every walk step,
+   resolving the "flat walk" issue with diagCoord. Key lemmas:
+   - `hexReScaled_adj_ne`: strictly changes at every step
+   - `hexReScaled_adj_bound`: changes are in {-2, -1, +1, +2}
+   - `hexReScaled_mod3`: values ≡ 0 or 2 (mod 3)
+   - `hexReScaled_in_strip`: PaperInfStrip T → hexReScaled ∈ [0, 3T]
+
+2. **diagCoord** (v.1 + v.2.1) with the structural lemma (SAWHWDecompInject.lean):
+   - `false_has_true_ge_dc'`: In any non-trivial hex walk, every FALSE vertex
+     has a TRUE vertex at diagCoord ≥ its own in the walk support
+   - `max_dc_is_true'`: Max diagCoord is ALWAYS achieved by a TRUE vertex
+   This is the key structural lemma: it ensures the split vertex in the
+   Hammersley-Welsh decomposition is always TRUE, making extracted bridges
+   compatible with PaperBridge (which starts at paperStart = TRUE vertex).
 
 To complete the proof, one needs to formalize:
-1. Walk splitting at the minimum-hexReScaled vertex
-2. Half-space walk decomposition into bridges by induction on hexReScaled height
+1. Walk splitting at the first max-diagCoord vertex (always TRUE by max_dc_is_true')
+2. Half-space walk decomposition into PaperBridges by induction on width
 3. Bridge extraction and translation to PaperBridges
 4. Injectivity of the decomposition (each walk uniquely determines its bridge sequence)
 5. Weight bound (walk length ≥ sum of bridge lengths, hence x^n ≤ ∏ x^{bridge_len})

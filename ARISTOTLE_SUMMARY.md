@@ -1,3 +1,42 @@
+# Summary of changes for run 605b1afe-57e7-4ec1-82ad-78f1bb41d3ad
+## Hammersley-Welsh Bridge Decomposition: Progress Report
+
+### What was accomplished
+
+I worked on the Hammersley-Welsh bridge decomposition (`paper_bridge_decomp_injection` in `SAWPaperChain.lean`), which is the key counting inequality for the upper bound μ ≤ √(2+√2).
+
+#### New sorry-free lemmas (SAWHWDecompInject.lean)
+
+I created a new file with two fully proved structural lemmas that are essential prerequisites for the bridge decomposition:
+
+1. **`false_has_true_ge_dc'`**: In any non-trivial hex walk, every FALSE vertex has a TRUE vertex at diagCoord ≥ its own in the walk support. This holds because hexGraph is bipartite (FALSE ↔ TRUE adjacency only), and all TRUE neighbors of FALSE(x,y) have diagCoord ≥ x+y.
+
+2. **`max_dc_is_true'`**: In any non-trivial hex path, the maximum diagCoord is ALWAYS achieved by a TRUE vertex. This is the **key structural lemma** for the bridge decomposition. It ensures that when we split a SAW at its max-diagCoord vertex (the first step of the Hammersley-Welsh algorithm), that vertex is always TRUE. This is critical because PaperBridges start at `paperStart` (a TRUE vertex), so extracted bridges are automatically compatible with the PaperBridge definition after translation.
+
+Both lemmas compile without sorry and use only standard axioms (propext, Classical.choice, Quot.sound).
+
+#### Updated documentation (PROOF_STATUS.md)
+
+Updated the proof status document with:
+- The new structural lemmas and their role
+- A clearer roadmap for completing the bridge decomposition
+- Two complementary coordinate systems (hexReScaled and diagCoord) and how they contribute
+
+### What remains (paper_bridge_decomp_injection)
+
+The sorry `paper_bridge_decomp_injection` remains. This is the Hammersley-Welsh bridge decomposition counting inequality — a deep combinatorial theorem that requires:
+
+1. **Walk splitting** at the first max-diagCoord vertex (always TRUE by `max_dc_is_true'`)
+2. **Half-space walk decomposition** into PaperBridges by induction on width
+3. **Bridge extraction and translation** to PaperBridges (using graph automorphisms)
+4. **Injectivity** of the decomposition (each walk uniquely determines its bridge sequence)
+5. **Weight bound** (walk length ≥ sum of bridge lengths)
+
+The structural lemma `max_dc_is_true'` resolves the most fundamental obstacle (ensuring compatibility with PaperBridge). The remaining steps require substantial walk manipulation infrastructure (splitting, reversing, translating walks while preserving self-avoidance).
+
+### Build status
+All files compile without errors. The new file `SAWHWDecompInject.lean` is completely sorry-free.
+
 # Summary of changes for run 58dc2a17-c549-4401-b87f-0420bbceacbe
 ## Summary: Hammersley-Welsh Bridge Decomposition Analysis
 
