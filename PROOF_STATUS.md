@@ -32,7 +32,7 @@ Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-**Key progress** (SAWHWStructural.lean, SAWHWReCoord.lean, SAWHWDecompInject.lean — all sorry-free, no longer depend on SAWPaperChain.lean):
+**Key progress** (multiple sorry-free infrastructure files):
 
 **IMPORTANT**: These three files have been refactored to import SAWDiagProof instead
 of SAWPaperChain, breaking the circular dependency. This means hw_bridge_decomp_core

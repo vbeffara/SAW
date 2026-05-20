@@ -1,3 +1,58 @@
+# Summary of changes for run 3da309bf-1120-4036-aaa0-28ac37e05702
+## Hammersley-Welsh Bridge Decomposition: Progress Report
+
+### Task
+Prove `paper_bridge_decomp_injection` (Sorry #3 in the proof chain) — the Hammersley-Welsh bridge decomposition counting inequality for the connective constant of the hexagonal lattice.
+
+### What was accomplished
+
+**New sorry-free file: `RequestProject/SAWHWComplete.lean`** (7 proved lemmas):
+
+1. **`le_two_mul_sq_of_one_le`**: For A ≥ 1, A ≤ 2A² — the algebraic bound needed to go from the single-product to the squared-product form.
+
+2. **`powerset_prod_ge_one'`**: The powerset-product sum ∑_S ∏ B_{T+1} ≥ 1 (the empty set contributes 1).
+
+3. **`bridge_summable_x`**: Bridge partition summability for 0 < x ≤ xc, derived from `paper_bridge_summable`.
+
+4. **`bridge1a`, `bridge1b`**: Two explicit PaperBridges of width 1 (paperStart → (-1,0,false) and paperStart → (0,-1,false)), with proofs that they're distinct and have length 1.
+
+5. **`bridge_partition_one_ge_2x`**: B₁(x) ≥ 2x for 0 < x ≤ xc — proved by exhibiting the two explicit bridges and using tsum lower bounds.
+
+6. **`bridge_partition_one_ge_x`**: B₁(x) ≥ x for 0 < x ≤ xc.
+
+**New file: `RequestProject/SAWHWExtraction.lean`** (3 proved + 2 sorry'd lemmas):
+
+7. **`walk_min_dc_le`** (proved): The walk minimum diagCoord is ≤ any vertex's diagCoord.
+
+8. **`walk_min_dc_achieved`** (proved): The minimum diagCoord is achieved by some vertex.
+
+9. **`walk_min_dc_le_start`** (proved): The minimum ≤ the starting vertex's diagCoord.
+
+10. **`bridge_extraction`** (sorry'd): For a path visiting dc < 0, extract a PaperBridge of the maximum width. This requires Walk.takeUntil + bridge_satisfies_paper_inf_strip.
+
+11. **`width_W_saw_bound`** (sorry'd): Width-W SAWs are bounded by B_W × (width-<W walks).
+
+### What remains
+
+The core sorry — `paper_bridge_decomp_injection` in `SAWPaperChain.lean` — **remains open**. This is the Hammersley-Welsh bridge decomposition counting inequality, a deep combinatorial theorem (Hammersley-Welsh, 1962).
+
+The key remaining steps to close this sorry are:
+
+1. **Bridge extraction** (bridge_extraction): Given a SAW visiting dc < 0, extract a PaperBridge of maximum width as a prefix. Requires formalizing the "last-max, first-min" vertex selection using Walk.takeUntil/dropUntil.
+
+2. **Width decrease**: After bridge extraction, the remainder walk has strictly smaller width (the max dc of the remainder is strictly below the original max dc). This follows from the "last-max" property.
+
+3. **Width induction**: By induction on width W, show width-W SAWs contribute ≤ B_W × ∏_{T<W}(1+B_T).
+
+4. **Telescoping**: Use the identity 1 + ∑_W B_W ∏_{T<W}(1+B_T) = ∏(1+B_T) to assemble the bound.
+
+5. **Final algebra**: Combine with the proved le_two_mul_sq_of_one_le and powerset_prod_ge_one'.
+
+The helper lemmas proved in this session provide the algebraic framework (steps 4-5) and the walk minimum infrastructure (step 1 prerequisites). The remaining gap is the constructive bridge extraction (steps 1-3), which requires substantial walk manipulation infrastructure.
+
+### Build status
+All files compile. `SAWHWComplete.lean` is completely sorry-free. The main theorem chain has the same root sorries as before (#1 parafermionic, #3 HW decomposition).
+
 # Summary of changes for run 70abaadb-0b4e-4c84-b61e-032159f600ea
 ## Summary of Work on the Hammersley-Welsh Bridge Decomposition (Sorry #3)
 
