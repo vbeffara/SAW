@@ -3,7 +3,8 @@
 -/
 
 import Mathlib
-import RequestProject.SAWPaperChain
+import RequestProject.SAWDiagProof
+import RequestProject.SAWSubmult
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -46,7 +47,21 @@ lemma path_interior_has_neighbors {v w : HexVertex}
     (hu_ne_v : u ≠ v) (hu_ne_w : u ≠ w) :
     ∃ a b : HexVertex, a ∈ p.support ∧ b ∈ p.support ∧
       hexGraph.Adj a u ∧ hexGraph.Adj u b ∧ a ≠ b := by
-  grind +suggestions
+  -- Since u is not the start or end, there exist indices i and j such that p.getVert i = u and p.getVert j = u with i < j.
+  obtain ⟨i, hi⟩ : ∃ i : ℕ, i < p.length ∧ p.getVert i = u := by
+    have h_support : u ∈ p.support → ∃ i : ℕ, i < p.length ∧ p.getVert i = u := by
+      intro hu
+      have h_support : u ∈ p.support → ∃ i : ℕ, i ≤ p.length ∧ p.getVert i = u := by
+        rw [ SimpleGraph.Walk.mem_support_iff_exists_getVert ] at hu ; aesop;
+      obtain ⟨ i, hi₁, hi₂ ⟩ := h_support hu; use i; cases lt_or_eq_of_le hi₁ <;> simp_all +decide [ SimpleGraph.Walk.getVert ] ;
+    exact h_support hu;
+  refine' ⟨ p.getVert ( i - 1 ), p.getVert ( i + 1 ), _, _, _, _, _ ⟩ <;> rcases i with ( _ | i ) <;> simp_all +decide [ SimpleGraph.Walk.getVert ];
+  · grind +suggestions;
+  · convert p.adj_getVert_succ _ using 1;
+    · exact hi.2.symm;
+    · lia;
+  · have := hp.getVert_injOn;
+    exact fun h => by have := this ( show i ≤ p.length from by linarith ) ( show i + 1 + 1 ≤ p.length from by linarith ) h; linarith;
 
 /-
 In a SAW staying in dc ∈ [-T, 0] (T ≥ 1) starting from dc > -T,
@@ -79,8 +94,10 @@ lemma no_true_at_min_dc_in_strip {v w : HexVertex}
     · grind;
   grind
 
-/-- In a SAW from TRUE at dc 0 staying in dc ∈ [-T, 0] (T ≥ 1),
-    all non-endpoint FALSE vertices have dc < 0. -/
+/-
+In a SAW from TRUE at dc 0 staying in dc ∈ [-T, 0] (T ≥ 1),
+    all non-endpoint FALSE vertices have dc < 0.
+-/
 lemma no_false_at_zero_dc {v w : HexVertex}
     (p : hexGraph.Walk v w) (hp : p.IsPath)
     (T : ℕ) (hT : 1 ≤ T)
@@ -113,8 +130,18 @@ lemma no_false_at_zero_dc {v w : HexVertex}
       exact ⟨by rw [← hi]; exact p.adj_getVert_succ (by linarith), by exact p.getVert_mem_support _⟩
     exact h_successor
   obtain ⟨w₂, hw₂⟩ : ∃ w₂, hexGraph.Adj w₂ u ∧ w₂ ∈ p.support := by
-    grind +suggestions
-  grind +suggestions
+    exact ⟨ w₁, by simpa [ hex_adj_flip_bool ] using hw₁.1.symm, hw₁.2 ⟩
+  obtain ⟨w₁, hw₁⟩ : ∃ w₁ : HexVertex, hexGraph.Adj u w₁ ∧ w₁ ∈ p.support ∧ w₁ = (u.1, u.2.1, true) := by
+    grind
+  obtain ⟨w₂, hw₂⟩ : ∃ w₂ : HexVertex, hexGraph.Adj w₂ u ∧ w₂ ∈ p.support ∧ w₂ = (u.1, u.2.1, true) := by
+    exact ⟨ w₂, hw₂.1, hw₂.2, h_predecessor w₂ hw₂.1 hw₂.2 ⟩;
+  obtain ⟨w₁, hw₁⟩ : ∃ w₁ : HexVertex, hexGraph.Adj u w₁ ∧ w₁ ∈ p.support ∧ w₁ ≠ (u.1, u.2.1, true) := by
+    have h_neighbors : ∃ a b : HexVertex, a ∈ p.support ∧ b ∈ p.support ∧ hexGraph.Adj a u ∧ hexGraph.Adj u b ∧ a ≠ b := by
+      apply path_interior_has_neighbors p hp u hu;
+      · grind;
+      · exact hu_not_last;
+    grind +qlia;
+  exact hw₁.2.2 ( h_neighbors w₁ hw₁.1 ( by linarith [ hstrip w₁ hw₁.2.1 ] ) )
 
 /-- The key PaperInfStrip compatibility: any SAW from paperStart to a FALSE
     vertex at dc -T, staying in dc ∈ [-T, 0], satisfies PaperInfStrip T. -/

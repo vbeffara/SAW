@@ -8,7 +8,7 @@ same diagCoord are DIFFERENT, ensuring distinct bridge widths.
 -/
 
 import Mathlib
-import RequestProject.SAWPaperChain
+import RequestProject.SAWDiagProof
 
 open Real Complex ComplexConjugate Filter Topology
 

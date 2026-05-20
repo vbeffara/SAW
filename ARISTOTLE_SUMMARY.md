@@ -1,3 +1,55 @@
+# Summary of changes for run 70abaadb-0b4e-4c84-b61e-032159f600ea
+## Summary of Work on the Hammersley-Welsh Bridge Decomposition (Sorry #3)
+
+I worked on proving `paper_bridge_decomp_injection` in `SAWPaperChain.lean` — the Hammersley-Welsh bridge decomposition counting inequality:
+
+```
+∑_{n≤N} c_n x^n ≤ 2 (∑_S ∏_{T∈S} B_{T+1}(x))²
+```
+
+### What was accomplished
+
+**1. Breaking circular dependencies (critical infrastructure work):**
+
+Three key structural files were refactored to no longer depend on `SAWPaperChain.lean`:
+
+- **`SAWHWStructural.lean`**: Changed import from `SAWPaperChain` to `SAWDiagProof` + `SAWSubmult`. Fixed two `grind +suggestions` proofs that broke with the new imports — `path_interior_has_neighbors` and `no_false_at_zero_dc` were fully re-proved. **This file is now sorry-free and independent of SAWPaperChain.**
+
+- **`SAWHWReCoord.lean`**: Changed import from `SAWPaperChain` to `SAWDiagProof`. Builds successfully without changes. **Remains sorry-free.**
+
+- **`SAWHWDecompInject.lean`**: Changed import from `SAWPaperChain` to `SAWDiagProof`. Builds successfully without changes. **Remains sorry-free.**
+
+This means all the structural lemmas needed for the HW proof (`bridge_satisfies_paper_inf_strip`, `max_dc_is_true'`, `hexReScaled_adj_ne`, etc.) are now available without any circular dependency on the sorry in `SAWPaperChain.lean`.
+
+**2. New file `SAWHWBridgeDecomp.lean`:**
+
+Created a file that imports the refactored structural files (without importing `SAWPaperChain`) and states the equivalent theorem `hw_bridge_decomp_core`. Once this theorem is proved, it can be imported into `SAWPaperChain.lean` to close sorry #3. The file also includes helper lemmas `bp_nn` and `ps_ge_one`.
+
+**3. New file `SAWHWFinal.lean`:**
+
+Integration file with instructions for connecting `hw_bridge_decomp_core` to `paper_bridge_decomp_injection`.
+
+**4. Updated `PROOF_STATUS.md`** with the new progress.
+
+### What remains
+
+The core sorry — `hw_bridge_decomp_core` / `paper_bridge_decomp_injection` — remains open. This is a deep combinatorial theorem (from Hammersley-Welsh 1962) that requires:
+
+1. **Walk splitting**: Split each SAW at the first vertex of maximum diagCoord (TRUE by `max_dc_is_true'`)
+2. **Half-plane walk decomposition**: Each half, after reversal/translation, decomposes into PaperBridges of strictly decreasing widths
+3. **Injectivity**: The decomposition map is injective (up to factor 2)
+4. **Weight counting**: Total bridge length ≤ walk length, and x < 1 gives the bound
+
+The full formalization would require ~500+ lines of Lean code defining the bridge decomposition map and proving its properties. The structural infrastructure is now in place (dependency-free), but the combinatorial construction itself is not yet formalized.
+
+### Files modified/created
+- `RequestProject/SAWHWStructural.lean` — import changed, two proofs fixed (sorry-free)
+- `RequestProject/SAWHWReCoord.lean` — import changed (sorry-free)
+- `RequestProject/SAWHWDecompInject.lean` — import changed (sorry-free)
+- `RequestProject/SAWHWBridgeDecomp.lean` — new file with theorem statement and helpers
+- `RequestProject/SAWHWFinal.lean` — integration file
+- `PROOF_STATUS.md` — updated documentation
+
 # Summary of changes for run d872f603-f5d7-402c-a906-9a54d75b48ba
 ## Hammersley-Welsh Bridge Decomposition: Progress Report
 

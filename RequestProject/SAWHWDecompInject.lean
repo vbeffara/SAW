@@ -21,7 +21,7 @@ Annals of Mathematics 175(3), 2012, Section 3.
 -/
 
 import Mathlib
-import RequestProject.SAWPaperChain
+import RequestProject.SAWDiagProof
 import RequestProject.SAWWalkPartition
 
 open Real Complex ComplexConjugate Filter Topology
