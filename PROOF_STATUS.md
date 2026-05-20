@@ -32,7 +32,26 @@ Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
 
-**Key progress** (multiple sorry-free infrastructure files):
+**Key progress** (multiple sorry-free infrastructure files, including new results from this session):
+
+**NEW (this session)**: Two new sorry-free files for the bridge extraction:
+
+- `SAWHWBridgeExtractProof.lean`: Proves that the first vertex at minimum dc in a
+  walk from paperStart is FALSE (`first_min_dc_is_false`), and that the prefix to
+  that vertex is a valid PaperBridge (`prefix_to_first_min_is_bridge`). These are
+  the key structural lemmas for extracting bridges from SAWs.
+
+- `SAWHWRecurrence.lean`: Walk translation infrastructure (`hexShift`, `shiftWalk`)
+  with proved properties: `hexShift_adj` (preserves adjacency), `shiftWalk_length`
+  (preserves length), `shiftWalk_isPath` (preserves path property),
+  `shiftWalk_support` (shifted support = map of support).
+
+**Key finding**: The diagCoord-based half-plane walk framework does NOT work for
+the bridge decomposition base case, because adjacent TRUE-FALSE vertices at the
+same cell share the same diagCoord. This makes DownHP(0) contain non-trivial walks,
+breaking the induction. The correct approach requires using `hexReScaled` (which
+strictly changes at every step) for the half-plane walk width definition, and then
+connecting hexReScaled bridges back to PaperBridges via the mod-3 structure.
 
 **IMPORTANT**: These three files have been refactored to import SAWDiagProof instead
 of SAWPaperChain, breaking the circular dependency. This means hw_bridge_decomp_core
