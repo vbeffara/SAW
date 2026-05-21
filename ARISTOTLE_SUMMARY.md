@@ -1,3 +1,43 @@
+# Summary of changes for run be979342-f52d-4a27-90e2-dd7f9dbd49e3
+## Hammersley-Welsh Bridge Decomposition: Analysis and Status
+
+I performed an extensive analysis of the Hammersley-Welsh bridge decomposition inequality (`hw_injection_bound` in `SAWHWFinalProof.lean`), which is the single remaining sorry for the HW part of the proof that μ = √(2+√2).
+
+### What was done
+
+1. **Deep analysis of the paper's proof**: I carefully studied Section 3 of the Duminil-Copin-Smirnov paper (available in `SAW.tex`) to understand the correct proof strategy. The key insight is the **"forgotten vertex" convention**: when extracting a bridge from a half-plane walk, the bridge is "prolonged to the mid-edge on the right of the last vertex," and the (n+1)-th vertex is "forgotten since there is no ambiguity in its position." This convention is essential for handling the hexagonal lattice's bipartite structure.
+
+2. **Identified the bipartite structure challenge**: On the hex lattice, TRUE and FALSE vertices alternate, and after bridge extraction, the remainder starts from a vertex of the opposite type. The paper's "forgotten vertex" trick resolves this: the bridge includes one extra step (to the forgotten vertex), and the remainder starts from the forgotten vertex with strictly smaller width.
+
+3. **Documented the proof strategy**: I updated `SAWHWFinalProof.lean` with a detailed module docstring explaining:
+   - The half-plane walk decomposition by induction on width
+   - The forgotten vertex convention and why it ensures strict width decrease
+   - The general SAW decomposition via splitting at the first max-dc vertex
+   - The injectivity argument (reverse procedure)
+   - The weight bound and factor-2 explanation
+
+4. **Verified existing infrastructure**: The project already has significant proved infrastructure that would be used in the full formalization:
+   - `max_dc_is_true'`: max diagCoord is always TRUE
+   - `bridge_satisfies_paper_inf_strip`: extracted bridges satisfy PaperInfStrip
+   - `hexReScaled_adj_ne`: hexReScaled strictly changes at every step
+   - `prefix_to_first_min_is_bridge`: bridge extraction produces valid PaperBridges
+   - `hexFlip`, `hexShift`: lattice automorphisms for the bipartite translation
+   - `saw_count_vertex_independent`: vertex independence of SAW counts
+
+### What remains
+
+The sorry `hw_injection_bound` in `SAWHWFinalProof.lean` (line 75) remains. This is a deep combinatorial theorem requiring ~500+ lines of additional formalization:
+
+1. **Define the recursive bridge extraction algorithm** using hexReScaled as the projection coordinate (which strictly changes at every step, resolving flat-step issues)
+2. **Prove bridge validity**: each extracted segment is a valid PaperBridge (using `bridge_satisfies_paper_inf_strip`)  
+3. **Prove strict width decrease**: the forgotten vertex convention ensures the remainder has strictly smaller hexReScaled range
+4. **Prove injectivity**: the bridge sequence uniquely determines the walk (reverse procedure)
+5. **Derive the counting inequality**: combine the injection with the weight bound x^n ≤ x^{bridge_lengths} for 0 < x ≤ 1
+
+### Project state
+
+The project builds successfully. The sorry chain for the HW part is exactly one theorem: `hw_injection_bound`. All downstream code (`hw_bridge_decomp_proved`, `paper_bridge_decomp_injection`, `hw_summable_corrected`, `connective_constant_eq_corrected`) correctly derives from this single sorry.
+
 # Summary of changes for run 065b26c0-af3e-48fc-aaeb-8071cdd93130
 ## Hammersley-Welsh Bridge Decomposition: Progress Report
 

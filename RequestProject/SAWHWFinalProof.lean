@@ -1,8 +1,57 @@
 /-
 # Hammersley-Welsh Bridge Decomposition: Final Proof
 
-Proves the key HW inequality. The core sorry (hw_injection_bound)
-captures the full Hammersley-Welsh bridge decomposition argument.
+The key inequality for the upper bound μ ≤ √(2+√2).
+
+## Proof strategy (from Duminil-Copin-Smirnov 2012 §3)
+
+The paper proves this following Hammersley-Welsh (1962):
+
+1. **Half-plane walk decomposition** (by induction on width T₀):
+   Given a half-plane SAW γ̃ (start has extremal projected coordinate):
+   - Find the LAST vertex at max projected coordinate, after n steps.
+   - The first n vertices form a bridge of width T₀ (prolonged to the
+     mid-edge past the last vertex).
+   - "We forget about the (n+1)-th vertex, since there is no ambiguity
+     in its position." This forgotten vertex starts the remainder.
+   - The remaining steps form a half-plane walk of width T₁ < T₀.
+   - By induction: the walk decomposes into bridges of widths T₀ > ⋯ > Tⱼ.
+   - The forgotten vertex convention ensures the width STRICTLY decreases.
+
+2. **General SAW decomposition**:
+   Cut the SAW at the first vertex of maximal projected coordinate.
+   The left part (reversed) and right part are half-plane walks.
+   Decompose each into bridges with strictly decreasing widths.
+
+3. **Injectivity**: Given the starting mid-edge and first vertex, the
+   decomposition uniquely determines the walk (reverse procedure).
+
+4. **Weight bound**: The total bridge length ≤ walk length (the
+   forgotten vertices add length not counted in bridges, and for x ≤ 1
+   this means x^{walk_length} ≤ x^{bridge_lengths}).
+
+5. **Factor 2**: Two choices for the first vertex from the starting
+   mid-edge (one TRUE, one FALSE in the hex lattice).
+
+## Key infrastructure available
+
+- `max_dc_is_true'`: max diagCoord achieved by TRUE vertex
+- `bridge_satisfies_paper_inf_strip`: bridges satisfy PaperInfStrip
+- `hexFlip`, `hexShift`: lattice automorphisms for translation/reflection
+- `hexReScaled_adj_ne`: hexReScaled strictly changes at every step
+- `prefix_to_first_min_is_bridge`: bridge extraction from walks
+- `first_min_dc_is_false`: first vertex at min dc is FALSE
+
+## What remains to formalize
+
+The main gap is the recursive bridge extraction algorithm with the
+"forgotten vertex" convention, and the proof that the map from SAWs
+to bridge sequences is injective. This requires:
+1. Defining the decomposition function (recursive, using hexReScaled)
+2. Proving it produces valid PaperBridges (using existing structural lemmas)
+3. Proving the width strictly decreases at each step
+4. Proving injectivity (the reverse procedure)
+5. Deriving the counting inequality
 -/
 
 import Mathlib
@@ -18,28 +67,8 @@ set_option maxHeartbeats 4000000
 
 /-- The Hammersley-Welsh bridge decomposition inequality.
 
-    **Proof sketch** (Hammersley-Welsh 1962, Duminil-Copin-Smirnov 2012 §3):
-
-    Every SAW from paperStart of length n ≤ N can be decomposed into
-    a pair of bridge sequences with strictly decreasing widths from
-    {1, ..., N}, with total bridge length ≤ n:
-
-    1. Split the SAW at the first vertex achieving maximum diagCoord
-       (always TRUE by max_dc_is_true').
-    2. Translate both halves to start from paperStart.
-    3. Decompose each half into bridges by iteratively extracting
-       the last FALSE vertex at minimum diagCoord:
-       - The prefix to that vertex is a PaperBridge
-         (by bridge_satisfies_paper_inf_strip).
-       - The suffix has strictly smaller width (no vertex at
-         the previous minimum after the last FALSE there).
-    4. The decomposition produces bridges with strictly decreasing
-       widths and total length ≤ walk length.
-    5. The map is injective (bridges determine the split points).
-
-    This injection gives:
-      ∑ c_n x^n ≤ (∑_S ∏_{T∈S} B_T(x))² ≤ 2·(∑_S ∏_{T∈S} B_T(x))²
-    since x^n ≤ x^{total bridge length} for 0 < x ≤ 1. -/
+    **Status**: sorry. This is the core combinatorial gap.
+    See the module docstring for the proof strategy and remaining steps. -/
 theorem hw_injection_bound {x : ℝ} (hx : 0 < x) (hx1 : x ≤ 1) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * (∏ T ∈ Finset.range N, (1 + paper_bridge_partition (T + 1) x)) ^ 2 := by
