@@ -1,3 +1,37 @@
+# Summary of changes for run 065b26c0-af3e-48fc-aaeb-8071cdd93130
+## Hammersley-Welsh Bridge Decomposition: Progress Report
+
+### What was accomplished
+
+I focused exclusively on the Hammersley-Welsh bridge decomposition inequality (Sorry #3 in the proof of μ = √(2+√2)).
+
+#### Key structural changes
+
+1. **`SAWHWFinalProof.lean` (new file)**: Contains the consolidated sorry and the clean derivation:
+   - `hw_injection_bound`: The single remaining sorry for the HW part — the core bridge decomposition inequality stating ∑ c_n x^n ≤ 2·P² where P = ∏(1 + B_T(x)). Includes a detailed proof sketch in the docstring.
+   - `hw_bridge_decomp_proved`: Derives the powerset-sum form of the inequality from `hw_injection_bound` using the Finset.prod_one_add identity. **Proved (sorry-free).**
+
+2. **`SAWPaperChain.lean` (modified)**: The sorry in `paper_bridge_decomp_injection` has been **replaced** by a call to `hw_bridge_decomp_proved`. The file now imports `SAWHWFinalProof` and the sorry no longer lives in this file.
+
+3. **`SAWHWStrictHP.lean` (new file)**: Infrastructure for "strict half-plane walks" (SAWs from paperStart where all non-start vertices have diagCoord ∈ [-W, -1]):
+   - `IsStrictDownHP`, `strictHP`: Definitions for the walk predicate and count.
+   - `strictHP_zero_zero`: **Proved** — the only strict DownHP(0) walk of length 0 is the trivial walk (count = 1).
+   - `strictHP_zero_succ`: **Proved** — no strict DownHP(0) walk of length ≥ 1 exists (count = 0).
+
+4. **`PROOF_STATUS.md` (updated)**: Updated to reflect the consolidation of Sorry #3 from `SAWPaperChain.lean` to `SAWHWFinalProof.lean`.
+
+#### What remains
+
+The single sorry `hw_injection_bound` in `SAWHWFinalProof.lean` captures the full Hammersley-Welsh bridge decomposition argument. This is a deep combinatorial theorem requiring ~500 lines of infrastructure to formalize from scratch:
+
+1. **Walk splitting at max diagCoord** (infrastructure exists: `max_dc_is_true'`)
+2. **Iterative bridge extraction** from half-plane walks (infrastructure exists: `first_min_dc_is_false`, `prefix_to_first_min_is_bridge`, `bridge_satisfies_paper_inf_strip`)
+3. **Walk transformation** via hexFlip + hexTranslate (infrastructure exists: `hexShift_adj`, `shiftWalk_isPath`)
+4. **Injectivity** of the decomposition
+5. **Counting inequality** combining injection with x ≤ 1
+
+The base case infrastructure (`strictHP_zero_zero`, `strictHP_zero_succ`) is now proved, providing the foundation for the inductive argument.
+
 # Summary of changes for run 49ca28fc-2a30-4f1b-8b73-5bb7e8f120ac
 ## Hammersley-Welsh Bridge Decomposition: Progress Report
 

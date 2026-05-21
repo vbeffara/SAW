@@ -23,6 +23,7 @@ import RequestProject.SAWDecomp
 import RequestProject.SAWCuttingProof
 import RequestProject.SAWRecurrenceProof
 import RequestProject.SAWStripT1Exact
+import RequestProject.SAWHWFinalProof
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -261,8 +262,8 @@ lemma paper_bridge_partition_nonneg (T : ℕ) (x : ℝ) (hx : 0 < x) :
 theorem paper_bridge_decomp_injection {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * (∑ S ∈ (Finset.range N).powerset,
-      ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2 := by
-  sorry
+      ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2 :=
+  hw_bridge_decomp_proved hx hxc N
 
 /-
 Hammersley-Welsh summability: Z(x) < ∞ for 0 < x < xc.

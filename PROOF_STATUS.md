@@ -23,14 +23,17 @@ The core bound from the parafermionic observable for the finite strip.
 Required for: paper_bridge_partial_sum_le → paper_bridge_decay → upper bound.
 **Note**: Sorry #2 is a consequence of Sorry #1 (by taking L → ∞).
 
-### Sorry #3: `paper_bridge_decomp_injection` (SAWPaperChain.lean:265)
+### Sorry #3: `hw_injection_bound` (SAWHWFinalProof.lean:46)
 ```lean
 ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-  2 * (∑ S ∈ (Finset.range N).powerset,
-    ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2
+  2 * (∏ T ∈ Finset.range N, (1 + paper_bridge_partition (T + 1) x)) ^ 2
 ```
 The Hammersley-Welsh bridge decomposition counting inequality.
 Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
+**Note**: `paper_bridge_decomp_injection` in SAWPaperChain.lean now calls
+`hw_bridge_decomp_proved` (SAWHWFinalProof.lean), which derives from this sorry
+via the powerset product identity. The sorry has been consolidated from
+SAWPaperChain.lean to SAWHWFinalProof.lean.
 
 **Key progress** (multiple sorry-free infrastructure files, including new results from this session):
 
