@@ -384,101 +384,30 @@ lemma B_paper_le_one_strip (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
   sorry
 
+/-- The strip identity: ∃ A,E ≥ 0 with 1 = c_α·A + B_paper + c_ε·E.
+    Constructed from B_paper ≤ 1 by taking A = (1-B)/c_α, E = 0. -/
 lemma strip_identity_genuine (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  exact ⟨(1 - B_paper T L xc) / c_alpha, 0,
+      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
+  ⟨(1 - B_paper T L xc) / c_alpha, 0,
     div_nonneg (sub_nonneg.mpr (B_paper_le_one_strip T L hT hL)) c_alpha_pos.le,
     le_refl _,
     by simp [mul_div_cancel₀ _ (ne_of_gt c_alpha_pos)]⟩
 
-/-- **B_paper(T,L,xc) ≤ 1** — follows from the genuine strip identity.
-
-    This is the core consequence of Lemma 2 of Duminil-Copin & Smirnov (2012).
-    Given the strip identity 1 = c_α·A + B + c_ε·E with A,E ≥ 0,
-    we have B ≤ 1 since c_α, c_ε > 0 and A, E ≥ 0. -/
-lemma B_paper_le_one_obs (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_paper T L xc ≤ 1 := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_genuine T L hT hL
-  exact bridge_bound_of_strip_identity hA hE hid
-
-/-- **Lemma 2** (Duminil-Copin & Smirnov 2012): The strip identity.
-
-    For the finite strip S_{T,L} with T ≥ 1 and L ≥ 1, there exist
-    non-negative reals A_mid, E_mid such that:
-      1 = c_α · A_mid + B_paper T L xc + c_ε · E_mid
-
-    Proved from B_paper_le_one_obs by taking A_mid = (1 - B)/c_α, E_mid = 0. -/
+/-- Alias for strip_identity_genuine. -/
 lemma strip_identity_paper (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     ∃ (A_m E_m : ℝ), 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m := by
-  refine ⟨(1 - B_paper T L xc) / c_alpha, 0,
-          div_nonneg (sub_nonneg.mpr (B_paper_le_one_obs T L hT hL)) c_alpha_pos.le,
-          le_refl _,
-          ?_⟩
-  have hca : c_alpha ≠ 0 := ne_of_gt c_alpha_pos
-  field_simp
-  ring
-
-/-- **B_paper(T,L,xc) ≤ 1** — follows from the strip identity (Lemma 2). -/
-lemma B_paper_le_one_parafermionic (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_paper T L xc ≤ 1 := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
-  exact bridge_bound_of_strip_identity hA hE hid
-
-/-- **The fundamental bound: B_paper(T,L,xc) ≤ 1.**
-
-    Follows immediately from the strip identity (Lemma 2) and the
-    abstract bound `bridge_bound_of_strip_identity`. -/
-theorem B_paper_le_one_core (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    B_paper T L xc ≤ 1 := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
-  exact bridge_bound_of_strip_identity hA hE hid
-
-/-- The parafermionic observable boundary sum is zero.
-    Follows immediately from strip_identity_paper. -/
-lemma boundary_sum_eq_zero (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    ∃ (non_B_boundary_re : ℝ),
-      0 ≤ non_B_boundary_re ∧
-      0 = -1 + B_paper T L xc + non_B_boundary_re := by
-  obtain ⟨A_m, E_m, hA, hE, hid⟩ := strip_identity_paper T L hT hL
-  exact ⟨c_alpha * A_m + c_eps * E_m,
-         add_nonneg (mul_nonneg c_alpha_pos.le hA) (mul_nonneg c_eps_pos.le hE),
-         by linarith⟩
-
-lemma paper_lemma2_identity (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
       1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
-  strip_identity_paper T L hT hL
+  strip_identity_genuine T L hT hL
 
-/-! ## Strip identity from B_paper ≤ 1 -/
-
-/-- The mid-edge strip identity: 1 = c_α·A_mid + B_paper + c_ε·E_mid.
-    This is Lemma 2 of Duminil-Copin & Smirnov (2012). -/
-theorem strip_identity_mid (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
-  strip_identity_paper T L hT hL
-
+/-- B_paper(T,L,xc) ≤ 1. Alias for B_paper_le_one_strip. -/
 theorem B_paper_le_one_direct (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 :=
-  B_paper_le_one_core T L hT hL
+  B_paper_le_one_strip T L hT hL
 
-/- Note: The exact vertex-based identity
-     1 = c_α · A_paper + B_paper + c_ε · E_paper
-   does NOT hold. The paper's identity uses mid-edge-based partition
-   functions. Corner vertices of the strip have multiple boundary
-   mid-edge types, causing the vertex-based classification to disagree
-   with the mid-edge classification. The bound B_paper ≤ 1 is correct
-   and sufficient for the main theorem. -/
-
-lemma strip_identity_exists (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    ∃ A_m E_m : ℝ, 0 ≤ A_m ∧ 0 ≤ E_m ∧
-      1 = c_alpha * A_m + B_paper T L xc + c_eps * E_m :=
-  strip_identity_mid T L hT hL
-
+/-- B_paper(T,L,xc) ≤ 1. Alias for B_paper_le_one_strip. -/
 theorem B_paper_le_one (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 :=
-  B_paper_le_one_core T L hT hL
+  B_paper_le_one_strip T L hT hL
 
 end

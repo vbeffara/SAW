@@ -86,15 +86,7 @@ lemma hexGraph_bipartite {v w : HexVertex} (h : hexGraph.Adj v w) :
     v.2.2 ≠ w.2.2 := by
   rcases h with ⟨h1, h2, _⟩ | ⟨h1, h2, _⟩ <;> simp_all
 
-/-
-PROBLEM
-In any walk from hexOrigin, the vertex at step i has
-    sublattice type (i % 2 = 1). In particular, even steps have
-    false sublattice (same as hexOrigin).
 
-PROVIDED SOLUTION
-By induction on the walk. Base case (nil): hexOrigin.2.2 = false = decide(0 % 2 = 1) = false. Inductive step (cons h p ih): We have hexGraph.Adj u v and a walk from hexOrigin to u. By ih, u.2.2 = decide(p.length % 2 = 1). By hexGraph_bipartite, v.2.2 ≠ u.2.2 (edges swap sublattice). The length of cons h p is p.length + 1. So decide((p.length+1) % 2 = 1) = !decide(p.length % 2 = 1). Since v.2.2 = !u.2.2 (by bipartiteness), and u.2.2 = decide(p.length % 2 = 1), we get v.2.2 = !decide(p.length % 2 = 1) = decide((p.length+1) % 2 = 1).
--/
 lemma walk_sublattice_parity {w : HexVertex} (p : hexGraph.Walk hexOrigin w) :
     w.2.2 = decide (p.length % 2 = 1) := by
   -- By definition of $hexGraph.Adj$, we know that $hexGraph.Adj u v$ implies $u.2.2 \neq v.2.2$.

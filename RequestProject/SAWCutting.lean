@@ -90,15 +90,6 @@ lemma A_inf_diff_reaches_boundary {T : ℕ} (hT : 0 < T)
     · have := true_at_boundary_has_lower_false s.walk.1 s.walk.2 s.end_left x y hxy h hT; aesop;
     · omega
 
-/-- Cutting a walk at the first vertex with diagCoord -(T+1)
-    gives two bridges of width T+1.
-
-    A_{T+1} - A_T ≤ xc · B_{T+1}² -/
-lemma cutting_argument (T : ℕ) (hT : 1 ≤ T) :
-    A_inf (T + 1) xc - A_inf T xc ≤
-    xc * paper_bridge_partition (T + 1) xc ^ 2 := by
-  sorry
-
 /-! ## The recurrence from strip identity + cutting
 
 The quadratic recurrence follows from:

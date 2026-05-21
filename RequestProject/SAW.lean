@@ -72,14 +72,7 @@ x_c is positive.
 lemma xc_pos : 0 < xc := by
   exact one_div_pos.mpr <| Real.sqrt_pos.mpr <| by positivity;
 
-/-
-PROBLEM
-The connective constant √(2+√2) equals 2·cos(π/8).
-    This identity is used in the triplet cancellation.
 
-PROVIDED SOLUTION
-We need √(2+√2) = 2cos(π/8). By the half-angle formula, cos(π/8) = cos(π/4 / 2) = √((1+cos(π/4))/2) = √((1+√2/2)/2) = √((2+√2)/4). So 2cos(π/8) = 2√((2+√2)/4) = √(4·(2+√2)/4) = √(2+√2). Equivalently, square both sides: (2+√2) vs 4cos²(π/8) = 4·(1+cos(π/4))/2 = 2(1+√2/2) = 2+√2.
--/
 lemma sqrt_two_add_sqrt_two_eq : Real.sqrt (2 + Real.sqrt 2) = 2 * Real.cos (Real.pi / 8) := by
   rw [ Real.sqrt_eq_iff_mul_self_eq ] <;> ring_nf <;> norm_num [ mul_div ] ; nlinarith [ Real.sqrt_nonneg 2, Real.sqrt_nonneg ( 2 + Real.sqrt 2 ), Real.mul_self_sqrt ( show 0 ≤ 2 by norm_num ), Real.mul_self_sqrt ( show 0 ≤ 2 + Real.sqrt 2 by positivity ) ] ;
   positivity
@@ -120,40 +113,13 @@ Walks contributing to the vertex relation are partitioned into:
   extensions. Their contributions cancel by Identity 2.
 -/
 
-/-
-PROBLEM
-**Pair cancellation identity.**
-    j · conj(λ)⁴ + conj(j) · λ⁴ = 0.
 
-    This identity ensures that pairs of walks visiting all three mid-edges
-    around a vertex v contribute zero to the vertex relation.
-    The factor j·conj(λ)⁴ arises from the 120° rotation (j) between mid-edges
-    and the winding phase (conj(λ)⁴ = exp(i·5π/6) for a ±4π/3 loop).
-
-PROVIDED SOLUTION
-Use the already proved lemmas j_mul_conj_lam_pow_four and conj_j_mul_lam_pow_four. We have j * conj(λ)^4 = -I and conj(j) * λ^4 = I, so their sum is -I + I = 0.
--/
 theorem pair_cancellation : j * conj lam ^ 4 + conj j * lam ^ 4 = 0 := by
   simp +decide [ show j = Complex.exp ( Complex.I * ( 2 * Real.pi / 3 ) ) from rfl, show lam = Complex.exp ( -Complex.I * ( 5 * Real.pi / 24 ) ) from rfl, ← Complex.exp_nat_mul, ← Complex.exp_conj ] ; ring_nf;
   norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] ; ring_nf ; norm_num [ mul_div ] ;
   rw [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring;
 
-/-
-PROBLEM
-**Triplet cancellation identity.**
-    1 + x_c · j · conj(λ) + x_c · conj(j) · λ = 0.
 
-    This identity ensures that triplets of walks (one visiting one mid-edge,
-    two visiting two mid-edges) contribute zero to the vertex relation.
-    This is the *only* place where the critical value x_c = 1/√(2+√2) is used.
-
-    The identity follows from x_c = 1/(2·cos(π/8)) and the expansion:
-      j·conj(λ) + conj(j)·λ = 2·Re(j·conj(λ))
-        = 2·cos(2π/3 + 5π/24) = 2·cos(7π/8) = -2·cos(π/8).
-
-PROVIDED SOLUTION
-Use j_conj_lam_sum which gives j*conj(λ) + conj(j)*λ = ↑(-2*cos(π/8)), and then xc_inv which gives xc⁻¹ = √(2+√2), and sqrt_two_add_sqrt_two_eq which gives √(2+√2) = 2*cos(π/8). So xc = 1/(2*cos(π/8)), and thus xc * (-2*cos(π/8)) = -1. Hence 1 + xc*(j*conj(λ) + conj(j)*λ) = 1 + xc*(-2*cos(π/8)) = 1 - 1 = 0. Rewrite using mul_add to distribute xc.
--/
 theorem triplet_cancellation :
     1 + (xc : ℂ) * j * conj lam + (xc : ℂ) * conj j * lam = 0 := by
   norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] at * ; ring_nf;
@@ -163,13 +129,7 @@ theorem triplet_cancellation :
 
 /-! ## Intermediate algebraic facts -/
 
-/-
-PROBLEM
-j · conj(λ)⁴ = -I (used in pair cancellation).
 
-PROVIDED SOLUTION
-j·conj(λ)⁴ = exp(i·2π/3)·exp(i·5π/24)⁴ = exp(i·2π/3)·exp(i·20π/24) = exp(i·2π/3)·exp(i·5π/6) = exp(i·(2π/3 + 5π/6)) = exp(i·(4π/6 + 5π/6)) = exp(i·9π/6) = exp(i·3π/2) = -i.
--/
 lemma j_mul_conj_lam_pow_four : j * conj lam ^ 4 = -Complex.I := by
   -- We know that $j = \exp(i \cdot 2\pi/3)$ and $\lambda = \exp(-i \cdot 5\pi/24)$.
   have h_j : j = Complex.exp (Complex.I * (2 * Real.pi / 3)) := rfl
@@ -180,39 +140,19 @@ lemma j_mul_conj_lam_pow_four : j * conj lam ^ 4 = -Complex.I := by
   rw [ ← Complex.exp_nat_mul ] ; ring_nf ; norm_num [ Complex.exp_re, Complex.exp_im, mul_div ] ; ring_nf ; norm_num [ mul_div ] ;
   rw [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring_nf ; norm_num;);
 
-/-
-PROBLEM
-conj(j) · λ⁴ = I (used in pair cancellation).
 
-PROVIDED SOLUTION
-conj(j)·λ⁴ = exp(-i·2π/3)·exp(-i·5π/24)⁴ = exp(-i·2π/3)·exp(-i·20π/24) = exp(-i·2π/3)·exp(-i·5π/6) = exp(-i·(2π/3+5π/6)) = exp(-i·3π/2) = i.
--/
 lemma conj_j_mul_lam_pow_four : conj j * lam ^ 4 = Complex.I := by
   unfold lam j; norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, ← Complex.exp_nat_mul ] ; ring_nf;
   rw [ show Real.pi * ( 2 / 3 ) = Real.pi - Real.pi / 3 by ring, show Real.pi * ( 5 / 6 ) = Real.pi - Real.pi / 6 by ring ] ; norm_num ; ring_nf ; norm_num;
 
-/-
-PROBLEM
-The real part identity: Re(j · conj(λ)) = cos(2π/3 + 5π/24) = cos(7π/8) = -cos(π/8).
-    This is the key computation for the triplet cancellation.
 
-PROVIDED SOLUTION
-j·conj(λ) = exp(i·2π/3)·exp(i·5π/24) = exp(i·(2π/3 + 5π/24)) = exp(i·(16π/24 + 5π/24)) = exp(i·21π/24) = exp(i·7π/8). So Re(j·conj(λ)) = cos(7π/8) = -cos(π/8).
--/
 lemma re_j_conj_lam :
     (j * conj lam).re = -Real.cos (Real.pi / 8) := by
   unfold j lam; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring_nf; norm_num [ mul_div ] ;
   rw [ ← Real.cos_add ] ; ring_nf ; norm_num [ mul_div ] ; ring_nf ; (
   rw [ show Real.pi * ( 7 / 8 ) = Real.pi - Real.pi / 8 by ring, Real.cos_pi_sub ] ; norm_num [ Real.sqrt_div_self ] ; ring;);
 
-/-
-PROBLEM
-j · conj(λ) + conj(j) · λ = -2 · cos(π/8).
-    Since conj(j·conj(λ)) = conj(j)·λ, the sum is twice the real part.
 
-PROVIDED SOLUTION
-Since conj(j * conj(λ)) = conj(j) * λ, the sum j*conj(λ) + conj(j)*λ = 2 * Re(j*conj(λ)). By re_j_conj_lam, Re(j*conj(λ)) = -cos(π/8). So the sum = 2*(-cos(π/8)) = -2*cos(π/8). Cast to complex.
--/
 lemma j_conj_lam_sum :
     j * conj lam + conj j * lam = ↑(-2 * Real.cos (Real.pi / 8)) := by
   convert congr_arg ( fun x : ℝ => x : ℝ → ℂ ) ( show 2 * ( j * ( conj ) lam |> Complex.re ) = -2 * Real.cos ( Real.pi / 8 ) from ?_ ) using 1;
@@ -227,20 +167,7 @@ The number c_n of n-step self-avoiding walks satisfies c_{n+m} ≤ c_n · c_m
 sequences.
 -/
 
-/-
-PROBLEM
-**Fekete's lemma** (submultiplicative version): If a sequence satisfies
-    a(n+m) ≤ a(n) · a(m) and a(n) > 0 for all n, m, then a(n)^{1/n} converges.
 
-    This is the standard result guaranteeing existence of the connective constant
-    for any lattice. When additionally a(1) > 1 (as for SAW counts), the limit
-    is positive.
-
-    Note: the limit equals inf_{n≥1} a(n)^{1/n}.
-
-PROVIDED SOLUTION
-Set b(n) = log(a(n)). Then b is subadditive: b(n+m) ≤ b(n) + b(m). By Fekete's subadditive lemma, b(n)/n → L = inf{b(n)/n : n ≥ 1} (which could be -∞, but since a is submultiplicative with a(n)>0, b(n)/n is bounded below by b(1) + ... so actually L is finite because b(n) ≤ n*b(1)). Then a(n)^(1/n) = exp(b(n)/n) → exp(L). The key challenge is that Fekete's subadditive lemma may not be directly in Mathlib. Alternative approach: show the sequence a(n)^(1/n) is eventually monotone decreasing or use subsequence arguments. Actually, the classical proof: for any m ≥ 1, write n = qm + r with 0 ≤ r < m. Then b(n) ≤ q*b(m) + b(r), so b(n)/n ≤ q*b(m)/n + b(r)/n. As n → ∞, q/n → 1/m and b(r)/n → 0, so limsup b(n)/n ≤ b(m)/m. Since m is arbitrary, limsup ≤ inf, and liminf ≥ inf trivially, so the limit exists.
--/
 theorem fekete_submultiplicative {a : ℕ → ℝ} (ha_pos : ∀ n, 0 < a n)
     (ha_submult : ∀ n m, a (n + m) ≤ a n * a m) :
     ∃ μ : ℝ, Filter.Tendsto (fun n => a n ^ (1 / (n : ℝ))) Filter.atTop (nhds μ) := by
@@ -292,23 +219,6 @@ theorem fekete_submultiplicative {a : ℕ → ℝ} (ha_pos : ∀ n, 0 < a n)
     exact ⟨ Max.max m N, fun n hn => ⟨ by exact csInf_le ⟨ 0, by rintro x ⟨ k, hk₁, rfl ⟩ ; exact Real.rpow_nonneg ( le_of_lt ( ha_pos k ) ) _ ⟩ ⟨ n, by linarith [ le_max_left m N ], rfl ⟩, le_trans ( h_root n ( by linarith [ le_max_left m N ] ) ) ( le_of_lt ( hN n ( by linarith [ le_max_right m N ] ) ) ) ⟩ ⟩;
   exact ⟨ c, Metric.tendsto_atTop.mpr fun ε ε_pos => by rcases h_bounds ( ε / 2 ) ( half_pos ε_pos ) with ⟨ N, hN ⟩ ; exact ⟨ N, fun n hn => abs_lt.mpr ⟨ by linarith [ hN n hn ], by linarith [ hN n hn ] ⟩ ⟩ ⟩
 
-/-
-PROBLEM
-When a submultiplicative sequence has a geometric lower bound a(n) ≥ c^n
-    for some c > 0, the connective constant μ = lim a(n)^{1/n} is at least c.
-    For SAW on the hexagonal lattice, c_n ≥ (√2)^n, giving μ ≥ √2 > 0.
-
-PROVIDED SOLUTION
-By fekete_submultiplicative, there exists μ with a(n)^(1/n) → μ. We need μ ≥ c. Since c^n ≤ a(n), we get c = (c^n)^(1/n) ≤ a(n)^(1/n) (for n ≥ 1). Since a(n)^(1/n) → μ, and a(n)^(1/n) ≥ c for all n ≥ 1, by the limit comparison μ ≥ c.
--/
-theorem fekete_pos_of_geometric_lower {a : ℕ → ℝ} {c : ℝ} (hc : 0 < c)
-    (ha_pos : ∀ n, 0 < a n)
-    (ha_submult : ∀ n m, a (n + m) ≤ a n * a m)
-    (ha_lower : ∀ n, c ^ n ≤ a n) :
-    ∃ μ : ℝ, μ ≥ c ∧ Filter.Tendsto (fun n => a n ^ (1 / (n : ℝ))) Filter.atTop (nhds μ) := by
-  obtain ⟨ μ, hμ ⟩ := fekete_submultiplicative ha_pos ha_submult;
-  refine' ⟨ μ, le_of_tendsto_of_tendsto tendsto_const_nhds hμ _, hμ ⟩;
-  filter_upwards [ Filter.eventually_gt_atTop 0 ] with n hn using le_trans ( by rw [ ← Real.rpow_natCast, ← Real.rpow_mul ( by positivity ), mul_one_div_cancel ( by positivity ), Real.rpow_one ] ) ( Real.rpow_le_rpow ( by positivity ) ( ha_lower n ) ( by positivity ) )
 
 /-! ## The identity for the strip domain (Lemma 2)
 
@@ -349,15 +259,7 @@ The proof of Z(x_c) = ∞ proceeds by cases:
   Z(x_c) ≥ Σ_T B_T = ∞.
 -/
 
-/-
-PROBLEM
-In the case E_T = 0, the recurrence gives B_T ≥ c/T.
-    More precisely, if c_α · x_c · B² + B ≥ B' for all consecutive values,
-    and B₁ ≥ δ > 0, then B_T ≥ min(δ, 1/(c_α·x_c)) / T.
 
-PROVIDED SOLUTION
-By induction on T. The recurrence B_n ≤ c_α·x_c·B_{n+1}² + B_{n+1} means B_{n+1} ≥ B_n / (1 + c_α·x_c·B_{n+1}). Since B_T ≤ 1 by bridge_bound, we have c_α·x_c·B_{n+1} ≤ c_α·x_c, so the denominator is at most 1 + c_α·x_c. One can show by induction that if B_T ≥ δ₀/T where δ₀ = min(δ, 1/(c_α·x_c)), then using the quadratic recurrence B_{T+1} ≥ 1/(c_α·x_c·(T+1)) follows. The key idea: from c_α·x_c·u² + u ≥ v, if v ≥ δ₀/T then u ≥ δ₀/(T+1).
--/
 theorem bridge_lower_bound {B : ℕ → ℝ} {δ : ℝ}
     (hB1 : δ ≤ B 1)
     (hB_pos : ∀ n, 0 < B n)
@@ -396,14 +298,7 @@ theorem bridge_exponential_decay {x : ℝ} (hx : 0 < x)
     (x / xc) ^ T * BT_xc ≤ (x / xc) ^ T := by
   exact mul_le_of_le_one_right ( pow_nonneg ( div_nonneg hx.le ( le_of_lt ( show 0 < xc from by rw [ show xc = 1 / Real.sqrt ( 2 + Real.sqrt 2 ) by rfl ] ; positivity ) ) ) _ ) hBT
 
-/-
-PROBLEM
-The product ∏_{T≥1} (1 + r^T) converges for 0 ≤ r < 1. This ensures the
-    Hammersley-Welsh decomposition gives a finite bound on Z(x) for x < x_c.
 
-PROVIDED SOLUTION
-Since 0 ≤ r < 1, the series Σ r^T converges. By the standard result that if Σ aₙ converges with aₙ ≥ 0 then ∏(1+aₙ) converges, we get the result. Try using hasSum_geometric_of_lt_one and relating products to sums via logarithms or direct Mathlib API.
--/
 theorem prod_one_add_geometric_converges {r : ℝ} (hr0 : 0 ≤ r) (hr1 : r < 1) :
     ∃ P : ℝ, 0 < P ∧
       Filter.Tendsto (fun N => ∏ T ∈ Finset.range N, (1 + r ^ (T + 1)))
@@ -549,23 +444,7 @@ private def walkToTree : {v w : HexVertex} → (p : hexGraph.Walk v w) → WalkT
   | _, _, .nil => ()
   | _, _, .cons h p => ⟨⟨_, h⟩, walkToTree p⟩
 
-/-
-PROBLEM
-walkToTree is injective: walks with the same tree encoding are equal.
 
-PROVIDED SOLUTION
-By induction on p₁ and case analysis on p₂ (using the length equality to match cases).
-
-Base case (p₁ = nil): Then p₁.length = 0, so p₂.length = 0 by hl. Case analysis on p₂: if p₂ = nil, then both walks are nil from v to v, and the sigma pairs are equal. If p₂ = cons, then p₂.length ≥ 1, contradicting p₂.length = 0.
-
-Inductive case (p₁ = cons h₁ p₁'): Then p₁.length = p₁'.length + 1. By hl, p₂.length = p₁'.length + 1 > 0, so p₂ must be cons h₂ p₂' with p₂'.length = p₁'.length.
-
-Now walkToTree (cons h₁ p₁') = ⟨⟨_, h₁⟩, walkToTree p₁'⟩ and walkToTree (cons h₂ p₂') = ⟨⟨_, h₂⟩, walkToTree p₂'⟩.
-
-From ht (after cast by hl), these WalkTree elements are equal. Since WalkTree is a Sigma type, the first components give that the intermediate vertex for h₁ equals that for h₂ (i.e., the next vertex is the same). Then the adjacency proofs are equal (since Adj is a Prop). The second components give that walkToTree p₁' equals walkToTree p₂' (after appropriate cast).
-
-By the IH, ⟨w₁, p₁'⟩ = ⟨w₂, p₂'⟩ as sigma types, so w₁ = w₂ and p₁' = p₂' (after cast). Then cons h₁ p₁' = cons h₂ p₂' (after cast), giving the result.
--/
 private lemma walkToTree_injective {v w₁ w₂ : HexVertex}
     (p₁ : hexGraph.Walk v w₁) (p₂ : hexGraph.Walk v w₂)
     (hl : p₁.length = p₂.length)
@@ -580,15 +459,7 @@ private lemma walkToTree_injective {v w₁ w₂ : HexVertex}
           grind;
       grind
 
-/-
-PROBLEM
-The set of n-step SAWs from any fixed vertex is finite.
-    Proof: SAW v n injects into the finite type WalkTree v n via walkToTree.
-    Since WalkTree v n is Fintype and the map is injective, SAW v n is Fintype.
 
-PROVIDED SOLUTION
-Use Fintype.ofInjective with the map s ↦ s.l ▸ walkToTree s.p.1 : WalkTree v n. This maps SAW v n into the finite type WalkTree v n. For injectivity: if two SAWs s₁ and s₂ map to the same WalkTree element, then walkToTree p₁ and walkToTree p₂ are HEq (after length cast). By walkToTree_injective, p₁ and p₂ are HEq. Since paths are determined by their walks, s₁ = s₂.
--/
 instance (v : HexVertex) (n : ℕ) : Fintype (SAW v n) := by
   apply Fintype.ofInjective
     (f := fun (s : SAW v n) => (s.l ▸ walkToTree s.p.1 : WalkTree v n))
@@ -619,32 +490,14 @@ where rayWalkFromTrue : (k : ℕ) → (n : ℕ) → Σ w, hexGraph.Walk ((↑k :
     let rest := rayWalk k n
     ⟨rest.1, .cons (by right; exact ⟨rfl, rfl, Or.inl ⟨rfl, rfl⟩⟩) rest.2⟩
 
-/-
-PROBLEM
-The ray walk has the correct length.
 
-PROVIDED SOLUTION
-By induction on n. For n = 0: the walk is .nil, length 0. For n + 1: the walk is .cons _ rest where rest comes from rayWalkFromTrue. By mutual induction, rayWalkFromTrue also has the right length. Use SimpleGraph.Walk.length_cons to unfold. The mutual recursion with rayWalkFromTrue needs a corresponding lemma for the true-sublattice version.
--/
 private lemma rayWalk_length (k n : ℕ) : (rayWalk k n).2.length = n := by
   induction' n using Nat.strong_induction_on with n ih generalizing k ; rcases n with ( _ | _ | n ) <;> norm_num [ SimpleGraph.Walk.length ] at * ; aesop;
   · rfl;
   · erw [ SimpleGraph.Walk.length_cons ] ; simp
     erw [ SimpleGraph.Walk.length_cons ] ; simp +arith +decide [ ih ]
 
-/-
-PROBLEM
-The ray walk is a valid path (all vertices distinct).
 
-PROVIDED SOLUTION
-We need to show the walk has nodup support. By strong induction on n.
-
-For n = 0: support = [(k,0,false)], which is trivially nodup.
-For n = 1: support = [(k,0,false), (k+1,0,true)], nodup since they have different sublattice indicators and k ≠ k+1 or different Bool.
-For n ≥ 2: the support is (k,0,false) :: support of rayWalkFromTrue(k+1, n-1). By IH applied to rayWalkFromTrue, the tail is nodup. We need (k,0,false) ∉ tail. The tail consists of vertices from rayWalkFromTrue(k+1, ...) which starts at (k+1,0,true) and continues with vertices having x-coordinate ≥ k+1 (for false sublattice) or ≥ k+1 (for true sublattice). Since all vertices in the tail have first coordinate ≥ k+1 when on false sublattice (or = k+1 on true sublattice, but (k,0,false).2.2 = false ≠ true), the vertex (k,0,false) with first coordinate k cannot appear.
-
-Key helper: for rayWalk k n, all support vertices v satisfy v.1 ≥ k. For rayWalkFromTrue k n, all support vertices v satisfy v.1 ≥ k. This makes (k,0,false) ∉ the support of the continuation since the continuation starts from k+1.
--/
 private lemma rayWalk_isPath (k n : ℕ) : (rayWalk k n).2.IsPath := by
   -- By definition of `rayWalk`, the support of the walk is a list of vertices that are all distinct.
   have h_support_nodup : ∀ k n, List.Nodup (SimpleGraph.Walk.support (rayWalk k n).snd) := by
@@ -719,13 +572,5 @@ lemma c_alpha_mul_xc : c_alpha * xc = (Real.sqrt 2 - 1) / 2 := by
   · rw [ Real.sq_sqrt, Real.sq_sqrt ] <;> nlinarith [ Real.sq_sqrt ( show 0 ≤ 2 by norm_num ) ];
   · exact le_mul_of_one_le_left ( Real.sqrt_nonneg _ ) ( Real.le_sqrt_of_sq_le ( by norm_num ) )
 
--- **Main Theorem** (Duminil-Copin & Smirnov, 2012):
--- The connective constant of the hexagonal lattice equals √(2+√2).
--- Proved in SAWFinal.lean as `connective_constant_eq` via the full proof chain:
--- algebraic identities → vertex relation → strip identity → bridge bounds
--- → partition function characterization → μ = √(2+√2).
-
--- The partition function results (convergence below x_c, divergence above x_c) are
--- proved in SAWFinal.lean, where the full proof chain is available.
 
 end
