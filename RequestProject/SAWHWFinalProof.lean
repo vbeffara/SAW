@@ -58,6 +58,7 @@ import Mathlib
 import RequestProject.SAWDiagProof
 import RequestProject.SAWSubmult
 import RequestProject.SAWElementary
+import RequestProject.SAWHWBound
 
 open Real Complex ComplexConjugate Filter Topology
 

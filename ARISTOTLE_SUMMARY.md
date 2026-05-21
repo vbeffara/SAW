@@ -1,3 +1,52 @@
+# Summary of changes for run 272b8430-4f3b-4034-9c35-5797635c1e41
+# Hammersley-Welsh Bridge Decomposition: Progress Report
+
+## What was done
+
+I worked on formalizing the Hammersley-Welsh part of the proof that the connective constant of the honeycomb lattice equals √(2+√2). This is Sorry #3 (`hw_injection_bound`) in the proof chain — the bridge decomposition counting inequality.
+
+### New sorry-free files created
+
+1. **`RequestProject/SAWHWBound.lean`** — Helper infrastructure (fully proved, 0 sorries):
+   - `saw_vertex_dc_bound`: vertices in n-step SAWs have diagCoord in [-n, n]
+   - `hexFlip_dc`: hexFlip negates the diagCoord
+   - `hexFlip_involution`, `hexFlip_paperStart`, `hexFlip_hexOrigin`
+   - `prod_one_add_eq`: the powerset product identity ∏(1+aₜ) = Σ_{S} ∏_{T∈S} aₜ
+   - `paper_bridge_partition_nonneg'`: B_T(x) ≥ 0 for x > 0
+
+2. **`RequestProject/SAWHWDecompFresh.lean`** — Key structural lemmas (4 proved, 1 sorry):
+   - `last_at_min_dc_is_false` ✅: In a walk from TRUE at dc=0 staying in [-M, 0], any non-endpoint vertex at dc=-M is FALSE
+   - `min_dc_vertex_is_false_in_hp` ✅: Same for half-plane walks from paperStart
+   - `hp_prefix_is_bridge` ✅: The prefix to a FALSE vertex at dc=-M is a valid PaperBridge of width M
+   - `next_after_min_dc_false` ✅: After FALSE at dc=-M, the next vertex is TRUE at dc=-(M-1)
+   - `hw_injection_bound_v2` ❌: The full counting inequality (still sorry)
+
+### What these lemmas accomplish
+
+The four proved structural lemmas resolve the fundamental **bipartite structure obstacle** for the bridge decomposition on the hexagonal lattice:
+
+- They prove that the iterative bridge extraction produces valid PaperBridges at each step
+- They prove that the width **strictly decreases** at each extraction step (from M to M-1)
+- They handle the hexagonal lattice's bipartite structure (TRUE/FALSE vertices alternating with different diagCoord constraints)
+
+## What remains
+
+The core sorry (`hw_injection_bound`) remains. The gap is the full **iterative bridge extraction and counting argument**, which requires:
+
+1. Walk splitting at the max-diagCoord vertex + translation to paperStart
+2. Iterative bridge extraction by well-founded recursion on width
+3. The injectivity argument (reverse procedure)
+4. The final counting inequality derivation
+
+Each piece is individually tractable with the structural lemmas now in place, but together they require approximately 500+ lines of additional formalization — primarily walk manipulation operations (splitting, concatenation, translation, reversal) and the combinatorial counting argument.
+
+## Files modified
+- `RequestProject/SAWHWFinalProof.lean`: Added import of SAWHWBound
+- `PROOF_STATUS.md`: Updated with current progress
+
+## Build status
+All files compile. The main proof chain (`SAWPaperChain.lean`) builds with warnings from the existing sorry in `SAWHWFinalProof.lean`.
+
 # Summary of changes for run be979342-f52d-4a27-90e2-dd7f9dbd49e3
 ## Hammersley-Welsh Bridge Decomposition: Analysis and Status
 
