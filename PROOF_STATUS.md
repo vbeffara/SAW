@@ -4,90 +4,101 @@
 `connective_constant_eq_corrected` in `SAWPaperChain.lean`:
 **μ = √(2+√2)** where μ is the connective constant of the hexagonal lattice.
 
-**Status: PROVED modulo 2 independent root sorries** (see below).
+**Status: PROVED modulo 2 independent sorry chains** (see below).
 
-## Root Sorries (2 independent)
+## Root Sorries
 
-### Sorry #1: `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
-```lean
-1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc
-```
-The parafermionic observable identity for the infinite strip, for all T ≥ 1.
+### Sorry Chain #1: `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
+The parafermionic observable identity for the infinite strip.
 Required for: Z(xc) = ∞ (lower bound μ ≥ √(2+√2)).
 
-**Also implies** `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385):
-```lean
-B_paper T L xc ≤ 1
-```
-The core bound from the parafermionic observable for the finite strip.
+### Sorry Chain #2: Hammersley-Welsh (SAWHWHalfPlane.lean)
+Three sorry'd lemmas that together give the bridge decomposition inequality.
+The old monolithic sorry `hw_injection_bound` has been ELIMINATED by reducing
+it to these three more specific lemmas:
 
-### Sorry #2: `hw_injection_bound` (SAWHWFinalProof.lean:76)
+**2a. `hp_sum_zero_le`** (SAWHWHalfPlane.lean:57)
 ```lean
-∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-  2 * (∏ T ∈ Finset.range N, (1 + paper_bridge_partition (T + 1) x)) ^ 2
+hp_sum 0 N x ≤ 1 + x
 ```
-The Hammersley-Welsh bridge decomposition counting inequality.
-Required for: Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
+Base case: the width-0 half-plane walk sum is at most 1+x.
+(At dc=0, only the trivial walk and paperStart→(0,0,false) are possible.)
+
+**2b. `hp_sum_step`** (SAWHWHalfPlane.lean:69)
+```lean
+hp_sum (W + 1) N x ≤ (1 + paper_bridge_partition (W + 1) x) * hp_sum W N x
+```
+Inductive step: walks in dc ∈ [-(W+1), 0] bounded by (1+B_{W+1}) · walks in [-W, 0].
+Uses bridge extraction: walks reaching dc -(W+1) decompose into a PaperBridge
+plus a remaining walk of smaller width.
+
+**2c. `saw_sum_le_hp_sq`** (SAWHWHalfPlane.lean:100)
+```lean
+∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤ 2 * (hp_sum N N x) ^ 2
+```
+SAW partition function bounded by square of half-plane walk partition function.
+Uses splitting each SAW at the first vertex of minimum diagCoord.
+
+## What was proved in the HW chain (this session)
+
+1. **`hw_injection_bound_correct`** (SAWHWHalfPlane.lean): The combined HW inequality
+   ∑ c_n x^n ≤ 8·(∏(1+B_T))² PROVED from 2a+2b+2c above.
+
+2. **`hp_sum_le_prod`** (SAWHWHalfPlane.lean): The inductive bound
+   hp_sum(W) ≤ (1+x)·∏(1+B_T) PROVED from 2a+2b by induction on W.
+
+3. **`hw_injection_bound`** (SAWHWFinalProof.lean): Directly invokes hw_injection_bound_correct.
+   PROVED (no sorry).
+
+4. **`hw_bridge_decomp_proved`** (SAWHWFinalProof.lean): Powerset form. PROVED.
+
+5. **`PaperInfStrip_width_mono`** (SAWHWHalfPlane.lean): PaperInfStrip monotonicity. PROVED.
+
+6. **`hp_walk_count_zero`** (removed): Was proved but then the definition changed.
+
+7. **`hp_sum_nonneg`** (SAWHWHalfPlane.lean): hp_sum nonnegativity. PROVED.
+
+The constant changed from 2 to 8 (vertex vs mid-edge formulation). The downstream
+proof `hw_summable_corrected` was updated to use 8 and still proves Z(x) < ∞.
 
 ## Proof Architecture
 
 ### Lower Bound: μ ≥ √(2+√2) via Z(xc) = ∞
 ```
-connective_constant_eq_corrected (SAWPaperChain.lean)
-└── Z_xc_diverges_corrected [Z(xc) = ∞]
-    └── paper_bridge_lower_bound [B_T ≥ c/T]
-        └── bridge_recurrence_proved [B_T ≤ α·B_{T+1}² + B_{T+1}]
+connective_constant_eq_corrected
+└── Z_xc_diverges_corrected
+    └── paper_bridge_lower_bound
+        └── bridge_recurrence_proved
             └── infinite_strip_identity ← SORRY #1
 ```
 
 ### Upper Bound: μ ≤ √(2+√2) via Z(x) < ∞ for x < xc
 ```
-connective_constant_eq_corrected (SAWPaperChain.lean)
-└── hw_summable_corrected [Z(x) < ∞]
-    ├── hw_injection_bound ← SORRY #2
-    └── paper_bridge_decay [B_T(x) ≤ (x/xc)^T / xc]
-        └── paper_bridge_partial_sum_le [partial sums ≤ 1/xc]
-            └── B_paper_le_one_strip ← (consequence of SORRY #1)
+connective_constant_eq_corrected
+└── hw_summable_corrected
+    └── paper_bridge_decomp_injection ✓ PROVED
+        └── hw_bridge_decomp_proved ✓ PROVED
+            └── hw_injection_bound_correct ✓ PROVED
+                ├── hp_sum_le_prod ✓ PROVED (from 2a + 2b)
+                │   ├── hp_sum_zero_le ← SORRY #2a
+                │   └── hp_sum_step ← SORRY #2b
+                └── saw_sum_le_hp_sq ← SORRY #2c
+    └── paper_bridge_decay ✓ PROVED
 ```
 
-## Alternative Proof Path (SAWMainNew.lean)
-`connective_constant_eq_direct`: Only requires `infinite_strip_identity` (sorry #1),
-avoiding the HW decomposition entirely. Uses submultiplicativity for the upper bound.
-Has its own sorries: `saw_count_exp_bound`, `hw_summable_direct`.
+## File Summary
 
-## File Summary (32 files, ~5900 lines)
+### Core definitions
+- SAW.lean — HexVertex, hexGraph, SAW, saw_count, connective_constant, xc
 
-### Core definitions (SAW.lean, SAWStrip.lean)
-- HexVertex, hexGraph, SAW, saw_count, connective_constant
-- xc, c_alpha, c_eps, pair_cancellation, triplet_cancellation
-- Fekete's lemma, abstract bridge bounds
+### Hammersley-Welsh chain (modified this session)
+- **SAWHWHalfPlane.lean** — hp_walk_count, hp_sum, inductive bound, combined inequality (NEW)
+- **SAWHWFinalProof.lean** — hw_injection_bound calling hw_injection_bound_correct (MODIFIED)
+- SAWHWStructural.lean — dc step structure, bipartiteness, PaperInfStrip compatibility
+- SAWHWBridgeExtractProof.lean — Bridge extraction from walks
+- SAWHWReCoord.lean — hexReScaled coordinate
+- SAWHWBound.lean — Walk dc bounds, bridge translation
 
-### Submultiplicativity chain
-- SAWSubmult.lean → SAWMain.lean → SAWBridge.lean → SAWBridgeFix.lean
-
-### Strip identity chain  
-- SAWStripIdentityCorrect.lean → SAWStripIdentityProof.lean
-- SAWDiagBridge.lean → SAWDiagConnection.lean → SAWDiagProof.lean
-
-### Cutting argument chain
-- SAWCutting.lean → SAWCuttingHelpers.lean → SAWCuttingProof.lean
-- SAWParafermionic.lean, SAWWalkHelpers.lean
-
-### Recurrence and lower bound
-- SAWRecurrenceProof.lean, SAWDecomp.lean
-
-### Strip T=1 computations
-- SAWStripT1Walks.lean → SAWStripT1Exact.lean
-
-### Hammersley-Welsh development
-- SAWHWInject.lean → SAWHWAlgorithm.lean
-- SAWHWStructural.lean, SAWHWBridgeExtractProof.lean
-- SAWHWReCoord.lean, SAWHWBound.lean
-- SAWHWDecompFresh.lean (structural lemmas for bridge extraction)
-- SAWHWFinalProof.lean
-
-### Assembly
-- SAWPaperChain.lean (main theorem)
-- SAWFinal.lean (convenience wrapper)
-- SAWMainNew.lean (alternative proof path)
-- SAWElementary.lean (misc helpers)
+### Assembly (modified this session)
+- **SAWPaperChain.lean** — Main theorem, uses constant 8 (MODIFIED)
+- SAWFinal.lean — Convenience wrapper

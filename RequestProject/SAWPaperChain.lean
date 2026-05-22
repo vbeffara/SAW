@@ -261,7 +261,7 @@ lemma paper_bridge_partition_nonneg (T : ℕ) (x : ℝ) (hx : 0 < x) :
     **Status: sorry.** This is the Hammersley-Welsh decomposition. -/
 theorem paper_bridge_decomp_injection {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    2 * (∑ S ∈ (Finset.range N).powerset,
+    8 * (∑ S ∈ (Finset.range N).powerset,
       ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2 :=
   hw_bridge_decomp_proved hx hxc N
 
@@ -286,7 +286,7 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
   -- Uniform bound on partial sums via the decomposition
   have h_summ_geo : Summable (fun T : ℕ => r ^ (T + 1)) :=
     (summable_nat_add_iff 1).mpr (summable_geometric_of_lt_one hr0 hr1)
-  set M := 2 * Real.exp (2 / xc * ∑' T : ℕ, r ^ (T + 1)) with hM_def
+  set M := 8 * Real.exp (2 / xc * ∑' T : ℕ, r ^ (T + 1)) with hM_def
   suffices hbound : ∀ N, ∑ n ∈ Finset.range N, (saw_count n : ℝ) * x ^ n ≤ M from
     summable_of_sum_range_le
       (fun n => mul_nonneg (Nat.cast_nonneg _) (pow_nonneg hx.le n))
@@ -295,7 +295,7 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
   rcases N with _ | N
   · simp; positivity
   calc ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n
-      ≤ 2 * (∑ S ∈ (Finset.range N).powerset,
+      ≤ 8 * (∑ S ∈ (Finset.range N).powerset,
           ∏ T ∈ S, paper_bridge_partition (T + 1) x) ^ 2 :=
         paper_bridge_decomp_injection hx hxc N
     _ ≤ M := by
@@ -309,7 +309,7 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
             rw [ Finset.mul_sum _ _ _, Real.exp_sum ];
             exact Finset.prod_le_prod ( fun _ _ => add_nonneg zero_le_one <| mul_nonneg ( one_div_nonneg.mpr <| by linarith ) <| pow_nonneg hr0 _ ) fun _ _ => by rw [ add_comm ] ; exact Real.add_one_le_exp _;
           exact h_exp_bound.trans ( Real.exp_le_exp.mpr <| mul_le_mul_of_nonneg_left ( Summable.sum_le_tsum ( Finset.range N ) ( fun _ _ => by positivity ) h_summ_geo ) <| by exact one_div_nonneg.mpr <| by linarith [ show 0 ≤ xc by exact div_nonneg zero_le_one <| Real.sqrt_nonneg _ ] );
-        convert mul_le_mul_of_nonneg_left ( pow_le_pow_left₀ ( Finset.sum_nonneg fun _ _ => Finset.prod_nonneg fun _ _ => ?_ ) ( h_sum_bound.trans h_exp_bound ) 2 ) zero_le_two using 1 ; ring;
+        convert mul_le_mul_of_nonneg_left ( pow_le_pow_left₀ ( Finset.sum_nonneg fun _ _ => Finset.prod_nonneg fun _ _ => ?_ ) ( h_sum_bound.trans h_exp_bound ) 2 ) (by norm_num : (0:ℝ) ≤ 8) using 1 ; ring;
         · rw [ ← Real.exp_nat_mul ] ; ring!;
         · exact paper_bridge_partition_nonneg (_ + 1) x hx
 

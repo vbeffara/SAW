@@ -1,3 +1,41 @@
+# Summary of changes for run 02b44626-7e76-4453-83ec-54f25813fbab
+## Hammersley-Welsh Proof Progress
+
+I made significant structural progress on the Hammersley-Welsh bridge decomposition inequality, which is the second of two independent sorry chains in the proof that μ = √(2+√2).
+
+### What was accomplished
+
+**The old monolithic sorry `hw_injection_bound` has been eliminated** by decomposing it into a clean proof architecture with three smaller, well-defined lemmas.
+
+#### New file: `RequestProject/SAWHWHalfPlane.lean`
+Contains the half-plane walk machinery:
+- **`hp_walk_count(W, n)`**: Counts SAWs of length n from `paperStart` staying in dc ∈ [-W, 0]
+- **`hp_sum(W, N, x)`**: Finite partition function ∑_{n≤N} hp_walk_count(W,n)·x^n
+- **`hp_sum_le_prod`** (PROVED): Inductive bound hp_sum(W) ≤ (1+x)·∏(1+B_T) — proved by induction on W from `hp_sum_zero_le` + `hp_sum_step`
+- **`hw_injection_bound_correct`** (PROVED): Combined HW inequality ∑c_n x^n ≤ 8·(∏(1+B_T))² — proved from `hp_sum_le_prod` + `saw_sum_le_hp_sq`
+- **`PaperInfStrip_width_mono`** (PROVED): PaperInfStrip monotonicity in width
+
+#### Modified files
+- **`SAWHWFinalProof.lean`**: `hw_injection_bound` now has zero sorries — it directly invokes `hw_injection_bound_correct`
+- **`SAWPaperChain.lean`**: Updated to use constant 8 (vs 2); the downstream proof `hw_summable_corrected` still proves Z(x) < ∞ for x < xc
+
+### Remaining sorries (3 in the HW chain)
+
+1. **`hp_sum_zero_le`** (line 57): Base case — hp_sum at width 0 is ≤ 1+x. Straightforward: at dc=0, only the trivial walk and one step to (0,0,false) are possible.
+
+2. **`hp_sum_step`** (line 69): Inductive step — hp_sum(W+1) ≤ (1+B_{W+1})·hp_sum(W). This is the core combinatorial argument: walks reaching dc -(W+1) decompose into a PaperBridge plus remaining walk. Uses existing infrastructure (`prefix_to_first_min_is_bridge`, `bridge_satisfies_paper_inf_strip`).
+
+3. **`saw_sum_le_hp_sq`** (line 100): SAW splitting — ∑c_n x^n ≤ 2·hp_sum(N)². Split each SAW at the first vertex of minimum diagCoord into two half-plane walks.
+
+### Key design decisions
+
+- **Constant 8 vs 2**: The paper uses mid-edges where the width-0 strip is trivial (weight 1). Our vertex formulation has hp_sum(0) = 1+x ≤ 2, giving an extra factor of 4 = 2². Since the downstream proof only needs Z(x) < ∞ (not the exact constant), this makes no difference.
+
+- **Raw dc constraint vs PaperInfStrip**: Using PaperInfStrip W for hp_walk_count fails because PaperInfStrip 0 is empty (kills the induction base). The raw dc ∈ [-W, 0] constraint works: at W=0, the walks at dc=0 give hp_sum(0) = 1+x, and the induction step uses bridge extraction to show width strictly decreases.
+
+### Build status
+All proof targets build successfully: `SAWFinal`, `SAWPaperChain`, `SAWHWFinalProof`.
+
 # Summary of changes for run ee825e92-0ccc-41be-8537-935d34f2b10e
 # Project Cleanup Summary
 
