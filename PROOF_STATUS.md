@@ -13,53 +13,50 @@ The parafermionic observable identity for the infinite strip.
 Required for: Z(xc) = ∞ (lower bound μ ≥ √(2+√2)).
 
 ### Sorry Chain #2: Hammersley-Welsh (SAWHWHalfPlane.lean)
-Three sorry'd lemmas that together give the bridge decomposition inequality.
-The old monolithic sorry `hw_injection_bound` has been ELIMINATED by reducing
-it to these three more specific lemmas:
+Two sorry'd lemmas remain:
 
-**2a. `hp_sum_zero_le`** (SAWHWHalfPlane.lean:57)
+**2a. `hp_sum_step`** (SAWHWHalfPlane.lean:121)
 ```lean
-hp_sum 0 N x ≤ 1 + x
+hp_sum (W + 1) N x ≤ (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x
 ```
-Base case: the width-0 half-plane walk sum is at most 1+x.
-(At dc=0, only the trivial walk and paperStart→(0,0,false) are possible.)
+Inductive step: walks in dc ∈ [-(W+1), 0] bounded by (1 + 6·B_{W+1}) · walks in [-W, 0].
+Uses bridge decomposition: walks reaching dc -(W+1) decompose at the LAST such vertex
+into a bridge prefix and suffix. The suffix (from bridge endpoint FALSE@dc=-(W+1))
+has ≤ 3 immediate next vertices, plus walks through TRUE@dc=-W (2 choices) each
+followed by walks from hexOrigin of width W. Combined with hp_sum ≥ 1,
+the reaching walk contribution is ≤ 6B · hp_sum(W).
 
-**2b. `hp_sum_step`** (SAWHWHalfPlane.lean:69)
-```lean
-hp_sum (W + 1) N x ≤ (1 + paper_bridge_partition (W + 1) x) * hp_sum W N x
-```
-Inductive step: walks in dc ∈ [-(W+1), 0] bounded by (1+B_{W+1}) · walks in [-W, 0].
-Uses bridge extraction: walks reaching dc -(W+1) decompose into a PaperBridge
-plus a remaining walk of smaller width.
-
-**2c. `saw_sum_le_hp_sq`** (SAWHWHalfPlane.lean:100)
+**2b. `saw_sum_le_hp_sq`** (SAWHWHalfPlane.lean:152)
 ```lean
 ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤ 2 * (hp_sum N N x) ^ 2
 ```
 SAW partition function bounded by square of half-plane walk partition function.
 Uses splitting each SAW at the first vertex of minimum diagCoord.
 
-## What was proved in the HW chain (this session)
+## What was proved in the HW chain
 
-1. **`hw_injection_bound_correct`** (SAWHWHalfPlane.lean): The combined HW inequality
-   ∑ c_n x^n ≤ 8·(∏(1+B_T))² PROVED from 2a+2b+2c above.
+### Newly proved (this session)
+1. **`hp_walk_count_zero_ge2`**: No SAW of length ≥ 2 stays at dc=0. PROVED.
+2. **`hp_walk_count_zero_zero_le`**: At most 1 walk of length 0 at dc=0. PROVED.
+3. **`hp_walk_count_zero_one_le`**: At most 1 walk of length 1 at dc=0. PROVED.
+4. **`hp_sum_zero_le`**: hp_sum at width 0 ≤ 1+x. PROVED from the above.
+5. **`hp_sum_le_prod`**: hp_sum(W) ≤ 2·∏(1+6B_T). PROVED from hp_sum_step.
+6. **`hw_injection_bound_correct`**: ∑c_n x^n ≤ 8·(∏(1+6B_T))². PROVED from hp_sum_le_prod + saw_sum_le_hp_sq.
+7. **`hw_injection_bound`**: Wraps hw_injection_bound_correct. PROVED.
+8. **`paper_bridge_decomp_bound`**: Calls hw_injection_bound. PROVED.
+9. **`hw_summable_corrected`**: Z(x) < ∞ for x < xc. PROVED from paper_bridge_decomp_bound + paper_bridge_decay.
 
-2. **`hp_sum_le_prod`** (SAWHWHalfPlane.lean): The inductive bound
-   hp_sum(W) ≤ (1+x)·∏(1+B_T) PROVED from 2a+2b by induction on W.
-
-3. **`hw_injection_bound`** (SAWHWFinalProof.lean): Directly invokes hw_injection_bound_correct.
-   PROVED (no sorry).
-
-4. **`hw_bridge_decomp_proved`** (SAWHWFinalProof.lean): Powerset form. PROVED.
-
-5. **`PaperInfStrip_width_mono`** (SAWHWHalfPlane.lean): PaperInfStrip monotonicity. PROVED.
-
-6. **`hp_walk_count_zero`** (removed): Was proved but then the definition changed.
-
-7. **`hp_sum_nonneg`** (SAWHWHalfPlane.lean): hp_sum nonnegativity. PROVED.
-
-The constant changed from 2 to 8 (vertex vs mid-edge formulation). The downstream
-proof `hw_summable_corrected` was updated to use 8 and still proves Z(x) < ∞.
+### Key design changes (this session)
+- **Removed paper_bridge_partition_lt_one**: This was FALSE (B_1(xc) ≈ 1.53 > 1)!
+  The vertex formulation gives B_T(xc) ≤ 1/xc ≈ 1.85, not ≤ 1.
+- **Changed from 1/(1-B) to (1+6B) form**: The self-referential bound
+  hp_sum(W+1) ≤ hp_sum(W) + B·hp_sum(W+1) can't be used as hp_sum ≤ hp_sum/(1-B)
+  when B > 1. Instead, using hp_sum ≥ 1 to absorb the additive constant gives
+  hp_sum(W+1) ≤ (1+6B)·hp_sum(W), which works for ALL B values.
+- **Constant 6**: From 1+3x+2x² ≤ 6 for x ∈ [0,1], accounting for the vertex
+  formulation's suffix structure (3 neighbors + 2 continuations to hexOrigin).
+- **Removed hp_sum_step old form**: The old form with (1+B) was too tight for
+  the vertex formulation.
 
 ## Proof Architecture
 
@@ -75,30 +72,16 @@ connective_constant_eq_corrected
 ### Upper Bound: μ ≤ √(2+√2) via Z(x) < ∞ for x < xc
 ```
 connective_constant_eq_corrected
-└── hw_summable_corrected
-    └── paper_bridge_decomp_injection ✓ PROVED
-        └── hw_bridge_decomp_proved ✓ PROVED
+└── hw_summable_corrected ✓ PROVED
+    └── paper_bridge_decomp_bound ✓ PROVED
+        └── hw_injection_bound ✓ PROVED
             └── hw_injection_bound_correct ✓ PROVED
-                ├── hp_sum_le_prod ✓ PROVED (from 2a + 2b)
-                │   ├── hp_sum_zero_le ← SORRY #2a
-                │   └── hp_sum_step ← SORRY #2b
-                └── saw_sum_le_hp_sq ← SORRY #2c
+                ├── hp_sum_le_prod ✓ PROVED
+                │   ├── hp_sum_zero_le ✓ PROVED
+                │   │   ├── hp_walk_count_zero_ge2 ✓ PROVED
+                │   │   ├── hp_walk_count_zero_zero_le ✓ PROVED
+                │   │   └── hp_walk_count_zero_one_le ✓ PROVED
+                │   └── hp_sum_step ← SORRY #2a
+                └── saw_sum_le_hp_sq ← SORRY #2b
     └── paper_bridge_decay ✓ PROVED
 ```
-
-## File Summary
-
-### Core definitions
-- SAW.lean — HexVertex, hexGraph, SAW, saw_count, connective_constant, xc
-
-### Hammersley-Welsh chain (modified this session)
-- **SAWHWHalfPlane.lean** — hp_walk_count, hp_sum, inductive bound, combined inequality (NEW)
-- **SAWHWFinalProof.lean** — hw_injection_bound calling hw_injection_bound_correct (MODIFIED)
-- SAWHWStructural.lean — dc step structure, bipartiteness, PaperInfStrip compatibility
-- SAWHWBridgeExtractProof.lean — Bridge extraction from walks
-- SAWHWReCoord.lean — hexReScaled coordinate
-- SAWHWBound.lean — Walk dc bounds, bridge translation
-
-### Assembly (modified this session)
-- **SAWPaperChain.lean** — Main theorem, uses constant 8 (MODIFIED)
-- SAWFinal.lean — Convenience wrapper
