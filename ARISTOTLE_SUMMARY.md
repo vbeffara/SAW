@@ -1,3 +1,35 @@
+# Summary of changes for run 16419d4e-b876-42af-b9f6-8ec6e9506312
+## Hammersley-Welsh Formalization Progress
+
+I made significant infrastructure progress toward proving the Hammersley-Welsh upper bound (μ ≤ √(2+√2)) in the connective constant proof.
+
+### New file: `RequestProject/SAWHWStepHelpers.lean`
+
+Created a new file with **10 proved lemmas** that reduce `hp_sum_step` to a single remaining sorry (`extra_sum_le`):
+
+**Key results proved:**
+1. `hp_walk_count_split` — Decomposes hp_walk_count(W+1, n) into walks staying in dc∈[-W,0] + "extra" walks visiting dc=-(W+1)
+2. `hexOrigin_only_neighbor_in_strip` — From hexOrigin in the strip, the only valid neighbor is paperStart
+3. `dropFirstHexSub` + `dropFirstHexSub_injective` — An injection from strip-constrained SAWs at hexOrigin to SAWs at paperStart, by dropping the forced first step
+4. `hex_origin_strip_le_hp` — hex_origin_strip_count(W, m) ≤ hp_walk_count(W, m-1) for m ≥ 1
+5. `hp_walk_count_zero` / `hp_sum_ge_one` — Base case bounds
+6. `hp_sum_step_from_helpers` — hp_sum_step follows automatically from extra_sum_le
+
+### Remaining sorries in the HW chain
+
+The HW chain now has **2 independent remaining sorries** (reduced from 3 previously):
+
+1. **`extra_sum_le`** (SAWHWStepHelpers.lean) — The generating function bound ∑ extra_count(W,n)·x^n ≤ 6·B_{W+1}·hp_sum(W). This is the core bridge-suffix decomposition inequality. Once proved, `hp_sum_step` follows automatically via `hp_sum_step_from_helpers`.
+
+2. **`saw_sum_le_hp_sq`** (SAWHWHalfPlane.lean) — The SAW-to-half-plane-walk reduction ∑c_n·x^n ≤ 2·hp_sum(N)².
+
+Both require constructing explicit walk decomposition injections in Lean — splitting walks at specific vertices, translating+flipping suffixes, and proving injectivity. The mathematical arguments are well-understood (documented in PROOF_STATUS.md and code comments), but the Lean formalization of walk manipulation (pattern matching on Walk constructors, transporting along equalities) is extremely challenging.
+
+### Build status
+All proof targets build successfully: `SAWPaperChain`, `SAWHWFinalProof`, `SAWHWStepHelpers`.
+
+See `PROOF_STATUS.md` for the full proof architecture diagram.
+
 # Summary of changes for run caaa36fa-ecc8-4b1b-a0a1-d8e2c7d507cd
 ## Hammersley-Welsh Formalization Progress
 
@@ -40,108 +72,47 @@ All proof targets build successfully: `SAWPaperChain`, `SAWHWFinalProof`, `SAWHW
 
 See `PROOF_STATUS.md` for the updated proof architecture diagram.
 
-# Summary of changes for run 02b44626-7e76-4453-83ec-54f25813fbab
-## Hammersley-Welsh Proof Progress
-
-I made significant structural progress on the Hammersley-Welsh bridge decomposition inequality, which is the second of two independent sorry chains in the proof that μ = √(2+√2).
+# Summary of changes for current session
+## Hammersley-Welsh Infrastructure Progress
 
 ### What was accomplished
 
-**The old monolithic sorry `hw_injection_bound` has been eliminated** by decomposing it into a clean proof architecture with three smaller, well-defined lemmas.
+Significant infrastructure progress toward proving `hp_sum_step` and `saw_sum_le_hp_sq`, 
+the two remaining Hammersley-Welsh sorries.
 
-#### New file: `RequestProject/SAWHWHalfPlane.lean`
-Contains the half-plane walk machinery:
-- **`hp_walk_count(W, n)`**: Counts SAWs of length n from `paperStart` staying in dc ∈ [-W, 0]
-- **`hp_sum(W, N, x)`**: Finite partition function ∑_{n≤N} hp_walk_count(W,n)·x^n
-- **`hp_sum_le_prod`** (PROVED): Inductive bound hp_sum(W) ≤ (1+x)·∏(1+B_T) — proved by induction on W from `hp_sum_zero_le` + `hp_sum_step`
-- **`hw_injection_bound_correct`** (PROVED): Combined HW inequality ∑c_n x^n ≤ 8·(∏(1+B_T))² — proved from `hp_sum_le_prod` + `saw_sum_le_hp_sq`
-- **`PaperInfStrip_width_mono`** (PROVED): PaperInfStrip monotonicity in width
+### New file: `RequestProject/SAWHWStepHelpers.lean`
 
-#### Modified files
-- **`SAWHWFinalProof.lean`**: `hw_injection_bound` now has zero sorries — it directly invokes `hw_injection_bound_correct`
-- **`SAWPaperChain.lean`**: Updated to use constant 8 (vs 2); the downstream proof `hw_summable_corrected` still proves Z(x) < ∞ for x < xc
+Created a new file with 10 proved lemmas providing the infrastructure for `hp_sum_step`:
 
-### Remaining sorries (3 in the HW chain)
+1. **`hp_walk_count_split`** ✓ — Splits hp_walk_count(W+1, n) = hp_walk_count(W, n) + extra_count(W, n)
+2. **`hp_sum_split`** ✓ — Generating function version of the split
+3. **`hexOrigin_only_neighbor_in_strip`** ✓ — From hexOrigin in strip, only neighbor is paperStart
+4. **`walk_copy_isPath`** ✓ — Walk.copy preserves IsPath
+5. **`hex_origin_strip_zero`** ✓ — hex_origin_strip_count(W, 0) = 1
+6. **`dropFirstHexSub`** ✓ — Injection: SAW hexOrigin (m+1) in strip → SAW paperStart m in strip
+7. **`dropFirstHexSub_injective`** ✓ — The injection is injective
+8. **`hex_origin_strip_le_hp`** ✓ — hex_origin_strip_count(W, m) ≤ hp_walk_count(W, m-1)
+9. **`hp_walk_count_zero`** ✓ — hp_walk_count(W, 0) = 1
+10. **`hp_sum_ge_one`** ✓ — hp_sum(W, N, x) ≥ 1
 
-1. **`hp_sum_zero_le`** (line 57): Base case — hp_sum at width 0 is ≤ 1+x. Straightforward: at dc=0, only the trivial walk and one step to (0,0,false) are possible.
+Plus the key theorem:
+- **`hp_sum_step_from_helpers`** ✓ — hp_sum_step follows from extra_sum_le
 
-2. **`hp_sum_step`** (line 69): Inductive step — hp_sum(W+1) ≤ (1+B_{W+1})·hp_sum(W). This is the core combinatorial argument: walks reaching dc -(W+1) decompose into a PaperBridge plus remaining walk. Uses existing infrastructure (`prefix_to_first_min_is_bridge`, `bridge_satisfies_paper_inf_strip`).
+### What this means
 
-3. **`saw_sum_le_hp_sq`** (line 100): SAW splitting — ∑c_n x^n ≤ 2·hp_sum(N)². Split each SAW at the first vertex of minimum diagCoord into two half-plane walks.
+The proof of `hp_sum_step` has been **reduced to a single lemma**: `extra_sum_le`.
+This lemma says ∑ extra_count(W,n)·x^n ≤ 6·B_{W+1}·hp_sum(W).
+Once `extra_sum_le` is proved, `hp_sum_step` follows automatically.
 
-### Key design decisions
+### Remaining sorry: `extra_sum_le`
 
-- **Constant 8 vs 2**: The paper uses mid-edges where the width-0 strip is trivial (weight 1). Our vertex formulation has hp_sum(0) = 1+x ≤ 2, giving an extra factor of 4 = 2². Since the downstream proof only needs Z(x) < ∞ (not the exact constant), this makes no difference.
+The remaining sorry requires the bridge-suffix decomposition injection:
+- Decompose each "extra walk" (visiting dc=-(W+1)) at the LAST vertex at dc=-(W+1)
+- Extract bridge prefix (PaperBridge) + suffix
+- Show suffix (after translate+flip) maps to hexOrigin strip walks
+- Use Cauchy product inequality + suffix GF bound
 
-- **Raw dc constraint vs PaperInfStrip**: Using PaperInfStrip W for hp_walk_count fails because PaperInfStrip 0 is empty (kills the induction base). The raw dc ∈ [-W, 0] constraint works: at W=0, the walks at dc=0 give hp_sum(0) = 1+x, and the induction step uses bridge extraction to show width strictly decreases.
-
-### Build status
-All proof targets build successfully: `SAWFinal`, `SAWPaperChain`, `SAWHWFinalProof`.
-
-# Summary of changes for run ee825e92-0ccc-41be-8537-935d34f2b10e
-# Project Cleanup Summary
-
-## Overview
-Performed a major tidying of the connective constant project, reducing it from 147 files (~21,400 lines) to 32 files (~5,900 lines) — a 73% reduction in code size.
-
-## What was done
-
-### 1. Removed 115 unused files
-Traced the import graph from the main proof targets (`SAWFinal.lean`, `SAWPaperChain.lean`, `SAWMainNew.lean`, `SAWHWDecompFresh.lean`) and deleted all 115 files not in any transitive import chain. These included abandoned proof attempts, duplicate approaches, superseded infrastructure, and unused conjectures.
-
-### 2. Cleaned up remaining files
-- **SAWBridge.lean** (918→313 lines): Removed `HalfPlaneWalk`, `BridgeSequence`, the sorry'd `hammersley_welsh_bound`, Section 4 conjectures, and verbose solver comment blocks.
-- **SAWMain.lean** (352→50 lines): Removed all conjectures (Nienhuis, Flory exponent, SLE, bridge decay), verbose comments, and unused definitions. Kept only `connective_constant_is_limit'` and `connective_constant_pos'`.
-- **SAWDecomp.lean** (475→59 lines): Stripped to just `quadratic_recurrence_lower_bound` and `not_summable_of_lower_bound` (the only externally-used results).
-- **SAWBridgeFix.lean** (191→57 lines): Removed unused proofs about non-summability, vacuousness, and `bridge_endpoints_differ`.
-- **SAWStripIdentityCorrect.lean** (484→413 lines): Consolidated 6 duplicate versions of `B_paper_le_one` and 5 of the strip identity into simple aliases.
-- **SAWCutting.lean**: Removed the dead sorry'd `cutting_argument` (superseded by `cutting_argument_proved` in `SAWCuttingProof.lean`).
-- **SAW.lean, SAWSubmult.lean, SAWHWAlgorithm.lean, SAWHWInject.lean**: Removed verbose PROBLEM/PROVIDED SOLUTION comment blocks (leftover solver logs).
-
-### 3. Sorry status (unchanged)
-Two independent root sorries remain:
-1. `infinite_strip_identity` (SAWRecurrenceProof.lean) — parafermionic observable identity
-2. `hw_injection_bound` (SAWHWFinalProof.lean) — Hammersley-Welsh counting inequality
-
-One dead sorry was removed (`cutting_argument` in SAWCutting.lean).
-
-### 4. Build verification
-All proof targets build successfully: `SAWFinal`, `SAWMainNew`, `SAWHWDecompFresh`.
-
-See `PROOF_STATUS.md` for the updated proof architecture and `ARISTOTLE_SUMMARY.md` for detailed notes.
-
-# Project Cleanup Summary
-
-## What was done
-
-Major tidying of the project to reduce size and remove dead code, making it easier to focus on the remaining open problems (the two root sorries).
-
-### Files deleted (115 files)
-Removed 115 Lean files that were not transitively imported by any of the main proof targets (`SAWFinal`, `SAWPaperChain`, `SAWMainNew`, `SAWHWDecompFresh`). These included abandoned proof attempts, duplicate approaches, unused conjectures, and superseded infrastructure.
-
-### Files cleaned (key files)
-- **SAWBridge.lean**: 918 → 313 lines. Removed unused definitions (`HalfPlaneWalk`, `BridgeSequence`, `hammersley_welsh_bound` sorry), Section 4 conjectures (`sigma_is_five_eighths`, `conformal_spin_exponent`), and verbose PROBLEM/PROVIDED SOLUTION comment blocks. Fixed a `grind` proof that broke during cleanup.
-- **SAWMain.lean**: 352 → 50 lines. Removed all conjectures (`nienhuis_asymptotic_conjecture`, `flory_exponent_conjecture`, etc.), verbose solver comments, and unused definitions.
-- **SAWDecomp.lean**: 475 → 59 lines. Kept only the two externally-used results (`quadratic_recurrence_lower_bound`, `not_summable_of_lower_bound`), removed all unused abstract bridge decomposition infrastructure.
-- **SAWBridgeFix.lean**: 191 → 57 lines. Removed unused proofs about bridge_partition being zero, the vacuousness proof, and `bridge_endpoints_differ`.
-- **SAWStripIdentityCorrect.lean**: 484 → 413 lines. Consolidated 6 duplicate versions of `B_paper_le_one` and 5 duplicate versions of the strip identity into simple aliases pointing to the root sorry.
-- **SAWCutting.lean**: Removed the dead sorry'd `cutting_argument` (superseded by `cutting_argument_proved` in `SAWCuttingProof.lean`).
-- **SAW.lean, SAWSubmult.lean, SAWHWAlgorithm.lean, SAWHWInject.lean**: Removed verbose PROBLEM/PROVIDED SOLUTION comment blocks (leftover solver logs).
-
-### Size reduction
-- **Before**: 147 files, ~21,400 lines
-- **After**: 32 files, ~5,900 lines
-- **Reduction**: 73% fewer lines, 78% fewer files
-
-### Sorry status (unchanged)
-The two independent root sorries remain:
-1. `infinite_strip_identity` — parafermionic observable identity for infinite strip
-2. `hw_injection_bound` — Hammersley-Welsh bridge decomposition counting inequality
-
-No new sorries were introduced. One dead sorry was removed (`cutting_argument`).
-
-### Build verification
-All three proof targets build successfully:
-- `RequestProject.SAWFinal` ✓
-- `RequestProject.SAWMainNew` ✓  
-- `RequestProject.SAWHWDecompFresh` ✓
+The analytical components (suffix bound, Cauchy product, arithmetic) are straightforward 
+given the infrastructure. The hard part is constructing the walk decomposition injection 
+in Lean (finding the last vertex, splitting the walk, translating+flipping the suffix, 
+and proving injectivity).
