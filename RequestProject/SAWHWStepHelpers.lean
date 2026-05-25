@@ -10,6 +10,7 @@ import RequestProject.SAWHWStructural
 import RequestProject.SAWHWBridgeExtractProof
 import RequestProject.SAWHWBound
 import RequestProject.SAWHWHalfPlane
+import RequestProject.SAWHWLastVertex
 
 open Real Complex ComplexConjugate Filter Topology
 

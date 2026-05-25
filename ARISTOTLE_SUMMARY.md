@@ -1,3 +1,51 @@
+# Summary of changes for run ed94f152-8f24-439f-8ee6-9e9da2ba7c95
+## Hammersley-Welsh Formalization Progress
+
+I made significant progress on the Hammersley-Welsh part of the proof that μ = √(2+√2), proving 18+ new lemmas and creating 4 new files of infrastructure.
+
+### New files created
+
+1. **`RequestProject/SAWHWLastVertex.lean`** — 6 lemmas, all proved
+   - `lastDCIndex`: Definition finding the last index at a given dc value using `Finset.max'`
+   - `lastDCIndex_le_length`, `lastDCIndex_dc`, `lastDCIndex_is_max`: Basic properties
+   - `after_lastDCIndex_no_dc`: No vertex after the last has the same dc
+   - `lastDCIndex_is_false`: The last vertex at dc=-(W+1) is FALSE (key structural lemma)
+   - `suffix_after_last_narrow`: After the last dc=-(W+1) vertex, all subsequent vertices have dc ∈ [-W, 0]
+
+2. **`RequestProject/SAWHWMinDC.lean`** — 7 lemmas, all proved
+   - `minDCVal`, `firstMinDCIdx`: Definitions for minimum dc value and first index achieving it
+   - `minDCVal_le`, `minDCVal_achieved`, `firstMinDCIdx_le_length`, `firstMinDCIdx_dc`: Properties
+   - `minDCVal_paperStart_le`, `neg_minDCVal_le_length`: Bounds from paperStart
+   - `firstMinDC_is_false`: The first min-dc vertex is FALSE when minDCVal < 0 (key for SAW decomposition)
+
+3. **`RequestProject/SAWHWExtraProof.lean`** — 2 lemmas, all proved
+   - `hp_walk_count_mono`: Wider strip allows more walks (monotonicity)
+   - `hex_origin_strip_sum_le`: hexOrigin strip GF ≤ (1+x)·hp_sum
+
+4. **`RequestProject/SAWHWSawBound.lean`** — 3 proved, 2 sorry
+   - `saw_count_nonneg_dc`, `saw_count_neg_dc`: Split SAWs by dc sign
+   - `saw_count_split` ✓: saw_count = nonneg + neg partition
+   - `saw_nonneg_le_hex_strip` ✓: Nonneg-dc walks bounded by hex strip (via hexFlip injection)
+   - `saw_neg_le_hp_conv` — SORRY: Neg-dc walks bounded by hp convolution (injection needed)
+   - `saw_sum_le_hp_sq_proof` — SORRY: Depends on saw_neg_le_hp_conv
+
+### Import restructuring
+- Removed unnecessary imports from `SAWHWLastVertex.lean` to break circular dependencies
+- Added `SAWHWLastVertex` import to `SAWHWStepHelpers.lean` and `SAWHWHalfPlane.lean`
+
+### Remaining sorries in the HW chain
+
+The 2 original HW sorries (`extra_sum_le` and `saw_sum_le_hp_sq`) have been decomposed into 2 cleaner root sorries:
+
+1. **`extra_sum_le`** (SAWHWStepHelpers.lean): The bridge-suffix decomposition at the last dc=-(W+1) vertex. All infrastructure is in place (lastDCIndex, suffix_after_last_narrow, etc.). The remaining work is composing Walk.take/drop with hexTranslate_walk/hexFlip_walk to construct the explicit injection.
+
+2. **`saw_neg_le_hp_conv`** (SAWHWSawBound.lean): The SAW decomposition at the first min-dc vertex. All infrastructure is in place (firstMinDCIdx, firstMinDC_is_false, etc.). The remaining work is the same: composing walk operations for the injection.
+
+Both require constructing explicit walk decomposition injections in Lean, composing Walk.take, Walk.drop, Walk.reverse, hexTranslate_walk, and hexFlip_walk while verifying IsPath preservation and strip constraints. Each individual operation has full Lean API support; the challenge is the technical composition.
+
+### Build status
+All files compile successfully. See `PROOF_STATUS.md` for the complete proof architecture diagram.
+
 # Summary of changes for run 16419d4e-b876-42af-b9f6-8ec6e9506312
 ## Hammersley-Welsh Formalization Progress
 

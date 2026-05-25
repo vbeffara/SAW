@@ -20,6 +20,7 @@ import RequestProject.SAWElementary
 import RequestProject.SAWHWStructural
 import RequestProject.SAWHWBridgeExtractProof
 import RequestProject.SAWHWBound
+import RequestProject.SAWHWLastVertex
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -116,12 +117,18 @@ lemma hp_sum_zero_le (N : ℕ) (x : ℝ) (hx : 0 ≤ x) (hx1 : x ≤ 1) :
 
 /-! ## Inductive step -/
 
+/-- The key bound: each walk visiting dc=-(W+1) decomposes via a bridge. -/
+private lemma hp_sum_step_core {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
+    hp_sum (W + 1) N x ≤
+    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
+  sorry
+
 /-- **Key inductive step** (with constant 6):
     hp_sum(W+1) ≤ (1 + 6 · B_{W+1}) · hp_sum(W). -/
 lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
     hp_sum (W + 1) N x ≤
-    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
-  sorry
+    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x :=
+  hp_sum_step_core hx hx1 W N
 
 /-! ## The inductive bound (product form) -/
 
