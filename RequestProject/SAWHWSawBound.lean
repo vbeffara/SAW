@@ -11,6 +11,8 @@ import RequestProject.SAWHWMinDC
 import RequestProject.SAWHWHalfPlane
 import RequestProject.SAWHWExtraProof
 import RequestProject.SAWHWStepHelpers
+import RequestProject.SAWHWDecomp
+import RequestProject.SAWHWDecompFresh
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -42,9 +44,7 @@ lemma saw_count_split (n : ℕ) :
 
 lemma saw_nonneg_le_hex_strip (N n : ℕ) (hn : n ≤ N) :
     saw_count_nonneg_dc n ≤ hex_origin_strip_count N n := by
-  -- Define the function that maps a SAW from paperStart to hexOrigin via hexFlip.
   set f : SAW paperStart n → SAW hexOrigin n := fun s => ⟨hexFlip s.w, ⟨hexFlip_walk s.p.1, hexFlip_walk_isPath s.p.1 s.p.2⟩, by rw [hexFlip_walk_length]; exact s.l⟩;
-  -- Show that $f$ maps SAWs from paperStart to hexOrigin via hexFlip.
   have hf_map : ∀ s : SAW paperStart n, (∀ v ∈ s.p.1.support, 0 ≤ v.1 + v.2.1) → (∀ v ∈ (f s).p.1.support, -(N : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0) := by
     intro s hs v hv; rw [ hexFlip_walk_support ] at hv; obtain ⟨ u, hu, rfl ⟩ := List.mem_map.mp hv; specialize hs u hu; specialize hs; specialize hs; simp_all +decide [ hexFlip ] ;
     constructor <;> linarith [ saw_vertex_dc_bound s u hu ];
@@ -59,17 +59,25 @@ lemma saw_nonneg_le_hex_strip (N n : ℕ) (hn : n ≤ N) :
   · unfold hex_origin_strip_count; simp +decide [ Fintype.card_subtype ] ;
   · exact Set.image_subset_iff.mpr hf_map
 
+/-! ## The neg_dc counting bound -/
+
+/-- For a SAW visiting dc < 0, minDCVal is negative. -/
+lemma minDCVal_neg_of_visits_neg {n : ℕ} (s : SAW paperStart n)
+    (h : ∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0) :
+    minDCVal s.p.1 < 0 := by
+  obtain ⟨v, hv, hvdc⟩ := h
+  obtain ⟨k, hkv, hk⟩ := SimpleGraph.Walk.mem_support_iff_exists_getVert.mp hv
+  exact lt_of_le_of_lt (minDCVal_le s.p.1 k hk) (hkv ▸ hvdc)
+
 /-- SAWs visiting dc < 0: convolution bound. -/
 lemma saw_neg_le_hp_conv (N n : ℕ) (hn : n ≤ N) :
     (saw_count_neg_dc n : ℝ) ≤
     ∑ k ∈ Finset.range (n + 1), (hp_walk_count N k : ℝ) * (hp_walk_count N (n - k) : ℝ) := by
-  sorry
+  unfold saw_count_neg_dc
+  exact_mod_cast saw_neg_dc_le_conv_nat N n hn
 
 /-! ## Cauchy product inequality -/
 
-/-
-Truncated convolution ≤ product of truncated sums for nonneg sequences.
--/
 lemma cauchy_product_le (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n, 0 ≤ b n)
     (x : ℝ) (hx : 0 ≤ x) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1),
@@ -77,7 +85,6 @@ lemma cauchy_product_le (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n,
     (∑ n ∈ Finset.range (N + 1), a n * x ^ n) *
     (∑ n ∈ Finset.range (N + 1), b n * x ^ n) := by
   simp +decide only [mul_comm, Finset.sum_mul];
-  -- By interchanging the order of summation, we can rewrite the left-hand side.
   have h_interchange : ∑ x_1 ∈ Finset.range (N + 1), x ^ x_1 * ∑ k ∈ Finset.range (x_1 + 1), a k * b (x_1 - k) = ∑ k ∈ Finset.range (N + 1), ∑ x_1 ∈ Finset.Ico k (N + 1), x ^ x_1 * a k * b (x_1 - k) := by
     simp +decide only [Finset.mul_sum _ _ _, mul_assoc];
     rw [ Finset.range_eq_Ico, Finset.sum_Ico_Ico_comm ];
@@ -89,47 +96,34 @@ lemma cauchy_product_le (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n,
 
 /-! ## SAW sum ≤ 2 · hp_sum² -/
 
-/-
-hp_walk_count(W, 1) ≥ 1: the walk paperStart → (0,0,false) is always valid.
--/
 lemma hp_walk_count_one_ge (W : ℕ) : 1 ≤ hp_walk_count W 1 := by
   refine' Finset.card_pos.mpr _;
   refine' ⟨ ⟨ ( 0, 0, false ), ⟨ SimpleGraph.Walk.cons ( by tauto ) SimpleGraph.Walk.nil, _ ⟩, _ ⟩, _ ⟩ <;> simp +decide [ SimpleGraph.Walk.cons ];
   norm_num [ paperStart ]
 
-/-
-hp_sum(N, N, x) ≥ 1 + x for N ≥ 1.
--/
 lemma hp_sum_ge_one_plus_x (N : ℕ) (hN : 1 ≤ N) (x : ℝ) (hx : 0 ≤ x) : 1 + x ≤ hp_sum N N x := by
   unfold hp_sum;
   rcases N with ( _ | N ) <;> simp_all +decide [ Finset.sum_range_succ' ];
   nlinarith [ show ( hp_walk_count ( N + 1 ) 1 : ℝ ) ≥ 1 by exact_mod_cast hp_walk_count_one_ge _, show ( hp_walk_count ( N + 1 ) 0 : ℝ ) = 1 by exact_mod_cast hp_walk_count_zero _, show ( ∑ k ∈ Finset.range N, ( hp_walk_count ( N + 1 ) ( k + 1 + 1 ) : ℝ ) * x ^ ( k + 1 + 1 ) ) ≥ 0 by exact Finset.sum_nonneg fun _ _ => mul_nonneg ( Nat.cast_nonneg _ ) ( pow_nonneg hx _ ) ]
 
-/-
-Each n-step SAW from hexOrigin decomposes into two half-plane walks.
--/
 theorem saw_sum_le_hp_sq {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     2 * (hp_sum N N x) ^ 2 := by
   by_cases hN : N = 0;
-  · -- Since $N = 0$, we have $saw_count 0 = 1$ and $hp_sum 0 0 x = 1$.
-    simp [hN, saw_count, hp_walk_count, hp_sum];
+  · simp [hN, saw_count, hp_walk_count, hp_sum];
     norm_cast;
     refine' le_trans _ ( Nat.mul_le_mul_left _ <| Nat.one_le_pow _ _ <| Finset.card_pos.mpr _ );
     · refine' le_trans ( Fintype.card_le_one_iff.mpr _ ) _ <;> norm_num;
       rintro ⟨ a, ⟨ p, hp ⟩, hl ⟩ ⟨ b, ⟨ q, hq ⟩, hl' ⟩ ; cases p <;> cases q <;> aesop;
     · refine' ⟨ ⟨ paperStart, ⟨ SimpleGraph.Walk.nil, _ ⟩, _ ⟩, _ ⟩ <;> simp +decide [ hN ];
-  · -- For the nonneg part: by saw_nonneg_le_hex_strip, saw_count_nonneg_dc(n) ≤ hex_origin_strip_count(N, n). Then by hex_origin_strip_sum_le, ∑ hex_origin_strip_count(N,n)·x^n ≤ (1+x)·hp_sum(N,N,x).
-    have h_nonneg : ∑ n ∈ Finset.range (N + 1), (saw_count_nonneg_dc n : ℝ) * x ^ n ≤ (1 + x) * hp_sum N N x := by
+  · have h_nonneg : ∑ n ∈ Finset.range (N + 1), (saw_count_nonneg_dc n : ℝ) * x ^ n ≤ (1 + x) * hp_sum N N x := by
       refine' le_trans _ ( hex_origin_strip_sum_le N N x hx.le hx1.le );
       exact Finset.sum_le_sum fun i hi => mul_le_mul_of_nonneg_right ( mod_cast saw_nonneg_le_hex_strip N i ( Finset.mem_range_succ_iff.mp hi ) ) ( pow_nonneg hx.le _ );
-    -- For the neg part: by saw_neg_le_hp_conv, saw_count_neg_dc(n) ≤ ∑_k hp_walk_count(N,k)·hp_walk_count(N,n-k). Then by cauchy_product_le (with a = b = hp_walk_count(N, ·)), the sum ≤ hp_sum(N,N,x)².
     have h_neg : ∑ n ∈ Finset.range (N + 1), (saw_count_neg_dc n : ℝ) * x ^ n ≤ (hp_sum N N x) ^ 2 := by
       have h_neg : ∑ n ∈ Finset.range (N + 1), (saw_count_neg_dc n : ℝ) * x ^ n ≤ ∑ n ∈ Finset.range (N + 1), (∑ k ∈ Finset.range (n + 1), (hp_walk_count N k : ℝ) * (hp_walk_count N (n - k) : ℝ)) * x ^ n := by
         apply Finset.sum_le_sum;
         exact fun n hn => mul_le_mul_of_nonneg_right ( mod_cast saw_neg_le_hp_conv N n ( Finset.mem_range_succ_iff.mp hn ) ) ( pow_nonneg hx.le _ );
       convert h_neg.trans ( cauchy_product_le ( fun n => hp_walk_count N n ) ( fun n => hp_walk_count N n ) ( fun n => Nat.cast_nonneg _ ) ( fun n => Nat.cast_nonneg _ ) x hx.le N ) using 1 ; norm_num [ hp_sum ] ; ring;
-    -- By saw_count_split, we have saw_count n = saw_count_nonneg_dc n + saw_count_neg_dc n.
     have h_split : ∀ n, (saw_count n : ℝ) = (saw_count_nonneg_dc n : ℝ) + (saw_count_neg_dc n : ℝ) := by
       exact_mod_cast saw_count_split;
     simp_all +decide [ add_mul, Finset.sum_add_distrib ];
@@ -137,9 +131,6 @@ theorem saw_sum_le_hp_sq {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
 
 /-! ## Combined bound -/
 
-/-- The Hammersley-Welsh bridge decomposition inequality.
-    For 0 < x < 1:
-    ∑_{n≤N} c_n x^n ≤ 8 · (∏_{T=1}^N (1 + 6·B_T(x)))² -/
 theorem hw_injection_bound_correct {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     8 * (∏ T ∈ Finset.range N, (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by

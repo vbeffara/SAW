@@ -1,17 +1,17 @@
 /-
-# Hammersley-Welsh Bridge Decomposition — Step-by-Step
+# The neg_dc injection proof
 
-Building blocks for the bridge decomposition proof.
+Proves saw_neg_dc_le_conv_nat using the decomposition infrastructure.
+Strategy: partition by k = firstMinDCIdx, bound each part.
 -/
 
 import Mathlib
 import RequestProject.SAWDiagProof
 import RequestProject.SAWSubmult
-import RequestProject.SAWElementary
 import RequestProject.SAWHWStructural
-import RequestProject.SAWHWBridgeExtractProof
-import RequestProject.SAWHWReCoord
-import RequestProject.SAWHWBound
+import RequestProject.SAWHWMinDC
+import RequestProject.SAWHWHalfPlane
+import RequestProject.SAWHWDecomp
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -19,97 +19,140 @@ noncomputable section
 
 set_option maxHeartbeats 4000000
 
-/-! ## Last vertex at min dc -/
+/-! ## Type abbreviations -/
+
+abbrev HPWalkSet (N k : ℕ) :=
+  { s : SAW paperStart k //
+    ∀ v ∈ s.p.1.support, -(N : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0 }
+
+/-- NEG DC SAWs with a fixed splitting index k. -/
+def NegDCAtK (n k : ℕ) : Finset (SAW paperStart n) :=
+  Finset.univ.filter (fun s : SAW paperStart n =>
+    (∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0) ∧ firstMinDCIdx s.p.1 = k)
+
+/-! ## Helper lemmas -/
+
+private lemma minDCVal_neg' {n : ℕ} (s : SAW paperStart n)
+    (h : ∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0) :
+    minDCVal s.p.1 < 0 := by
+  obtain ⟨v, hv, hvdc⟩ := h
+  obtain ⟨k, hkv, hk⟩ := SimpleGraph.Walk.mem_support_iff_exists_getVert.mp hv
+  exact lt_of_le_of_lt (minDCVal_le s.p.1 k hk) (hkv ▸ hvdc)
+
+/-! ## The injection for fixed k -/
+
+/-- For a SAW s with firstMinDCIdx = k, construct the pair
+    (prefix_transform, suffix_transform) in HPWalkSet(N,k) × HPWalkSet(N,n-k). -/
+def negDCAtK_inject (N n k : ℕ) (hn : n ≤ N) (hk : k ≤ n)
+    (s : SAW paperStart n)
+    (hs_neg : ∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0)
+    (hs_k : firstMinDCIdx s.p.1 = k) :
+    HPWalkSet N k × HPWalkSet N (n - k) := by
+  have hneg := minDCVal_neg' s hs_neg
+  have hf : (s.p.1.getVert k).2.2 = false := hs_k ▸ firstMinDC_is_false s.p.1 s.p.2 hneg
+  have hi : k ≤ s.p.1.length := by
+    have := firstMinDCIdx_le_length s.p.1; rw [hs_k] at this; exact this
+  have hmin : ∀ j, j ≤ s.p.1.length →
+      (s.p.1.getVert k).1 + (s.p.1.getVert k).2.1 ≤
+      (s.p.1.getVert j).1 + (s.p.1.getVert j).2.1 := by
+    intro j hj; rw [← hs_k, firstMinDCIdx_dc]; exact minDCVal_le s.p.1 j hj
+  have hlen_suff : (suffixTransform s.p.1 k hi hf).length = n - k := by
+    rw [suffixTransform_length, s.l]
+  exact (
+    ⟨⟨_, ⟨prefixTransform s.p.1 k hi hf,
+          prefixTransform_isPath s.p.1 s.p.2 k hi hf⟩,
+     prefixTransform_length s.p.1 k hi hf⟩,
+     prefixTransform_strip s.p.1 s.p.2 k hi hf hmin N (le_trans hk hn)⟩,
+    ⟨⟨_, ⟨suffixTransform s.p.1 k hi hf,
+          suffixTransform_isPath s.p.1 s.p.2 k hi hf⟩,
+     hlen_suff⟩,
+     suffixTransform_strip s.p.1 s.p.2 k hi hf hmin N (by rw [s.l]; exact Nat.sub_le_of_le_add (by linarith))⟩)
 
 /-
-In any non-empty walk on hex lattice where the walk stays in dc ∈ [-M, 0],
-    if v is a vertex at dc = -M and no later vertex (by walk order) also has dc = -M,
-    then v is FALSE. (If v were TRUE at dc=-M, the next step goes to FALSE at dc≤-M,
-    but dc≥-M forces dc=-M, giving a later vertex at dc=-M, contradiction.)
+The injection for fixed k is injective.
 -/
-lemma last_at_min_dc_is_false {v w : HexVertex}
-    (p : hexGraph.Walk v w) (hp : p.IsPath)
-    (M : ℕ) (hM : 1 ≤ M)
-    (hv_dc : v.1 + v.2.1 = 0) (hv_true : v.2.2 = true)
-    (hstrip : ∀ u ∈ p.support, -(M : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
-    (z : HexVertex) (hz : z ∈ p.support)
-    (hz_dc : z.1 + z.2.1 = -(M : ℤ))
-    (hz_ne_w : z ≠ w)
-    (hz_last : ∀ u ∈ p.support,
-      u.1 + u.2.1 = -(M : ℤ) → u ≠ z →
-      -- u appears before z in the walk
-      True) :
-    z.2.2 = false := by
-  have h_no_true_at_min : ∀ u ∈ p.support, u.2.2 = true → u.1 + u.2.1 > -M ∨ u = w := by
-    intros u hu hu_true
-    by_cases hu_last : u = w;
-    · exact Or.inr hu_last;
-    · apply Classical.byContradiction
-      intro h_contra;
-      exact absurd ( no_true_at_min_dc_in_strip p hp M hM ( by linarith ) hstrip u hu hu_true hu_last ) ( by aesop );
-  grind
+lemma negDCAtK_inject_injective (N n k : ℕ) (hn : n ≤ N) (hk : k ≤ n)
+    (s₁ s₂ : SAW paperStart n)
+    (hs₁_neg : ∃ v ∈ s₁.p.1.support, v.1 + v.2.1 < 0)
+    (hs₂_neg : ∃ v ∈ s₂.p.1.support, v.1 + v.2.1 < 0)
+    (hs₁_k : firstMinDCIdx s₁.p.1 = k)
+    (hs₂_k : firstMinDCIdx s₂.p.1 = k)
+    (h_eq : negDCAtK_inject N n k hn hk s₁ hs₁_neg hs₁_k =
+            negDCAtK_inject N n k hn hk s₂ hs₂_neg hs₂_k) :
+    s₁ = s₂ := by
+  have h_support : (s₁.p.1.take k).support = (s₂.p.1.take k).support ∧ (s₁.p.1.drop k).support = (s₂.p.1.drop k).support := by
+    unfold negDCAtK_inject at h_eq;
+    simp +zetaDelta at *;
+    have h_support : (prefixTransform s₁.p.1 k (by
+    exact hs₁_k ▸ firstMinDCIdx_le_length _ |> le_trans <| by simp +decide [ s₁.l ] ;) (by
+    grind +qlia)).support = (prefixTransform s₂.p.1 k (by
+    exact hs₂_k ▸ firstMinDCIdx_le_length _) (by
+    grind)).support ∧ (suffixTransform s₁.p.1 k (by
+    exact hs₁_k ▸ firstMinDCIdx_le_length _ |> le_trans <| by simp +decide [ s₁.l ] ;) (by
+    grind +qlia)).support = (suffixTransform s₂.p.1 k (by
+    exact hs₂_k ▸ firstMinDCIdx_le_length _) (by
+    grind)).support := by
+      grind
+    generalize_proofs at *;
+    simp_all +decide [ prefixTransform_support, suffixTransform_support ];
+    simp_all +decide [ hexFlip, hexTranslate ];
+    exact ⟨ List.map_injective_iff.mpr ( by intros a b; aesop ) h_support.1, List.map_injective_iff.mpr ( by intros a b; aesop ) h_support.2 ⟩;
+  have h_support_eq : s₁.p.1.support = s₂.p.1.support := by
+    have h_support_eq : (s₁.p.1.take k).support ++ (s₁.p.1.drop k).support.tail = s₁.p.1.support ∧ (s₂.p.1.take k).support ++ (s₂.p.1.drop k).support.tail = s₂.p.1.support := by
+      have h_support_eq : ∀ {v w : HexVertex} {p : hexGraph.Walk v w} {k : ℕ}, k ≤ p.length → (p.take k).support ++ (p.drop k).support.tail = p.support := by
+        intros v w p k hk; induction' p with v w p ih generalizing k; aesop;
+        rcases k with ( _ | k ) <;> simp_all +decide [ SimpleGraph.Walk.take, SimpleGraph.Walk.drop ];
+      exact ⟨ h_support_eq ( by linarith [ s₁.l ] ), h_support_eq ( by linarith [ s₂.l ] ) ⟩;
+    grind;
+  cases s₁ ; cases s₂;
+  congr! 1;
+  · rename_i w₁ p₁ l₁ w₂ p₂ l₂;
+    have h_support_eq : ∀ {v w : HexVertex} {p : hexGraph.Walk v w}, p.IsPath → p.support.getLast? = some w := by
+      intros v w p hp; induction p <;> simp_all +decide [ SimpleGraph.Walk.support ] ;
+      grind;
+    grind;
+  · have h_walk_eq : ∀ {v w : HexVertex} {p q : hexGraph.Walk v w}, p.IsPath → q.IsPath → p.length = q.length → p.support = q.support → p = q := by
+      exact?;
+    grind
 
-/-- In a downward half-plane walk from paperStart (all dc ∈ [-M, 0]),
-    any vertex at dc = -M that is not the walk endpoint must be FALSE.
-    (This uses the bipartite structure: TRUE at dc=-M would force visiting
-    FALSE at same dc, but self-avoidance limits the neighbors.) -/
-lemma min_dc_vertex_is_false_in_hp
-    {w : HexVertex}
-    (p : hexGraph.Walk paperStart w) (hp : p.IsPath)
-    (M : ℕ) (hM : 1 ≤ M)
-    (hstrip : ∀ u ∈ p.support, -(M : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
-    (v : HexVertex) (hv : v ∈ p.support)
-    (hv_dc : v.1 + v.2.1 = -(M : ℤ))
-    (hv_ne_w : v ≠ w) :
-    v.2.2 = false := by
-  by_contra h
-  have hv_true : v.2.2 = true := by
-    cases hb : v.2.2 <;> simp_all
-  have hstart : paperStart.1 + paperStart.2.1 > -(M : ℤ) := by simp [paperStart]; omega
-  have hgt := no_true_at_min_dc_in_strip p hp M hM hstart hstrip v hv hv_true hv_ne_w
-  linarith
+/-! ## Partition of saw_count_neg_dc -/
 
-/-! ## Prefix to a min-dc FALSE vertex is a PaperBridge -/
+lemma saw_neg_dc_partition (n : ℕ) :
+    Finset.card (Finset.univ.filter (fun s : SAW paperStart n =>
+      ∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0)) =
+    ∑ k ∈ Finset.range (n + 1), (NegDCAtK n k).card := by
+  rw [ ← Finset.card_biUnion ];
+  · congr with s ; simp +decide [ NegDCAtK ];
+    exact fun x y h₁ h₂ => le_trans ( firstMinDCIdx_le_length _ ) ( by simp +decide [ s.l ] );
+  · exact fun x hx y hy hxy => Finset.disjoint_left.mpr fun z hzx hzy => hxy <| by unfold NegDCAtK at *; aesop;
 
-/-- The prefix of a downward half-plane walk to a FALSE vertex at dc=-M
-    is a valid PaperBridge of width M. This uses bridge_satisfies_paper_inf_strip. -/
-lemma hp_prefix_is_bridge
-    {w : HexVertex}
-    (p : hexGraph.Path paperStart w) (M : ℕ) (hM : 1 ≤ M)
-    (hstrip : ∀ u ∈ p.1.support, -(M : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
-    (v : HexVertex) (hv : v ∈ p.1.support)
-    (hv_dc : v.1 + v.2.1 = -(M : ℤ))
-    (hv_false : v.2.2 = false) :
-    ∃ (b : PaperBridge M), b.walk.1.length = (p.1.takeUntil v hv).length := by
-  exact prefix_to_first_min_is_bridge p M hM v hv hv_dc hv_false
-    (fun u hu => hstrip u (p.1.support_takeUntil_subset hv hu))
+lemma neg_dc_at_k_bound (N n k : ℕ) (hn : n ≤ N) (hk : k ≤ n) :
+    (NegDCAtK n k).card ≤ hp_walk_count N k * hp_walk_count N (n - k) := by
+  convert Set.card_le_card ?_ using 1;
+  rotate_left;
+  rotate_left;
+  exact ( HPWalkSet N k ) × ( HPWalkSet N ( n - k ) );
+  exact Set.image ( fun s : NegDCAtK n k => negDCAtK_inject N n k hn hk s.1 ( by
+    exact s.2 |> Finset.mem_filter.mp |>.2.1 ) ( by
+    grind +locals ) ) ( Set.univ : Set ( NegDCAtK n k ) )
+  all_goals generalize_proofs at *;
+  exact Set.univ;
+  exact Set.Finite.fintype ( Set.toFinite _ );
+  exact?;
+  · exact Set.image_subset_iff.mpr fun s _ => Set.mem_univ _;
+  · rw [ Set.card_image_of_injective ];
+    · rw [ Fintype.card_congr ( Equiv.Set.univ _ ) ] ; aesop;
+    · intro s t h_eq_eq;
+      exact Subtype.ext <| negDCAtK_inject_injective N n k hn hk _ _ _ _ _ _ h_eq_eq;
+  · unfold hp_walk_count; simp +decide [ Fintype.card_subtype ] ;
 
-/-! ## After the min-dc vertex, dc increases -/
-
-/-
-If v is FALSE at dc=-M in a walk, and u is the next vertex after v,
-    then u is TRUE with dc = -(M-1). This is because all FALSE neighbors
-    of FALSE(a,b) with dc=-M are TRUE, and the only TRUE neighbor at
-    dc ≤ -M is TRUE(a,b) at dc=-M (which violates PaperInfStrip).
--/
-lemma next_after_min_dc_false
-    {a b : ℤ} {u : HexVertex}
-    (h_adj : hexGraph.Adj (a, b, false) u)
-    (h_dc : a + b = -(M : ℤ))
-    (h_strip : -(M : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
-    (h_not_same : u ≠ (a, b, true)) :
-    u.1 + u.2.1 = -(M : ℤ) + 1 := by
-  cases u ; simp_all +decide [ hexGraph ];
-  grind
-
-/-! ## The Hammersley-Welsh inequality -/
-
-/-- The Hammersley-Welsh bridge decomposition inequality.
-    For all 0 < x ≤ 1 and N ≥ 0:
-    ∑_{n=0}^{N} c_n x^n ≤ 2 ∏_{T=1}^{N} (1 + B_T(x))² -/
-theorem hw_injection_bound_v2 {x : ℝ} (hx : 0 < x) (hx1 : x ≤ 1) (N : ℕ) :
-    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    2 * (∏ T ∈ Finset.range N, (1 + paper_bridge_partition (T + 1) x)) ^ 2 := by
-  sorry
+/-- The main bound. -/
+theorem saw_neg_dc_le_conv_nat (N n : ℕ) (hn : n ≤ N) :
+    Finset.card (Finset.univ.filter (fun s : SAW paperStart n =>
+      ∃ v ∈ s.p.1.support, v.1 + v.2.1 < 0)) ≤
+    ∑ k ∈ Finset.range (n + 1), hp_walk_count N k * hp_walk_count N (n - k) := by
+  rw [saw_neg_dc_partition]
+  exact Finset.sum_le_sum fun k hk =>
+    neg_dc_at_k_bound N n k hn (Nat.lt_succ_iff.mp (Finset.mem_range.mp hk))
 
 end

@@ -1,3 +1,42 @@
+# Summary of changes for run 3a403225-9673-4f6a-a155-741cfc19d0b0
+## Hammersley-Welsh Formalization Progress
+
+### Major Achievement: `saw_neg_le_hp_conv` is now fully proved
+
+I eliminated one of the 2 root sorries in the Hammersley-Welsh chain. The sorry `saw_neg_le_hp_conv` in `RequestProject/SAWHWSawBound.lean` — which states that SAWs visiting negative diagonal coordinate are bounded by the convolution of half-plane walk counts — is now fully proved with no remaining sorries.
+
+The proof constructs an explicit injection from SAWs visiting dc < 0 into pairs of half-plane walks using the firstMinDCIdx decomposition:
+1. Each SAW visiting dc < 0 is split at the first vertex achieving minimum dc
+2. The prefix (reversed + translated + flipped) and suffix (translated + flipped) become SAWs from paperStart in strip [-N, 0]
+3. The injection is injective (proved via support-level injectivity using `decomp_support_injective`)
+4. The counting bound follows from partition + injection + Fintype.card_le_of_injective
+
+### New files created (all sorry-free)
+
+1. **`RequestProject/SAWHWDecomp.lean`** — Walk decomposition infrastructure
+   - `prefixTransform` / `suffixTransform`: walk transformations (reverse+translate+flip / translate+flip)
+   - `prefixTransform_strip` / `suffixTransform_strip`: strip constraints [-N, 0] (proved)
+   - `decomp_support_injective`: support-level injectivity of the decomposition (proved)
+   - Plus length preservation and IsPath preservation lemmas
+
+2. **`RequestProject/SAWHWDecompFresh.lean`** — Full counting bound for saw_neg_le_hp_conv
+   - `negDCAtK_inject`: injection from extra walks with fixed splitting index k
+   - `negDCAtK_inject_injective`: the injection is injective
+   - `saw_neg_dc_partition`: partition of saw_count_neg_dc by k = firstMinDCIdx
+   - `neg_dc_at_k_bound`: card bound for each partition class
+   - `saw_neg_dc_le_conv_nat`: the main ℕ counting bound
+
+3. **`RequestProject/SAWHWExtraSumProof.lean`** — Helper lemmas for extra_sum_le
+   - `extra_count_zero_small`: extra_count(W, n) = 0 for n ≤ W
+   - `suffix_gf_bound`: 1 + 2x(1+x)·hp_sum ≤ 6·hp_sum
+
+### Remaining sorry in the HW chain
+
+The HW chain now has exactly **1 remaining sorry**: `extra_sum_le` in `RequestProject/SAWHWStepHelpers.lean:160`. This is the generating function bound for "extra walks" (walks in strip [-(W+1), 0] that visit dc=-(W+1)). The proof requires a bridge-suffix decomposition at lastDCIndex(-(W+1)), similar in structure to the saw_neg_le_hp_conv proof. All analytical helper lemmas are proved; the remaining work is constructing the bridge-suffix injection.
+
+### Build status
+All files compile successfully. `SAWPaperChain` (the main theorem file) builds with the HW chain having exactly 1 sorry (extra_sum_le). See `PROOF_STATUS.md` for the full proof architecture diagram.
+
 # Summary of changes for run 4170f48c-5674-43c5-ab12-1ec5c5968601
 ## Hammersley-Welsh Formalization Progress
 
@@ -211,3 +250,41 @@ The analytical components (suffix bound, Cauchy product, arithmetic) are straigh
 given the infrastructure. The hard part is constructing the walk decomposition injection 
 in Lean (finding the last vertex, splitting the walk, translating+flipping the suffix, 
 and proving injectivity).
+
+# Summary of changes for current session
+## Hammersley-Welsh: saw_neg_le_hp_conv PROVED
+
+### Major achievement: `saw_neg_le_hp_conv` is now fully proved
+
+The sorry `saw_neg_le_hp_conv` in SAWHWSawBound.lean has been eliminated. This was one of
+the 2 root sorries in the Hammersley-Welsh chain. The proof constructs an explicit injection
+from SAWs visiting dc < 0 into pairs of half-plane walks, using the firstMinDCIdx decomposition.
+
+### New files created
+
+1. **`RequestProject/SAWHWDecomp.lean`** — Walk decomposition infrastructure (all proved)
+   - `prefixTransform` / `suffixTransform`: walk transformations
+   - `prefixTransform_strip` / `suffixTransform_strip`: strip constraints
+   - `decomp_support_injective`: support-level injectivity
+
+2. **`RequestProject/SAWHWDecompFresh.lean`** — Full counting bound (all proved)
+   - `negDCAtK_inject`: injection for fixed splitting index k
+   - `negDCAtK_inject_injective`: injectivity proof
+   - `saw_neg_dc_partition`: partition of saw_count_neg_dc by k
+   - `neg_dc_at_k_bound`: bound for each k
+   - `saw_neg_dc_le_conv_nat`: the main ℕ counting bound
+
+3. **`RequestProject/SAWHWExtraSumProof.lean`** — Helper lemmas for extra_sum_le (all proved)
+   - `extra_count_zero_small`: extra_count(W, n) = 0 for n ≤ W
+   - `suffix_gf_bound`: 1 + 2x(1+x)*hp_sum ≤ 6*hp_sum
+
+### Remaining sorry in the HW chain: `extra_sum_le`
+
+The last sorry is `extra_sum_le` in SAWHWStepHelpers.lean:160. This requires the bridge-suffix
+decomposition at lastDCIndex(-(W+1)), which involves:
+- Constructing the bridge-suffix injection (similar to saw_neg_le_hp_conv)
+- Bounding the suffix using hex_origin_strip_count after translate+flip
+- Cauchy product for the generating functions
+
+### Build status
+All files compile successfully. The HW chain has exactly 1 remaining sorry (extra_sum_le).

@@ -12,28 +12,33 @@
 The parafermionic observable identity for the infinite strip.
 Required for: Z(xc) = ∞ (lower bound μ ≥ √(2+√2)).
 
-### Sorry Chain #2: Hammersley-Welsh (2 root sorries)
+### Sorry Chain #2: Hammersley-Welsh (1 root sorry remaining)
 
-**2a. `extra_sum_le`** (SAWHWStepHelpers.lean:160)
+**`extra_sum_le`** (SAWHWStepHelpers.lean:160)
 The generating function bound for extra walks:
 ```lean
 ∑ n ∈ Finset.range (N + 1), (extra_count W n : ℝ) * x ^ n ≤
     6 * paper_bridge_partition (W + 1) x * hp_sum W N x
 ```
-Requires constructing an injection from "extra walks" (visiting dc=-(W+1))
-to (bridge prefix, suffix) pairs, and bounding the suffix GF by 6·hp_sum(W).
-The injection splits at the last FALSE vertex at dc=-(W+1).
+Requires the bridge-suffix decomposition at lastDCIndex(-(W+1)):
+1. Each extra walk decomposes at the LAST vertex at dc=-(W+1) into bridge prefix + suffix.
+2. Bridge prefix is a PaperBridge of width W+1.
+3. Suffix starts from FALSE at dc=-(W+1), subsequent vertices stay in [-W, 0] (by suffix_after_last_narrow).
+4. After translate+flip from the suffix's second vertex (TRUE at dc=-W), the continuation maps to hex_origin_strip_count(W, ·).
+5. Suffix GF ≤ 1 + 2x*(1+x)*hp_sum(W) ≤ 6*hp_sum(W) (by suffix_gf_bound).
+6. Extra sum ≤ B_{W+1} * suffix_GF ≤ 6*B_{W+1}*hp_sum(W).
 
-**2b. `saw_neg_le_hp_conv`** (SAWHWSawBound.lean:66)
-SAWs visiting dc < 0 are bounded by the convolution of hp_walk_counts:
-```lean
-(saw_count_neg_dc n : ℝ) ≤
-    ∑ k ∈ Finset.range (n + 1), (hp_walk_count N k : ℝ) * (hp_walk_count N (n - k) : ℝ)
-```
-Requires constructing an injection from SAWs visiting dc < 0 to pairs of
-half-plane walks, using the decomposition at the first vertex of minimum dc.
-The key is that each half stays in a strip of width ≤ k (resp. n-k) ≤ N,
-which follows from the dc range lemma (walk_getVert_dc_diff).
+Infrastructure proved:
+- `extra_count_zero_small`: extra_count(W, n) = 0 for n ≤ W
+- `suffix_gf_bound`: 1 + 2x(1+x)*hp_sum ≤ 6*hp_sum
+- `lastDCIndex_is_false`: the last vertex at dc=-(W+1) is FALSE
+- `suffix_after_last_narrow`: subsequent vertices stay in [-W, 0]
+The main remaining work is constructing the bridge-suffix injection and Cauchy product bound.
+
+**PREVIOUSLY PROVED: `saw_neg_le_hp_conv`** (SAWHWSawBound.lean) ✓
+SAWs visiting dc < 0 are bounded by the convolution of hp_walk_count:
+This was proved using the firstMinDCIdx decomposition with prefix/suffix transforms
+(see SAWHWDecomp.lean, SAWHWDecompFresh.lean).
 
 ## Proof Architecture
 
@@ -50,12 +55,15 @@ connective_constant_eq_corrected
                 │   ├── hex_origin_strip_sum_le ✓
                 │   ├── hp_sum_ge_one_plus_x ✓
                 │   ├── cauchy_product_le ✓
-                │   └── saw_neg_le_hp_conv ← SORRY #2b
+                │   └── saw_neg_le_hp_conv ✓  ← PROVED THIS SESSION
+                │       └── saw_neg_dc_le_conv_nat ✓ (SAWHWDecompFresh.lean)
+                │           ├── negDCAtK_inject_injective ✓
+                │           ├── saw_neg_dc_partition ✓
+                │           └── neg_dc_at_k_bound ✓
                 └── hp_sum_le_prod ✓  (SAWHWStepHelpers.lean)
                     ├── hp_sum_zero_le ✓
                     └── hp_sum_step ✓
-                        └── extra_sum_le ← SORRY #2a
-    └── paper_bridge_decay ✓
+                        └── extra_sum_le ← SORRY (remaining)
 
 ### Lower Bound: μ ≥ √(2+√2) via Z(xc) = ∞
 connective_constant_eq_corrected
@@ -65,49 +73,26 @@ connective_constant_eq_corrected
             └── infinite_strip_identity ← SORRY #1
 ```
 
-## Infrastructure proved in this session
+## New files created this session
 
-### File restructuring
-- Moved `hp_sum_step`, `hp_sum_le_prod` from SAWHWHalfPlane.lean to SAWHWStepHelpers.lean
-  (eliminates circular dependency)
-- Moved `saw_sum_le_hp_sq`, `hw_injection_bound_correct` from SAWHWHalfPlane.lean to SAWHWSawBound.lean
-- Updated SAWHWFinalProof.lean imports accordingly
-- SAWHWHalfPlane.lean now contains only definitions and base case proofs
+### RequestProject/SAWHWDecomp.lean
+Walk decomposition infrastructure for the firstMinDCIdx decomposition:
+- `prefixTransform` / `suffixTransform`: walk transformations (reverse+translate+flip / translate+flip)
+- `prefixTransform_length` / `suffixTransform_length`: length preservation
+- `prefixTransform_isPath` / `suffixTransform_isPath`: path preservation
+- `prefixTransform_strip` / `suffixTransform_strip`: strip constraint [-N, 0]
+- `prefixTransform_support` / `suffixTransform_support`: support characterization
+- `decomp_support_injective`: support-level injectivity of the decomposition
 
-### New proofs in SAWHWSawBound.lean
-1. `cauchy_product_le` ✓ — Truncated convolution ≤ product of truncated sums
-2. `hp_walk_count_one_ge` ✓ — hp_walk_count(W, 1) ≥ 1
-3. `hp_sum_ge_one_plus_x` ✓ — hp_sum(N, N, x) ≥ 1 + x for N ≥ 1
-4. `saw_sum_le_hp_sq` ✓ — ∑c_n x^n ≤ 2·hp_sum(N)² (the full SAW-to-halfplane reduction)
-5. `hw_injection_bound_correct` ✓ — ∑c_n x^n ≤ 8·(∏(1+6B_T))²
+### RequestProject/SAWHWDecompFresh.lean
+The counting bound for saw_neg_le_hp_conv:
+- `negDCAtK_inject`: injection for fixed splitting index k
+- `negDCAtK_inject_injective`: the injection is injective
+- `saw_neg_dc_partition`: partition of saw_count_neg_dc by k
+- `neg_dc_at_k_bound`: bound for each k
+- `saw_neg_dc_le_conv_nat`: the main ℕ counting bound
 
-### New proofs in SAWHWStructural.lean
-1. `walk_getVert_dc_le` ✓ — dc(getVert i) ≤ dc(start) + i
-2. `walk_getVert_dc_ge` ✓ — dc(getVert i) ≥ dc(start) - i
-3. `walk_getVert_dc_diff` ✓ — dc(getVert j) - dc(getVert i) ≤ j - i
-4. `walk_getVert_dc_diff'` ✓ — dc(getVert i) - dc(getVert j) ≤ j - i
-
-## What remains to formalize
-
-Both remaining sorries require constructing **explicit walk decomposition injections**
-in Lean. The mathematical arguments are clear:
-
-### For `extra_sum_le`:
-Split each "extra walk" at the last FALSE vertex at dc=-(W+1). The prefix is a bridge
-of width W+1. The suffix (from FALSE at dc=-(W+1)) has at most 3 first-step choices,
-then enters dc ∈ [-W, 0]. After translate+flip, suffix maps to walks bounded by
-hex_origin_strip_count(W, ·). The suffix GF ≤ (1+3x+2x²)·hp_sum(W) ≤ 6·hp_sum(W).
-
-### For `saw_neg_le_hp_conv`:
-Split the SAW at firstMinDCIdx. The prefix (reversed + translate + flip) gives
-a walk from paperStart in strip [-k, 0] ⊆ [-N, 0]. The suffix (translate + flip)
-gives a walk from paperStart in strip [-(n-k), 0] ⊆ [-N, 0]. The strip bounds
-follow from prefix_dc_upper_bound/suffix_dc_upper_bound. The map is injective
-because all transforms are bijective and the original walk = prefix.append(suffix).
-
-### Technical challenge:
-The difficulty is not mathematical but FORMAL: constructing Lean functions
-`SAW → SAW × SAW` that compose walk operations (take, drop, reverse, translate, flip)
-while carrying the necessary type-level proofs (IsPath, length, strip constraints).
-The dc range infrastructure (walk_getVert_dc_diff) is fully proved, providing the
-mathematical foundation for the strip constraint proofs.
+### RequestProject/SAWHWExtraSumProof.lean
+Helper lemmas for extra_sum_le:
+- `extra_count_zero_small`: extra_count(W, n) = 0 for n ≤ W
+- `suffix_gf_bound`: 1 + 2x(1+x)*hp_sum ≤ 6*hp_sum
