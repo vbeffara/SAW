@@ -1,3 +1,50 @@
+# Summary of changes for run 4170f48c-5674-43c5-ab12-1ec5c5968601
+## Hammersley-Welsh Formalization Progress
+
+### What was accomplished
+
+I made significant progress on the Hammersley-Welsh part of the proof that μ = √(2+√2), proving 10+ new lemmas and restructuring the proof architecture to eliminate circular dependencies.
+
+#### File restructuring (major)
+- **SAWHWHalfPlane.lean**: Simplified to contain only definitions (`hp_walk_count`, `hp_sum`) and base case proofs. Removed sorry'd theorems that caused circular dependency issues.
+- **SAWHWStepHelpers.lean**: Now contains `hp_sum_step` (inductive step) and `hp_sum_le_prod` (product bound), both fully proved modulo `extra_sum_le`.
+- **SAWHWSawBound.lean**: Now contains `saw_sum_le_hp_sq` (SAW-to-halfplane reduction), `hw_injection_bound_correct` (combined HW inequality), both fully proved modulo `saw_neg_le_hp_conv`. Also added and proved auxiliary lemmas.
+- **SAWHWFinalProof.lean**: Updated imports to match new structure.
+
+#### New proofs in SAWHWSawBound.lean (6 lemmas)
+1. **`cauchy_product_le`** ✓ — Truncated convolution ≤ product of truncated sums for nonneg sequences
+2. **`hp_walk_count_one_ge`** ✓ — hp_walk_count(W, 1) ≥ 1 (at least one 1-step walk)
+3. **`hp_sum_ge_one_plus_x`** ✓ — hp_sum(N, N, x) ≥ 1 + x for N ≥ 1
+4. **`saw_sum_le_hp_sq`** ✓ — ∑cₙxⁿ ≤ 2·hp_sum(N)² (the full SAW-to-halfplane reduction, using saw_count_split + saw_nonneg_le_hex_strip + hex_origin_strip_sum_le + cauchy_product_le)
+5. **`hw_injection_bound_correct`** ✓ — ∑cₙxⁿ ≤ 8·(∏(1+6Bₜ))² (combined Hammersley-Welsh inequality)
+
+#### New proofs in SAWHWStructural.lean (4 lemmas)
+1. **`walk_getVert_dc_le`** ✓ — dc(getVert i) ≤ dc(start) + i
+2. **`walk_getVert_dc_ge`** ✓ — dc(getVert i) ≥ dc(start) - i
+3. **`walk_getVert_dc_diff`** ✓ — dc(getVert j) - dc(getVert i) ≤ j - i for i ≤ j
+4. **`walk_getVert_dc_diff'`** ✓ — dc(getVert i) - dc(getVert j) ≤ j - i for i ≤ j
+
+These dc range lemmas are the key mathematical ingredient for the strip constraint proofs needed by the remaining sorries.
+
+### Remaining sorries in the HW chain (2 root sorries)
+
+**1. `extra_sum_le`** (SAWHWStepHelpers.lean:160):
+```
+∑ extra_count(W,n) · xⁿ ≤ 6 · B_{W+1}(x) · hp_sum(W, N, x)
+```
+The bridge-suffix decomposition at the last FALSE vertex at dc=-(W+1).
+
+**2. `saw_neg_le_hp_conv`** (SAWHWSawBound.lean:66):
+```
+saw_count_neg_dc(n) ≤ ∑ₖ hp_walk_count(N,k) · hp_walk_count(N,n-k)
+```
+The SAW decomposition at the first minimum-dc vertex into two half-plane walks.
+
+Both require constructing **explicit walk decomposition injections** in Lean — splitting walks via `take`/`drop`, transforming via `reverse`/`translate`/`flip`, and proving strip constraints + injectivity. The mathematical arguments are completely clear (documented in `PROOF_STATUS.md`), and all necessary infrastructure is proved (dc range lemmas, bridge infrastructure, transform operations). The remaining difficulty is purely formal: composing these operations while carrying the type-level proofs (IsPath, length, strip constraints).
+
+### Build status
+All files compile successfully. `SAWPaperChain` (the main theorem file) builds with exactly 2 sorry warnings from the HW chain. See `PROOF_STATUS.md` for the complete proof architecture diagram.
+
 # Summary of changes for run ed94f152-8f24-439f-8ee6-9e9da2ba7c95
 ## Hammersley-Welsh Formalization Progress
 

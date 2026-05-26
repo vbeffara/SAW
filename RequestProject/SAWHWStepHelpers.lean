@@ -159,12 +159,37 @@ lemma extra_sum_le (W N : ℕ) (x : ℝ) (hx : 0 < x) (hx1 : x < 1) :
     6 * paper_bridge_partition (W + 1) x * hp_sum W N x := by
   sorry
 
-theorem hp_sum_step_from_helpers {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
+/-- **Key inductive step** (with constant 6):
+    hp_sum(W+1) ≤ (1 + 6 · B_{W+1}) · hp_sum(W). -/
+lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
     hp_sum (W + 1) N x ≤
     (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
   rw [hp_sum_split]
   have h1 := extra_sum_le W N x hx hx1
   have h2 := hp_sum_nonneg W N x hx.le
   nlinarith
+
+/-! ## The inductive bound (product form) -/
+
+/-- Half-plane walk bound:
+    hp_sum(W) ≤ 2 · ∏_{T=1}^W (1 + 6·B_T(x)). -/
+theorem hp_sum_le_prod {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
+    hp_sum W N x ≤
+    2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x) := by
+  induction W with
+  | zero =>
+    simp
+    linarith [hp_sum_zero_le N x hx.le hx1.le]
+  | succ W ih =>
+    rw [Finset.prod_range_succ]
+    have hB_nn : 0 ≤ paper_bridge_partition (W + 1) x :=
+      tsum_nonneg fun _ => pow_nonneg hx.le _
+    have hF : 0 ≤ 1 + 6 * paper_bridge_partition (W + 1) x := by linarith
+    have hstep := hp_sum_step hx hx1 W N
+    have h1 : hp_sum (W + 1) N x ≤ (1 + 6 * paper_bridge_partition (W + 1) x) *
+        (2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x)) :=
+      le_trans hstep (mul_le_mul_of_nonneg_left ih hF)
+    linarith [mul_comm (∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x))
+      (1 + 6 * paper_bridge_partition (W + 1) x)]
 
 end

@@ -1,16 +1,9 @@
 /-
-# Half-Plane Walk Partition Function and Hammersley-Welsh Bound
+# Half-Plane Walk Partition Function — Definitions and Base Case
 
-## Vertex formulation: (1 + C·B) bound
-
-In the vertex formulation, after extracting the bridge from a half-plane
-walk (at the LAST vertex at minimum dc), the suffix splits into:
-- A step from v@dc=-(W+1) to u@dc=-W (2 choices) or u@dc=-(W+1) (stuck)
-- A remaining walk from u@dc=-W, mapped via translate+hexFlip to hexOrigin
-- Walk from hexOrigin first goes to paperStart, then continues
-
-This gives: hp_sum(W+1) ≤ (1 + C · B_{W+1}) · hp_sum(W)
-where C ≤ 6 (from 1 + 3x + 2x² ≤ 6 for x ≤ 1 and hp_sum ≥ 1).
+Defines hp_walk_count and hp_sum, and proves the base case (width 0).
+The inductive step and downstream theorems are in SAWHWStepHelpers.lean
+and SAWHWSawBound.lean to avoid circular imports.
 -/
 
 import Mathlib
@@ -114,71 +107,5 @@ lemma hp_sum_zero_le (N : ℕ) (x : ℝ) (hx : 0 ≤ x) (hx1 : x ≤ 1) :
     _ = (hp_walk_count 0 0 : ℝ) * x ^ 0 + (hp_walk_count 0 1 : ℝ) * x ^ 1 := by
         simp [Finset.sum_range_succ]
     _ ≤ 1 + x := add_le_add h0 h1
-
-/-! ## Inductive step -/
-
-/-- The key bound: each walk visiting dc=-(W+1) decomposes via a bridge. -/
-private lemma hp_sum_step_core {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
-    hp_sum (W + 1) N x ≤
-    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
-  sorry
-
-/-- **Key inductive step** (with constant 6):
-    hp_sum(W+1) ≤ (1 + 6 · B_{W+1}) · hp_sum(W). -/
-lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
-    hp_sum (W + 1) N x ≤
-    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x :=
-  hp_sum_step_core hx hx1 W N
-
-/-! ## The inductive bound (product form) -/
-
-/-- Half-plane walk bound:
-    hp_sum(W) ≤ 2 · ∏_{T=1}^W (1 + 6·B_T(x)). -/
-theorem hp_sum_le_prod {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
-    hp_sum W N x ≤
-    2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x) := by
-  induction W with
-  | zero =>
-    simp
-    linarith [hp_sum_zero_le N x hx.le hx1.le]
-  | succ W ih =>
-    rw [Finset.prod_range_succ]
-    have hB_nn : 0 ≤ paper_bridge_partition (W + 1) x :=
-      tsum_nonneg fun _ => pow_nonneg hx.le _
-    have hF : 0 ≤ 1 + 6 * paper_bridge_partition (W + 1) x := by linarith
-    have hstep := hp_sum_step hx hx1 W N
-    have h1 : hp_sum (W + 1) N x ≤ (1 + 6 * paper_bridge_partition (W + 1) x) *
-        (2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x)) :=
-      le_trans hstep (mul_le_mul_of_nonneg_left ih hF)
-    linarith [mul_comm (∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x))
-      (1 + 6 * paper_bridge_partition (W + 1) x)]
-
-/-! ## SAW to half-plane walk reduction -/
-
-/-- Each n-step SAW from hexOrigin decomposes into two half-plane walks. -/
-theorem saw_sum_le_hp_sq {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
-    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    2 * (hp_sum N N x) ^ 2 := by
-  sorry
-
-/-! ## Combined bound -/
-
-/-- The Hammersley-Welsh bridge decomposition inequality.
-    For 0 < x < 1:
-    ∑_{n≤N} c_n x^n ≤ 8 · (∏_{T=1}^N (1 + 6·B_T(x)))² -/
-theorem hw_injection_bound_correct {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
-    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    8 * (∏ T ∈ Finset.range N, (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by
-  have hB_nn : ∀ T, 0 ≤ paper_bridge_partition (T + 1) x :=
-    fun T => tsum_nonneg fun _ => pow_nonneg hx.le _
-  calc ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n
-      ≤ 2 * (hp_sum N N x) ^ 2 := saw_sum_le_hp_sq hx hx1 N
-    _ ≤ 2 * (2 * ∏ T ∈ Finset.range N,
-          (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by
-        apply mul_le_mul_of_nonneg_left _ (by norm_num)
-        exact pow_le_pow_left₀ (hp_sum_nonneg N N x hx.le)
-          (hp_sum_le_prod hx hx1 N N) 2
-    _ = 8 * (∏ T ∈ Finset.range N,
-          (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by ring
 
 end

@@ -36,6 +36,52 @@ lemma true_only_false_neighbor_at_dc {a b : ℤ} {w : HexVertex}
     w = (a, b, false) := by
   cases h; aesop; grind
 
+/-! ## DC range bound -/
+
+/-
+For any vertex at index i in a hexGraph walk, dc(vertex_i) ≤ dc(start) + i.
+-/
+lemma walk_getVert_dc_le {v w : HexVertex} (p : hexGraph.Walk v w)
+    (i : ℕ) (hi : i ≤ p.length) :
+    (p.getVert i).1 + (p.getVert i).2.1 ≤ (v.1 + v.2.1) + i := by
+  -- Apply the lemma hexGraph_walk_sum_bound_pos to the sub-walk p.take i.
+  have h_sub_walk : ((p.take i).getVert i).1 + ((p.take i).getVert i).2.1 - (v.1 + v.2.1) ≤ (p.take i).length := by
+    convert hexGraph_walk_sum_bound_pos ( p.take i ) using 1;
+    simp +decide [ SimpleGraph.Walk.getVert ];
+  convert sub_le_iff_le_add.mp h_sub_walk using 1 ; aesop;
+  rw [ add_comm, SimpleGraph.Walk.take_length ] ; aesop;
+
+/-
+For any vertex at index i in a hexGraph walk, dc(vertex_i) ≥ dc(start) - i.
+-/
+lemma walk_getVert_dc_ge {v w : HexVertex} (p : hexGraph.Walk v w)
+    (i : ℕ) (hi : i ≤ p.length) :
+    (v.1 + v.2.1) - i ≤ (p.getVert i).1 + (p.getVert i).2.1 := by
+  have := hexGraph_walk_sum_bound_neg ( p.take i ) ; simp_all +decide [ SimpleGraph.Walk.take_length ] ;
+  grind +splitImp
+
+/-
+For indices i ≤ j in a walk, dc(getVert j) - dc(getVert i) ≤ j - i.
+-/
+lemma walk_getVert_dc_diff {v w : HexVertex} (p : hexGraph.Walk v w)
+    (i j : ℕ) (hij : i ≤ j) (hj : j ≤ p.length) :
+    (p.getVert j).1 + (p.getVert j).2.1 - ((p.getVert i).1 + (p.getVert i).2.1) ≤ ↑(j - i) := by
+  convert hexGraph_walk_sum_bound_pos ( SimpleGraph.Walk.take ( SimpleGraph.Walk.drop p i ) ( j - i ) ) using 1;
+  · simp +decide [ SimpleGraph.Walk.getVert, hij ];
+  · simp +decide [ hij, hj ];
+    rw [ Nat.cast_sub ] <;> linarith
+
+/-
+For indices i ≤ j in a walk, dc(getVert i) - dc(getVert j) ≤ j - i.
+-/
+lemma walk_getVert_dc_diff' {v w : HexVertex} (p : hexGraph.Walk v w)
+    (i j : ℕ) (hij : i ≤ j) (hj : j ≤ p.length) :
+    (p.getVert i).1 + (p.getVert i).2.1 - ((p.getVert j).1 + (p.getVert j).2.1) ≤ ↑(j - i) := by
+  convert hexGraph_walk_sum_bound_neg ( p.drop i |> SimpleGraph.Walk.take <| j - i ) using 1;
+  · simp +decide [ SimpleGraph.Walk.getVert, hij ];
+  · simp +decide [ hij, hj ];
+    rw [ Nat.cast_sub ] <;> linarith
+
 /-! ## PaperInfStrip compatibility -/
 
 /-
