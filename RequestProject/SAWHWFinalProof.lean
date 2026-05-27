@@ -21,6 +21,6 @@ set_option maxHeartbeats 4000000
 theorem hw_injection_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
     8 * (∏ T ∈ Finset.range N, (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 :=
-  hw_injection_bound_correct hx (lt_trans hxc xc_lt_one) N
+  hw_injection_bound_correct hx hxc N
 
 end
