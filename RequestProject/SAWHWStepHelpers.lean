@@ -154,7 +154,7 @@ The key generating function bound:
     4. Suffix GF ≤ 1 + 2x(1 + x·hp_sum(W)) ≤ (1+2x+2x²)·hp_sum(W) ≤ 6·hp_sum(W).
     5. By Cauchy product: ∑ extra(n)·x^n ≤ B_{W+1}·SuffixGF ≤ 6·B_{W+1}·hp_sum(W).
 -/
-lemma extra_sum_le (W N : ℕ) (x : ℝ) (hx : 0 < x) (hx1 : x < 1) :
+private lemma extra_sum_le_placeholder (W N : ℕ) (x : ℝ) (hx : 0 < x) (hx1 : x < 1) :
     ∑ n ∈ Finset.range (N + 1), (extra_count W n : ℝ) * x ^ n ≤
     6 * paper_bridge_partition (W + 1) x * hp_sum W N x := by
   sorry
@@ -165,7 +165,7 @@ lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (W N : ℕ) :
     hp_sum (W + 1) N x ≤
     (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
   rw [hp_sum_split]
-  have h1 := extra_sum_le W N x hx hx1
+  have h1 := extra_sum_le_placeholder W N x hx hx1
   have h2 := hp_sum_nonneg W N x hx.le
   nlinarith
 
