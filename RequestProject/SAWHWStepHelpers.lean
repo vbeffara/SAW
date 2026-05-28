@@ -503,6 +503,66 @@ lemma extra_prefix_bridge' (W n : ℕ) (s : SAW paperStart n)
   · simp_all +decide [ SimpleGraph.Walk.take_support_eq_support_take_succ ];
     exact fun a b => ⟨ fun h => hs_strip a b |>.1 <| List.mem_of_mem_take h, fun h => hs_strip a b |>.2 <| List.mem_of_mem_take h ⟩
 
+/-! ## Tail extraction helpers for suffix_partition_bound -/
+
+/-- Given a SAW from v of length s with getVert 1 = w, produce a SAW from w of length s-1. -/
+def tailTo {v : HexVertex} {s : ℕ} (w : HexVertex) (t : SAW v s)
+    (h : t.p.1.getVert 1 = w) : SAW w (s - 1) :=
+  ⟨t.w, ⟨(t.p.1.drop 1).copy (by rw [h]) rfl,
+    walk_copy_isPath _ (by rw [h]) rfl (walk_drop_isPath t.p.1 t.p.2 1)⟩,
+   by simp [SimpleGraph.Walk.length_copy, SimpleGraph.Walk.drop_length, t.l]⟩
+
+/-
+tailTo is injective: if two SAWs from v have the same first step and same tail, they're equal.
+-/
+lemma tailTo_injective {v w : HexVertex} {s : ℕ}
+    {t₁ t₂ : SAW v s} (h₁ : t₁.p.1.getVert 1 = w) (h₂ : t₂.p.1.getVert 1 = w)
+    (h_eq : tailTo w t₁ h₁ = tailTo w t₂ h₂) : t₁ = t₂ := by
+  rcases s with ( _ | s ) <;> simp_all +decide [ tailTo ];
+  · rcases t₁ with ⟨ w₁, p₁, l₁ ⟩ ; rcases t₂ with ⟨ w₂, p₂, l₂ ⟩ ; simp_all +decide [ SimpleGraph.Walk.length ] ;
+    rcases p₁ with ⟨ ⟨ ⟩ ⟩ ; rcases p₂ with ⟨ ⟨ ⟩ ⟩ ; aesop;
+    · cases l₂;
+    · cases l₁;
+  · rcases t₁ with ⟨ w₁, ⟨ p₁, hp₁ ⟩, l₁ ⟩ ; rcases t₂ with ⟨ w₂, ⟨ p₂, hp₂ ⟩, l₂ ⟩ ; simp_all +decide [ SimpleGraph.Walk.drop ] ;
+    cases p₁ <;> cases p₂ <;> simp_all +decide [ SimpleGraph.Walk.drop ];
+    · cases l₁;
+    · cases l₂;
+    · grind +suggestions
+
+/-
+Any element of the tail's support was in the original walk's support.
+-/
+lemma tailTo_support_subset {v w : HexVertex} {s : ℕ} (t : SAW v s)
+    (h : t.p.1.getVert 1 = w) :
+    ∀ u ∈ (tailTo w t h).p.1.support, u ∈ t.p.1.support := by
+  intro u hu
+  simp [tailTo] at hu;
+  -- Since the support of the drop 1 walk is a subset of the support of the original walk, u must be in the support of the original walk.
+  have h_support_subset : ((t.p.1.drop 1).support ⊆ t.p.1.support) := by
+    grind +suggestions
+  exact h_support_subset hu
+
+/-
+If all getVert j for j > 0 are in [-W,0], then all support elements of tailTo are in [-W,0].
+-/
+lemma tailTo_strip {v w : HexVertex} {s : ℕ} (W : ℕ) (t : SAW v s)
+    (h : t.p.1.getVert 1 = w)
+    (hs : 0 < s)
+    (ht : ∀ j, 0 < j → j ≤ s → -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+      (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) :
+    ∀ u ∈ (tailTo w t h).p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0 := by
+  intro u hu
+  have hu' : u ∈ (t.p.1.drop 1).support := by
+    simp only [tailTo, SimpleGraph.Walk.support_copy] at hu; exact hu
+  rw [SimpleGraph.Walk.mem_support_iff_exists_getVert] at hu'
+  obtain ⟨n, hn_eq, hn_le⟩ := hu'
+  rw [SimpleGraph.Walk.drop_getVert] at hn_eq
+  have hlen : (t.p.1.drop 1).length = s - 1 := by
+    rw [SimpleGraph.Walk.drop_length, t.l]
+  rw [← hn_eq]
+  refine ht (1 + n) (by omega) ?_
+  rw [hlen] at hn_le; omega
+
 open Classical in
 /-- The partition bound: SAWs from FALSE v of length s with getVert j ∈ [-W,0] for j > 0
     inject into continuation SAWs from the two TRUE neighbors at dc=-W. -/
@@ -520,25 +580,33 @@ lemma suffix_partition_bound (W : ℕ) (v : HexVertex) (s : ℕ)
       ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) +
     Finset.card (Finset.filter (fun t : SAW (v.1, v.2.1 + 1, true) (s - 1) =>
       ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) := by
-  -- Define the tail extraction function
-  let tailFun (t : SAW v s) : SAW (t.p.1.getVert 1) (s - 1) :=
-    ⟨t.w, ⟨t.p.1.drop 1, walk_drop_isPath t.p.1 t.p.2 1⟩,
-      by rw [SimpleGraph.Walk.drop_length, t.l]⟩
-  -- Key property: tail support ⊆ original support
-  have tail_support : ∀ t : SAW v s, ∀ u ∈ (tailFun t).p.1.support, u ∈ t.p.1.support := by
-    intro t u hu
-    rw [SimpleGraph.Walk.mem_support_iff_exists_getVert] at hu ⊢
-    obtain ⟨n, hn_eq, hn_le⟩ := hu
-    rw [SimpleGraph.Walk.drop_getVert] at hn_eq
-    exact ⟨1 + n, hn_eq, by rw [t.l]; rw [SimpleGraph.Walk.drop_length, t.l] at hn_le; omega⟩
-  -- Key property: tail getVert j = original getVert (j+1)
-  have tail_getVert : ∀ (t : SAW v s) (j : ℕ),
-      ((tailFun t).p.1.getVert j).1 + ((tailFun t).p.1.getVert j).2.1 =
-      (t.p.1.getVert (1 + j)).1 + (t.p.1.getVert (1 + j)).2.1 := by
-    intro t j; simp only [tailFun, SimpleGraph.Walk.drop_getVert]
-  -- For each t in the filter, tailFun t is in the continuation set from w1 or w2
-  -- and the map is injective
-  sorry
+  revert v hv_false hv_dc hs_pos h_first_step;
+  intro v hv hv' hs h_first_step_step
+  set F := Finset.univ.filter (fun t : SAW v s => ∀ j, 0 < j → j ≤ s → -(W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) with hF_def;
+  -- By definition of $F$, we can split it into two subsets based on the first step of the walk.
+  set F1 := F.filter (fun t => t.p.1.getVert 1 = (v.1 + 1, v.2.1, true)) with hF1_def
+  set F2 := F.filter (fun t => t.p.1.getVert 1 = (v.1, v.2.1 + 1, true)) with hF2_def;
+  -- By definition of $F1$ and $F2$, we have $F \subseteq F1 \cup F2$.
+  have hF_subset : F ⊆ F1 ∪ F2 := by
+    grind +locals;
+  -- By definition of $F1$ and $F2$, we can inject them into the targets.
+  have hF1_inj : ∃ f : F1 → SAW (v.1 + 1, v.2.1, true) (s - 1), Function.Injective f ∧ ∀ t, f t ∈ Finset.univ.filter (fun t : SAW (v.1 + 1, v.2.1, true) (s - 1) => ∀ u ∈ t.p.1.support, -(W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) := by
+    refine' ⟨ fun t => tailTo ( v.1 + 1, v.2.1, true ) t.val ( Finset.mem_filter.mp t.2 |>.2 ), _, _ ⟩;
+    · intro t1 t2 h_eq;
+      exact Subtype.ext <| tailTo_injective _ _ h_eq;
+    · simp +zetaDelta at *;
+      intro a ha hq a_1 a_2; exact ⟨ fun h => tailTo_strip W a hq hs ha _ h, fun h => tailTo_strip W a hq hs ha _ h ⟩ ;
+  have hF2_inj : ∃ f : F2 → SAW (v.1, v.2.1 + 1, true) (s - 1), Function.Injective f ∧ ∀ t, f t ∈ Finset.univ.filter (fun t : SAW (v.1, v.2.1 + 1, true) (s - 1) => ∀ u ∈ t.p.1.support, -(W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) := by
+    refine' ⟨ fun t => tailTo _ t.1 _, _, _ ⟩;
+    grind +revert;
+    · intro t₁ t₂ h_eq; exact Subtype.ext <| tailTo_injective _ _ h_eq;
+    · simp +zetaDelta at *;
+      intro t ht ht' a b; exact ⟨ fun h => tailTo_strip W t ht' hs ht _ h, fun h => tailTo_strip W t ht' hs ht _ h ⟩ ;
+  refine le_trans ( Finset.card_le_card hF_subset ) ?_F1_inj
+  obtain ⟨ f2, hf2_inj, hf2 ⟩ := hF2_inj;
+  obtain ⟨ f1, hf1_inj, hf1 ⟩ := hF1_inj;
+  refine' le_trans ( Finset.card_union_le _ _ ) _;
+  exact add_le_add ( by simpa [ Finset.card_image_of_injective _ hf1_inj ] using Finset.card_le_card ( show Finset.image f1 Finset.univ ⊆ Finset.filter ( fun t : SAW ( v.1 + 1, v.2.1, true ) ( s - 1 ) => ∀ u ∈ t.p.1.support, - ( W : ℤ ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0 ) Finset.univ from Finset.image_subset_iff.mpr fun t ht => by simpa using hf1 t ) ) ( by simpa [ Finset.card_image_of_injective _ hf2_inj ] using Finset.card_le_card ( show Finset.image f2 Finset.univ ⊆ Finset.filter ( fun t : SAW ( v.1, v.2.1 + 1, true ) ( s - 1 ) => ∀ u ∈ t.p.1.support, - ( W : ℤ ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0 ) Finset.univ from Finset.image_subset_iff.mpr fun t ht => by simpa using hf2 t ) )
 
 open Classical in
 /-- From FALSE v at dc=-(W+1), the number of SAWs of length s where
@@ -600,11 +668,25 @@ lemma suffix_saw_count_le (W s : ℕ) (v : HexVertex)
       _ = narrow_suffix_count W s := by
         unfold narrow_suffix_count; simp [hs]; ring
 
-/-- extra_count(W, n) ≤ Σ_k bridge_count(W+1, k) · narrow_suffix_count(W, n-k). -/
+/-- Bridge count that allows any parity endpoint (both TRUE and FALSE). -/
+def bridge_count_any (T k : ℕ) : ℕ :=
+  Finset.card (Finset.univ.filter (fun s : SAW paperStart k =>
+    s.w.1 + s.w.2.1 = -(T : ℤ) ∧
+    ∀ v ∈ s.p.1.support, -(T : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0))
+
+/-
+bridge_count_any ≥ bridge_count (since bridge_count has an extra FALSE condition).
+-/
+lemma bridge_count_le_any (T k : ℕ) : bridge_count T k ≤ bridge_count_any T k := by
+  convert Finset.card_le_card _;
+  grind
+
+/-- extra_count(W, n) ≤ Σ_k bridge_count_any(W+1, k) · narrow_suffix_count(W, n-k).
+    Uses bridge_count_any (allowing TRUE/FALSE endpoints) to avoid parity issues. -/
 lemma extra_count_le_conv (W n : ℕ) :
     (extra_count W n : ℝ) ≤
     ∑ k ∈ Finset.range (n + 1),
-      (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) := by
+      (bridge_count_any (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) := by
   sorry
 
 /-! ## Cauchy product -/
@@ -640,7 +722,15 @@ private lemma extra_sum_le_placeholder (W N : ℕ) (x : ℝ) (hx : 0 < x) (hxc :
       (extra_count W n : ℝ) * x ^ n ≤
       (∑ k ∈ Finset.range (n + 1),
         (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ)) * x ^ n := by
-    intro n _; exact mul_le_mul_of_nonneg_right (extra_count_le_conv W n) (pow_nonneg hx.le _)
+    intro n _
+    apply mul_le_mul_of_nonneg_right _ (pow_nonneg hx.le _)
+    calc (extra_count W n : ℝ)
+        ≤ ∑ k ∈ Finset.range (n + 1),
+          (bridge_count_any (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) :=
+        extra_count_le_conv W n
+      _ ≤ ∑ k ∈ Finset.range (n + 1),
+          (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) := by
+        sorry -- bridge_count_any ≤ bridge_count (needs parity fix)
   -- Step 2: Apply Cauchy product
   have h_cauchy :
       ∑ n ∈ Finset.range (N + 1),

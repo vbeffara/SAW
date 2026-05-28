@@ -1,3 +1,33 @@
+# Summary of changes for run c3c2b84f-3fda-4bb1-9017-c7d4a7f3703e
+## Hammersley-Welsh Proof Progress
+
+### Key accomplishments:
+
+1. **Proved `suffix_partition_bound`** — the main walk decomposition lemma that was one of the two original root sorries. This required building several helper lemmas:
+   - `tailTo` definition and its properties (`tailTo_injective`, `tailTo_support_subset`, `tailTo_strip`)
+   - These provide a clean tail extraction for SAWs with a known first step
+
+2. **Proved `bridge_count_le_any`** — monotonicity of bridge counts
+
+3. **Proved `extra_count_eq_sum`** — fiber decomposition of extra walks by lastDCIndex value
+
+4. **Discovered and documented a mathematical bug** in the original formulation of `extra_count_le_conv`: The lemma as stated is FALSE because `bridge_count(T, k)` requires FALSE endpoints, but walks of even length from `paperStart` (a TRUE vertex) always end at TRUE vertices, making `bridge_count(T, even_k) = 0`. Counterexample: W=0, n=0 gives `extra_count(0,0) = 1` but the convolution sum equals 0.
+
+5. **Provided corrected formulation** using `bridge_count_any` (defined in the file), which allows any endpoint parity and makes the convolution bound correct.
+
+### Remaining sorries (3):
+
+1. `extra_count_le_conv` (SAWHWStepHelpers.lean) — corrected to use `bridge_count_any`, depends on #2
+2. `extra_at_k_le_prod` (SAWHWConvBound.lean) — the core fiber counting argument
+3. A transition step in `extra_sum_le_placeholder` connecting `bridge_count_any` to `bridge_count` — this step is known to be FALSE as stated and needs the proof architecture to use `bridge_count_any` throughout the generating function bound
+
+### Files modified:
+- `RequestProject/SAWHWStepHelpers.lean` — new helper lemmas, proved `suffix_partition_bound`, defined `bridge_count_any`
+- `RequestProject/SAWHWConvBound.lean` — new file with fiber decomposition infrastructure
+- `PROOF_STATUS.md` — updated status documentation
+
+All files compile successfully (with the documented sorries).
+
 # Summary of changes for run 9253f715-f43c-42a5-b0a3-c6310cfde8a8
 ## Hammersley-Welsh Formalization Progress
 
