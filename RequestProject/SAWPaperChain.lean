@@ -262,7 +262,7 @@ lemma paper_bridge_partition_nonneg (T : ℕ) (x : ℝ) (hx : 0 < x) :
     ∑_{n≤N} c_n x^n ≤ 8 · (∏_{T=1}^N (1 + 6·B_T(x)))² -/
 theorem paper_bridge_decomp_bound {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    8 * (∏ T ∈ Finset.range N, (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 :=
+    8 * (∏ T ∈ Finset.range N, (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2 :=
   hw_injection_bound hx hxc N
 
 /-
@@ -284,7 +284,7 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
   have h_summ_geo : Summable (fun T : ℕ => r ^ (T + 1)) :=
     (summable_nat_add_iff 1).mpr (summable_geometric_of_lt_one hr0 hr1)
   -- Use the bound: ∏(1+6B_T) ≤ exp(6∑B_T) ≤ exp(6/xc · ∑r^{T+1})
-  set M := 8 * Real.exp (12 / xc * ∑' T : ℕ, r ^ (T + 1)) with hM_def
+  set M := 8 * Real.exp (24 / xc * ∑' T : ℕ, r ^ (T + 1)) with hM_def
   suffices hbound : ∀ N, ∑ n ∈ Finset.range N, (saw_count n : ℝ) * x ^ n ≤ M from
     summable_of_sum_range_le
       (fun n => mul_nonneg (Nat.cast_nonneg _) (pow_nonneg hx.le n))
@@ -294,13 +294,13 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
   · simp; positivity
   calc ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n
       ≤ 8 * (∏ T ∈ Finset.range N,
-          (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 :=
+          (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2 :=
         paper_bridge_decomp_bound hx hxc N
     _ ≤ M := by
         -- Bound each factor: 1 + 6·B_T ≤ 1 + (6/xc)·r^{T+1}
         have h_factor_bound : ∏ T ∈ Finset.range N,
-            (1 + 6 * paper_bridge_partition (T + 1) x) ≤
-            ∏ T ∈ Finset.range N, (1 + (6 / xc) * r ^ (T + 1)) := by
+            (1 + 12 * paper_bridge_partition (T + 1) x) ≤
+            ∏ T ∈ Finset.range N, (1 + (12 / xc) * r ^ (T + 1)) := by
           apply Finset.prod_le_prod
           · intro T _
             exact add_nonneg (by norm_num) (mul_nonneg (by norm_num)
@@ -311,16 +311,16 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
             have hxc_lt : xc < 1 := xc_lt_one
             have hxc_pos' : 0 < xc := xc_pos
             have hd := h_decay T
-            have : 6 * paper_bridge_partition (T + 1) x ≤ 6 / xc * r ^ (T + 1) := by
-              have : 6 * (1 / xc * r ^ (T + 1)) = 6 / xc * r ^ (T + 1) := by ring
+            have : 12 * paper_bridge_partition (T + 1) x ≤ 12 / xc * r ^ (T + 1) := by
+              have : 12 * (1 / xc * r ^ (T + 1)) = 12 / xc * r ^ (T + 1) := by ring
               linarith
             linarith
         -- Bound the product using exp: ∏(1+a_T) ≤ exp(∑a_T)
         have h_exp_bound : ∏ T ∈ Finset.range N,
-            (1 + (6 / xc) * r ^ (T + 1)) ≤
-            Real.exp ((6 / xc) * ∑' T : ℕ, r ^ (T + 1)) := by
-          have h1 : ∏ T ∈ Finset.range N, (1 + (6 / xc) * r ^ (T + 1)) ≤
-              Real.exp ((6 / xc) * ∑ T ∈ Finset.range N, r ^ (T + 1)) := by
+            (1 + (12 / xc) * r ^ (T + 1)) ≤
+            Real.exp ((12 / xc) * ∑' T : ℕ, r ^ (T + 1)) := by
+          have h1 : ∏ T ∈ Finset.range N, (1 + (12 / xc) * r ^ (T + 1)) ≤
+              Real.exp ((12 / xc) * ∑ T ∈ Finset.range N, r ^ (T + 1)) := by
             rw [Finset.mul_sum, Real.exp_sum]
             exact Finset.prod_le_prod
               (fun _ _ => add_nonneg zero_le_one (mul_nonneg (div_nonneg (by norm_num) xc_pos.le) (pow_nonneg hr0 _)))
@@ -331,13 +331,13 @@ theorem hw_summable_corrected {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
         -- Combine
         have hprod_bound := h_factor_bound.trans h_exp_bound
         calc 8 * (∏ T ∈ Finset.range N,
-              (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2
-            ≤ 8 * (Real.exp ((6 / xc) * ∑' T : ℕ, r ^ (T + 1))) ^ 2 := by
+              (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2
+            ≤ 8 * (Real.exp ((12 / xc) * ∑' T : ℕ, r ^ (T + 1))) ^ 2 := by
               apply mul_le_mul_of_nonneg_left _ (by norm_num : (0:ℝ) ≤ 8)
               exact pow_le_pow_left₀ (Finset.prod_nonneg fun _ _ =>
                 add_nonneg (by norm_num) (mul_nonneg (by norm_num)
                   (tsum_nonneg fun _ => pow_nonneg hx.le _))) hprod_bound 2
-          _ = 8 * Real.exp (12 / xc * ∑' T : ℕ, r ^ (T + 1)) := by
+          _ = 8 * Real.exp (24 / xc * ∑' T : ℕ, r ^ (T + 1)) := by
               congr 1; rw [sq, ← Real.exp_add]; congr 1; ring
 
 /-! ## Main theorem -/

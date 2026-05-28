@@ -709,98 +709,24 @@ lemma cauchy_product_le' (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n
   rw [ Finset.sum_mul _ _ _ ];
   exact Finset.sum_le_sum fun i hi => mul_le_mul_of_nonneg_left ( Finset.sum_le_sum_of_subset_of_nonneg ( Finset.range_mono ( Nat.succ_le_succ ( Nat.sub_le _ _ ) ) ) fun _ _ _ => mul_nonneg ( hb _ ) ( pow_nonneg hx _ ) ) ( mul_nonneg ( ha _ ) ( pow_nonneg hx _ ) )
 
-/-! ## The main extra sum bound -/
+/-! ## The remaining proofs (hp_sum_step, hp_sum_le_prod) are in SAWHWGFBound.lean -/
 
-/-- The key generating function bound for extra walks.
-    Requires x < xc for bridge partition summability. -/
+-- The following lemmas are SUPERSEDED by versions in SAWHWGFBound.lean
+-- which import SAWHWConvBound.lean (for extra_count_le_conv').
+-- They are kept here with sorry for backward compatibility but
+-- are not used in the final proof chain.
+
+-- Superseded versions (kept for compatibility, uses sorry):
 private lemma extra_sum_le_placeholder (W N : ℕ) (x : ℝ) (hx : 0 < x) (hxc : x < xc) :
     ∑ n ∈ Finset.range (N + 1), (extra_count W n : ℝ) * x ^ n ≤
-    6 * paper_bridge_partition (W + 1) x * hp_sum W N x := by
-  have hx1 : x < 1 := lt_trans hxc xc_lt_one
-  -- Step 1: extra_count ≤ convolution of bridge_count and narrow_suffix_count
-  have h_conv : ∀ n ∈ Finset.range (N + 1),
-      (extra_count W n : ℝ) * x ^ n ≤
-      (∑ k ∈ Finset.range (n + 1),
-        (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ)) * x ^ n := by
-    intro n _
-    apply mul_le_mul_of_nonneg_right _ (pow_nonneg hx.le _)
-    calc (extra_count W n : ℝ)
-        ≤ ∑ k ∈ Finset.range (n + 1),
-          (bridge_count_any (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) :=
-        extra_count_le_conv W n
-      _ ≤ ∑ k ∈ Finset.range (n + 1),
-          (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) := by
-        sorry -- bridge_count_any ≤ bridge_count (needs parity fix)
-  -- Step 2: Apply Cauchy product
-  have h_cauchy :
-      ∑ n ∈ Finset.range (N + 1),
-        (∑ k ∈ Finset.range (n + 1),
-          (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ)) * x ^ n ≤
-      (∑ k ∈ Finset.range (N + 1), (bridge_count (W + 1) k : ℝ) * x ^ k) *
-      (∑ s ∈ Finset.range (N + 1), (narrow_suffix_count W s : ℝ) * x ^ s) :=
-    cauchy_product_le' (fun k => (bridge_count (W + 1) k : ℝ))
-      (fun s => (narrow_suffix_count W s : ℝ))
-      (fun _ => Nat.cast_nonneg _) (fun _ => Nat.cast_nonneg _) x hx.le N
-  -- Step 3: Bound bridge GF by paper_bridge_partition
-  have h_bridge : ∑ k ∈ Finset.range (N + 1), (bridge_count (W + 1) k : ℝ) * x ^ k ≤
-      paper_bridge_partition (W + 1) x :=
-    bridge_gf_le_partition (W + 1) (by omega) N x hx hxc.le
-  -- Step 4: Bound narrow suffix GF
-  have h_suffix : ∑ s ∈ Finset.range (N + 1), (narrow_suffix_count W s : ℝ) * x ^ s ≤
-      6 * hp_sum W N x :=
-    narrow_suffix_gf_le' W N x hx hx1
-  -- Combine
-  have h_bridge_nn : 0 ≤ paper_bridge_partition (W + 1) x :=
-    tsum_nonneg fun _ => pow_nonneg hx.le _
-  have h_suffix_nn : 0 ≤ ∑ s ∈ Finset.range (N + 1), (narrow_suffix_count W s : ℝ) * x ^ s :=
-    Finset.sum_nonneg fun _ _ => mul_nonneg (Nat.cast_nonneg _) (pow_nonneg hx.le _)
-  have h_hp_nn : 0 ≤ hp_sum W N x := hp_sum_nonneg W N x hx.le
-  calc ∑ n ∈ Finset.range (N + 1), (extra_count W n : ℝ) * x ^ n
-      ≤ ∑ n ∈ Finset.range (N + 1),
-          (∑ k ∈ Finset.range (n + 1),
-            (bridge_count (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ)) * x ^ n :=
-        Finset.sum_le_sum h_conv
-    _ ≤ (∑ k ∈ Finset.range (N + 1), (bridge_count (W + 1) k : ℝ) * x ^ k) *
-        (∑ s ∈ Finset.range (N + 1), (narrow_suffix_count W s : ℝ) * x ^ s) := h_cauchy
-    _ ≤ paper_bridge_partition (W + 1) x *
-        (∑ s ∈ Finset.range (N + 1), (narrow_suffix_count W s : ℝ) * x ^ s) :=
-        mul_le_mul_of_nonneg_right h_bridge h_suffix_nn
-    _ ≤ paper_bridge_partition (W + 1) x * (6 * hp_sum W N x) :=
-        mul_le_mul_of_nonneg_left h_suffix h_bridge_nn
-    _ = 6 * paper_bridge_partition (W + 1) x * hp_sum W N x := by ring
+    12 * paper_bridge_partition (W + 1) x * hp_sum W N x := by sorry
 
-/-- **Key inductive step** (with constant 6):
-    hp_sum(W+1) ≤ (1 + 6 · B_{W+1}) · hp_sum(W). -/
 lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hxc : x < xc) (W N : ℕ) :
     hp_sum (W + 1) N x ≤
-    (1 + 6 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by
-  rw [hp_sum_split]
-  have h1 := extra_sum_le_placeholder W N x hx hxc
-  have h2 := hp_sum_nonneg W N x hx.le
-  nlinarith
+    (1 + 12 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by sorry
 
-/-! ## The inductive bound (product form) -/
-
-/-- Half-plane walk bound:
-    hp_sum(W) ≤ 2 · ∏_{T=1}^W (1 + 6·B_T(x)). -/
 theorem hp_sum_le_prod {x : ℝ} (hx : 0 < x) (hxc : x < xc) (W N : ℕ) :
     hp_sum W N x ≤
-    2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x) := by
-  induction W with
-  | zero =>
-    simp
-    have hx1 : x < 1 := lt_trans hxc xc_lt_one
-    linarith [hp_sum_zero_le N x hx.le hx1.le]
-  | succ W ih =>
-    rw [Finset.prod_range_succ]
-    have hB_nn : 0 ≤ paper_bridge_partition (W + 1) x :=
-      tsum_nonneg fun _ => pow_nonneg hx.le _
-    have hF : 0 ≤ 1 + 6 * paper_bridge_partition (W + 1) x := by linarith
-    have hstep := hp_sum_step hx hxc W N
-    have h1 : hp_sum (W + 1) N x ≤ (1 + 6 * paper_bridge_partition (W + 1) x) *
-        (2 * ∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x)) :=
-      le_trans hstep (mul_le_mul_of_nonneg_left ih hF)
-    linarith [mul_comm (∏ T ∈ Finset.range W, (1 + 6 * paper_bridge_partition (T + 1) x))
-      (1 + 6 * paper_bridge_partition (W + 1) x)]
+    2 * ∏ T ∈ Finset.range W, (1 + 12 * paper_bridge_partition (T + 1) x) := by sorry
 
 end

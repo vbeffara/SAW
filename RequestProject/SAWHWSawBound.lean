@@ -13,6 +13,7 @@ import RequestProject.SAWHWExtraProof
 import RequestProject.SAWHWStepHelpers
 import RequestProject.SAWHWDecomp
 import RequestProject.SAWHWDecompFresh
+import RequestProject.SAWHWGFBound
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -133,16 +134,16 @@ theorem saw_sum_le_hp_sq {x : ℝ} (hx : 0 < x) (hx1 : x < 1) (N : ℕ) :
 
 theorem hw_injection_bound_correct {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
     ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    8 * (∏ T ∈ Finset.range N, (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by
+    8 * (∏ T ∈ Finset.range N, (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2 := by
   have hx1 : x < 1 := lt_trans hxc xc_lt_one
   calc ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n
       ≤ 2 * (hp_sum N N x) ^ 2 := saw_sum_le_hp_sq hx hx1 N
     _ ≤ 2 * (2 * ∏ T ∈ Finset.range N,
-          (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by
+          (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2 := by
         apply mul_le_mul_of_nonneg_left _ (by norm_num)
         exact pow_le_pow_left₀ (hp_sum_nonneg N N x hx.le)
-          (hp_sum_le_prod hx hxc N N) 2
+          (hp_sum_le_prod' hx hxc N N) 2
     _ = 8 * (∏ T ∈ Finset.range N,
-          (1 + 6 * paper_bridge_partition (T + 1) x)) ^ 2 := by ring
+          (1 + 12 * paper_bridge_partition (T + 1) x)) ^ 2 := by ring
 
 end

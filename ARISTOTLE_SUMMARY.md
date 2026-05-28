@@ -1,3 +1,57 @@
+# Summary of changes for run cad13496-2d5d-44cf-b5ed-2d11eab8d83a
+## Hammersley-Welsh Proof Progress
+
+### Major architectural fix: bridge_count_any parity issue resolved
+
+The previous proof architecture had a fundamental flaw: `extra_sum_le_placeholder` tried to bound `bridge_count_any` by `bridge_count`, which is FALSE (bridge_count requires FALSE endpoints, but walks of even length from a TRUE start always end at TRUE vertices).
+
+**Fix implemented**: The proof now uses `bridge_count_any` directly throughout, with:
+- `bridge_count_any_gf_le`: ∑ bridge_count_any(T,k)·x^k ≤ (1+x)·paper_bridge_partition(T,x)  
+- This changes the constant from 6 to 12 in hp_sum_step and hp_sum_le_prod
+- The convergence argument still works (any finite constant suffices)
+
+### New files created
+
+1. **`RequestProject/SAWHWGFBound.lean`** — Contains the bridge count any GF bound and the corrected hp_sum_step/hp_sum_le_prod with constant 12. Imports SAWHWConvBound to resolve the circular import issue.
+
+2. **`RequestProject/SAWHWConvBound.lean`** — Extended with the ℝ-valued convolution bound `extra_count_le_conv'`, and several proved helper lemmas.
+
+### Lemmas proved in this session
+
+In `SAWHWConvBound.lean`:
+- **`extra_count_eq_sum`** ✓ — Partition extra walks by lastDCIndex
+- **`extra_at_k_le_prod_eq`** ✓ — Case k=n (walk itself is a bridge)
+- **`suffix_drop_narrow`** ✓ — Suffix vertices stay in [-W, 0]  
+- **`saw_eq_of_support`** ✓ — SAWs determined by support list
+- **`walk_support_take_drop`** ✓ — Walk support = take ++ drop.tail
+- **`suffix_fiber_injective`** ✓ — Same take + same drop ⟹ same walk
+- **`extra_count_le_conv'`** ✓ — ℝ-valued convolution bound (from ℕ version)
+
+In `SAWHWGFBound.lean`:
+- **`extra_sum_le`** ✓ — GF bound: ∑ extra_count·x^n ≤ 12·B·hp_sum
+- **`hp_sum_step'`** ✓ — Inductive step: hp_sum(W+1) ≤ (1+12B)·hp_sum(W)
+- **`hp_sum_le_prod'`** ✓ — Product bound: hp_sum(W) ≤ 2·∏(1+12B_T)
+
+### Files modified
+- `RequestProject/SAWHWStepHelpers.lean` — Removed superseded proofs (now in SAWHWGFBound)
+- `RequestProject/SAWHWSawBound.lean` — Updated to use hp_sum_le_prod'
+- `RequestProject/SAWPaperChain.lean` — Updated constants from 6 to 12
+- `RequestProject/SAWHWFinalProof.lean` — Updated constant
+- `PROOF_STATUS.md` — Updated architecture documentation
+
+### Remaining sorries in HW chain (3 root sorries, down from previous 3)
+
+1. **`extra_at_k_le_prod_lt`** (SAWHWConvBound.lean) — The fiber counting injection. Requires constructing the (take k, drop k) injection into bridge × suffix sets and bounding fibers.
+
+2. **`bridge_count_any_le_shifted`** (SAWHWGFBound.lean) — TRUE-endpoint bridge truncation to FALSE-endpoint bridge of length k-1.
+
+3. **`bridge_count_any_gf_le`** (SAWHWGFBound.lean) — GF bound for bridge_count_any, follows from #2.
+
+### Build status
+All files compile successfully: `SAWPaperChain`, `SAWFinal`, `SAWHWGFBound`, `SAWHWConvBound`.
+
+The proof chain is architecturally sound — the remaining 3 sorries are clean combinatorial lemmas about walk decomposition and injection, with no circular dependencies or parity issues.
+
 # Summary of changes for run c3c2b84f-3fda-4bb1-9017-c7d4a7f3703e
 ## Hammersley-Welsh Proof Progress
 

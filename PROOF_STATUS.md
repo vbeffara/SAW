@@ -12,66 +12,57 @@
 The parafermionic observable identity for the infinite strip.
 Required for: Z(xc) = ∞ (lower bound μ ≥ √(2+√2)).
 
-### Sorry Chain #2: Hammersley-Welsh (3 sorry's remaining, was 3 originally)
+### Sorry Chain #2: Hammersley-Welsh (3 root sorries)
 
-The HW chain has been substantially restructured. The previous 2 root sorries
-(`suffix_partition_bound` and `extra_count_le_conv`) have been addressed:
+The HW chain proves Z(x) < ∞ for x < xc (upper bound μ ≤ √(2+√2)).
+Architecture has been fixed to use `bridge_count_any` directly (avoiding the
+FALSE parity issue), with constant 12 instead of 6.
 
-- **`suffix_partition_bound`**: PROVED (with helpers tailTo_injective, tailTo_strip, etc.)
-- **`extra_count_le_conv`**: CORRECTED to use `bridge_count_any` (see below)
+**Root sorries (3):**
 
-#### Remaining sorry's:
+1. **`extra_at_k_le_prod_lt`** (SAWHWConvBound.lean:145)
+   The fiber counting argument: extra walks with lastDCIndex = k inject into
+   bridge_count_any(W+1, k) × narrow_suffix_count(W, n-k).
+   Requires: constructing the (take, drop) injection and bounding fibers.
 
-1. **`extra_count_le_conv`** (SAWHWStepHelpers.lean, line 690)
-   Corrected to use `bridge_count_any` instead of `bridge_count`.
-   Proved modulo `extra_at_k_le_prod` (see #2).
+2. **`bridge_count_any_le_shifted`** (SAWHWGFBound.lean:23)
+   TRUE-endpoint bridges of length k truncate to FALSE-endpoint bridges of length k-1.
+   Uses: the only in-strip FALSE neighbor of TRUE v at dc=-T is (v.1, v.2.1, false).
 
-2. **`extra_at_k_le_prod`** (SAWHWConvBound.lean, line 48)
-   The fiber counting argument: for each k, extra walks with lastDCIndex = k
-   inject into bridge_count_any(W+1, k) × narrow_suffix_count(W, n-k).
-   This is the core decomposition lemma.
-   Can use `Finset.card_biUnion_le_card_mul` for the fiber counting.
+3. **`bridge_count_any_gf_le`** (SAWHWGFBound.lean:30)
+   GF of bridge_count_any ≤ (1+x) · paper_bridge_partition.
+   Follows from #2 via ∑_k bridge_count_any(T,k)*x^k ≤ (1+x)*∑_k bridge_count(T,k)*x^k.
 
-3. **`bridge_count_any ≤ bridge_count`** (SAWHWStepHelpers.lean, line 733)
-   In `extra_sum_le_placeholder`: transition from bridge_count_any to bridge_count
-   to connect with paper_bridge_partition. This step is FALSE in general and needs
-   the proof architecture to be modified (see "Known Issue" below).
+## Proof Architecture (HW chain)
 
-#### Known Issue: Bridge endpoint parity
+```
+SAWHWConvBound.lean
+  extra_at_k_le_prod_lt [SORRY] → extra_at_k_le_prod → extra_count_le_conv_nat → extra_count_le_conv'
 
-The original `bridge_count` requires FALSE endpoints, but walks of even length from
-`paperStart` (TRUE) always end at TRUE. So `bridge_count(T, even_k) = 0`, while
-`bridge_count_any(T, even_k)` can be nonzero. This makes the original
-`extra_count_le_conv` FALSE (counterexample: W=0, n=0).
+SAWHWGFBound.lean (imports SAWHWConvBound)
+  bridge_count_any_le_shifted [SORRY]
+  bridge_count_any_gf_le [SORRY]
+  extra_sum_le → hp_sum_step' → hp_sum_le_prod'
 
-**Proposed fix**: Replace `bridge_count` with `bridge_count_any` in the partition
-function bound. The bridge_count_any GF satisfies:
-  Σ_k bridge_count_any(T,k)·x^k ≤ (1 + 1/x) · paper_bridge_partition(T,x)
-This changes the constant in hp_sum_step from 6 to 6·(1+1/x) but does not affect
-convergence of ∏(1+C·B_T) for x < x_c.
+SAWHWSawBound.lean (imports SAWHWGFBound)
+  saw_sum_le_hp_sq [PROVED]
+  hw_injection_bound_correct [PROVED from hp_sum_le_prod']
 
-## What was proved in this session
+SAWHWFinalProof.lean → SAWPaperChain.lean
+  hw_injection_bound → paper_bridge_decomp_bound → hw_summable_corrected
+  → connective_constant_eq_corrected [PROVED modulo sorries]
+```
 
-### Newly proved lemmas (SAWHWStepHelpers.lean):
+## Proved infrastructure for the HW chain
 
-1. **`tailTo`** — Definition: given SAW from v with getVert 1 = w, produce SAW from w of length s-1.
-2. **`tailTo_injective`** — The tail extraction is injective.
-3. **`tailTo_support_subset`** — Elements of the tail's support are in the original support.
-4. **`tailTo_strip`** — Strip condition propagates through tailTo.
-5. **`suffix_partition_bound`** — **KEY LEMMA PROVED**: SAWs from FALSE v inject into continuations from the two TRUE neighbors at dc=-W.
-6. **`bridge_count_any`** — Definition: bridge count without FALSE endpoint requirement.
-7. **`bridge_count_le_any`** — bridge_count ≤ bridge_count_any (monotonicity).
-
-### Infrastructure (SAWHWConvBound.lean):
-
-8. **`extra_at_k`** — Definition: extra walks with specific lastDCIndex value.
-9. **`extra_count_eq_sum`** — extra_count equals the sum of extra_at_k over k.
-10. **`extra_count_le_conv_nat`** — The ℕ convolution bound (modulo extra_at_k_le_prod).
-
-### Mathematical discovery:
-
-The original formulation of `extra_count_le_conv` (using `bridge_count` with FALSE
-endpoint requirement) is FALSE due to the TRUE/FALSE parity alternation in the
-hexagonal lattice. The corrected formulation uses `bridge_count_any` which allows
-any endpoint parity. This requires a minor architectural change in the downstream
-proofs (changing the constant factor in the generating function bound).
+- `extra_count_eq_sum`: partition extra walks by lastDCIndex value
+- `extra_at_k_le_prod_eq`: case k=n (trivial walk = bridge)
+- `suffix_drop_narrow`: suffix after lastDCIndex stays in [-W, 0]
+- `saw_eq_of_support`: SAWs are determined by their support
+- `walk_support_take_drop`: support = take_support ++ drop_support.tail
+- `suffix_fiber_injective`: walks with same take and drop supports are equal
+- `extra_sum_le`: GF bound with constant 12 (proved from sorry'd inputs)
+- `hp_sum_step'`: inductive step with constant 12
+- `hp_sum_le_prod'`: product bound with constant 12
+- `cauchy_product_le'`: Cauchy product inequality for GFs
+- All the existing infrastructure from previous sessions
