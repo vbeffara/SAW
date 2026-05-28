@@ -1,3 +1,41 @@
+# Summary of changes for run 9253f715-f43c-42a5-b0a3-c6310cfde8a8
+## Hammersley-Welsh Formalization Progress
+
+I made significant progress on the Hammersley-Welsh part of the proof, reducing the sorry count from 3 to 2.
+
+### What was accomplished
+
+**Proved 7 new lemmas** in `RequestProject/SAWHWStepHelpers.lean`:
+
+1. **`extra_walk_exists_getVert`** — Converts support membership to getVert condition (was one of the 3 original sorry's).
+
+2. **`extra_prefix_bridge`** — The prefix of an extra walk at lastDCIndex satisfies bridge conditions (was the second original sorry, proved by the theorem prover).
+
+3. **`lastDCIndex_is_false'`** — Key generalization: proves the vertex at lastDCIndex is FALSE for ALL W, removing the unnecessary `hW : 0 < W` hypothesis from the original `lastDCIndex_is_false`. This is needed because `extra_count_le_conv` works for all W including W=0.
+
+4. **`suffix_after_lastDCIndex_in_narrow`** — After lastDCIndex, all vertices have dc ∈ [-W, 0] (not -(W+1)), using `after_lastDCIndex_no_dc`.
+
+5. **`false_true_neighbors_at_dc_minus_W`** — From a FALSE vertex at dc=-(W+1), the TRUE neighbors not at dc=-(W+1) are at dc=-W.
+
+6. **`extra_prefix_bridge'`** — Generalized prefix bridge construction for all W (no hW needed).
+
+7. **`suffix_saw_count_le`** — Key suffix bound: from a FALSE vertex at dc=-(W+1), SAWs of length s where all non-start vertices have dc ∈ [-W, 0] is ≤ narrow_suffix_count(W, s). Proved modulo `suffix_partition_bound`.
+
+### What remains (2 sorry's, down from 3)
+
+1. **`suffix_partition_bound`** (line 509) — The walk decomposition/injection lemma. Infrastructure is set up (tailFun, tail_support, tail_getVert using Walk.drop), but the formal injection from filtered SAWs to the two continuation sets is technically challenging due to dependent type issues with Walk decomposition.
+
+2. **`extra_count_le_conv`** (line 604) — The convolution bound, which depends on `suffix_partition_bound` through `suffix_saw_count_le`.
+
+### Architecture of the remaining proof
+
+The overall structure is:
+- `extra_count_le_conv` uses `suffix_saw_count_le` (✓ proved modulo partition bound)
+- `suffix_saw_count_le` uses `suffix_partition_bound` (sorry) + `continuation_from_true_le'` (✓) + `false_neighbors_in_strip` (✓)
+- `suffix_partition_bound` needs to formalize the injection via Walk.drop (infrastructure set up but injection not completed)
+
+The `PROOF_STATUS.md` file has been updated with the current state.
+
 # Summary of changes for run 9dcf8e50-cfdf-4a9d-bd78-8b332dc3513a
 ## Hammersley-Welsh Formalization Progress
 

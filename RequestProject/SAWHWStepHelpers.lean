@@ -398,9 +398,14 @@ lemma extra_walk_exists_getVert (W n : ℕ) (s : SAW paperStart n)
     (hs : (∀ v ∈ s.p.1.support, -(↑(W + 1) : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0) ∧
           (∃ v ∈ s.p.1.support, v.1 + v.2.1 = -(↑(W + 1) : ℤ))) :
     ∃ j, j ≤ s.p.1.length ∧ (s.p.1.getVert j).1 + (s.p.1.getVert j).2.1 = -(↑(W + 1) : ℤ) := by
-  sorry
+  obtain ⟨v, hv_mem, hv_dc⟩ := hs.2
+  rw [SimpleGraph.Walk.mem_support_iff_exists_getVert] at hv_mem
+  obtain ⟨n, hn_eq, hn_le⟩ := hv_mem
+  exact ⟨n, hn_le, by rw [hn_eq]; exact hv_dc⟩
 
-/-- The prefix of an extra walk at lastDCIndex satisfies bridge conditions. -/
+/-
+The prefix of an extra walk at lastDCIndex satisfies bridge conditions.
+-/
 lemma extra_prefix_bridge (W n : ℕ) (hW : 0 < W) (s : SAW paperStart n)
     (hs_strip : ∀ v ∈ s.p.1.support, -(↑(W + 1) : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0)
     (h_exists : ∃ j, j ≤ s.p.1.length ∧ (s.p.1.getVert j).1 + (s.p.1.getVert j).2.1 = -(↑(W + 1) : ℤ))
@@ -411,7 +416,189 @@ lemma extra_prefix_bridge (W n : ℕ) (hW : 0 < W) (s : SAW paperStart n)
       b.w.2.2 = false ∧
       (∀ v ∈ b.p.1.support, -(↑(W + 1) : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0) ∧
       b.p.1.support = (s.p.1.take k).support := by
+  refine' ⟨ ⟨ _, ⟨ _, _ ⟩, _ ⟩, _, _, _, rfl ⟩;
+  exact walk_take_isPath _ s.p.2 _;
+  all_goals norm_num;
+  grind +splitIndPred;
+  · convert lastDCIndex_dc _ _ _ using 1;
+  · convert lastDCIndex_is_false s.p.1 s.p.2 W hW hs_strip _ h_not_last using 1;
+    norm_num [ add_comm, add_left_comm, add_assoc ];
+  · intro a b; constructor <;> intro h <;> have := hs_strip ( a, b, false ) <;> have := hs_strip ( a, b, true ) <;> simp_all +decide [ SimpleGraph.Walk.take_support_eq_support_take_succ ] ;
+    · exact hs_strip a b |>.1 ( List.mem_of_mem_take h );
+    · exact hs_strip a b |>.2 ( List.mem_of_mem_take h )
+
+/-
+`lastDCIndex_is_false` generalized: works for all W (no hW : 0 < W needed).
+-/
+lemma lastDCIndex_is_false'
+    {w : HexVertex}
+    (p : hexGraph.Walk paperStart w) (hp : p.IsPath)
+    (W : ℕ)
+    (hstrip : ∀ u ∈ p.support, -(↑(W + 1) : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
+    (h : ∃ k, k ≤ p.length ∧ (p.getVert k).1 + (p.getVert k).2.1 = -(↑(W + 1) : ℤ))
+    (h_not_last : lastDCIndex p (-(↑(W + 1) : ℤ)) h < p.length) :
+    (p.getVert (lastDCIndex p (-(↑(W + 1) : ℤ)) h)).2.2 = false := by
+  by_contra h_contra;
+  -- By `dc_step_from_true`, since the vertex at `lastDCIndex` is TRUE, the next vertex (at `lastDCIndex + 1`) has dc ≤ -(W+1).
+  have h_next_dc_le : (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).1 + (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).2.1 ≤ -(↑(W + 1) : ℤ) := by
+    have h_next_dc_le : hexGraph.Adj (p.getVert (lastDCIndex p (-↑(W + 1)) h)) (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)) := by
+      exact?;
+    convert dc_step_from_true h_next_dc_le _ using 1;
+    · exact Eq.symm ( lastDCIndex_dc p ( - ( W + 1 : ℤ ) ) h );
+    · exact?;
+  -- By `hstrip`, since the next vertex is in support, its dc ≥ -(W+1).
+  have h_next_dc_ge : (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).1 + (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).2.1 ≥ -(↑(W + 1) : ℤ) := by
+    exact hstrip _ ( SimpleGraph.Walk.getVert_mem_support _ _ ) |>.1;
+  have h_next_dc_eq : (p.getVert (lastDCIndex p (-(↑(W + 1) : ℤ)) h + 1)).1 + (p.getVert (lastDCIndex p (-(↑(W + 1) : ℤ)) h + 1)).2.1 = -(↑(W + 1) : ℤ) := by
+    exact le_antisymm h_next_dc_le h_next_dc_ge;
+  exact absurd ( after_lastDCIndex_no_dc p ( - ( W + 1 : ℤ ) ) h ( lastDCIndex p ( - ( W + 1 : ℤ ) ) h + 1 ) ( by linarith ) ( by linarith ) ) ( by aesop )
+
+/-
+After lastDCIndex, all vertices have dc ∈ [-W, 0] (not -(W+1)).
+-/
+lemma suffix_after_lastDCIndex_in_narrow
+    {w : HexVertex}
+    (p : hexGraph.Walk paperStart w) (hp : p.IsPath)
+    (W : ℕ)
+    (hstrip : ∀ u ∈ p.support, -(↑(W + 1) : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0)
+    (h : ∃ k, k ≤ p.length ∧ (p.getVert k).1 + (p.getVert k).2.1 = -(↑(W + 1) : ℤ))
+    (h_not_last : lastDCIndex p (-(↑(W + 1) : ℤ)) h < p.length)
+    (j : ℕ) (hj : j ≤ p.length)
+    (hj_gt : lastDCIndex p (-(↑(W + 1) : ℤ)) h < j) :
+    -(↑W : ℤ) ≤ (p.getVert j).1 + (p.getVert j).2.1 ∧
+    (p.getVert j).1 + (p.getVert j).2.1 ≤ 0 := by
+  grind +suggestions
+
+/-
+From FALSE v at dc=-(W+1), the TRUE neighbors NOT at dc=-(W+1) are at dc=-W.
+    There are exactly 2 such neighbors.
+-/
+lemma false_true_neighbors_at_dc_minus_W (W : ℕ) (v : HexVertex)
+    (hv_false : v.2.2 = false) (hv_dc : v.1 + v.2.1 = -(↑(W + 1) : ℤ))
+    {w : HexVertex} (hadj : hexGraph.Adj v w)
+    (hw_not_dc : w.1 + w.2.1 ≠ -(↑(W + 1) : ℤ)) :
+    w.1 + w.2.1 = -(↑W : ℤ) ∧ w.2.2 = true := by
+  unfold hexGraph at hadj;
+  grind
+
+/-
+The prefix bridge construction generalized (no hW).
+-/
+lemma extra_prefix_bridge' (W n : ℕ) (s : SAW paperStart n)
+    (hs_strip : ∀ v ∈ s.p.1.support, -(↑(W + 1) : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0)
+    (h_exists : ∃ j, j ≤ s.p.1.length ∧ (s.p.1.getVert j).1 + (s.p.1.getVert j).2.1 = -(↑(W + 1) : ℤ))
+    (h_not_last : lastDCIndex s.p.1 (-(↑(W + 1) : ℤ)) h_exists < s.p.1.length) :
+    let k := lastDCIndex s.p.1 (-(↑(W + 1) : ℤ)) h_exists
+    ∃ (b : SAW paperStart k),
+      b.w.1 + b.w.2.1 = -(↑(W + 1) : ℤ) ∧
+      b.w.2.2 = false ∧
+      (∀ v ∈ b.p.1.support, -(↑(W + 1) : ℤ) ≤ v.1 + v.2.1 ∧ v.1 + v.2.1 ≤ 0) ∧
+      b.p.1.support = (s.p.1.take k).support := by
+  refine' ⟨ ⟨ _, ⟨ _, _ ⟩, _ ⟩, _, _, _, rfl ⟩;
+  exact walk_take_isPath _ s.p.2 _;
+  all_goals norm_num [ SimpleGraph.Walk.take_length ] at *;
+  exact le_of_lt h_not_last;
+  · convert lastDCIndex_dc _ _ _ using 1;
+  · grind +suggestions;
+  · simp_all +decide [ SimpleGraph.Walk.take_support_eq_support_take_succ ];
+    exact fun a b => ⟨ fun h => hs_strip a b |>.1 <| List.mem_of_mem_take h, fun h => hs_strip a b |>.2 <| List.mem_of_mem_take h ⟩
+
+open Classical in
+/-- The partition bound: SAWs from FALSE v of length s with getVert j ∈ [-W,0] for j > 0
+    inject into continuation SAWs from the two TRUE neighbors at dc=-W. -/
+lemma suffix_partition_bound (W : ℕ) (v : HexVertex) (s : ℕ)
+    (hv_false : v.2.2 = false) (hv_dc : v.1 + v.2.1 = -(↑(W + 1) : ℤ))
+    (hs_pos : 0 < s)
+    (h_first_step : ∀ t : SAW v s,
+        (∀ j, 0 < j → j ≤ s → -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+          (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) →
+        t.p.1.getVert 1 = (v.1 + 1, v.2.1, true) ∨ t.p.1.getVert 1 = (v.1, v.2.1 + 1, true)) :
+    Finset.card (Finset.filter (fun t : SAW v s =>
+      ∀ j, 0 < j → j ≤ s → -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+        (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) Finset.univ) ≤
+    Finset.card (Finset.filter (fun t : SAW (v.1 + 1, v.2.1, true) (s - 1) =>
+      ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) +
+    Finset.card (Finset.filter (fun t : SAW (v.1, v.2.1 + 1, true) (s - 1) =>
+      ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) := by
+  -- Define the tail extraction function
+  let tailFun (t : SAW v s) : SAW (t.p.1.getVert 1) (s - 1) :=
+    ⟨t.w, ⟨t.p.1.drop 1, walk_drop_isPath t.p.1 t.p.2 1⟩,
+      by rw [SimpleGraph.Walk.drop_length, t.l]⟩
+  -- Key property: tail support ⊆ original support
+  have tail_support : ∀ t : SAW v s, ∀ u ∈ (tailFun t).p.1.support, u ∈ t.p.1.support := by
+    intro t u hu
+    rw [SimpleGraph.Walk.mem_support_iff_exists_getVert] at hu ⊢
+    obtain ⟨n, hn_eq, hn_le⟩ := hu
+    rw [SimpleGraph.Walk.drop_getVert] at hn_eq
+    exact ⟨1 + n, hn_eq, by rw [t.l]; rw [SimpleGraph.Walk.drop_length, t.l] at hn_le; omega⟩
+  -- Key property: tail getVert j = original getVert (j+1)
+  have tail_getVert : ∀ (t : SAW v s) (j : ℕ),
+      ((tailFun t).p.1.getVert j).1 + ((tailFun t).p.1.getVert j).2.1 =
+      (t.p.1.getVert (1 + j)).1 + (t.p.1.getVert (1 + j)).2.1 := by
+    intro t j; simp only [tailFun, SimpleGraph.Walk.drop_getVert]
+  -- For each t in the filter, tailFun t is in the continuation set from w1 or w2
+  -- and the map is injective
   sorry
+
+open Classical in
+/-- From FALSE v at dc=-(W+1), the number of SAWs of length s where
+    all non-start vertices have dc ∈ [-W, 0] is ≤ narrow_suffix_count W s.
+    The key: the getVert(1) condition restricts the first step to dc=-W
+    (the dc=-(W+1) neighbor is excluded by the dc ≥ -W condition). -/
+lemma suffix_saw_count_le (W s : ℕ) (v : HexVertex)
+    (hv_false : v.2.2 = false) (hv_dc : v.1 + v.2.1 = -(↑(W + 1) : ℤ)) :
+    Finset.card (Finset.univ.filter (fun t : SAW v s =>
+      ∀ j, 0 < j → j ≤ s →
+        -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+        (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0)) ≤
+    narrow_suffix_count W s := by
+  by_cases hs : s = 0
+  · -- s = 0: the condition is vacuously true, filter ⊆ univ, card ≤ 1 = nsc
+    subst hs; simp only [narrow_suffix_count, ite_true]
+    exact le_trans (Finset.card_filter_le _ _)
+      (by change Fintype.card (SAW v 0) ≤ 1; (
+      rw [ Fintype.card_le_one_iff ];
+      rintro ⟨ w, ⟨ p, hp ⟩, hl ⟩ ⟨ w', ⟨ p', hp' ⟩, hl' ⟩;
+      cases p <;> cases p' <;> aesop))
+  · -- s ≥ 1: partition by first step
+    have hs_pos : 0 < s := Nat.pos_of_ne_zero hs
+    -- The first step must go to a neighbor with dc ∈ [-W, 0]
+    have h_first_step : ∀ t : SAW v s,
+        (∀ j, 0 < j → j ≤ s → -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+          (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) →
+        t.p.1.getVert 1 = (v.1 + 1, v.2.1, true) ∨ t.p.1.getVert 1 = (v.1, v.2.1 + 1, true) := by
+      intro t ht
+      have h1 := ht 1 (by omega) (by omega)
+      have : hexGraph.Adj v (t.p.1.getVert 1) := by
+        rcases t with ⟨w, ⟨p, hp⟩, hl⟩
+        rcases p with _ | ⟨hadj, _⟩ <;> simp_all [SimpleGraph.Walk.getVert]
+      exact false_neighbors_in_strip W v hv_false hv_dc this h1
+    -- Define sets S1, S2 of SAWs filtered by first step
+    let w1 : HexVertex := (v.1 + 1, v.2.1, true)
+    let w2 : HexVertex := (v.1, v.2.1 + 1, true)
+    -- The tail map: SAW v s → SAW (getVert 1) (s-1)
+    -- For each SAW in the filter starting with wi, its drop gives a SAW from wi of length s-1
+    -- staying in [-W, 0], bounded by continuation_from_true_le'
+    -- We bound by the two continuation sets
+    have hw1_dc : w1.1 + w1.2.1 = -(↑W : ℤ) := by simp only [w1]; omega
+    have hw2_dc : w2.1 + w2.2.1 = -(↑W : ℤ) := by simp only [w2]; omega
+    have h_bound1 := continuation_from_true_le' W w1 rfl hw1_dc (s - 1)
+    have h_bound2 := continuation_from_true_le' W w2 rfl hw2_dc (s - 1)
+    -- Partition: each SAW in the filter starts with w1 or w2
+    have h_partition : Finset.card
+        (Finset.filter (fun t : SAW v s =>
+          ∀ j, 0 < j → j ≤ s → -(↑W : ℤ) ≤ (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ∧
+            (t.p.1.getVert j).1 + (t.p.1.getVert j).2.1 ≤ 0) Finset.univ) ≤
+        Finset.card (Finset.filter (fun t : SAW w1 (s - 1) =>
+          ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) +
+        Finset.card (Finset.filter (fun t : SAW w2 (s - 1) =>
+          ∀ u ∈ t.p.1.support, -(↑W : ℤ) ≤ u.1 + u.2.1 ∧ u.1 + u.2.1 ≤ 0) Finset.univ) := by
+      exact suffix_partition_bound W v s hv_false hv_dc hs_pos h_first_step
+    calc Finset.card _ ≤ _ := h_partition
+      _ ≤ hex_origin_strip_count W (s - 1) + hex_origin_strip_count W (s - 1) :=
+        add_le_add h_bound1 h_bound2
+      _ = narrow_suffix_count W s := by
+        unfold narrow_suffix_count; simp [hs]; ring
 
 /-- extra_count(W, n) ≤ Σ_k bridge_count(W+1, k) · narrow_suffix_count(W, n-k). -/
 lemma extra_count_le_conv (W n : ℕ) :
