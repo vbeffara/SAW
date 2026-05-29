@@ -1,3 +1,55 @@
+# Summary of changes for run fd75caff-04cf-4db2-9978-654c943d1462
+## Hammersley-Welsh Proof Status — Analysis and Infrastructure
+
+I performed a thorough analysis of the remaining sorries blocking the Hammersley-Welsh (HW) part of the proof that μ = √(2+√2).
+
+### Current State
+
+The main theorem `connective_constant_eq_corrected` in `SAWPaperChain.lean` depends on **two root sorries**, both requiring the same mathematical argument:
+
+1. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean): States B_paper(T,L,xc) ≤ 1 — the bridge partition function in a finite strip is bounded by 1. Required for the HW upper bound (μ ≤ √(2+√2)) via `paper_bridge_partial_sum_le → paper_bridge_decay → hw_summable_corrected`.
+
+2. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): States 1 = c_α·A_inf + xc·paper_bridge_partition — the parafermionic identity for the infinite strip. Required for the lower bound (μ ≥ √(2+√2)) via the bridge recurrence.
+
+### Key Finding: Both Sorries Share One Root Cause
+
+Both are consequences of **Lemma 2 of Duminil-Copin & Smirnov (2012)** — the discrete Stokes theorem for the parafermionic observable. The proof requires:
+
+1. **Walk pairing/tripling at each vertex** (the combinatorial core): At each strip vertex, walks are partitioned into groups whose contributions cancel by `pair_cancellation` and `triplet_cancellation` (both already proved in `SAW.lean`).
+
+2. **Discrete Stokes telescoping**: Summing vertex relations, interior mid-edges cancel, boundary mid-edges survive.
+
+3. **Winding telescoping**: The winding W of any walk equals θ_final − θ_initial (a simple telescoping identity).
+
+4. **Boundary evaluation**: Each boundary type has cos(3θ/8) > 0 (proved as `boundary_cos_pos`).
+
+### What Was Done
+
+- **Created `SAWStripIdentityProof.lean`**: Contains proved helper lemmas for boundary direction computations (left boundary direction = -1, right boundary direction = +1, escape boundary phase ≥ 0).
+
+- **Updated `PROOF_STATUS.md`**: Comprehensive documentation of the proof architecture, dependency structure, and what remains to formalize.
+
+- **Verified full project builds**: All files compile cleanly with the existing sorries.
+
+### What Remains
+
+The walk pairing/tripling argument (step 1 above) is the core missing piece. It requires:
+- Defining what it means for a walk to "visit" a mid-edge of a vertex
+- Constructing the bijection between walk-seeds (visiting 1 mid-edge) and their extensions (visiting 2 mid-edges)
+- Constructing the pairing of walks visiting all 3 mid-edges (loop reversal)
+- Proving exhaustiveness of the partition
+
+This is a substantial combinatorial formalization (estimated 500-1000+ lines of Lean code). The algebraic ingredients (`pair_cancellation`, `triplet_cancellation`, `boundary_cos_pos`) are all proved — only the combinatorial walk-grouping infrastructure remains.
+
+### Why This Is Hard
+
+The discrete Stokes / parafermionic argument is the mathematical heart of the paper. It cannot be bypassed:
+- No injection/counting argument can establish B ≤ 1 at the critical value x = xc
+- The submultiplicativity approach (in `SAWMainNew.lean`) is circular without B ≤ 1
+- The transfer matrix approach would require equally substantial formalization
+
+The 22 SAWHW*.lean files remain sorry-free in isolation — their transitive sorry dependency comes only from these two root sorries.
+
 # Summary of changes for run 008b2ace-3b91-4e60-9d2b-0b18834b5ba3
 ## Hammersley-Welsh Proof Chain — Completed
 
