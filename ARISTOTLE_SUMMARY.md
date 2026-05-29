@@ -1,3 +1,40 @@
+# Summary of changes for run 288cb6a4-a4ed-46cb-ab8c-ab3622eca4df
+## Hammersley-Welsh Proof — Completed
+
+All 3 root sorries in the Hammersley-Welsh chain have been proved, eliminating the entire HW sorry chain from the formalization of the connective constant theorem.
+
+### What was proved
+
+The Hammersley-Welsh argument establishes the upper bound μ ≤ √(2+√2) by decomposing self-avoiding walks into bridges. The 3 root sorries were:
+
+1. **`extra_at_k_le_prod_lt`** — The fiber counting bound: extra walks with lastDCIndex = k are bounded by bridge_count_any(W+1, k) × narrow_suffix_count(W, n-k). This was the hardest of the three, requiring:
+   - Construction of a type-transported suffix SAW (`dropToSuffix`)
+   - Injectivity of the suffix map via `suffix_fiber_injective`
+   - A relaxed suffix counting bound via `suffix_saw_count_le`
+   - A biUnion-based fiber counting argument
+
+2. **`bridge_count_any_le_shifted`** — Bridge count with any endpoint parity ≤ bridge count (FALSE) + shifted bridge count. Proved by:
+   - Splitting bridge_count_any into FALSE and TRUE endpoints
+   - Showing TRUE-endpoint bridges of length k truncate injectively to FALSE-endpoint bridges of length k-1 (the unique FALSE neighbor at the same dc coordinate)
+
+3. **`bridge_count_any_gf_le`** — The generating function of bridge_count_any ≤ (1+x) × paper_bridge_partition. Follows algebraically from #2, using that bridge_count(T, 0) = 0 for T ≥ 1.
+
+### New files created
+
+- `RequestProject/SAWHWConvBoundBase.lean` — Infrastructure extracted from SAWHWConvBound to break circular imports (definitions of extra_at_k, suffix_fiber_injective, etc.)
+- `RequestProject/SAWHWFiberCount.lean` — The fiber counting proof (fiber_bound and all helpers: dropToSuffix, relaxed_suffix_count, etc.)
+- `RequestProject/SAWHWBridgeShift.lean` — The bridge count shift proof (bridge_count_any_le_shifted' and all helpers: truncateTrueBridge, bridge_count_true, etc.)
+
+### Files modified
+
+- `RequestProject/SAWHWConvBound.lean` — Updated to import SAWHWConvBoundBase and SAWHWFiberCount; `extra_at_k_le_prod_lt` now proved
+- `RequestProject/SAWHWGFBound.lean` — Updated to import SAWHWBridgeShift; both `bridge_count_any_le_shifted` and `bridge_count_any_gf_le` now proved
+- `PROOF_STATUS.md` — Updated to reflect the completed HW chain
+
+### Remaining work
+
+The main theorem `connective_constant_eq_corrected` now depends on only **1 independent sorry chain**: the `infinite_strip_identity` in `SAWRecurrenceProof.lean` (the parafermionic observable identity for the infinite strip, required for the lower bound Z(xc) = ∞). The Hammersley-Welsh chain is fully complete.
+
 # Summary of changes for run cad13496-2d5d-44cf-b5ed-2d11eab8d83a
 ## Hammersley-Welsh Proof Progress
 

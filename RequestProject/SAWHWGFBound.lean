@@ -8,6 +8,7 @@ the generating function bound for extra walks, hp_sum_step, and hp_sum_le_prod.
 import Mathlib
 import RequestProject.SAWHWStepHelpers
 import RequestProject.SAWHWConvBound
+import RequestProject.SAWHWBridgeShift
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -19,15 +20,32 @@ set_option maxHeartbeats 8000000
 
 /-- bridge_count_any ≤ bridge_count + bridge_count at shifted index. -/
 lemma bridge_count_any_le_shifted (T k : ℕ) (hT : 1 ≤ T) :
-    bridge_count_any T k ≤ bridge_count T k + bridge_count T (k - 1) := by
-  sorry
+    bridge_count_any T k ≤ bridge_count T k + bridge_count T (k - 1) :=
+  bridge_count_any_le_shifted' T k hT
 
-/-- The GF of bridge_count_any is ≤ (1+x) · paper_bridge_partition. -/
+/-
+The GF of bridge_count_any is ≤ (1+x) · paper_bridge_partition.
+-/
 lemma bridge_count_any_gf_le (T : ℕ) (hT : 1 ≤ T) (N : ℕ) (x : ℝ)
     (hx : 0 < x) (hxc : x ≤ xc) :
     ∑ k ∈ Finset.range (N + 1), (bridge_count_any T k : ℝ) * x ^ k ≤
     (1 + x) * paper_bridge_partition T x := by
-  sorry
+  -- By bridge_count_any_le_shifted, we have bridge_count_any T k ≤ bridge_count T k + bridge_count T (k - 1).
+  have h_le : ∀ k, (bridge_count_any T k : ℝ) ≤ (bridge_count T k : ℝ) + (bridge_count T (k - 1) : ℝ) := by
+    exact fun k => mod_cast bridge_count_any_le_shifted T k hT;
+  -- By bridge_gf_le_partition, we have that the sum of bridge_count T k * x^k is less than or equal to paper_bridge_partition T x.
+  have h_sum_le : ∑ k ∈ Finset.range (N + 1), (bridge_count T k : ℝ) * x ^ k ≤ paper_bridge_partition T x := by
+    convert bridge_gf_le_partition T hT N x hx hxc using 1;
+  refine le_trans ( Finset.sum_le_sum fun i hi => mul_le_mul_of_nonneg_right ( h_le i ) ( pow_nonneg hx.le _ ) ) ?_;
+  -- The sum of bridge_count T (k - 1) * x^k can be rewritten as x times the sum of bridge_count T j * x^j for j from 0 to N-1.
+  have h_sum_shift : ∑ k ∈ Finset.range (N + 1), (bridge_count T (k - 1) : ℝ) * x ^ k = x * ∑ j ∈ Finset.range N, (bridge_count T j : ℝ) * x ^ j := by
+    norm_num [ Finset.sum_range_succ', pow_succ', mul_assoc, mul_comm, mul_left_comm, Finset.mul_sum _ _ _ ];
+    unfold bridge_count; simp +decide [ hT ] ;
+    rintro ⟨ w, p, hp ⟩ hw₁ hw₂; rcases p with ⟨ _ | ⟨ a, b ⟩ ⟩ <;> norm_num at *;
+    · cases hw₂;
+    · cases hp;
+  simp_all +decide [ add_mul, Finset.sum_add_distrib ];
+  exact add_le_add h_sum_le ( mul_le_mul_of_nonneg_left ( le_trans ( Finset.sum_le_sum_of_subset_of_nonneg ( Finset.range_mono ( Nat.le_succ _ ) ) fun _ _ _ => mul_nonneg ( Nat.cast_nonneg _ ) ( pow_nonneg hx.le _ ) ) h_sum_le ) hx.le )
 
 /-! ## The main extra sum bound -/
 
