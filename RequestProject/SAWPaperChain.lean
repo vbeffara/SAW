@@ -3,13 +3,15 @@
 
 ## Sorry status
 
-Two independent sorry chains remain:
+One independent sorry chain remains:
 1. `infinite_strip_identity` (in SAWRecurrenceProof.lean) — the parafermionic
    observable identity for the infinite strip (follows from Lemma 2 of the paper).
    This also implies `strip_identity_genuine` in SAWStripIdentityCorrect.lean.
    The bridge recurrence is now PROVED from this + cutting argument.
-2. `paper_bridge_decomp_injection` (this file) — Hammersley-Welsh decomposition,
-   independent of #1.
+
+The Hammersley-Welsh chain is FULLY PROVED (all SAWHW*.lean files are sorry-free).
+The HW bound uses slightly weaker constants than the paper (factor 8 and 12
+instead of 2 and 1), but this suffices for the main theorem.
 
 ## Proved
 - `paper_bridge_recurrence` — derived from infinite strip identity + cutting argument

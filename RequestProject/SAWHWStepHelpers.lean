@@ -681,14 +681,6 @@ lemma bridge_count_le_any (T k : ℕ) : bridge_count T k ≤ bridge_count_any T 
   convert Finset.card_le_card _;
   grind
 
-/-- extra_count(W, n) ≤ Σ_k bridge_count_any(W+1, k) · narrow_suffix_count(W, n-k).
-    Uses bridge_count_any (allowing TRUE/FALSE endpoints) to avoid parity issues. -/
-lemma extra_count_le_conv (W n : ℕ) :
-    (extra_count W n : ℝ) ≤
-    ∑ k ∈ Finset.range (n + 1),
-      (bridge_count_any (W + 1) k : ℝ) * (narrow_suffix_count W (n - k) : ℝ) := by
-  sorry
-
 /-! ## Cauchy product -/
 
 lemma cauchy_product_le' (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n, 0 ≤ b n)
@@ -708,25 +700,5 @@ lemma cauchy_product_le' (a b : ℕ → ℝ) (ha : ∀ n, 0 ≤ a n) (hb : ∀ n
   refine le_trans h_cauchy <| h_fubini.le.trans ?_;
   rw [ Finset.sum_mul _ _ _ ];
   exact Finset.sum_le_sum fun i hi => mul_le_mul_of_nonneg_left ( Finset.sum_le_sum_of_subset_of_nonneg ( Finset.range_mono ( Nat.succ_le_succ ( Nat.sub_le _ _ ) ) ) fun _ _ _ => mul_nonneg ( hb _ ) ( pow_nonneg hx _ ) ) ( mul_nonneg ( ha _ ) ( pow_nonneg hx _ ) )
-
-/-! ## The remaining proofs (hp_sum_step, hp_sum_le_prod) are in SAWHWGFBound.lean -/
-
--- The following lemmas are SUPERSEDED by versions in SAWHWGFBound.lean
--- which import SAWHWConvBound.lean (for extra_count_le_conv').
--- They are kept here with sorry for backward compatibility but
--- are not used in the final proof chain.
-
--- Superseded versions (kept for compatibility, uses sorry):
-private lemma extra_sum_le_placeholder (W N : ℕ) (x : ℝ) (hx : 0 < x) (hxc : x < xc) :
-    ∑ n ∈ Finset.range (N + 1), (extra_count W n : ℝ) * x ^ n ≤
-    12 * paper_bridge_partition (W + 1) x * hp_sum W N x := by sorry
-
-lemma hp_sum_step {x : ℝ} (hx : 0 < x) (hxc : x < xc) (W N : ℕ) :
-    hp_sum (W + 1) N x ≤
-    (1 + 12 * paper_bridge_partition (W + 1) x) * hp_sum W N x := by sorry
-
-theorem hp_sum_le_prod {x : ℝ} (hx : 0 < x) (hxc : x < xc) (W N : ℕ) :
-    hp_sum W N x ≤
-    2 * ∏ T ∈ Finset.range W, (1 + 12 * paper_bridge_partition (T + 1) x) := by sorry
 
 end

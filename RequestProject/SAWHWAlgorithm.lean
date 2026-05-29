@@ -203,34 +203,24 @@ by strong induction on the width. -/
 We now combine the half-plane decomposition with walk splitting
 to prove the full counting inequality. -/
 
-/-- **The bridge decomposition counting inequality.**
+/- **The bridge decomposition counting inequality (paper version).**
 
-    For 0 < x < xc (hence x < 1):
-    ∑_{n=0}^{N} c_n x^n ≤ 2 · (∑_{S ⊆ range(N)} ∏_{T∈S} B_{T+1}^x)²
+    The paper states: ∑_{n≤N} c_n x^n ≤ 2 · ∏_{T>0} (1+B_T^x)²
+    using horizontal-coordinate bridges (origin_bridge_partition).
 
-    Proof outline (Hammersley-Welsh):
-    1. Each n-step SAW γ from hexOrigin has max x-coordinate M ≤ n ≤ N.
-    2. Split γ at the first vertex with x = M into left part γ₁ and right part γ₂.
-    3. Reversed γ₁ is a half-plane walk (start at x=M has maximal x).
-       γ₂ is a half-plane walk (start at x=M has maximal x).
-    4. Each half-plane walk decomposes into bridges by induction on width.
-    5. Translating each bridge to start from hexOrigin gives origin bridges.
-    6. The bridge widths form a subset of {1,...,N} (since max x ≤ N).
-    7. Walk length n = left_length + right_length ≥ sum of bridge lengths
-       (forgotten vertices between consecutive bridges add extra edges).
-    8. Hence x^n ≤ ∏ x^{bridge_length} for x ≤ 1.
-    9. The map (γ, vertex_choice) → (left bridges, right bridges) is injective:
-       given the sequence of origin bridges and the starting point,
-       the reverse procedure reconstructs the walk uniquely.
-    10. Factor 2: accounts for 2 possible first-vertex choices from hexOrigin
-        (the hexagonal lattice has 3 neighbors, but the mid-edge formulation
-        in the paper gives 2; our vertex formulation allows a cruder bound).
-    11. Therefore ∑ c_n x^n ≤ 2 · (∑_S ∏ B_{T+1}^x)². -/
-theorem bridge_decomp_injection_from_algorithm
-    {x : ℝ} (hx : 0 < x) (hxc : x < xc) (N : ℕ) :
-    ∑ n ∈ Finset.range (N + 1), (saw_count n : ℝ) * x ^ n ≤
-    2 * (∑ S ∈ (Finset.range N).powerset,
-      ∏ T ∈ S, origin_bridge_partition (T + 1) x) ^ 2 := by
-  sorry
+    This formalization instead proves the bound using diagonal-coordinate
+    bridges (paper_bridge_partition) with weaker constants:
+
+      ∑_{n≤N} c_n x^n ≤ 8 · ∏_{T=1}^N (1 + 12 · B_T(x))²
+
+    See `hw_injection_bound` in SAWHWFinalProof.lean.
+    Both versions suffice to prove Z(x) < ∞ for x < xc,
+    which gives the upper bound μ ≤ xc⁻¹ = √(2+√2).
+
+    The paper’s exact constants require the full constructive bridge
+    decomposition (by induction on width for half-plane walks), which
+    is not formalized here. The weaker bound avoids this by using
+    a convolution-based counting argument.
+-/
 
 end
