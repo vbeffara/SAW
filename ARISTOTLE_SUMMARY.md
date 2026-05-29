@@ -1,3 +1,47 @@
+# Summary of changes for run e4fb4e00-8c05-452e-8303-a37b32184732
+## Parafermionic Observable and Cancellation Identity
+
+Created `RequestProject/SAWObservable.lean` — a new file formalizing the parafermionic observable and the cancellation identity (Lemma 1) from Section 2 of Duminil-Copin & Smirnov (2012). The file compiles with **zero sorries** and depends only on standard axioms.
+
+### What was formalized
+
+**1. Walk and observable infrastructure:**
+- `WalkToMidEdge` — structure representing a SAW from a start vertex ending at a specific mid-edge (prev → endpoint)
+- `correctWalkWinding` — winding computation using `correctHexEmbed`
+- `walkWeight` — the complex weight exp(-iσW) · x^ℓ for a walk
+- `walkContrib` — the contribution of a walk to the vertex relation sum
+
+**2. Direction vector j-relations (fully proved):**
+- `false_vertex_j_relation` — at a FALSE vertex (x,y), the three direction vectors to neighbors TRUE(x,y), TRUE(x+1,y), TRUE(x,y+1) satisfy d₂ = j·d₁ and d₃ = conj(j)·d₁
+- `true_vertex_j_relation` — the analogous result for TRUE vertices
+- Supporting lemmas: `j_eq_complex`, `conj_j_eq_complex`, `false_dir1`, `false_dir2_eq_j`, `false_dir3_eq_conjj`, `true_dir1`, `true_dir2_eq_j`, `true_dir3_eq_conjj`
+
+**3. Phase factor identities (fully proved):**
+- `exp_winding_minus` / `exp_winding_plus` — factoring exp(-iσ(W ± π/3)) into exp(-iσW) times a phase
+- `phase_plus_eq_conj_lam` — exp(iσπ/3) = conj(λ), since σ·π/3 = 5π/24
+- `phase_minus_eq_lam` — exp(-iσπ/3) = λ
+
+**4. Triplet cancellation (fully proved):**
+- `triplet_contribution_zero` — the sum of contributions from a walk triplet (one visiting 1 mid-edge, two visiting 2 mid-edges each) vanishes:
+  ```
+  d · e^{-iσW} · xc^ℓ + d·j · e^{-iσ(W-π/3)} · xc^{ℓ+1} + d·j̄ · e^{-iσ(W+π/3)} · xc^{ℓ+1} = 0
+  ```
+  This factors as d · exp(-iσW) · xc^ℓ · (1 + xc·j·conj(λ) + xc·conj(j)·λ) = 0, using `triplet_cancellation`. This is the **only** place where x = xc (the critical value √(2+√2)⁻¹) is used.
+
+**5. Pair cancellation (fully proved):**
+- `pair_contribution_zero` — the sum of contributions from a walk pair (both visiting all 3 mid-edges, differing by loop direction) vanishes:
+  ```
+  d·j · e^{-iσ(W-4π/3)} · xc^ℓ + d·j̄ · e^{-iσ(W+4π/3)} · xc^ℓ = 0
+  ```
+  This uses `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0.
+
+**6. Vertex relation (Lemma 1):**
+- `vertex_relation_false` / `vertex_relation_true` — the cancellation identity for FALSE and TRUE vertices, reducing the geometric relation d₁·F₁ + d₂·F₂ + d₃·F₃ = 0 to the algebraic identity d·F₁ + j·d·F₂ + conj(j)·d·F₃ = 0
+
+### Remaining gap
+
+The combinatorial walk partition argument — showing that every walk ending at one of a vertex's three mid-edges belongs to exactly one cancelling group (triplet or pair) — is not yet formalized. This is the step connecting the algebraic cancellation proved here to the actual observable. Once established, Lemma 1 follows immediately, and summing over all vertices gives the strip identity (Lemma 2), from which B_paper ≤ 1.
+
 # Summary of changes for run fd75caff-04cf-4db2-9978-654c943d1462
 ## Hammersley-Welsh Proof Status — Analysis and Infrastructure
 
