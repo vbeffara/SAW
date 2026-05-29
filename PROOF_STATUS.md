@@ -128,3 +128,6 @@ via the bridge summability bounds).
 - `SAWRecurrenceProof.lean` — sorry #2, bridge recurrence
 - `SAWPaperChain.lean` — main theorem assembly
 - `SAWStripIdentityProof.lean` — boundary direction computations
+- `SAWObservable.lean` — parafermionic observable, algebraic cancellations
+- `SAWVertexRelation.lean` — vertex relation (Lemma 1), cube root properties,
+  boundary phases, discrete Stokes key steps (ALL SORRY-FREE)

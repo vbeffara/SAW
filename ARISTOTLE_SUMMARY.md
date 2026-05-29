@@ -1,3 +1,53 @@
+# Summary of changes for run 6e97d3a1-bf5c-4e9d-bf0e-1520ba20619b
+## Work on the Parafermionic Observable and Cancellation Identity
+
+### New file created: `RequestProject/SAWVertexRelation.lean` (259 lines, SORRY-FREE)
+
+This file formalizes key components of the vertex relation (Lemma 1) from Duminil-Copin & Smirnov's proof that the connective constant of the honeycomb lattice equals √(2+√2).
+
+### Theorems proved (all sorry-free):
+
+**Cube root of unity properties:**
+- `j_cube_eq_one`: j³ = 1
+- `j_norm_one`: |j|² = 1
+- `j_sum_zero`: 1 + j + j² = 0
+- `j_sq_eq_conj`: j² = conj(j)
+
+**Edge direction computations:**
+- `false_edge_dirs`: At FALSE vertex (x,y), the three edge directions are 1, j, conj(j)
+- `true_edge_dirs`: At TRUE vertex (x,y), the three edge directions are -1, -j, -conj(j)
+- `false_dir_j_rel` / `true_dir_j_rel`: The j-relation between direction vectors
+
+**Vertex cancellation (the heart of Lemma 1):**
+- `triplet_cancel_at_vertex`: For any direction d ∈ ℂ, winding W, and length ℓ:
+  d·wt(W,ℓ) + (d·j)·wt(W-π/3, ℓ+1) + (d·j̄)·wt(W+π/3, ℓ+1) = 0
+  This is the triplet cancellation — the ONLY place where x = xc is used.
+- `pair_cancel_at_vertex`: For any d, W, ℓ:
+  (d·j)·wt(W-4π/3, ℓ) + (d·j̄)·wt(W+4π/3, ℓ) = 0
+  This is the pair cancellation for walks visiting all 3 mid-edges.
+
+**Boundary phase computations (for the strip identity):**
+- `left_boundary_contrib_re`: Re((-1)·e^{-iσπ}) = c_alpha = cos(3π/8)
+- `left_boundary_contrib_re_neg`: Re((-1)·e^{iσπ}) = c_alpha (same for winding ±π)
+- `right_boundary_phase'`: Phase at right boundary is 1 (winding = 0)
+
+**Discrete Stokes infrastructure:**
+- `interior_midedge_cancels`: direction(v→w) + direction(w→v) = 0 (key cancellation for interior edges in the telescoping sum)
+
+**Winding structure:**
+- `winding_three_vertices`: Winding of a 3-vertex walk
+- `winding_append_vertex`: Recursive winding decomposition
+
+### Neighbor enumeration:
+- `falseNeighbors` / `trueNeighbors`: Explicit enumeration of hex vertex neighbors
+- `falseNeighbors_adj` / `trueNeighbors_adj`: Adjacency proofs
+
+### What remains (documented in the file):
+The **combinatorial walk partition** — showing every walk ending at a vertex's mid-edges belongs to exactly one cancelling group (triplet or pair) — and the **discrete Stokes summation** over all strip vertices are identified as the remaining gaps to close the strip identity.
+
+### Updated documentation:
+- `PROOF_STATUS.md` updated to list the new file and its sorry-free status.
+
 # Summary of changes for run e4fb4e00-8c05-452e-8303-a37b32184732
 ## Parafermionic Observable and Cancellation Identity
 
