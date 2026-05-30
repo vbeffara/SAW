@@ -1,3 +1,58 @@
+# Summary of changes for run dd3c2db5-2c23-41cc-9ee7-f9822f8ce63f
+## Summary of Work on the Parafermionic Observable and Cancellation Identity
+
+I created three new Lean files, all **completely sorry-free**, formalizing key infrastructure for the parafermionic observable and cancellation identity (Lemma 1 of Duminil-Copin & Smirnov 2012):
+
+### New Files Created
+
+**1. `RequestProject/SAWCancellationProof.lean`** (175 lines, sorry-free)
+Core properties of the cube root of unity j and the cancellation identity:
+- `j_ne_zero`, `conj_j_ne_zero`, `j_normSq_eq_one` — j is a unit on the unit circle
+- `j_cube_eq_one'` — j³ = 1
+- `j_sum_zero'` — 1 + j + j² = 0
+- `j_sq_eq_conj'` — j² = conj(j)
+- `midEdgeDir_zero_ne_zero` — direction vectors are nonzero
+- `hexNeighbors3_complete` — every hex neighbor is one of the 3 listed neighbors
+- `hexNeighbors3_injective` — the 3 neighbors are distinct
+- `vertex_relation_from_reduced` / `reduced_from_vertex_relation` — the vertex relation d₀F₀ + d₁F₁ + d₂F₂ = 0 is equivalent to the reduced form F₀ + jF₁ + j̄F₂ = 0
+- `vertexContrib_triplet_zero` — triplet contribution vanishes at any vertex
+- `vertexContrib_pair_zero` — pair contribution vanishes at any vertex
+- `sum_zero_of_partition_cancel` — abstract partition cancellation theorem
+- `direction_cancellation` — interior edge directions cancel (key for discrete Stokes)
+
+**2. `RequestProject/SAWWalkPartition.lean`** (93 lines, sorry-free)
+Walk partition infrastructure — the combinatorial heart of the cancellation identity:
+- `hex_vertex_degree` — complete characterization: w is adjacent to v iff w is one of the 3 named neighbors
+- `trail_to_v_has_predecessor` — every nonempty trail ending at v can be decomposed by removing the last edge, yielding a prefix trail with the edge freshness property
+- `predecessor_is_named_neighbor` — the predecessor vertex is one of hexNeighbors3 v k for some k ∈ {0,1,2}
+- `walk_penultimate_adj` — existence of penultimate vertex in a nonempty walk
+- `tripletExtend_last_edge` — the extension operation increases trail length by 1
+
+This file provides the **retraction** (inverse of `tripletExtendFromN`): given a trail from s to v, decompose it by removing the last edge to recover which neighbor the trail arrived from.
+
+**3. `RequestProject/SAWDiscreteStokes.lean`** (103 lines, sorry-free)
+Boundary evaluation for the strip identity and architectural documentation:
+- `boundary_phase_right` — right boundary phase factor = 1
+- `right_boundary_direction` — direction at right boundary = 1
+- `left_boundary_direction` — direction at left boundary = -1
+- `starting_midedge_contribution` — starting mid-edge direction = -1
+- Detailed documentation of the full discrete Stokes proof architecture
+
+### Updated Files
+- `PROOF_STATUS.md` — Updated to reflect new results and remaining gaps
+
+### Architecture
+
+The cancellation identity (Lemma 1) proof now has this structure:
+1. **Algebraic cancellation** (PROVED): `triplet_cancellation` and `pair_cancellation` in SAW.lean
+2. **Direction j-relation** (PROVED): d₁ = j·d₀, d₂ = j̄·d₀ at every vertex
+3. **Walk group cancellation** (PROVED): `triplet_contribution_at_vertex` and `pair_contribution_at_vertex`
+4. **Walk partition infrastructure** (PROVED): trail decomposition, extension/retraction, neighbor completeness
+5. **Walk partition exhaustiveness** (REMAINING GAP): connecting the extension/retraction bijection to the observable sum
+6. **Discrete Stokes** (REMAINING GAP): summing over vertices, boundary evaluation
+
+All algebraic and combinatorial building blocks for the cancellation identity are now formally proved. The remaining gap is the assembly: defining F(z) as a formal sum over walks and using the walk partition to show the vertex relation holds for F(z).
+
 # Summary of changes for run 00c48de0-3a11-4011-ba4d-ce1d9e7b00cb
 ## Parafermionic Observable and Cancellation Identity — Formalization
 
