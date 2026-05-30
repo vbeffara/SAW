@@ -1,3 +1,48 @@
+# Summary of changes for run 919102dc-95c8-4bef-a88b-3fe193f746bc
+## Summary of work on the parafermionic observable and cancellation identity
+
+I created two new sorry-free files and proved several key theorems advancing the formalization of the parafermionic observable and cancellation identity (Lemma 1 of Duminil-Copin & Smirnov 2012).
+
+### New file: `RequestProject/SAWObservableFormal.lean` (sorry-free)
+Formal definitions and theorems for the parafermionic observable:
+
+- **`HexMidEdge`** — formal mid-edge structure with oriented direction vectors
+- **`ObsWalk`** — formal observable walk from a starting vertex to a mid-edge (vertex-SAW model)
+- **`vertexMidEdges` / `vertexMidEdgesIncoming`** — the six oriented mid-edges at each vertex
+- **`walkVertexContrib`** — walk contribution to the vertex relation sum
+- **`triplet_sum_perm_zero`** — triplet cancellation identity (permutation 0→1→2)
+- **`triplet_sum_perm1_zero`** — triplet cancellation for cyclic permutation 1→2→0 *(newly proved)*
+- **`triplet_sum_perm2_zero`** — triplet cancellation for cyclic permutation 2→0→1 *(newly proved)*
+- **`pair_sum_zero`** — pair cancellation
+- **Boundary evaluation lemmas** — right/left boundary directions (=1, =-1), starting direction (=-1), left boundary phase real part (=c_alpha), interior edge cancellation (=0)
+- **`hex_vertex_visit_bound`** — structural lemma: trails from v to v have length 0 or ≥2
+- **Detailed documentation** of the proof architecture, gap analysis, and the connection between trail-based observable and vertex-SAW partition functions
+
+### New file: `RequestProject/SAWStripAlgebra.lean` (sorry-free)
+Key algebraic identities connecting xc = 1/√(2+√2) and c_alpha = cos(3π/8) via the triple angle formula:
+
+- **`xc_eq_inv_two_cos`** — xc = 1/(2·cos(π/8))
+- **`c_alpha_eq_cos`** — c_α = cos(3π/8)
+- **`cos_triple_pi_eight`** — 4cos³(π/8) = cos(3π/8) + 3cos(π/8)
+- **`strip_algebraic_identity`** — **2·c_α·xc³ + 3·xc² = 1** *(key new result!)*
+  This is the algebraic content of the strip identity, proved via the triple angle formula
+- **`c_alpha_xc_relation`** — c_α·xc = (1−3xc²)/(2xc²)
+- **`xc_sq_plus_ca_xc_lt_one`** — xc² + c_α·xc < 1
+- **`strip_identity_T1_algebraic`** — the T=1 case of infinite_strip_identity (conditional on A_inf(1) computation)
+- **`strip_identity_T1_from_A`** — T=1 identity using the known exact value B(1) = 2xc/(1−xc²)
+
+### Updated: `PROOF_STATUS.md`
+Comprehensive documentation of the full proof architecture and remaining gaps.
+
+### Remaining formalization gaps
+The two root sorries (`B_paper_le_one_strip` and `infinite_strip_identity`) remain. These require:
+1. Walk partition exhaustiveness (grouping walks into cancelling triplets/pairs)
+2. Formal observable as a sum
+3. Discrete Stokes summation
+4. Boundary evaluation connecting to partition functions
+
+All *algebraic* ingredients are now fully proved. The remaining gaps are *combinatorial* (the walk partition) and *analytic* (connecting the observable to the partition functions).
+
 # Summary of changes for run dd3c2db5-2c23-41cc-9ee7-f9822f8ce63f
 ## Summary of Work on the Parafermionic Observable and Cancellation Identity
 
