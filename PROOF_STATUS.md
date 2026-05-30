@@ -30,7 +30,30 @@ This is the infinite-L limit of the finite strip identity.
 
 ## Parafermionic Observable and Cancellation Identity
 
-### SAWObservableFormal.lean (NEW, ALL SORRY-FREE)
+### SAWTrailStructure.lean (NEW, ALL SORRY-FREE)
+Trail structure on the 3-regular hexagonal lattice:
+
+1. `hex_trail_revisit_is_endpoint` — on the hex lattice, if a trail revisits a vertex v, then v must be the start or end of the trail
+2. `hex_trail_interior_visit_bound` — interior vertices (v ≠ s, v ≠ t) are visited at most once by any trail
+3. `hex_edges_incident_le_three` — at most 3 edges incident to any vertex appear in a trail
+4. `trail_interior_vertex_uses_two_edges` — an interior vertex uses ≥ 2 incident trail edges
+5. `boundary_vertex_edge_bound` — boundary vertices (with exterior neighbor) have ≤ 2 trail edges in a strip trail
+6. `boundary_endpoint_count_le_one` — boundary endpoints with s ≠ t are visited at most once
+7. `strip_trail_boundary_endpoints_is_path` — a trail between two boundary vertices (s ≠ t) in the strip is a path
+8. `right_boundary_trail_is_path` — **KEY**: a trail from paperStart to a right boundary vertex in PaperInfStrip T is a vertex-SAW (path)
+
+This is a crucial structural result for the strip identity: it shows that
+on the right boundary, the trail-based observable F(z) equals the path-based
+partition function B_paper.
+
+### SAWObservableSum.lean (NEW, ALL SORRY-FREE)
+Formal observable sum definition and connection to partition functions:
+
+1. `StripMidEdgeTrail` — a mid-edge trail staying in the strip
+2. `vertex_relation_abstract` — the vertex relation from the reduced form
+3. `right_boundary_trails_are_paths` — boundary trails are vertex-SAWs
+
+### SAWObservableFormal.lean (ALL SORRY-FREE)
 Formal parafermionic observable definition and vertex relation (Lemma 1):
 
 1. `HexMidEdge` — mid-edge structure with direction vectors
@@ -140,18 +163,19 @@ Vertex relation infrastructure:
 
 ### Remaining formalization gaps
 
-1. **Walk partition exhaustiveness**: Show that every walk at v's mid-edges
+1. **Walk partition exhaustiveness**: Show that every trail to v's mid-edges
    belongs to exactly one cancelling group (triplet or pair).
+   The grouping operations (extension, retraction, loop reversal) are defined.
+   The algebraic cancellation for each group is proved.
 
-2. **Formal observable as a sum**: Define F(z) = Σ_γ e^{-iσW} xc^ℓ as a
-   formal sum over walks/trails from start to mid-edge z.
-
-3. **Discrete Stokes summation**: Sum vertex relations over all vertices,
+2. **Discrete Stokes summation**: Sum vertex relations over all vertices,
    show interior mid-edges cancel, only boundary survives.
 
-4. **Boundary evaluation**: Connect boundary sum to partition functions A, B, E.
+3. **Boundary evaluation**: Connect boundary sum to partition functions A, B, E.
+   The key ingredient — boundary trails are vertex-SAWs — is **now proved**
+   (right_boundary_trail_is_path in SAWTrailStructure.lean).
 
-5. **Limiting argument** (for Sorry #2): L → ∞ in the finite strip identity.
+4. **Limiting argument** (for Sorry #2): L → ∞ in the finite strip identity.
 
 ## Proof Architecture
 
