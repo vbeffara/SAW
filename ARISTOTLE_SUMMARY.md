@@ -1,3 +1,43 @@
+# Summary of changes for run 00c48de0-3a11-4011-ba4d-ce1d9e7b00cb
+## Parafermionic Observable and Cancellation Identity — Formalization
+
+I created a new file `RequestProject/SAWObservableDef.lean` (410 lines) that formalizes the parafermionic observable and cancellation identity (Lemma 1) from Section 2 of Duminil-Copin & Smirnov (2012). **All theorems are sorry-free** — every lemma compiles without `sorry`, using only standard axioms (propext, Classical.choice, Quot.sound).
+
+### What was formalized
+
+**Hex vertex neighbor enumeration:**
+- `hexNeighbors3` — the three neighbors of any hex vertex (FALSE or TRUE sublattice)
+- `hexNeighbors3_adj` — each neighbor is adjacent in the hex graph
+
+**Direction vectors and the j-relation (proved):**
+- `midEdgeDir` — direction vector from a vertex v to its i-th neighbor
+- `midEdgeDir_j_relation` — at every hex vertex, direction vectors satisfy d₁ = j·d₀ and d₂ = conj(j)·d₀
+
+**Corrected winding function:**
+- `hexWalkWinding` — computes the walk winding using `Complex.arg(d₂/d₁)` at each turn, which correctly handles the branch cut of `Complex.arg` at the negative real axis. This fixes an issue with the existing `correctWalkWinding` function, which uses `arg(d₂) - arg(d₁)` and gives incorrect results when consecutive edge directions cross the branch cut.
+
+**Trail-based mid-edge walks:**
+- `MidEdgeTrail` — a trail (edge-self-avoiding walk) from a starting vertex to a mid-edge. Uses `SimpleGraph.Walk.IsTrail` for edge-self-avoidance, matching the paper's notion of walks between mid-edges where vertices may be revisited.
+
+**Triplet extension (proved):**
+- `tripletExtendFromN` — given a walk γ ending at mid-edge (n₀, v), extends to a walk ending at mid-edge (v, nⱼ) by appending the edge n₀→v
+- `tripletExtendFromN_len` — extended walk has length ℓ+1
+
+**Winding relations (proved):**
+- `arg_neg_j` — arg(-j) = -π/3
+- `arg_neg_conj_j` — arg(-conj(j)) = π/3
+- `triplet_winding_ext1` — winding changes by -π/3 for the first extension
+- `triplet_winding_ext2` — winding changes by +π/3 for the second extension
+
+**Cancellation theorems (proved):**
+- `triplet_contribution_at_vertex` — the total contribution of a triplet (one walk visiting 1 mid-edge + its two extensions) is zero. Combines the j-relation, winding relations, and the algebraic `triplet_contribution_zero`.
+- `pair_contribution_at_vertex` — the total contribution of a pair (two walks visiting all 3 mid-edges, paired by loop reversal) is zero.
+- `cancellation_identity_abstract` — the vertex relation d₀·F₀ + d₁·F₁ + d₂·F₂ = 0 holds whenever the observable values decompose into cancelling triplets and pairs.
+
+### What remains
+
+The **combinatorial walk partition argument** — showing that every walk contributing to the vertex relation at an interior vertex belongs to exactly one cancelling group (triplet or pair) — is not yet formalized. This is the bridge between the algebraic cancellation (fully proved) and the strip identity (`B_paper ≤ 1`). I also updated `PROOF_STATUS.md` to reflect the new work.
+
 # Summary of changes for run 6e97d3a1-bf5c-4e9d-bf0e-1520ba20619b
 ## Work on the Parafermionic Observable and Cancellation Identity
 

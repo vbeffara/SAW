@@ -28,6 +28,33 @@ This is the infinite-L limit of the finite strip identity.
 
 **Required for:** The bridge recurrence (Z(xc) = ∞, the lower bound μ ≥ √(2+√2)).
 
+## Parafermionic Observable and Cancellation Identity (NEW)
+
+File: `SAWObservableDef.lean`
+
+Formalizes the parafermionic observable F(z) and the cancellation identity
+(Lemma 1) from Section 2 of the paper. **All theorems are sorry-free.**
+
+### Proved results:
+1. `midEdgeDir_j_relation` — direction vectors at each hex vertex satisfy
+   d₁ = j·d₀ and d₂ = conj(j)·d₀
+2. `hexWalkWinding` — corrected winding function using arg(d₂/d₁)
+   (fixes branch cut issue in `correctWalkWinding`)
+3. `MidEdgeTrail` — trail-based mid-edge walks (edge-self-avoiding)
+4. `tripletExtendFromN` — the triplet walk extension operation
+5. `arg_neg_j` / `arg_neg_conj_j` — turning angles -π/3 and π/3
+6. `triplet_winding_ext1` / `triplet_winding_ext2` — winding changes
+   by ±π/3 in triplet extensions
+7. `triplet_contribution_at_vertex` — triplet contribution vanishes
+8. `pair_contribution_at_vertex` — pair contribution vanishes
+9. `cancellation_identity_abstract` — the vertex relation
+
+### Remaining gap:
+The combinatorial walk partition argument (showing every walk belongs
+to exactly one cancelling group) is not yet formalized. This is the
+bridge between the algebraic cancellation (proved) and the strip
+identity (B_paper ≤ 1).
+
 ### Relationship between the two sorries
 
 Both are consequences of the **same** mathematical result: Lemma 2 of
