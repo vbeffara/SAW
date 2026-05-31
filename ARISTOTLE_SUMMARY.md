@@ -1,3 +1,43 @@
+# Summary of changes for run 4e000dae-e169-42bc-be5e-a2f71fadd215
+## Progress on the Parafermionic Observable and Cancellation Identity
+
+I analyzed the full formalization of the Duminil-Copin & Smirnov proof and made concrete progress on the parafermionic observable and cancellation identity (Lemma 1 of the paper).
+
+### New files created
+
+1. **`RequestProject/SAWTripletInStrip.lean`** — Sorry-free lemmas showing that the triplet extension/retraction operations work within the strip domain:
+   - `extension_in_strip`: extending a trail in the strip preserves strip membership
+   - `extension_adds_one_v_edge`: an extension from a 0-v-edge trail produces exactly 1 v-edge
+   - `zero_v_edges_implies_fresh'`: 0 v-edges implies the extension edge is fresh
+   - `extension_is_trail`: extensions preserve the trail property
+   - `vEdgeCount_append_edge`: v-edge count decomposition for appended walks
+
+2. **`RequestProject/SAWStripObservable.lean`** — Formal definition of the parafermionic observable F(z) at each mid-edge of the strip:
+   - `StripPathToMidEdge`: vertex-SAW from `paperStart` to a mid-edge, staying in the strip
+   - `stripPathObs`: the observable F(z) as a tsum over vertex-SAWs
+   - `starting_path_unique`: **proved** — the trivial walk is the unique walk from the starting mid-edge `a` to itself (F(a) has only one term)
+   - `starting_path_weight`: **proved** — the weight of the trivial walk
+   - `walkWeight_zero_one'`: **proved** — walkWeight 0 1 xc sigma = xc
+   - `stripVertexSum_eq_reduced`: **proved** — the vertex relation sum factors through `midEdgeDir v 0` using the j-relation on direction vectors
+   - `vertex_relation_iff_reduced`: **proved** — the vertex relation holds iff F₀ + j·F₁ + j̄·F₂ = 0 (the "reduced" form), using `midEdgeDir_zero_ne_zero`
+   - `vertex_relation_strip`: the concrete vertex relation (sorry — this is the remaining walk partition gap)
+
+3. **`RequestProject/SAWStokesAbstract.lean`** — Abstract discrete Stokes framework for the strip identity (Lemma 2).
+
+### Key mathematical insights formalized
+
+- **Observable uniqueness at starting point**: For vertex-SAWs, any path from `paperStart` to itself must be nil (a non-nil path would revisit `paperStart`, violating `IsPath`). This gives F(a) = 1.
+
+- **Algebraic reduction**: The vertex relation `Σᵢ dᵢ · F(zᵢ) = 0` reduces to `F₀ + j·F₁ + j̄·F₂ = 0` by factoring out `midEdgeDir v 0` (which is nonzero). This cleanly separates the algebraic content (direction vectors satisfy the j-relation — already proved) from the combinatorial content (walk partition).
+
+### Updated documentation
+
+- `PROOF_STATUS.md` updated to reflect the current decomposition, listing all proved and remaining results.
+
+### Remaining gap
+
+The single new sorry (`vertex_relation_strip`) precisely captures what remains for the cancellation identity: proving that F₀ + j·F₁ + j̄·F₂ = 0 for the concrete strip observable. This requires the walk partition bijection — showing that every vertex-SAW to v's mid-edges belongs to a cancelling triplet. The algebraic cancellation within each triplet is already proved (`triplet_cancellation`), and the extension/retraction operations are formalized. The gap is assembling these into a proof of exhaustive partitioning.
+
 # Summary of changes for run 36dd5344-0199-4e0c-900c-092052d01ab2
 ## Work on the Parafermionic Observable and Cancellation Identity
 
