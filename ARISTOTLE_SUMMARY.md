@@ -1,3 +1,56 @@
+# Summary of changes for run 36dd5344-0199-4e0c-900c-092052d01ab2
+## Work on the Parafermionic Observable and Cancellation Identity
+
+I focused on formalizing the **walk partition bijection** for Lemma 1 (the cancellation identity) from Duminil-Copin & Smirnov's paper on the connective constant of the honeycomb lattice.
+
+### New file created: `RequestProject/SAWCancellationFull.lean` (sorry-free)
+
+This file proves 14 key lemmas about the walk partition that underpins the cancellation identity. All lemmas are **fully proved** (no sorries):
+
+#### Walk extension properties
+1. **`extend_gives_one_v_edge`** — Extending a 0-v-edge trail by edge {n_j, v} produces a trail with exactly 1 v-edge
+2. **`extend_is_trail`** — The extension preserves the trail (edge-SAW) property
+3. **`extend_is_path`** — The extension of a **path** (vertex-SAW) with 0 v-edges is also a path
+4. **`extend_v_in_support`** — The vertex v appears in the extension's support
+5. **`extend_support`** — The support of the extension equals `original_support ++ [v]`
+6. **`extend_edges`** — The edges of the extension equal `original_edges ++ [{n_j, v}]`
+7. **`extend_injective`** — Different root trails produce different extensions (injectivity)
+
+#### Walk retraction and round-trip properties
+8. **`retract_extend_gives_j`** — Retracting an extension recovers the original root index j and produces a 0-v-edge trail
+9. **`path_vEdgeCount_zero_or_one`** — Paths (vertex-SAWs) have 0 or 1 v-edges (so only triplets arise, no pairs needed)
+10. **`zero_v_edge_path_not_in_support`** — A path with 0 v-edges at vertex v (where v ≠ start) has v ∉ support
+
+#### Vertex relation from the walk partition
+11. **`vertex_relation_from_triplets`** — Any set of walks organized into complete triplets sums to zero (uses `triplet_cancellation`)
+12. **`vertex_relation_combined`** — Any set of walks organized into triplets + pairs sums to zero (uses both `triplet_cancellation` and `pair_cancellation`)
+
+#### Helper lemmas
+13. **`append_cons_nil_length`** — Length after appending a single edge
+14. **`vEdgeCount_single_edge`** — v-edge count of a single-edge walk
+
+### What these results establish
+
+These lemmas prove the **structural half** of the cancellation identity:
+
+- The walk partition operations (extension and retraction) are well-defined, preserve path/trail properties, and form a bijection between 0-v-edge roots and 1-v-edge extensions.
+- When walks can be organized into cancelling groups (triplets and pairs), their total contribution is provably zero.
+- For vertex-SAWs (paths), only triplets arise (no pairs needed), simplifying the argument.
+
+### Remaining gaps for the full cancellation identity (Lemma 1)
+
+The algebraic cancellations (`triplet_cancellation`, `pair_cancellation`) are fully proved. The walk partition operations and their properties are now proved. What remains:
+
+1. **Walk partition exhaustiveness**: Show that EVERY trail in the strip to one of v's mid-edges belongs to exactly one cancelling group.
+2. **Discrete Stokes summation**: Sum the vertex relations over all strip vertices, showing interior mid-edges cancel.
+3. **Boundary evaluation**: Connect boundary observable values to the partition functions B_paper, A_paper, E_paper.
+
+These gaps correspond to the 4 remaining sorries in the project (`B_paper_le_one_strip`, `infinite_strip_identity`, `saw_count_exp_bound`, `hw_summable_direct`).
+
+### Updated PROOF_STATUS.md
+
+The proof status document has been updated to reflect all new results.
+
 # Summary of changes for run 5c11c315-7773-4ae9-bb28-29e846cf461c
 ## Summary: Parafermionic Observable and Cancellation Identity
 
