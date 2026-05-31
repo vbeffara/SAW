@@ -1,3 +1,44 @@
+# Summary of changes for run a7391af7-0243-4724-a85a-c096f2e3ae80
+## Work on the Parafermionic Observable and Cancellation Identity
+
+I created a new file `RequestProject/SAWCancellationIdentity.lean` that formalizes the trail-based parafermionic observable and the cancellation identity (Lemma 1 of Duminil-Copin & Smirnov 2012).
+
+### Key contribution: Trail classification at a vertex
+
+The cancellation identity partitions trails at each vertex into cancelling groups (triplets and pairs). A critical ingredient is classifying trails by their "v-edge count" (number of edges at vertex v used by the trail). I proved the complete classification:
+
+**Proved lemmas (all sorry-free):**
+
+1. **`strip_trail_length_bound`** — Trails in the finite strip `PaperFinStrip T L` have length bounded by `3 * |strip vertices|`.
+
+2. **`strip_trail_finite`** — Strip trails form a finite type (via injection into `Σ n : Fin(N+1), {w // w.length = n}`, using `SimpleGraph.fintypeSubtypeWalkLength`).
+
+3. **`three_vEdges_implies_two_visits`** — If a trail uses ≥ 3 edges at vertex v, then v appears ≥ 2 times in the trail's support. (Proved via a counting inequality: `vEdgeCount v ≤ 2 * support.count v`.)
+
+4. **`trail_vEdge_le_two_interior`** — For interior vertices (v ≠ start, v ≠ end), the v-edge count is ≤ 2. (Uses `three_vEdges_implies_two_visits` + `hex_trail_revisit_is_endpoint`.)
+
+5. **`incoming_trail_vEdge_classify`** — Incoming trails (ending at a neighbor of v with half-edge toward v) have exactly 0 or 2 v-edges. (0 = root for triplet, 2 = transit for pair.)
+
+6. **`vEdgeCount_odd_at_endpoint`** — Key parity lemma: for a trail from s to t with v = t and v ≠ s, the v-edge count is odd. (Proved by induction, maintaining the parity invariant `vEdgeCount v % 2 = ((if v=s then 1 else 0) + (if v=t then 1 else 0)) % 2`.)
+
+7. **`outgoing_trail_vEdge_classify`** — Outgoing trails (ending at v with half-edge toward a neighbor) have exactly 1 or 3 v-edges. (1 = triplet extension, 3 = pair member. Follows from parity + 3-regularity bound.)
+
+8. **`tripletExtendStrip`** — The triplet extension operation is well-defined in the strip: extending a 0-v-edge trail by adding an edge preserves the trail property and strip membership.
+
+9. **`strip_triplet_zero`** / **`strip_pair_zero`** — Each triplet and pair contributes zero to the vertex sum (connects to the algebraic cancellations already proved).
+
+### Remaining sorry
+
+**`trail_vertex_relation`** — The full vertex relation stating that the trail-based vertex sum is zero at each interior vertex. All algebraic and classification ingredients are now proved; the remaining gap is the combinatorial walk partition bijection showing that every trail belongs to exactly one cancelling group. This is a purely combinatorial argument about grouping trails into triplets (for 0/1 v-edge trails) and pairs (for 2/3 v-edge trails).
+
+### Mathematical insight
+
+During this work, I identified that the vertex relation holds for the **trail-based** (edge-SAW) observable but NOT for the path-based (vertex-SAW) observable. This is because the triplet extension for trails only requires edge freshness (guaranteed by 0 v-edges), while path extension additionally requires vertex freshness (which can fail when a neighbor is already visited). The paper's proof implicitly uses the trail-based formulation.
+
+### Files modified
+- `RequestProject/SAWCancellationIdentity.lean` — New file (the main contribution)
+- `PROOF_STATUS.md` — Updated to reflect the new results
+
 # Summary of changes for run 4e000dae-e169-42bc-be5e-a2f71fadd215
 ## Progress on the Parafermionic Observable and Cancellation Identity
 

@@ -63,14 +63,30 @@ Submultiplicativity-based bounds, independent of the observable.
 - `boundary_cos_pos`: all boundary phases positive
 - `interior_midedge_cancels`: opposite directions cancel
 
-#### Concrete observable infrastructure (SAWStripObservable.lean — NEW)
+#### Trail-based observable and classification (SAWCancellationIdentity.lean — NEW)
+- `StripTrail`: trail from paperStart to a mid-edge in the finite strip
+- `trailObs`: the trail-based parafermionic observable F(z)
+- `strip_trail_length_bound`: trails have bounded length in finite strip
+- `strip_trail_finite`: strip trails form a finite type
+- `tripletExtendStrip`: triplet extension operation in the strip
+- `tripletExtendStrip_len`: extension has length ℓ+1
+- `tripletExtendStrip_vEdge`: extension has exactly 1 v-edge
+- `three_vEdges_implies_two_visits`: 3 v-edges → vertex visited ≥ 2 times
+- `trail_vEdge_le_two_interior`: interior vertices have ≤ 2 v-edges
+- `incoming_trail_vEdge_classify`: incoming trails: 0 or 2 v-edges
+- `vEdgeCount_odd_at_endpoint`: parity of v-edges at endpoint
+- `outgoing_trail_vEdge_classify`: outgoing trails: 1 or 3 v-edges
+- `strip_triplet_zero`: each triplet contributes zero
+- `strip_pair_zero`: each pair contributes zero
+
+#### Concrete observable infrastructure (SAWStripObservable.lean)
 - `StripPathToMidEdge`: vertex-SAW from paperStart to a mid-edge in the strip
 - `stripPathObs`: the observable F(z) as a tsum over vertex-SAWs
 - `starting_path_unique`: the trivial walk is the unique walk from a to a
 - `starting_path_weight`: weight of the trivial walk = walkWeight 0 1 xc sigma
 - `walkWeight_zero_one'`: walkWeight 0 1 xc sigma = xc
 
-#### Triplet extension in the strip (SAWTripletInStrip.lean — NEW)
+#### Triplet extension in the strip (SAWTripletInStrip.lean)
 - `extension_in_strip`: extending a trail in the strip stays in strip
 - `extension_adds_one_v_edge`: extension produces exactly 1 v-edge
 - `zero_v_edges_implies_fresh'`: 0 v-edges → edge is fresh for extension
@@ -78,10 +94,11 @@ Submultiplicativity-based bounds, independent of the observable.
 
 ### Remaining gaps
 
-1. **`vertex_relation_strip`** (SAWStripObservable.lean): The vertex relation
-   for the concrete strip observable. This states that for each vertex v in
-   the strip, the direction-weighted sum of observable values at v's three
-   mid-edges is zero.
+1. **`trail_vertex_relation`** (SAWCancellationIdentity.lean): The vertex
+   relation for the trail-based observable. All algebraic and classification
+   ingredients are proved. The remaining gap is the combinatorial walk
+   partition bijection — showing every trail belongs to exactly one
+   cancelling group (triplet or pair).
 
 2. **Discrete Stokes summation**: Summing vertex relations over all strip
    vertices, showing interior mid-edges cancel pairwise.
@@ -96,7 +113,8 @@ Submultiplicativity-based bounds, independent of the observable.
 ```
 pair_cancellation + triplet_cancellation (PROVED)
   → vertexContrib_triplet_zero + vertexContrib_pair_zero (PROVED)
-    → vertex_relation_strip (sorry)
-      → discrete Stokes → B_paper_le_one_strip (sorry #1)
-      → discrete Stokes → infinite_strip_identity (sorry #2)
+  → trail classification (incoming: 0/2, outgoing: 1/3) (PROVED)
+  → trail_vertex_relation (sorry — walk partition bijection)
+    → discrete Stokes → B_paper_le_one_strip (sorry #1)
+    → discrete Stokes → infinite_strip_identity (sorry #2)
 ```
