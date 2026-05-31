@@ -1,3 +1,48 @@
+# Summary of changes for run 5c11c315-7773-4ae9-bb28-29e846cf461c
+## Summary: Parafermionic Observable and Cancellation Identity
+
+I worked on formalizing the parafermionic observable and the cancellation identity (Lemma 1) from Section 2 of Duminil-Copin & Smirnov (2012). Here is what was accomplished:
+
+### New file: `RequestProject/SAWCancellationLemma1.lean` (sorry-free)
+
+This file provides a clean, complete formalization of the cancellation identity (Lemma 1):
+
+- **`triplet_contrib_zero_at_vertex`** — For any vertex v and any cyclic permutation (j,k,l) of (0,1,2), the triplet contribution `dⱼ·wt(W,ℓ) + dₖ·wt(W-π/3,ℓ+1) + dₗ·wt(W+π/3,ℓ+1) = 0`. This works for ALL cyclic permutations, not just the base case (0,1,2).
+
+- **`pair_contrib_zero_at_vertex`** — The pair contribution `dₖ·wt(W-4π/3,ℓ) + dₗ·wt(W+4π/3,ℓ) = 0` for all cyclic permutations.
+
+- **`lemma1_vertex_relation_abstract`** — The abstract vertex relation: if walks can be partitioned into groups, each summing to zero, then the total vertex relation sum is zero.
+
+- **`vertex_relation_vertex_saws`** — The concrete vertex relation for vertex-SAWs organized into triplets. Given a partition of walks into triplets satisfying the winding/length relations, the total sum is zero. This is the key structural theorem for the cancellation identity.
+
+### Enhanced file: `RequestProject/SAWWalkPartitionComplete.lean` (sorry-free)
+
+Previously contained 1 sorry (`outgoing_1_v_edge_retract`). Now contains 0 sorries. All the following lemmas were proved:
+
+- **`walk_decompose_last`** — A nonempty walk decomposes as prefix.append(cons adj nil).
+- **`walk_decompose_last_trail`** — For trails, the decomposition preserves the trail property and the last edge is fresh.
+- **`vEdgeCount_append`** — The v-edge count decomposes additively over walk append.
+- **`vEdgeCount_cons_nil`** — The v-edge count of a single-edge walk.
+- **`outgoing_1_v_edge_retract`** — KEY LEMMA: A trail ending at v with exactly 1 v-edge can be retracted to give a prefix trail with 0 v-edges. This is the retraction half of the extension/retraction bijection in the walk partition.
+- **`extend_vEdgeCount_one`** — The extension of a 0-v-edge trail produces exactly 1 v-edge.
+- **`path_vEdgeCount_le_one`** — Paths (vertex-SAWs) have at most 1 v-edge per vertex.
+- **`path_fresh_vEdgeCount_zero`** — If v is not in a path's support, then the path has 0 v-edges.
+
+### Overall status
+
+The parafermionic observable formalization now has:
+- **Complete algebraic cancellation** — triplet and pair cancellation at all cyclic permutations (not just the base case).
+- **Complete walk partition operations** — extension (0→1 v-edge) and retraction (1→0 v-edge) are both proved.
+- **Complete abstract vertex relation** — the cancellation identity follows from any valid walk partition into triplets/pairs.
+- **Complete vertex-SAW vertex relation** — for paths organized into triplets, the relation holds.
+
+The remaining gaps for the full Lemma 1 are:
+1. Showing that ALL walks in a specific strip domain satisfy the partition conditions (connecting abstract framework to concrete walks).
+2. The discrete Stokes summation over all vertices.
+3. Boundary evaluation connecting the boundary sum to partition functions A, B, E.
+
+These gaps are captured by the 4 remaining sorries in the project (2 from the observable argument, 2 from submultiplicativity).
+
 # Summary of changes for run 60554206-6746-416e-87f4-6c40ba410d34
 ## Work on the Parafermionic Observable and Cancellation Identity
 

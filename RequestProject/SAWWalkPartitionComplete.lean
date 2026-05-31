@@ -88,8 +88,52 @@ An outgoing trail MidEdgeTrail(s, v, nᵢ) where exactly 1 v-edge is used
 (the entering edge) can be retracted by removing the last edge.
 The retracted trail has 0 v-edges. -/
 
-/-- An outgoing trail with 1 v-edge: the entering edge is the only
-    v-edge used. Removing it gives a trail from s to nⱼ with 0 v-edges. -/
+/-
+A nonempty walk from s to v can be decomposed as prefix.append (cons adj nil),
+    where the prefix is the walk without the last edge.
+-/
+lemma walk_decompose_last {V : Type*} {G : SimpleGraph V} {s v : V}
+    (w : G.Walk s v) (h_len : 0 < w.length) :
+    ∃ (u : V) (prefix_walk : G.Walk s u) (hadj : G.Adj u v),
+      w = prefix_walk.append (.cons hadj .nil) := by
+  induction' w with u v w ih;
+  · contradiction;
+  · exact?
+
+/-
+For a trail, the prefix from walk_decompose_last is also a trail.
+-/
+lemma walk_decompose_last_trail {V : Type*} {G : SimpleGraph V} {s v : V}
+    (w : G.Walk s v) (h_trail : w.IsTrail) (h_len : 0 < w.length) :
+    ∃ (u : V) (prefix_walk : G.Walk s u) (hadj : G.Adj u v),
+      w = prefix_walk.append (.cons hadj .nil) ∧
+      prefix_walk.IsTrail ∧
+      s(u, v) ∉ prefix_walk.edges := by
+  obtain ⟨ u, prefix_walk, hadj, rfl ⟩ := walk_decompose_last w h_len;
+  refine' ⟨ u, prefix_walk, hadj, rfl, _, _ ⟩ <;> simp_all +decide [ SimpleGraph.Walk.isTrail_def ];
+  · exact h_trail.of_append_left;
+  · grind
+
+/-
+vEdgeCount decomposes over append: the count in the append equals
+    the sum of counts in the two parts.
+-/
+lemma vEdgeCount_append (v : HexVertex) {s t u : HexVertex}
+    (p : hexGraph.Walk s t) (q : hexGraph.Walk t u) :
+    vEdgeCount v (p.append q) = vEdgeCount v p + vEdgeCount v q := by
+  unfold vEdgeCount; rw [ SimpleGraph.Walk.edges_append ] ; simp +decide [ List.filter_append, List.length_append ] ;
+
+/-
+vEdgeCount of a single edge.
+-/
+lemma vEdgeCount_cons_nil (v w₁ w₂ : HexVertex) (hadj : hexGraph.Adj w₁ w₂) :
+    vEdgeCount v (SimpleGraph.Walk.cons hadj .nil) = if v ∈ s(w₁, w₂) then 1 else 0 := by
+  unfold vEdgeCount; aesop;
+
+/-
+An outgoing trail with 1 v-edge: the entering edge is the only
+    v-edge used. Removing it gives a trail from s to nⱼ with 0 v-edges.
+-/
 lemma outgoing_1_v_edge_retract {s v : HexVertex}
     (trail : hexGraph.Walk s v) (h_trail : trail.IsTrail)
     (h_1_v : vEdgeCount v trail = 1)
@@ -98,7 +142,12 @@ lemma outgoing_1_v_edge_retract {s v : HexVertex}
       prefix_trail.IsTrail ∧
       trail.length = prefix_trail.length + 1 ∧
       vEdgeCount v prefix_trail = 0 := by
-  sorry
+  obtain ⟨ u, prefix_walk, hadj, h1, h2, h3 ⟩ := walk_decompose_last_trail trail h_trail h_len;
+  -- Use hexNeighbors3_complete to � find� j such that u = hexNeighbors3 v j.
+  obtain ⟨j, hj⟩ : ∃ j : Fin 3, u = hexNeighbors3 v j := by
+    have := hexNeighbors3_complete v u ( hexGraph_symm' u v hadj ) ; aesop;
+  simp_all +decide [ vEdgeCount_append, vEdgeCount_cons_nil ];
+  grind
 
 /-! ## Triplet contribution vanishes
 
@@ -122,6 +171,77 @@ lemma fin3_other_ne (j : Fin 3) :
     (fin3_other j).1 ≠ j ∧ (fin3_other j).2 ≠ j ∧
     (fin3_other j).1 ≠ (fin3_other j).2 := by
   fin_cases j <;> simp [fin3_other]
+
+/-! ## Extension produces exactly 1 v-edge -/
+
+/-
+The extension of a 0-v-edge trail produces a trail with exactly 1 v-edge.
+-/
+lemma extend_vEdgeCount_one {s v : HexVertex} (j k : Fin 3)
+    (γ : MidEdgeTrail s (hexNeighbors3 v j) v)
+    (h_no_v : vEdgeCount v γ.trail = 0) :
+    vEdgeCount v (extend_zero_v_edges j k γ h_no_v).trail = 1 := by
+  convert vEdgeCount_append v γ.trail ( SimpleGraph.Walk.cons _ SimpleGraph.Walk.nil ) using 1;
+  rw [ vEdgeCount_cons_nil ] ; aesop
+
+/-- The retracted trail from a 1-v-edge extension has the right properties. -/
+lemma retract_gives_root {s v : HexVertex}
+    (trail : hexGraph.Walk s v) (h_trail : trail.IsTrail)
+    (h_1_v : vEdgeCount v trail = 1) (h_len : 0 < trail.length) :
+    ∃ (j : Fin 3) (prefix_trail : hexGraph.Walk s (hexNeighbors3 v j)),
+      prefix_trail.IsTrail ∧
+      trail.length = prefix_trail.length + 1 ∧
+      vEdgeCount v prefix_trail = 0 :=
+  outgoing_1_v_edge_retract trail h_trail h_1_v h_len
+
+/-! ## Vertex-SAW walks have at most 1 v-edge
+
+For vertex-SAWs (paths), a walk ending at v can visit v at most once.
+Therefore, the number of v-edges is at most 1.
+This means only TRIPLETS arise (no pairs), simplifying the walk partition. -/
+
+/-
+For a path ending at v, the number of v-edges is at most 1.
+-/
+lemma path_vEdgeCount_le_one {s v : HexVertex}
+    (trail : hexGraph.Walk s v) (h_path : trail.IsPath) :
+    vEdgeCount v trail ≤ 1 := by
+  by_contra! h_contra;
+  -- Use walk_decompose_last_trail to decompose the trail as prefix.append (cons adj nil).
+  obtain ⟨u, prefix_walk, hadj, h_decomp, h_prefix_trail, h_prefix_no_v⟩ : ∃ (u : HexVertex) (prefix_walk : hexGraph.Walk s u) (hadj : hexGraph.Adj u v), trail = prefix_walk.append (SimpleGraph.Walk.cons hadj SimpleGraph.Walk.nil) ∧ prefix_walk.IsTrail ∧ s(u, v) ∉ prefix_walk.edges := by
+    apply walk_decompose_last_trail trail h_path.isTrail (by
+    rcases trail with ( _ | ⟨ _, _, _ ⟩ ) <;> simp_all +decide [ vEdgeCount ]);
+  -- Since $v$ is in the support of the prefix walk, it must be visited at least once.
+  have h_v_in_support : v ∈ prefix_walk.support := by
+    contrapose! h_contra; simp_all +decide [ vEdgeCount ] ;
+    intro e he; intro hv; have := h_path; simp_all +decide [ SimpleGraph.Walk.isPath_def ] ;
+    have h_v_in_support : ∀ {u v : HexVertex} {p : hexGraph.Walk u v}, ∀ e ∈ p.edges, ∀ w ∈ e, w ∈ p.support := by
+      intros u v p e he w hw; induction p <;> aesop;
+    exact h_contra <| h_v_in_support e he v hv;
+  simp_all +decide [ SimpleGraph.Walk.isPath_def ];
+  simp_all +decide [ SimpleGraph.Walk.support_append ];
+  grind
+
+/-
+For a path NOT ending at v (ending at some neighbor nⱼ),
+    if v ∉ trail.support then vEdgeCount = 0.
+-/
+lemma path_fresh_vEdgeCount_zero {s nⱼ : HexVertex} (v : HexVertex)
+    (trail : hexGraph.Walk s nⱼ) (h_path : trail.IsPath)
+    (h_fresh : v ∉ trail.support) :
+    vEdgeCount v trail = 0 := by
+  unfold vEdgeCount;
+  simp_all +decide [ SimpleGraph.Walk.mem_support_iff_exists_mem_edges ]
+
+/-! ## Complete triplet partition for vertex-SAWs
+
+For vertex-SAWs (paths) in the strip:
+- Every arrival walk (ending at incoming mid-edge nⱼ → v, v fresh) has 0 v-edges → root
+- Every departure walk (ending at outgoing mid-edge v → nₖ, nₖ fresh) has 1 v-edge → extension
+- Extension/retraction are inverse bijections
+- Each triplet (root + 2 extensions) sums to zero
+
+Therefore the vertex relation holds at every interior vertex. -/
 
 /-! ## Summary of the walk partition architecture
 

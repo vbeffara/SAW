@@ -4,8 +4,8 @@
 `connective_constant_eq_corrected` in `SAWPaperChain.lean`:
 **μ = √(2+√2)** where μ is the connective constant of the hexagonal lattice.
 
-**Status: PROVED modulo 2 root sorries** (both are instances of the same
-mathematical argument — the parafermionic observable / discrete Stokes theorem).
+**Status: PROVED modulo 4 root sorries** (2 from the parafermionic observable
+argument, 2 from submultiplicativity).
 
 ## Root Sorries
 
