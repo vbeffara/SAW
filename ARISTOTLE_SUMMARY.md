@@ -1,3 +1,37 @@
+# Summary of changes for run 81ae0bfd-40a4-4bd9-9384-aac0d80a11d1
+## Work on the Parafermionic Observable and Cancellation Identity
+
+I formalized and proved key lemmas for the cancellation identity (Lemma 1 of Duminil-Copin & Smirnov 2012), which is the heart of the parafermionic observable argument. Two new sorry-free files were created:
+
+### New file: `RequestProject/SAWCancellationProved.lean`
+Proves the **direction ratio lemmas** — the critical geometric facts relating direction vectors at hex vertices to cube roots of unity:
+
+- **`direction_ratio_clockwise`**: At any hex vertex v, for any neighbor index j, the ratio of direction vectors for the clockwise extension equals −j (the negated cube root of unity). This works for ALL neighbor indices, not just index 0.
+- **`direction_ratio_counterclockwise`**: Same for the counterclockwise extension, giving −conj(j).
+- **`turning_angle_clockwise`** / **`turning_angle_counterclockwise`**: The turning angles at v are −π/3 and +π/3 respectively. These follow from the direction ratios combined with the previously proved `arg_neg_j` and `arg_neg_conj_j`.
+- **`triplet_algebraic_zero`**: A convenient restatement of the triplet cancellation identity.
+
+### New file: `RequestProject/SAWWindingLemma.lean`
+Proves the **winding relation for walk extensions** — connecting the geometric turning angles to the actual hexagonal lattice winding function:
+
+- **`hexWalkWinding_snoc`**: The fundamental winding append lemma — appending a vertex to a walk's support adds exactly the turning angle at the junction. Proved by induction on the list using the recursive definition of `hexWalkWinding`.
+- **`walk_support_getLast`**: The last element of a walk's support is its endpoint.
+- **`extension_winding_cw`**: For a 0-v-edge incoming trail extended clockwise, the winding decreases by π/3.
+- **`extension_winding_ccw`**: For the counterclockwise extension, the winding increases by π/3.
+- **`strip_trail_triplet_vanishes`**: **The main result** — each triplet of strip trails (one root + two extensions) contributes zero to the vertex relation sum. This combines the winding relations, the length relation (`tripletExtendStrip_len`), and the algebraic triplet cancellation.
+
+### What this achieves
+
+These lemmas establish the **geometric part** of the cancellation identity: proving that when a 0-v-edge incoming trail is extended through vertex v, the winding changes by exactly ±π/3 and the length increases by 1 — matching the algebraic cancellation identity's requirements. The theorem `strip_trail_triplet_vanishes` then shows each triplet's total contribution vanishes.
+
+### Remaining gap
+
+The **combinatorial walk partition** — showing that every trail to v's mid-edges belongs to exactly one cancelling group (triplet or pair) — remains the main open step for closing `trail_vertex_relation`. All algebraic and geometric ingredients are now proved; the gap is purely combinatorial (defining the partition function and proving it exhausts all trails).
+
+### Verification
+
+All new files build successfully with no sorries. The axioms used are only the standard ones (propext, Classical.choice, Quot.sound). The full project builds cleanly.
+
 # Summary of changes for run a7391af7-0243-4724-a85a-c096f2e3ae80
 ## Work on the Parafermionic Observable and Cancellation Identity
 

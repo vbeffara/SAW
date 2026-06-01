@@ -15,6 +15,32 @@ argument, 2 from submultiplicativity).
 Follows from Lemma 2 of Duminil-Copin & Smirnov (2012): the strip identity
 `1 = c_α · A + B + c_ε · E` with A, E ≥ 0 implies B ≤ 1.
 
+### New: Cancellation Identity Key Lemmas (PROVED)
+
+The following key lemmas for the cancellation identity (Lemma 1) have been
+formalized and proved sorry-free in `SAWCancellationProved.lean` and
+`SAWWindingLemma.lean`:
+
+- `direction_ratio_clockwise` — at any hex vertex, the ratio of direction
+  vectors for the clockwise extension equals -j (cube root of unity)
+- `direction_ratio_counterclockwise` — same for counterclockwise, equals -conj(j)
+- `turning_angle_clockwise` — turning angle at v for clockwise extension is -π/3
+- `turning_angle_counterclockwise` — turning angle for counterclockwise is +π/3
+- `hexWalkWinding_snoc` — appending a vertex adds the turning angle to the winding
+- `extension_winding_cw` — winding of the clockwise extension = root winding - π/3
+- `extension_winding_ccw` — winding of counterclockwise extension = root winding + π/3
+- `strip_trail_triplet_vanishes` — each triplet's contribution to the vertex
+  relation sum is zero (combines winding, length, and algebraic cancellation)
+- `triplet_algebraic_zero` — the algebraic triplet identity for all vertices
+
+These establish the GEOMETRIC part of the cancellation identity: the winding
+relation ±π/3 for extensions at any vertex, for any neighbor index j.
+Combined with the algebraic triplet cancellation (already proved), each
+triplet of walks contributes zero to the vertex relation sum.
+
+The remaining gap is the COMBINATORIAL part: showing that every trail to
+v's mid-edges belongs to exactly one cancelling group (triplet or pair).
+
 ### Sorry #2: `infinite_strip_identity` (SAWRecurrenceProof.lean)
 **Statement:** `1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc`
 
