@@ -1,3 +1,52 @@
+# Summary of changes for run e882040a-b925-4d1d-be84-61e59a15c806
+## Progress on the Parafermionic Observable and Cancellation Identity
+
+I made significant progress on formalizing the cancellation identity (Lemma 1 of Duminil-Copin & Smirnov 2012) for the parafermionic observable.
+
+### Key Contribution: Corrected Observable Model
+
+I identified a fundamental issue with the existing `StripTrail` model: it lacked an **edge freshness** condition, causing the observable to overcount walks (including invalid walks that revisit mid-edges). This made the existing `trail_vertex_relation` statement incorrect.
+
+I created the correct model `FreshTrail` in `RequestProject/SAWPathVertexRelation.lean`, which adds the constraint `fresh : s(prev, next) ∉ walk.edges` — ensuring the ending mid-edge hasn't already been traversed. This matches the paper's self-avoiding walk on mid-edges.
+
+### New Files
+
+**`RequestProject/SAWPathVertexRelation.lean`** (0 sorries) — The fresh trail model:
+- `FreshTrail` — correct observable model with edge freshness
+- `freshObs` — the parafermionic observable F(z)
+- `freshVertexSum` — the vertex relation sum
+- `fresh_triplet_cancel` — each triplet of walks cancels algebraically
+- `freshExtend` — the triplet extension operation preserving freshness
+- Winding relations for extensions (±π/3)
+
+**`RequestProject/SAWVertexRelationProof.lean`** (1 sorry) — The vertex relation proof:
+
+**Proved sorry-free:**
+- `vEdgeCount_le_two_excluding` — with one excluded edge, ≤ 2 v-edges remain
+- `fresh_outgoing_vEdgeCount_one` — fresh outgoing trails have exactly 1 v-edge
+- `fresh_incoming_vEdgeCount_classify` — fresh incoming trails have 0 or 2 v-edges
+- `fresh_incoming_decompose` / `fresh_outgoing_decompose` — sum decomposition
+- `freshExtensionMap_injective` — extension map is injective
+- `fresh_outgoing_surj` — every outgoing extension comes from a root (surjectivity)
+- `sigmaExtMap_inj` / `sigmaExtMap_surj` — bijection between sigma type and outgoing exts
+- `outExt_sum_split` — outgoing sum decomposes by root index
+- `rootTripletContrib_zero` — each root's triplet contribution is zero
+- **`freshVertexSum_triplet_part_zero`** — the triplet part of the vertex sum vanishes
+- `freshVertexSum_decompose` — vertex sum = triplet part + pair part
+- `fresh_vertex_relation` — the full vertex relation (modulo pair part)
+
+**Remaining sorry:**
+- `freshVertexSum_pair_part_zero` — The pair cancellation part. This requires implementing the **loop reversal involution** on trails with 2 v-edges. The algebraic pair identity (`pair_cancellation: j · conj(λ)⁴ + conj(j) · λ⁴ = 0`) is already proved. The remaining gap is purely combinatorial: constructing the involution that reverses the direction of traversal through vertex v and proving the associated winding/length relations.
+
+### Architecture
+
+The proof follows the paper's structure:
+1. Walks to v's mid-edges are classified by v-edge count (0 or 2 for incoming, 1 for outgoing)
+2. 0-v-edge roots biject with 1-v-edge outgoing extensions via the extension map
+3. Each triplet (root + 2 extensions) cancels by the algebraic identity
+4. 2-v-edge incoming pairs cancel by loop reversal (sorry)
+5. Total vertex sum = 0
+
 # Summary of changes for run 4b34fbfc-4a02-4be1-8ae1-a7ae09a085ec
 ## Parafermionic Observable and Cancellation Identity — Formalization Progress
 

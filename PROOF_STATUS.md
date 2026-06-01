@@ -15,7 +15,23 @@ argument, 2 from submultiplicativity).
 Follows from Lemma 2 of Duminil-Copin & Smirnov (2012): the strip identity
 `1 = c_α · A + B + c_ε · E` with A, E ≥ 0 implies B ≤ 1.
 
-### New: Cancellation Identity Key Lemmas (PROVED)
+### New: Vertex Relation (Lemma 1) — Nearly Complete
+
+The cancellation identity (Lemma 1) has been formalized with a corrected
+observable model (`FreshTrail` with edge freshness) in `SAWVertexRelationProof.lean`.
+
+**Proved sorry-free:**
+- `freshVertexSum_triplet_part_zero`: The triplet part of the vertex sum = 0
+- Complete bijection between fresh outgoing extensions and incoming roots
+- `fresh_vertex_relation`: vertex relation reduces to triplet + pair parts
+- `freshVertexSum_decompose`: observable decomposes by v-edge count
+
+**Remaining sorry:**
+- `freshVertexSum_pair_part_zero`: The pair cancellation part. Requires
+  implementing the loop reversal involution on 2-v-edge trails.
+  The algebraic identity (`pair_cancellation`) is already proved.
+
+### Previously Proved: Cancellation Identity Key Lemmas
 
 The following key lemmas for the cancellation identity (Lemma 1) have been
 formalized and proved sorry-free in `SAWCancellationProved.lean` and
