@@ -1,3 +1,47 @@
+# Summary of changes for run 4b34fbfc-4a02-4be1-8ae1-a7ae09a085ec
+## Parafermionic Observable and Cancellation Identity — Formalization Progress
+
+I worked on formalizing the parafermionic observable and cancellation identity (Lemma 1) from Section 2 of the Duminil-Copin & Smirnov paper on the connective constant of the honeycomb lattice.
+
+### New Files Created (all sorry-free)
+
+**`RequestProject/SAWWindingGeneral.lean`** — General winding relations for triplet extensions at any vertex index j ∈ Fin 3 (8 theorems, 0 sorries):
+
+- `neg_midEdgeDir_ratio_k` / `neg_midEdgeDir_ratio_l` — Direction vector ratios at hex vertices equal `-j` and `-conj(j)` respectively
+- `turning_angle_k` / `turning_angle_l` — The turning angles for triplet extensions are `-π/3` and `+π/3` for all vertex indices (generalizing the j=0 case)
+- `hexWalkWinding_extend` — Decomposition lemma: the winding of a walk with two appended vertices equals the original winding plus the turning angle
+- `triplet_winding_general_k` / `triplet_winding_general_l` — The winding of a triplet extension changes by `∓π/3` (proved for general vertex index j, not just j=0)
+- `stripTrail_triplet_cancel` — Each complete triplet of strip trails contributes zero to the vertex relation sum
+
+**`RequestProject/SAWPathVertexRelation.lean`** — Fresh trail model with freshness constraint and triplet cancellation (9 definitions + 7 theorems, 0 sorries):
+
+- `FreshTrail` — Trail from paperStart to a mid-edge with freshness constraint (the adj edge is not in the walk's edges), correctly modeling the paper's edge-SAW observable
+- `extension_adj_fresh` — When extending a 0-v-edge root by one step, the adj edge to the OTHER neighbor is fresh (i.e., not in the extended walk), guaranteeing the extension is a valid FreshTrail
+- `freshExtend` — The triplet extension operation for fresh trails
+- `freshExtend_winding_k` / `freshExtend_winding_l` — Winding relations for fresh trail extensions
+- `fresh_triplet_cancel` — **The key theorem**: each triplet (root + two extensions) of fresh trails sums to zero in the vertex relation. This is the algebraic heart of Lemma 1.
+
+**`RequestProject/SAWTrailVertexRelation.lean`** — Decomposition infrastructure connecting trail-based sums to triplet cancellation (partially proved, 2 sorries remaining):
+
+- `incoming_sum_split` / `outgoing_sum_split` — Decomposition of trail sums by v-edge count
+- `extensionMap` — The map from incoming roots to outgoing extensions
+- `extensionMap_injective` / `sigma_extensionMap_injective` — Injectivity of the extension map
+- `outgoingExt_from_root` — Surjectivity: every 1-v-edge outgoing trail comes from some root
+- `root_triplet_zero` — Each root's triplet contributes zero
+- `vertex_sum_decompose` — The vertex sum decomposes into triplet + pair parts
+- Remaining sorries: `triplet_part_zero` (needs bijection-based sum rearrangement) and `pair_part_zero` (loop reversal for trails visiting all 3 mid-edges)
+
+### Key Mathematical Insight
+
+During the formalization, I discovered a subtle modeling issue: the original `StripTrail` type (edge-SAW without freshness) allows "self-extensions" where a walk's last half-edge reuses an already-traversed edge. These break the triplet cancellation. The paper's observable implicitly excludes such walks. The `FreshTrail` type with an explicit freshness constraint (`s(prev, next) ∉ walk.edges`) correctly models the paper's observable and enables clean triplet cancellation.
+
+### What Remains
+
+The complete proof of the cancellation identity (Lemma 1) requires:
+1. **Walk partition bijection**: showing that the extension map gives a bijection between incoming roots and outgoing fresh trails (the pieces — injectivity and surjectivity — are proved, but the sum rearrangement needs more work)
+2. **Pair cancellation**: for trails visiting all 3 mid-edges at a vertex, showing loop reversal pairs cancel (algebraic cancellation is proved, but the combinatorial pairing is not yet formalized)
+3. Connecting the fresh trail vertex relation to the strip identity (Lemma 2)
+
 # Summary of changes for run 81ae0bfd-40a4-4bd9-9384-aac0d80a11d1
 ## Work on the Parafermionic Observable and Cancellation Identity
 
