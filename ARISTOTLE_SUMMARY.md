@@ -1,3 +1,45 @@
+# Summary of changes for run 7d4179fe-7373-4fa0-a51c-4e7cccde3eaf
+## Summary of Work on the Parafermionic Observable and Cancellation Identity
+
+### Analysis and Investigation
+
+I conducted an extensive analysis of the parafermionic observable (Section 2 of Duminil-Copin & Smirnov 2012) and the cancellation identity (Lemma 1), examining the full formalization chain across ~20 Lean files.
+
+### Key Finding: The Triplet Part is Fully Proved
+
+The most significant existing result is `freshVertexSum_triplet_part_zero` in `SAWVertexRelationProof.lean`, which proves that the "triplet part" of the vertex relation vanishes. This encompasses:
+
+- **Complete extension bijection**: Every fresh outgoing extension (1 v-edge) bijects with an incoming root (0 v-edges) via `sigmaExtMap_inj` and `sigmaExtMap_surj`
+- **Winding relations**: Extensions change winding by ±π/3 (`freshExtend_winding_k/l`)
+- **Algebraic cancellation**: Each triplet sums to zero via the critical value identity 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0
+
+### Remaining Gap: The Pair Part
+
+The sole remaining sorry for the cancellation identity is `freshVertexSum_pair_part_zero` (line 417 of `SAWVertexRelationProof.lean`). This requires showing that walks from paperStart to a neighbor n_ji that **pass through v** (using 2 v-edges) cancel in the direction-weighted sum.
+
+My analysis revealed this is a genuinely subtle combinatorial problem:
+- These "IncomingPair" walks enter v from one neighbor and exit to another
+- They visit all 3 mid-edges at v (2 as full edges, 1 as half-edge)  
+- The paper's pair cancellation (loop reversal) applies to walks with 3 v-edges (loops), not 2 v-edges (pass-through)
+- The correct cancellation mechanism for 2-v-edge walks requires a deep combinatorial argument connecting the walk structure before and after v
+
+### Project Status
+
+The project builds cleanly with 9 remaining `sorry` statements. All sorries in the cancellation identity chain reduce to the same core problem (`freshVertexSum_pair_part_zero`). The `PROOF_STATUS.md` file has been updated with a detailed account of what is proved and what remains.
+
+### What Was Already Proved (Confirmed Working)
+
+All the following compile without sorry:
+- Core algebraic identities (`pair_cancellation`, `triplet_cancellation`)
+- Direction vector j-relations at all hex vertices
+- Walk extension/retraction operations and their properties
+- Winding computation infrastructure (turning angles ±π/3)
+- Trail classification by v-edge count
+- Trail finiteness in finite strips
+- The complete triplet cancellation for the fresh trail observable
+- Boundary evaluation lemmas (phase factors, direction cancellation)
+- Path-based observable definitions and starting walk properties
+
 # Summary of changes for run e882040a-b925-4d1d-be84-61e59a15c806
 ## Progress on the Parafermionic Observable and Cancellation Identity
 
