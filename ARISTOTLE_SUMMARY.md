@@ -1,3 +1,30 @@
+# Summary of changes for run eff26fb4-a6a9-435c-b24c-629e049eedb6
+## Work on the Parafermionic Observable and Cancellation Identity
+
+I focused exclusively on the parafermionic observable and cancellation identity (Lemma 1) from the Duminil-Copin & Smirnov paper, as requested.
+
+### Concrete contributions
+
+**1. Proved `outgoing_ext_by_root_index`** (in `RequestProject/SAWTrailVertexRelation.lean`):
+A new sorry-free lemma that decomposes the outgoing extension tsum by root index using `Summable.tsum_sigma'` and the existing bijection infrastructure (`outgoing_ext_tsum_rewrite`, `sigma_extensionMap_injective`, `sigma_extensionMap_surjective`). This converts the sigma-type tsum into a finitely-indexed sum of tsums over individual root types.
+
+**2. Identified a critical architectural issue with the StripTrail decomposition**:
+The `triplet_part_zero` theorem for StripTrails (no freshness constraint) is likely false as stated. The outgoing ext sum at index k includes "self-extensions" from roots at ji = k (walks entering v from nₖ and exiting to nₖ), which are NOT part of any triplet. The FreshTrail version in `SAWVertexRelationProof.lean` correctly excludes these self-extensions via the freshness constraint, which is why `freshVertexSum_triplet_part_zero` IS proved there.
+
+**3. Updated documentation** in `SAWTrailVertexRelation.lean` to accurately reflect the proof architecture, distinguishing between the StripTrail and FreshTrail approaches.
+
+### Current state of the cancellation identity
+
+The remaining sorry in the most advanced version (`SAWVertexRelationProof.lean`) is `freshVertexSum_pair_part_zero` — the pair cancellation for 2-v-edge incoming FreshTrails. The triplet part (`freshVertexSum_triplet_part_zero`) is already proved, and the vertex relation `fresh_vertex_relation` follows from both parts.
+
+The pair cancellation is the hardest remaining piece. It requires:
+- Constructing a loop-reversal involution on walks that pass through v
+- Proving this involution maps FreshIncomingPair at one index to FreshIncomingPair at another index
+- Establishing the winding relation (±4π/3 shift) for paired walks
+- Showing each pair's contribution is zero by the algebraic `pair_cancellation` identity
+
+The algebraic identity (`pair_cancellation: j * conj(λ)⁴ + conj(j) * λ⁴ = 0`) is fully proved. The gap is purely the combinatorial walk-manipulation argument for constructing and verifying the involution.
+
 # Summary of changes for run 7d4179fe-7373-4fa0-a51c-4e7cccde3eaf
 ## Summary of Work on the Parafermionic Observable and Cancellation Identity
 

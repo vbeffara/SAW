@@ -1,14 +1,26 @@
 /-
-# Trail Vertex Relation (Lemma 1) — Complete Proof
+# Trail Vertex Relation (Lemma 1) — Infrastructure
 
-Proves the cancellation identity: for every interior vertex v,
+Infrastructure for proving the cancellation identity:
   trailVertexSum T L v = 0
 
-The proof proceeds by:
-1. Decomposing incoming trails by v-edge count (0 or 2)
-2. Showing that 0-v-edge incoming trails biject with 1-v-edge outgoing via extension
-3. Showing that 2-v-edge incoming trails pair with 3-v-edge outgoing trails
-4. Each triplet/pair cancels by algebraic identity
+## Key results (sorry-free)
+* `incoming_sum_split` — incoming trails split by v-edge count (0 or 2)
+* `outgoing_sum_split` — outgoing trails split by v-edge count (1 or 3)
+* `extensionMap` — bijection from IncomingRoot to OutgoingExt
+* `root_triplet_zero` — each root's triplet contribution vanishes
+* `outgoing_ext_by_root_index` — decomposes outgoing ext sum by root index
+
+## Architecture
+The vertex sum decomposes as (IncomingRoot + OutgoingExt) + (IncomingPair + OutgoingPairMem).
+For StripTrails (no freshness), the "triplet part" (IncomingRoot + OutgoingExt) is NOT
+independently zero because the outgoing sum at k includes self-extensions from roots at k.
+The correct decomposition uses FreshTrails (see SAWVertexRelationProof.lean) where freshness
+excludes self-extensions, making the triplet part independently zero.
+
+## Remaining gaps
+* `triplet_part_zero` — needs corrected decomposition (see note above)
+* `pair_part_zero` — requires loop-reversal involution
 -/
 
 import Mathlib
@@ -240,6 +252,15 @@ lemma outgoing_ext_tsum_rewrite {T L : ℕ} {v : HexVertex} (k : Fin 3)
     ⟨sigma_extensionMap_injective k hv, sigma_extensionMap_surjective k hv hv_ne_start⟩
   rw [← Equiv.tsum_eq (Equiv.ofBijective _ hbij)]
   simp [Equiv.ofBijective_apply]
+
+/-- Decompose outgoing ext tsum by root index. -/
+lemma outgoing_ext_by_root_index {T L : ℕ} {v : HexVertex} (k : Fin 3)
+    (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
+    ∑' (γ : OutgoingExt T L v k), γ.1.weight =
+    ∑ ji : Fin 3, ∑' (γ : IncomingRoot T L v ji), (extensionMap k hv γ).1.weight := by
+  rw [outgoing_ext_tsum_rewrite k hv hv_ne_start]
+  rw [Summable.tsum_sigma' (fun ji => Summable.of_finite) Summable.of_finite]
+  simp only [tsum_fintype]
 
 /-- The triplet part of the vertex sum vanishes. -/
 theorem triplet_part_zero (T L : ℕ) (v : HexVertex)
