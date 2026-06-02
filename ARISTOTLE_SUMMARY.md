@@ -1,3 +1,43 @@
+# Summary of changes for run 4cb6318d-d6a0-4d31-abbc-904b32bf68f9
+## Work on the Parafermionic Observable and Cancellation Identity
+
+I focused on the pair cancellation part of Lemma 1 (the cancellation identity / vertex relation) from Duminil-Copin & Smirnov's paper. This is the remaining gap in the cancellation identity: the triplet part was already proved (`freshVertexSum_triplet_part_zero`), but the pair part (`freshVertexSum_pair_part_zero`) remained.
+
+### New file: `RequestProject/SAWPairInvolution.lean`
+
+Created a new file with 14 proved lemmas (sorry-free) building the infrastructure for the pair involution — the loop-reversal argument that shows paired walks' contributions cancel.
+
+**Proved lemmas (all sorry-free):**
+1. `v_in_support_of_two_v_edges` — a trail with 2 v-edges must have v in its support
+2. `pair_walk_v_in_support` — v is in the support of any FreshIncomingPair walk
+3. `pair_suffix_nonempty` — the suffix from v to the endpoint is nonempty
+4. `pair_exit_neighbor` — identifies the exit direction from v and decomposes the suffix into `cons adj inner`
+5. `mkPairedWalk` — constructs the loop-reversed walk from prefix and reversed inner walk
+6. `mkPairedWalk_length` — the paired walk has the right length
+7. `mkPairedWalk_in_strip` — the paired walk stays in the strip
+8. `mkPairedWalk_fresh` — the paired walk has the correct fresh edge
+9. `mkPairedWalk_two_v_edges` — the paired walk has 2 v-edges
+10. `vEdgeCount_ge_one_end` — a nonempty walk ending at v has ≥ 1 v-edge
+11. `vEdgeCount_cons_start` — vEdgeCount of a cons walk decomposes additively
+12. `v_mem_sym2_self` — v ∈ s(v, n) always
+13. `vEdgeCount_zero_of_not_in_support` — v ∉ support implies 0 v-edges
+14. `v_not_in_inner_support` — **key lemma**: v is not in the inner walk's support (follows from vEdgeCount = 2)
+
+**Remaining gaps (2 sorries):**
+- `mkPairedWalk_is_trail` — showing the paired walk preserves the trail property (edges remain nodup after the edge-swap at v). This is the most technically demanding remaining step, requiring detailed reasoning about List.Nodup across walk decompositions.
+- `freshVertexSum_pair_part_zero_proved` — the main theorem, which follows from the involution once `mkPairedWalk_is_trail` is established.
+
+### Analysis of existing sorries
+
+During this work, I identified important structural observations about some existing sorry'd statements:
+- The **FreshTrail model** (in `SAWVertexRelationProof.lean`) is the correct formalization of the paper's walk partition, where the triplet part is already proved and only the pair part remains.
+- The **StripTrail model** (in `SAWTrailVertexRelation.lean`) includes "self-extension" walks that make `triplet_part_zero` and `pair_part_zero` individually unprovable — only their sum equals zero.
+- The **StripPathToMidEdge model** (in `SAWStripObservable.lean`) has an overly restrictive freshness constraint that may exclude walks needed for complete triplet cancellation.
+
+The correct proof path is: `freshVertexSum_pair_part_zero` → `fresh_vertex_relation` → discrete Stokes → strip identity → B_paper ≤ 1.
+
+No existing files were modified; only the new file `RequestProject/SAWPairInvolution.lean` was added. The project builds successfully.
+
 # Summary of changes for run eff26fb4-a6a9-435c-b24c-629e049eedb6
 ## Work on the Parafermionic Observable and Cancellation Identity
 
