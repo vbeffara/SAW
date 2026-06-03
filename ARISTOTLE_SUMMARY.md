@@ -1,3 +1,35 @@
+# Summary of changes for run 3266c948-c6ae-46a1-9438-209f3cab8781
+## Summary of Work on the Parafermionic Observable and Cancellation Identity
+
+I worked on formalizing the cancellation identity (Lemma 1) from Duminil-Copin & Smirnov's paper "The connective constant of the honeycomb lattice equals √(2+√2)". This is the key result that states for every interior vertex v of the domain, the parafermionic observable satisfies (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0.
+
+### New Sorry-Free Results
+
+**1. Winding Reversal (`SAWPairWinding.lean` — all sorry-free):**
+- Proved `hexWalkWinding_reverse_walk`: For any hex lattice trail of length ≥ 2, the winding of the reversed walk equals the negation of the original winding. This is a key building block for the pair cancellation in the cancellation identity.
+- Helper lemmas: `hex_embed_sub_ne_zero'` (adjacent hex vertices have different complex embeddings), `hex_turn_neg'` (reversed turn angle is negated), `HexTrailList` (trail condition on vertex lists), `walk_support_is_hex_trail_list'`, and `hexWalkWinding_reverse_list'` (general list-level reversal).
+
+**2. Pair Involution Infrastructure (`SAWPairCancellation.lean`):**
+- Constructed `pairInvol`: the loop-reversal involution on FreshIncomingPair walks (walks with 2 v-edges that visit all three mid-edges). This maps a pair walk at index k to a pair walk at the exit index, reversing the inner loop direction.
+- Proved `pairInvol_length`: the paired walk has exactly the same length as the original (sorry-free).
+- Helper definitions: `pairExitIdx`, `pairInner`, `pairPrefix`, `pairInvolWalk`, and associated well-formedness lemmas.
+
+**3. Supporting file (`SAWWindingReverse.lean`):** Re-exports from SAWPairWinding.lean.
+
+### Remaining Gaps
+
+The main remaining gap is the **winding relation** between paired walks: showing that the winding difference between a walk and its loop-reversal is exactly ±8π/3. This requires:
+- A discrete Gauss-Bonnet theorem (loop winding = ±2π for simple closed trails on the hex lattice)
+- Connecting the local turn angle changes at vertex v to the global winding difference
+
+Once this winding relation is established, `pair_contrib_cancels` and then `freshVertexSum_pair_part_zero` would follow, completing the cancellation identity (Lemma 1). The triplet part (`freshVertexSum_triplet_part_zero`) is already fully proved.
+
+### Files Modified/Created
+- `RequestProject/SAWPairWinding.lean` — Added winding reversal infrastructure (was 1 sorry, now 0 sorries)
+- `RequestProject/SAWPairCancellation.lean` — New file with pair involution (2 sorries remain)
+- `RequestProject/SAWWindingReverse.lean` — New supporting file (0 sorries)
+- `PROOF_STATUS.md` — Updated documentation
+
 # Summary of changes for run dacea8b1-11dc-44ad-9668-c4156d02acd0
 ## Progress on the Parafermionic Observable and Cancellation Identity
 
