@@ -268,6 +268,9 @@ theorem triplet_part_zero (T L : ℕ) (v : HexVertex)
     (hv_ne_start : v ≠ paperStart) :
     ∑ ji : Fin 3, midEdgeDir v ji * ∑' (γ : IncomingRoot T L v ji), γ.1.weight +
     ∑ k : Fin 3, midEdgeDir v k * ∑' (γ : OutgoingExt T L v k), γ.1.weight = 0 := by
+  /- Note: For StripTrails (no freshness), the triplet part is NOT independently zero
+     because the outgoing sum at k includes self-extensions from roots at k.
+     The correct decomposition uses FreshTrails (see SAWVertexRelationProof.lean). -/
   sorry
 
 /-- The pair part of the vertex sum vanishes. -/

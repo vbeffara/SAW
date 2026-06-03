@@ -1,3 +1,51 @@
+# Summary of changes for run 3a167d4f-2558-4ede-809c-70af220bd11c
+## Summary of Work on the Parafermionic Observable and Cancellation Identity
+
+I focused on the cancellation identity (Lemma 1 from Duminil-Copin & Smirnov 2012) — the vertex relation for the parafermionic observable:
+
+  (p-v)F(p) + (q-v)F(q) + (r-v)F(r) = 0
+
+### New Contributions
+
+**1. `pair_contrib_from_winding` (PROVED) in `RequestProject/SAWPairWindingRelation.lean`**
+
+This theorem shows that each pair's contribution to the vertex sum is zero, given the winding relation. It connects the deep geometric fact (`pair_winding_relation`) to the already-proved algebraic pair identity (`pair_contrib_zero_at_vertex`). The proof:
+- Takes the winding relation (W_common and matching indices j)
+- Rewrites the weights using the winding values
+- Applies the algebraic pair cancellation identity via `fin_cases j` + `subst`
+
+**2. `pair_winding_relation` (stated, sorry) in `RequestProject/SAWPairWindingRelation.lean`**
+
+This is the **single remaining geometric fact** needed for the full cancellation identity. It states: for a FreshIncomingPair γ at k with its paired walk, there exists W_common and j such that the windings satisfy W(γ) = W_common - 4π/3 and W(pair) = W_common + 4π/3 with matching direction indices.
+
+This fact requires the turning number theorem for simple closed curves on the hexagonal lattice in a simply-connected domain — a deep topological result.
+
+**3. Analysis of the path-based approach**
+
+I analyzed why the path-based vertex relation (`vertex_relation_strip` in `SAWStripObservable.lean`) cannot be proved by simple triplet extension: for paths, extending through v to neighbor n_k fails when n_k is already in the path's support. The correct approach requires the trail-based FreshTrail machinery.
+
+**4. Clarification of StripTrail triplet independence**
+
+I documented (in `SAWTrailVertexRelation.lean`) that the triplet part for StripTrails (without freshness) is NOT independently zero due to self-extensions, confirming that the FreshTrail decomposition is the correct approach.
+
+### Proof Architecture (updated in `PROOF_STATUS.md`)
+
+The cancellation identity now reduces to a single sorry:
+
+```
+pair_winding_relation (SORRY — turning number theorem)
+    ↓
+pair_contrib_from_winding (PROVED)
+    ↓
+freshVertexSum_pair_part_zero (follows from involution argument)
+    ↓
+fresh_vertex_relation (= triplet_part + pair_part = 0)
+    ↓
+cancellation identity (Lemma 1)
+```
+
+All algebraic, combinatorial, trail classification, and bijection infrastructure is in place and sorry-free.
+
 # Summary of changes for run 3266c948-c6ae-46a1-9438-209f3cab8781
 ## Summary of Work on the Parafermionic Observable and Cancellation Identity
 

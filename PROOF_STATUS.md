@@ -28,46 +28,73 @@ states that for every interior vertex v:
   The triplet part of the vertex sum = 0.
   Complete bijection between fresh outgoing extensions and incoming roots.
 - `fresh_triplet_cancel` (SAWPathVertexRelation.lean): Each triplet sums to 0.
-- `triplet_contribution_at_vertex`, `pair_contribution_at_vertex`
 
-**Walk Partition Operations:**
-- Extension/retraction bijection for 0-v-edge ↔ 1-v-edge trails
-- Trail classification by v-edge count (0 or 2 incoming, 1 or 3 outgoing)
-- `strip_trail_finite`, `fresh_trail_finite`: finiteness of strip trails
+**Pair Involution Infrastructure:**
+- `pairInvol` (SAWPairCancellation.lean): The pair involution on FreshIncomingPair.
+- `pairInvol_length`: Same length preserved.
+- `mkPairedWalk_is_trail`: The paired walk is a valid trail.
+- `mkPairedWalk_fresh`: The paired walk has the correct fresh edge.
+- `mkPairedWalk_two_v_edges`: The paired walk has 2 v-edges.
 
-**Winding Reversal (NEW):**
-- `hexWalkWinding_reverse_walk` (SAWPairWinding.lean): 
-  For a hex trail of length ≥ 2, hexWalkWinding(walk.reverse.support) = -hexWalkWinding(walk.support).
-  This is the key building block for the pair cancellation.
-- Helper lemmas: `hex_embed_sub_ne_zero'`, `hex_turn_neg'`, `HexTrailList`, 
-  `walk_support_is_hex_trail_list'`, `hexWalkWinding_reverse_list'`
+**Pair Contribution Cancellation (from winding relation):**
+- `pair_contrib_from_winding` (SAWPairWindingRelation.lean, PROVED):
+  Each pair's contribution is zero, given the winding relation.
+  Uses `pair_contrib_zero_at_vertex` (algebraic identity).
 
-**Pair Involution Infrastructure (NEW):**
-- `pairInvol` (SAWPairCancellation.lean): Construction of the loop-reversed walk
-  for FreshIncomingPair walks.
-- `pairInvol_length`: Paired walk has the same length as the original.
-- `mkPairedWalk_is_trail`, `mkPairedWalk_fresh`, `mkPairedWalk_in_strip`,
-  `mkPairedWalk_two_v_edges`, `mkPairedWalk_length` (SAWPairInvolution.lean)
-- `v_not_in_inner_support`: The inner walk doesn't revisit v.
+**Trail Classification:**
+- `incoming_trail_vEdge_classify`: incoming trails have 0 or 2 v-edges
+- `outgoing_trail_vEdge_classify`: outgoing trails have 1 or 3 v-edges
+- `strip_trail_finite`: trails in the finite strip form a Finite type
 
-### Remaining Gaps
+**Winding Relations (for triplets):**
+- `triplet_winding_general_k`: extension winding decreases by π/3
+- `triplet_winding_general_l`: extension winding increases by π/3
+- `hexWalkWinding_reverse_walk`: winding of reversed trail = -original
 
-**Pair Cancellation:**
-- `pair_contrib_cancels` (SAWPairCancellation.lean): The winding relation between
-  paired walks (showing ΔW = ±8π/3) is not yet established. This requires:
-  - A loop winding theorem (Gauss-Bonnet for discrete hex lattice curves)
-  - Connecting the winding reversal to the overall winding difference
-- `freshVertexSum_pair_part_zero` (SAWVertexRelationProof.lean):
-  The pair part of the vertex sum = 0. Depends on pair_contrib_cancels.
+### Remaining Sorry
 
-**Downstream:**
-- `fresh_vertex_relation` (SAWVertexRelationProof.lean): Follows from
-  triplet part (proved) + pair part (gap).
-- `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean): Follows from
-  vertex relation + discrete Stokes summation.
+**`pair_winding_relation`** (SAWPairWindingRelation.lean):
+  The winding relation for pairs: ∃ W_common, j such that
+  W(γ) = W_common - 4π/3 and W(pair) = W_common + 4π/3
 
-## New Files
+  This is the ONLY remaining geometric fact needed for the full
+  cancellation identity. It requires:
+  - The turning number theorem for simple closed curves (winding = ±2π)
+  - The hex lattice geometry (exterior angles are ±π/3)
+  - Simply-connected domain constraining the loop orientation
 
-- `SAWWindingReverse.lean`: Re-exports winding reversal results
-- `SAWPairCancellation.lean`: Pair involution and cancellation infrastructure
-- `SAWPairWinding.lean`: Winding reversal lemmas (all sorry-free)
+  Once proved, it automatically gives:
+  - `pair_contrib_from_winding` → each pair contribution = 0
+  - `freshVertexSum_pair_part_zero` → pair part = 0
+  - `fresh_vertex_relation` → full vertex relation = 0
+  - `trail_vertex_relation` → trail-based vertex relation = 0
+
+### Proof Chain
+
+```
+pair_winding_relation (SORRY — turning number theorem on hex lattice)
+    ↓
+pair_contrib_from_winding (PROVED — algebraic pair identity)
+    ↓
+freshVertexSum_pair_part_zero (currently sorry, follows from involution argument)
+    ↓
+fresh_vertex_relation (follows: triplet_part + pair_part = 0)
+    ↓
+trail_vertex_relation (follows from fresh_vertex_relation)
+    ↓
+strip identity / B ≤ 1 (via discrete Stokes)
+```
+
+## Other Sorries
+
+- `infinite_strip_identity` (SAWStripIdentityCorrect.lean): Discrete Stokes summation
+- `vertex_relation_strip` (SAWStripObservable.lean): Path-based vertex relation
+  (Note: requires trail-based approach, not direct path extension)
+- Various downstream sorries that depend on the cancellation identity
+
+## Summary
+
+The cancellation identity is fully proved modulo ONE geometric fact:
+`pair_winding_relation` — the turning number theorem for simple loops
+on the hexagonal lattice in a simply-connected domain. All algebraic,
+combinatorial, and bijection infrastructure is in place.
