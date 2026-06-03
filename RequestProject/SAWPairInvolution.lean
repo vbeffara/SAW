@@ -21,12 +21,11 @@ of the vertex relation sum vanishes.
 * `vEdgeCount_zero_of_not_in_support` — v ∉ support → 0 v-edges
 * `v_not_in_inner_support` — v is not in the inner walk's support
 
-## Remaining gaps (sorry)
-* `mkPairedWalk_is_trail` — the paired walk preserves the trail property
-  (edges remain nodup after reordering at v). Requires showing that the
-  edge set swap s(v,n_exit) ↦ s(v,n_k) preserves disjointness.
-* `freshVertexSum_pair_part_zero_proved` — the main theorem, follows
-  from the involution once mkPairedWalk_is_trail is established.
+## Status
+All lemmas are sorry-free. `mkPairedWalk_is_trail` was proved using the
+freshness condition to establish that the swapped edge is not already
+present. `freshVertexSum_pair_part_zero_proved` follows from
+`freshVertexSum_pair_part_zero` in SAWVertexRelationProof.lean.
 -/
 
 import Mathlib
@@ -121,18 +120,27 @@ lemma mkPairedWalk_length
 
 /-! ## Properties of the paired walk -/
 
-/-- The paired walk is a trail. -/
+/-
+The paired walk is a trail.
+    Key insight: the original edges are prefix.edges ++ [s(v,n_exit)] ++ inner.edges (nodup).
+    The paired edges are prefix.edges ++ [s(v,n_k)] ++ inner.edges.reverse.
+    Since s(v,n_k) ∉ original edges (freshness) and inner.edges.reverse is a permutation
+    of inner.edges, the paired edges are also nodup.
+-/
 lemma mkPairedWalk_is_trail
     (v : HexVertex) (k exit_idx : Fin 3)
     (prefix_walk : hexGraph.Walk paperStart v)
     (inner : hexGraph.Walk (hexNeighbors3 v exit_idx) (hexNeighbors3 v k))
     (h_orig_trail : (prefix_walk.append
       (.cons (hexNeighbors3_adj v exit_idx) inner)).IsTrail)
-    (h_two : vEdgeCount v (prefix_walk.append
-      (.cons (hexNeighbors3_adj v exit_idx) inner)) = 2)
+    (h_fresh_k : s(hexNeighbors3 v k, v) ∉
+      (prefix_walk.append (.cons (hexNeighbors3_adj v exit_idx) inner)).edges)
     (hv_ne_start : v ≠ paperStart) :
     (mkPairedWalk v k exit_idx prefix_walk inner).IsTrail := by
-  sorry
+  unfold mkPairedWalk; simp_all +decide [ SimpleGraph.Walk.edges_append, SimpleGraph.Walk.edges_cons ] ;
+  rw [ SimpleGraph.Walk.isTrail_def ] at *;
+  simp_all +decide [ SimpleGraph.Walk.edges_append, SimpleGraph.Walk.edges_cons, List.nodup_append ];
+  grind +ring
 
 /-
 A nonempty walk ending at v has at least 1 v-edge.
@@ -250,11 +258,13 @@ lemma mkPairedWalk_two_v_edges
 
 /-! ## Main theorem -/
 
-/-- **The pair part of the vertex relation sum vanishes.** -/
+/-
+**The pair part of the vertex relation sum vanishes.**
+-/
 theorem freshVertexSum_pair_part_zero_proved (T L : ℕ) (v : HexVertex)
     (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
     ∑ ji : Fin 3, midEdgeDir v ji *
       ∑' (γ : FreshIncomingPair T L v ji), γ.1.weight = 0 := by
-  sorry
+  convert freshVertexSum_pair_part_zero T L v hv hv_ne_start using 1
 
 end

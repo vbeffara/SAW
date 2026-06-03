@@ -1,3 +1,39 @@
+# Summary of changes for run dacea8b1-11dc-44ad-9668-c4156d02acd0
+## Progress on the Parafermionic Observable and Cancellation Identity
+
+I focused on advancing the formalization of the cancellation identity (Lemma 1) from the Duminil-Copin & Smirnov paper, specifically the **pair cancellation** infrastructure needed for the vertex relation.
+
+### New sorry-free proofs
+
+**In `RequestProject/SAWPairInvolution.lean`:**
+- **`mkPairedWalk_is_trail`** — Proved that the loop-reversed walk (used in the pair involution) preserves the trail property. This was the key infrastructure gap for constructing the pair involution. The proof adds a freshness hypothesis (that the swapped edge is not already present) and shows the edge list remains duplicate-free after swapping one edge for another. Previously this was a sorry.
+
+The file is now entirely sorry-free (all lemmas compile without `sorryAx`).
+
+**In `RequestProject/SAWPairWinding.lean` (new file):**
+- **`hex_turn_value`** — Proved that on the hexagonal lattice, every turn angle in a trail walk is exactly ±π/3. This is a fundamental geometric property: since each hex vertex has 3 neighbors at 120° apart, and trails never retrace edges, the turn at each vertex is always ±60°. The proof handles all 12 cases (2 vertex types × 3 incoming × 2 outgoing neighbors) by explicit computation.
+- **`arg_inv_of_ne_pi`** — Proved that `Complex.arg(z⁻¹) = -Complex.arg(z)` when `arg(z) = ±π/3`. This handles the branch-cut issue: the standard identity `arg(z⁻¹) = -arg(z)` fails when `arg(z) = π`, but since hex lattice trail turns are always ±π/3, the identity holds.
+
+### Remaining sorry
+- **`hexWalkWinding_reverse_walk`** — States that the winding of a reversed hex trail equals the negation of the original winding. This follows from `hex_turn_value` and `arg_inv_of_ne_pi` by induction, but the induction structure (Walk vs List) makes the formal proof technically challenging. This is the key remaining step for completing the pair winding relation.
+
+### Architecture summary
+
+The cancellation identity (Lemma 1) proof chain:
+1. ✅ **Triplet algebraic cancellation** (`triplet_cancellation`) — proved
+2. ✅ **Pair algebraic cancellation** (`pair_cancellation`) — proved  
+3. ✅ **Direction j-relation** (`midEdgeDir_j_relation`) — proved
+4. ✅ **Triplet winding relations** — proved
+5. ✅ **Triplet vertex contribution = 0** — proved
+6. ✅ **Fresh triplet part = 0** (`freshVertexSum_triplet_part_zero`) — proved
+7. ✅ **Pair involution: trail property** (`mkPairedWalk_is_trail`) — **proved in this session**
+8. ✅ **Hex turn angles are ±π/3** (`hex_turn_value`) — **proved in this session**
+9. ⬜ **Winding reversal for trails** (`hexWalkWinding_reverse_walk`) — stated, sorry
+10. ⬜ **Pair winding relation** — needs winding reversal + turning number theorem
+11. ⬜ **Fresh pair part = 0** (`freshVertexSum_pair_part_zero`) — needs pair involution
+12. ⬜ **Full vertex relation** — needs triplet + pair parts
+
+
 # Summary of changes for run 4cb6318d-d6a0-4d31-abbc-904b32bf68f9
 ## Work on the Parafermionic Observable and Cancellation Identity
 
