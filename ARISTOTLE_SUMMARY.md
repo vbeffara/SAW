@@ -1,3 +1,37 @@
+# Summary of changes for run df96cd7d-f2ac-4cfb-a77f-86ccb232a70c
+## Work on Parafermionic Observable and Cancellation Identity
+
+### New Files Created
+
+1. **`RequestProject/SAWPairInvolutionHelpers.lean`** — Sorry-free helper lemmas for the pair involution:
+   - `v_not_in_paired_suffix`: v doesn't appear in the loop-reversed suffix of the paired walk
+   - `v_count_one_in_prefix`: v appears exactly once in the prefix (takeUntil v)
+   - `pairInvolWalk_support_eq`: the paired walk's support decomposes as prefix ++ suffix_tail
+   - `v_count_one_in_pairInvolWalk`: v appears exactly once in the entire paired walk's support
+
+   All four lemmas are fully proved with no sorries and depend only on standard axioms (propext, Classical.choice, Quot.sound).
+
+2. **`RequestProject/SAWPairInvolutionProof.lean`** — The main cancellation identity proof assembly:
+   - `freshVertexSum_pair_part_zero_proved`: The pair part of the vertex sum vanishes. Proved using the "S = -S" argument: the pairing map sends each contribution to its negation, and reindexing by the bijection shows the sum equals minus itself.
+   - **`fresh_vertex_relation` (Lemma 1)**: The full cancellation identity `freshVertexSum T L v = 0`. Proved by combining `freshVertexSum_triplet_part_zero` (already proved) with `freshVertexSum_pair_part_zero_proved`.
+
+### Proof Architecture
+
+The proof of Lemma 1 decomposes the vertex sum into:
+- **Triplet part** = 0 (previously proved in `SAWVertexRelationProof.lean`)
+- **Pair part** = 0 (new, proved via the S = -S argument)
+
+The S = -S argument works as follows: for each walk γ in the sum, `pair_contrib_cancels` shows f(γ) = -f(invol(γ)). Since the involution is a bijection on the finite type (via `pairSigmaInvol_injective`), reindexing gives S = -S, hence 2S = 0, hence S = 0.
+
+### Remaining Sorries (2)
+
+1. **`pairSigmaInvol_injective`** — Injectivity of the pairing map on the sigma type. The mathematical argument is clear: the paired walk uniquely determines the original walk by reversing the loop at v. The helper lemmas (v appears exactly once, etc.) provide the key infrastructure. The difficulty is purely technical: handling dependent type transport with `choose`-based definitions.
+
+2. **`pair_winding_relation`** (in `SAWPairCancellation.lean`) — The winding relation for loop-reversed pairs. This requires the discrete turning number theorem for simple closed curves on the hexagonal lattice: total exterior angle = ±2π. This is a deep geometric fact about planar graphs.
+
+### Updated Documentation
+- `PROOF_STATUS.md` updated with the complete proof chain and remaining gaps.
+
 # Summary of changes for run 74ce4d58-1aa2-4563-816e-66d730c3851c
 ## Summary: Parafermionic Observable and Cancellation Identity Progress
 
