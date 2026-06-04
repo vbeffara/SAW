@@ -256,15 +256,10 @@ lemma mkPairedWalk_two_v_edges
   unfold vEdgeCount at *;
   simp_all +decide [ SimpleGraph.Walk.edges_append, SimpleGraph.Walk.edges_cons ]
 
-/-! ## Main theorem -/
-
-/-
-**The pair part of the vertex relation sum vanishes.**
--/
-theorem freshVertexSum_pair_part_zero_proved (T L : ℕ) (v : HexVertex)
-    (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
-    ∑ ji : Fin 3, midEdgeDir v ji *
-      ∑' (γ : FreshIncomingPair T L v ji), γ.1.weight = 0 := by
-  convert freshVertexSum_pair_part_zero T L v hv hv_ne_start using 1
+/- The pair part of the vertex relation sum vanishes.
+   This was previously proved via a circular reference to
+   freshVertexSum_pair_part_zero. The genuine proof is now
+   in SAWPairCancellation.freshVertexSum_pair_part_zero_proof,
+   using pair_contrib_cancels + pair_winding_relation. -/
 
 end

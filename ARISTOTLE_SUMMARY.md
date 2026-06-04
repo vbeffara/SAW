@@ -1,3 +1,56 @@
+# Summary of changes for run 74ce4d58-1aa2-4563-816e-66d730c3851c
+## Summary: Parafermionic Observable and Cancellation Identity Progress
+
+### What was done
+
+I worked on formalizing the parafermionic observable and cancellation identity (Lemma 1) from the Duminil-Copin & Smirnov paper on the connective constant of the honeycomb lattice.
+
+### Key accomplishment: Proved `pair_contrib_cancels`
+
+**Proved** in `RequestProject/SAWPairCancellation.lean`: Each pair's contribution to the vertex relation sum is zero:
+
+```
+lemma pair_contrib_cancels : midEdgeDir v k * γ.1.weight +
+    midEdgeDir v (pairExitIdx hv_ne γ) * (pairInvol hv hv_ne γ).1.weight = 0
+```
+
+This was proved from:
+- `pair_winding_relation` (the winding relation for loop-reversed pairs) — sorry
+- The algebraic pair cancellation identity j·conj(λ)⁴ + conj(j)·λ⁴ = 0 (already proved)
+
+### Proof restructuring
+
+The proof chain was restructured to eliminate circular dependencies and clarify the architecture:
+
+1. **Removed circular sorry dependencies**: 
+   - Removed the sorry'd `freshVertexSum_pair_part_zero` from `SAWVertexRelationProof.lean`
+   - Removed the circular wrapper `freshVertexSum_pair_part_zero_proved` from `SAWPairInvolution.lean`
+   - Removed the sorry'd `fresh_vertex_relation` from `SAWVertexRelationProof.lean`
+
+2. **Consolidated pair cancellation** in `SAWPairCancellation.lean`:
+   - Added `pair_winding_relation` (the single atomic sorry for the turning number theorem)
+   - Proved `pair_contrib_cancels` from it
+   - Left `freshVertexSum_pair_part_zero_proof` as sorry (needs involution involutivity proof)
+
+3. **Simplified `SAWPairWindingRelation.lean`**: Now just re-exports `pair_contrib_cancels`
+
+### Remaining gaps in the cancellation identity
+
+The cancellation identity now reduces to **two independent gaps**:
+
+1. **`pair_winding_relation`** (SAWPairCancellation.lean:165): The turning number theorem for simple closed curves on the hexagonal lattice. This is the key geometric fact stating that the loop winding matches the pair algebraic identity structure. It requires formalizing that simple closed trails on the hex lattice have total exterior angle ±2π, combined with the specific geometry at each vertex.
+
+2. **`freshVertexSum_pair_part_zero_proof`** (SAWPairCancellation.lean:213): Given `pair_contrib_cancels`, this needs showing that the pair involution on FreshIncomingPair is a fixed-point-free involution, so that Finset.sum_involution can be applied. The involutivity (pairInvol ∘ pairInvol = id) follows from walk reverse being involutive.
+
+Once these two are proved, the full cancellation identity (Lemma 1) follows by combining the already-proved triplet part with the pair part.
+
+### Files modified
+- `RequestProject/SAWPairCancellation.lean` — restructured, proved pair_contrib_cancels
+- `RequestProject/SAWPairWindingRelation.lean` — simplified, removed duplicate
+- `RequestProject/SAWVertexRelationProof.lean` — removed circular sorry'd lemmas
+- `RequestProject/SAWPairInvolution.lean` — removed circular wrapper
+- `PROOF_STATUS.md` — updated status
+
 # Summary of changes for run 3a167d4f-2558-4ede-809c-70af220bd11c
 ## Summary of Work on the Parafermionic Observable and Cancellation Identity
 

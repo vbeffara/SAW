@@ -407,14 +407,22 @@ theorem freshVertexSum_triplet_part_zero (T L : ℕ) (v : HexVertex)
     ring!;
   · norm_num
 
-/-! ## The pair part of the vertex sum vanishes -/
+/-! ## The pair part and the full vertex relation
 
-/-- The pair part of the fresh vertex sum vanishes. -/
-theorem freshVertexSum_pair_part_zero (T L : ℕ) (v : HexVertex)
-    (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
-    ∑ ji : Fin 3, midEdgeDir v ji *
-      ∑' (γ : FreshIncomingPair T L v ji), γ.1.weight = 0 := by
-  sorry
+The pair part of the vertex sum vanishes by the pair involution
++ winding relation (proved in SAWPairCancellation.lean).
+The full vertex relation (fresh_vertex_relation) follows from
+the triplet part (proved above) and the pair part.
+
+These results are assembled in SAWPairCancellation.lean, which
+imports this file and has access to the pair involution machinery.
+
+The proof chain:
+  pair_winding_relation (sorry: turning number theorem)
+  → pair_contrib_cancels (proved)
+  → freshVertexSum_pair_part_zero_proof (needs involution structure)
+  → fresh_vertex_relation (needs both triplet + pair parts)
+-/
 
 /-! ## The vertex sum decomposes into triplet and pair parts -/
 
@@ -432,16 +440,5 @@ lemma freshVertexSum_decompose (T L : ℕ) (v : HexVertex)
            fresh_incoming_decompose T L v _ hv_ne_start, mul_add,
            Finset.sum_add_distrib]
   ring
-
-/-- **Lemma 1** (Cancellation Identity / Vertex Relation).
-    For every interior vertex v ≠ paperStart in the strip,
-    the fresh vertex sum is zero. -/
-theorem fresh_vertex_relation (T L : ℕ) (v : HexVertex)
-    (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
-    freshVertexSum T L v = 0 := by
-  rw [freshVertexSum_decompose T L v hv_ne_start]
-  have h1 := freshVertexSum_triplet_part_zero T L v hv hv_ne_start
-  have h2 := freshVertexSum_pair_part_zero T L v hv hv_ne_start
-  linear_combination h1 + h2
 
 end

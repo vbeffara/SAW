@@ -29,6 +29,11 @@ states that for every interior vertex v:
   Complete bijection between fresh outgoing extensions and incoming roots.
 - `fresh_triplet_cancel` (SAWPathVertexRelation.lean): Each triplet sums to 0.
 
+**Pair Contribution Cancellation (NEW):**
+- `pair_contrib_cancels` (SAWPairCancellation.lean): Each pair’s
+  contribution to the vertex sum is zero. Proved from `pair_winding_relation`
+  + the algebraic pair identity `pair_cancellation`.
+
 **Pair Involution Infrastructure:**
 - `pairInvol` (SAWPairCancellation.lean): The pair involution on FreshIncomingPair.
 - `pairInvol_length`: Same length preserved.
