@@ -56,14 +56,93 @@ lemma pairSigmaContrib_neg {T L : ℕ} {v : HexVertex}
   have h := pairSigmaContrib_cancel hv hv_ne p
   linear_combination h
 
-/-- The pairing map is injective.
-    If invol(k₁, γ₁) = invol(k₂, γ₂), then k₁ = k₂ and γ₁ = γ₂.
-    This follows from the fact that the paired walk uniquely determines
-    the original walk (the loop at v can only be reversed one way). -/
+/-
+The inner reverse support starts with hexNeighbors3 v k.
+-/
+lemma inner_rev_support_head {T L : ℕ} {v : HexVertex} {k : Fin 3}
+    (hv_ne : v ≠ paperStart)
+    (γ : FreshIncomingPair T L v k) :
+    (pairInner hv_ne γ).reverse.support.head? = some (hexNeighbors3 v k) := by
+  have h_support : ∀ {u w : HexVertex} {p : hexGraph.Walk u w}, p.support.reverse.head? = some w := by
+    intros u w p; induction p <;> aesop;
+  convert h_support using 1;
+  rw [ SimpleGraph.Walk.support_reverse ]
+
+/-
+The paired walk support has a specific structure.
+-/
+lemma pairInvolWalk_support_structure {T L : ℕ} {v : HexVertex} {k : Fin 3}
+    (hv_ne : v ≠ paperStart)
+    (γ : FreshIncomingPair T L v k) :
+    (pairInvolWalk hv_ne γ).support =
+    (pairPrefix hv_ne γ).support ++ (pairInner hv_ne γ).reverse.support := by
+  convert mkPairedWalk_support' v k ( pairExitIdx hv_ne γ ) ( pairPrefix hv_ne γ ) ( pairInner hv_ne γ ) using 1
+
+/-
+Equal paired walk supports imply equal k indices.
+-/
+lemma paired_walk_determines_k {T L : ℕ} {v : HexVertex} {k₁ k₂ : Fin 3}
+    (hv_ne : v ≠ paperStart)
+    (γ₁ : FreshIncomingPair T L v k₁) (γ₂ : FreshIncomingPair T L v k₂)
+    (h_support : (pairInvolWalk hv_ne γ₁).support = (pairInvolWalk hv_ne γ₂).support) :
+    k₁ = k₂ := by
+  apply hexNeighbors3_injective v;
+  rw [ pairInvolWalk_support_structure, pairInvolWalk_support_structure ] at h_support;
+  have h_eq : (pairPrefix hv_ne γ₁).support = (pairPrefix hv_ne γ₂).support ∧ (pairInner hv_ne γ₁).reverse.support = (pairInner hv_ne γ₂).reverse.support := by
+    apply list_append_cancel_at_unique' v h_support (prefix_support_ne_nil hv_ne γ₁) (prefix_support_ne_nil hv_ne γ₂) (prefix_support_getLast hv_ne γ₁) (prefix_support_getLast hv_ne γ₂) (v_not_in_inner_rev_support hv_ne γ₁) (v_not_in_inner_rev_support hv_ne γ₂);
+    convert v_count_one_in_pairInvolWalk hv_ne γ₁ using 1;
+    rw [ pairInvolWalk_support_structure ];
+    convert rfl;
+  have := inner_rev_support_head hv_ne γ₁; have := inner_rev_support_head hv_ne γ₂; aesop;
+
+/-
+Equal paired walk supports (at same k) imply equal originals.
+-/
+lemma paired_walk_determines_original {T L : ℕ} {v : HexVertex} {k : Fin 3}
+    (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
+    (γ₁ γ₂ : FreshIncomingPair T L v k)
+    (h_exit : pairExitIdx hv_ne γ₁ = pairExitIdx hv_ne γ₂)
+    (h_support : (pairInvolWalk hv_ne γ₁).support = (pairInvolWalk hv_ne γ₂).support) :
+    γ₁ = γ₂ := by
+  -- Apply the lemma that states if the supports are equal, then the prefixes and suffixes are equal.
+  have h_prefix_suffix : (pairPrefix hv_ne γ₁).support = (pairPrefix hv_ne γ₂).support ∧ (pairInner hv_ne γ₁).reverse.support = (pairInner hv_ne γ₂).reverse.support := by
+    apply list_append_cancel_at_unique' v;
+    any_goals exact prefix_support_ne_nil hv_ne _;
+    any_goals exact v_not_in_inner_rev_support hv_ne _;
+    · rw [ ← pairInvolWalk_support_structure hv_ne γ₁, ← pairInvolWalk_support_structure hv_ne γ₂, h_support ];
+    · exact prefix_support_getLast hv_ne γ₁;
+    · exact?;
+    · convert v_count_one_in_pairInvolWalk hv_ne γ₁ using 1;
+      rw [ pairInvolWalk_support_structure ];
+      convert rfl;
+  apply Subtype.ext; exact (by
+  apply Eq.symm; exact (by
+    have := pairDecomp hv_ne γ₂
+    have := pairDecomp hv_ne γ₁; simp_all +decide [ pairInvolWalk ] ;
+    apply Eq.symm; exact (by
+      have h_walk_eq : (γ₁.1.walk) = (γ₂.1.walk) := by
+        apply SimpleGraph.Walk.ext_support;
+        simp_all +decide [ SimpleGraph.Walk.support_append ]
+      cases h : γ₁.1 ; cases h' : γ₂.1 ; aesop ( simp_config := { singlePass := true } ) ;
+    )
+  ));
+
+/-
+The pairing map is injective.
+-/
 lemma pairSigmaInvol_injective {T L : ℕ} {v : HexVertex}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart) :
     Function.Injective (pairSigmaInvol hv hv_ne) := by
-  sorry
+  intro p q hpq;
+  -- Extract the exit indices from the equality of the pairedb walks.
+  have h_exit : p.1 = q.1 := by
+    apply paired_walk_determines_k hv_ne p.2 q.2;
+    convert congr_arg ( fun x : AllFreshPairs T L v => ( x.2.1.walk.support ) ) hpq using 1;
+  cases p ; cases q ; simp_all +decide [ pairSigmaInvol ];
+  rename_i k₁ γ₁ k₂ γ₂;
+  subst h_exit;
+  have := paired_walk_determines_original hv hv_ne γ₁ γ₂ ( by injection hpq ) ( by
+    have := congr_arg ( fun x : AllFreshPairs T L v => x.2.1.walk.support ) hpq; aesop; ) ; aesop;
 
 /-! ## The pair part of the vertex sum vanishes -/
 

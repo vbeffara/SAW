@@ -21,6 +21,7 @@ import RequestProject.SAWRecurrenceProof
 import RequestProject.SAWDecomp
 import RequestProject.SAWBridgeFix
 import RequestProject.SAWStripT1Exact
+import RequestProject.SAWPaperChain
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -169,18 +170,11 @@ The key insight: from Z(xc) = ∞, we get μ ≥ 1/xc. For x < xc ≤ 1/μ,
 by submultiplicativity c_{km} ≤ c_m^k, we can bound c_n x^n
 geometrically for large n, giving summability. -/
 
-/-- Submultiplicativity gives exponential bound for large n.
-    From saw_count_submult_with_remainder: c_{qm+r} ≤ c_m^q · c_r.
-    With q = n/m and r = n%m, and c_r ≤ c_m (by saw_count_mono). -/
-lemma saw_count_exp_bound (m : ℕ) (hm : 0 < m) (n : ℕ) :
-    (saw_count n : ℝ) ≤ (saw_count m : ℝ) * (saw_count m : ℝ) ^ (n / m) := by
-  sorry
-
-/-- The partition function converges below the radius of convergence,
-    which is at least xc (since Z(xc) = ∞). Uses submultiplicativity. -/
+/-- The partition function converges below xc.
+    Uses the Hammersley-Welsh decomposition from SAWPaperChain. -/
 theorem hw_summable_direct {x : ℝ} (hx : 0 < x) (hxc : x < xc) :
-    Summable (fun n => (saw_count n : ℝ) * x ^ n) := by
-  sorry
+    Summable (fun n => (saw_count n : ℝ) * x ^ n) :=
+  hw_summable_corrected hx hxc
 
 /-! ## Main theorem -/
 

@@ -4,8 +4,10 @@
 `connective_constant_eq_direct` in `SAWMainNew.lean`:
 **μ = √(2+√2)** where μ is the connective constant of the hexagonal lattice.
 
-**Status: PROVED modulo root sorries** (from the parafermionic observable
-argument and submultiplicativity).
+**Status: PROVED modulo one sorry** (`infinite_strip_identity` in SAWRecurrenceProof.lean).
+
+The Hammersley-Welsh bound is fully proved (sorry-free), and the
+convergence proof `hw_summable_direct` now uses it via `hw_summable_corrected`.
 
 ## Cancellation Identity (Lemma 1) — Status
 
@@ -29,7 +31,7 @@ states that for every interior vertex v:
   Complete bijection between fresh outgoing extensions and incoming roots.
 - `fresh_triplet_cancel` (SAWPathVertexRelation.lean): Each triplet sums to 0.
 
-**Pair Involution Infrastructure:**
+**Pair Involution Infrastructure (ALL sorry-free):**
 - `mkPairedWalk_is_trail`: the loop-reversed walk is a trail
 - `mkPairedWalk_length`: paired walk has the same length
 - `mkPairedWalk_in_strip`: paired walk stays in strip
@@ -38,17 +40,32 @@ states that for every interior vertex v:
 - `pairInvol`: the pair involution operation
 - `pairInvol_length`: paired walk has same length as original
 
-**Pair Involution Helpers (NEW — SAWPairInvolutionHelpers.lean):**
+**Pair Involution Helpers (sorry-free, SAWPairInvolutionHelpers.lean):**
 - `v_not_in_paired_suffix`: v doesn't appear in the loop-reversed suffix
 - `v_count_one_in_prefix`: v appears exactly once in the prefix
 - `v_count_one_in_pairInvolWalk`: v appears exactly once in the paired walk
 - `pairInvolWalk_support_eq`: paired walk support decomposes correctly
+- `mkPairedWalk_support'`: support = prefix.support ++ inner.reverse.support
+- `list_append_cancel_at_unique'`: list splitting at unique element
+- `v_not_in_inner_rev_support`: v ∉ inner.reverse.support
+- `prefix_support_ne_nil`: prefix support is nonempty
+- `prefix_support_getLast`: prefix support ends at v
+
+**Pair Involution Injectivity (sorry-free, SAWPairInvolutionProof.lean):**
+- `pairSigmaInvol_injective`: **NOW PROVED** — the pairing map is injective
+  Proof via support splitting: equal paired walks imply equal prefix and inner
+  supports (by `list_append_cancel_at_unique'`), hence equal k indices
+  (by `hexNeighbors3_injective`) and equal original walks (by Walk.ext_support).
+- `inner_rev_support_head`: inner reverse support starts with hexNeighbors3 v k
+- `pairInvolWalk_support_structure`: paired walk support decomposition
+- `paired_walk_determines_k`: equal paired walks → equal k indices
+- `paired_walk_determines_original`: equal paired walks (same k) → equal originals
 
 **Pair Algebraic Cancellation:**
 - `pair_contrib_cancels`: each pair's contribution to vertex sum = 0
   (uses pair_winding_relation)
 
-**Vertex Sum Structure (NEW — SAWPairInvolutionProof.lean):**
+**Vertex Sum Structure (SAWPairInvolutionProof.lean):**
 - `freshVertexSum_pair_part_zero_proved`: The pair part of the vertex sum = 0.
   Uses the pairing map as a bijection on the sigma type.
   Proved from pair_contrib_cancels + pairSigmaInvol_injective.
@@ -68,27 +85,14 @@ states that for every interior vertex v:
 - `hexWalkWinding_reverse_walk`: winding of reversed trail = -original
 - `hexWalkWinding_extend`: winding extends additively
 
-### Remaining Sorries (2)
+### Remaining Sorry (1 for cancellation identity)
 
 1. **`pair_winding_relation`** (SAWPairCancellation.lean):
    The winding relation for pairs: ∃ W_common, j such that
    W(γ) = W_common - 4π/3 and W(pair) = W_common + 4π/3
 
    This requires formalizing the discrete turning number theorem
-   for simple closed curves on the hexagonal lattice. The key steps:
-   - A simple closed trail has total exterior angle ±2π
-   - Each turn on the hex lattice is ±π/3
-   - The simply-connected domain constrains the loop orientation
-
-2. **`pairSigmaInvol_injective`** (SAWPairInvolutionProof.lean):
-   The pairing map (k, γ) ↦ (exit, pairInvol(γ)) is injective on
-   the sigma type Σ ji, FreshIncomingPair ji.
-
-   The argument: the paired walk uniquely determines the original walk
-   by reversing the loop at v. The support of the paired walk determines
-   the prefix (up to v), k (first step after v), and inner walk (reversed).
-   Hence the original walk is recovered. Helper lemmas for the support
-   structure are proved in SAWPairInvolutionHelpers.lean.
+   for simple closed curves on the hexagonal lattice.
 
 ### Proof Chain
 
@@ -96,27 +100,34 @@ states that for every interior vertex v:
 pair_winding_relation (SORRY — turning number theorem on hex lattice)
     ↓
 pair_contrib_cancels (PROVED — algebraic pair identity + winding)
-    ↓                                  ↓
-pairSigmaInvol_injective (SORRY)    pairSigmaContrib_cancel (PROVED)
+    ↓
+pairSigmaInvol_injective (PROVED ✓)    pairSigmaContrib_cancel (PROVED)
     ↓                                  ↓
 freshVertexSum_pair_part_zero_proved (PROVED — S = -S argument)
     ↓
 fresh_vertex_relation (PROVED — triplet + pair = 0)
 ```
 
-## Other Sorries
+## Main Theorem Chain
 
-- `infinite_strip_identity` (SAWStripIdentityCorrect.lean): Discrete Stokes summation
-- `vertex_relation_strip` (SAWStripObservable.lean): Path-based vertex relation
-- Various downstream sorries that depend on the cancellation identity
+```
+infinite_strip_identity (SORRY — discrete Stokes + vertex relation)
+    ↓
+paper_bridge_recurrence_derived (PROVED)
+    ↓
+Z_xc_diverges_direct (PROVED)           hw_summable_direct (PROVED ✓)
+    ↓                                    ↓
+connective_constant_eq_direct (PROVED — main theorem)
+```
 
 ## Summary
 
-The cancellation identity (Lemma 1) has been fully formalized, with the
-proof structure reduced to TWO remaining geometric/combinatorial facts:
-1. The turning number theorem for simple loops on the hex lattice
-2. Injectivity of the loop-reversal map
+The main theorem `μ = √(2+√2)` has been reduced to a SINGLE sorry:
+`infinite_strip_identity`, which is the parafermionic observable identity
+for the infinite strip (Lemma 2 of the paper).
 
-All algebraic identities, direction vector relations, walk extension
-operations, trail classification, winding infrastructure, and the
-key S = -S argument for the pair sum cancellation are proved.
+The cancellation identity (Lemma 1) has been reduced to a SINGLE sorry:
+`pair_winding_relation`, which requires the discrete turning number theorem.
+
+Previous sorry `pairSigmaInvol_injective` has been ELIMINATED.
+Previous sorry `hw_summable_direct` / `saw_count_exp_bound` have been ELIMINATED.
