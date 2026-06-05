@@ -153,31 +153,9 @@ for simple closed curves on the hex lattice. The key steps would be:
 4. Combined with the specific geometry at v, this determines the
    suffix winding to be ±4π/3 -/
 
-/-- The exp constraint for pair cancellation.
-
-    For a FreshIncomingPair γ at vertex v, the phase-weighted direction
-    vectors of γ and its paired walk sum to zero:
-
-      d_k · exp(-iσ W_γ) + d_exit · exp(-iσ W_paired) = 0
-
-    This follows from the discrete turning number theorem on the hex
-    lattice: the loop at v formed by the suffix has turning number ±1,
-    and the sign is determined by the exit direction relative to k.
-    Combined with σ = 5/8 and the specific hex lattice geometry,
-    this gives exp(-iσ ΔW) = -(d_exit/d_k) for the winding difference
-    ΔW = W_γ - W_paired.
-
-    **Sorry**: requires the discrete turning number theorem for simple
-    closed trails on the hexagonal lattice. -/
-lemma pair_exp_cancellation {T L : ℕ} {v : HexVertex} {k : Fin 3}
-    (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
-    (γ : FreshIncomingPair T L v k) :
-    midEdgeDir v k * Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) +
-    midEdgeDir v (pairExitIdx hv_ne γ) *
-      Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding) = 0 := by
-  sorry
-
-/-- The winding relation for pairs (legacy statement). -/
+/-- The winding relation for pairs.
+    **Sorry**: requires the discrete turning number theorem for
+    simple closed trails on the hexagonal lattice. -/
 lemma pair_winding_relation {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
@@ -187,6 +165,62 @@ lemma pair_winding_relation {T L : ℕ} {v : HexVertex} {k : Fin 3}
       (pairInvol hv hv_ne γ).1.winding = W_common + 4 * Real.pi / 3 ∧
       (pairInvol hv hv_ne γ).1.len = γ.1.len := by
   sorry
+
+/-! ## Algebraic helpers for pair_exp_cancellation
+
+These lemmas connect the winding relation from pair_winding_relation
+to the algebraic pair_cancellation identity. -/
+
+/-- For each j_idx, the midEdgeDirs at the fin3_other indices cancel
+    with conj(λ)⁴ and λ⁴ weights. Proved from pair_cancellation by
+    fin_cases on j_idx. -/
+private lemma fin3_other_pair_cancel (v : HexVertex) (j_idx : Fin 3) :
+    midEdgeDir v (fin3_other j_idx).1 * conj lam ^ 4 +
+    midEdgeDir v (fin3_other j_idx).2 * lam ^ 4 = 0 := by
+  fin_cases j_idx <;> simp +decide [ * ] <;> ring_nf <;> norm_num [ Complex.ext_iff, sq ] at *;
+  · simp +decide [ fin3_other, midEdgeDir_j_relation ] at * ; ring_nf at * ;
+    have := pair_cancellation; simp_all +decide [ Complex.ext_iff, pow_succ ] ; ring_nf at * ; norm_num at *;
+    norm_num [ show lam ^ 4 = lam ^ 2 * lam ^ 2 by ring, show ( starRingEnd ℂ lam ) ^ 4 = ( starRingEnd ℂ lam ) ^ 2 * ( starRingEnd ℂ lam ) ^ 2 by ring, pow_two ] at * ; ring_nf at * ;
+    exact ⟨ by linear_combination' this * ( midEdgeDir v 0 |> Complex.re ), by linear_combination' this * ( midEdgeDir v 0 |> Complex.im ) ⟩;
+  · unfold fin3_other; simp +decide [ *, midEdgeDir_j_relation ] ; ring_nf ;
+    unfold j lam; norm_num [ pow_succ ] ; ring_nf ;
+    erw [ show ( starRingEnd ℂ ( Complex.exp ( Complex.I * Real.pi * ( -5 / 24 ) ) ) ) ^ 4 = ( starRingEnd ℂ ( Complex.exp ( Complex.I * Real.pi * ( -5 / 24 ) ) ^ 4 ) ) by simp +decide [ map_pow ] ] ; norm_num [ Complex.exp_re, Complex.exp_im, ← Complex.exp_nat_mul ] ; ring_nf ; norm_num [ mul_div ] ;
+    norm_num [ show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring, show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring ] ; ring ; norm_num;
+    constructor <;> ring;
+  · unfold fin3_other; simp +decide [ midEdgeDir_j_relation, j_cube_eq_one', j_sq_eq_conj' ] ; ring_nf;
+    unfold lam j; norm_num [ pow_succ ] ; ring_nf; norm_num;
+    erw [ show ( starRingEnd ℂ ) ( Complex.exp ( - ( Complex.I * Real.pi * ( 5 / 24 ) ) ) ) ^ 4 = ( starRingEnd ℂ ) ( Complex.exp ( - ( Complex.I * Real.pi * ( 5 / 24 ) ) ) ^ 4 ) by rw [ map_pow ] ] ; norm_num [ Complex.exp_re, Complex.exp_im, ← Complex.exp_nat_mul ] ; ring_nf ; norm_num [ mul_div ] ;
+    norm_num [ show Real.pi * 5 / 6 = Real.pi - Real.pi / 6 by ring, show Real.pi * 2 / 3 = Real.pi - Real.pi / 3 by ring ] ; ring ; norm_num;
+    constructor <;> ring
+
+private lemma exp_shift_minus' (W : ℝ) :
+    Complex.exp (-Complex.I * ↑sigma * ↑(W - 4 * Real.pi / 3)) =
+    Complex.exp (-Complex.I * ↑sigma * ↑W) * conj lam ^ 4 := by
+  rw [ show lam = Complex.exp ( -I * ( 5 * Real.pi / 24 ) ) from rfl ] ; rw [ ← Complex.exp_conj ] ; rw [ ← Complex.exp_nat_mul ] ; rw [ ← Complex.exp_add ] ; push_cast [ sigma ] ; ring;
+  norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im ] ; ring;
+  norm_num [ Complex.normSq, Complex.inv_re, Complex.inv_im, Complex.conj_ofReal ] ; ring ; norm_num
+
+private lemma exp_shift_plus' (W : ℝ) :
+    Complex.exp (-Complex.I * ↑sigma * ↑(W + 4 * Real.pi / 3)) =
+    Complex.exp (-Complex.I * ↑sigma * ↑W) * lam ^ 4 := by
+  unfold lam
+  rw [← Complex.exp_nat_mul, ← Complex.exp_add]; norm_num [sigma]; ring
+
+/-- The exp constraint for pair cancellation.
+
+    **Proved** from pair_winding_relation + algebraic lemmas.
+    The only remaining sorry in the chain is pair_winding_relation
+    (the discrete turning number theorem for hex lattice loops). -/
+lemma pair_exp_cancellation {T L : ℕ} {v : HexVertex} {k : Fin 3}
+    (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
+    (γ : FreshIncomingPair T L v k) :
+    midEdgeDir v k * Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) +
+    midEdgeDir v (pairExitIdx hv_ne γ) *
+      Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding) = 0 := by
+  obtain ⟨W_common, j_idx, hk, hexit, hw1, hw2, _⟩ := pair_winding_relation hv hv_ne γ
+  simp only [hw1, hw2, hk, hexit, exp_shift_minus', exp_shift_plus']
+  have h := fin3_other_pair_cancel v j_idx
+  linear_combination Complex.exp (-Complex.I * ↑sigma * ↑W_common) * h
 
 /-! ## Pair contribution cancels
 
