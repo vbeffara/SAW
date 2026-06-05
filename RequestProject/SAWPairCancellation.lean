@@ -254,29 +254,10 @@ lemma pair_contrib_cancels {T L : ℕ} (v : HexVertex) {k : Fin 3}
 
 /-! ## The pair part of the vertex sum vanishes
 
-**Proof strategy**: The pair involution maps FreshIncomingPair at k to
-FreshIncomingPair at exit_idx. The involution pairs up all walks, and
-each pair cancels by `pair_contrib_cancels`.
-
-The total sum ∑_ji midEdgeDir v ji * ∑'_γ γ.weight can be rearranged
-so that paired walks contribute together, and each pair sums to zero. -/
-
-/-
-**The pair part of the vertex sum vanishes.**
-
-    Proved from `pair_contrib_cancels` using the involution structure:
-    each walk pairs with its loop-reversed partner, and each pair
-    cancels. Uses `Finset.sum_involution` from Mathlib.
--/
-theorem freshVertexSum_pair_part_zero_proof (T L : ℕ) (v : HexVertex)
-    (hv : PaperFinStrip T L v) (hv_ne_start : v ≠ paperStart) :
-    ∑ ji : Fin 3, midEdgeDir v ji *
-      ∑' (γ : FreshIncomingPair T L v ji), γ.1.weight = 0 := by
-  -- Requires showing the involution (k,γ) ↦ (pairExitIdx,pairInvol(γ))
-  -- is a fixed-point-free involution on Σ k, FreshIncomingPair k,
-  -- then applying Finset.sum_involution with pair_contrib_cancels.
-  -- The involutive property (pairInvol ∘ pairInvol = id) follows from
-  -- the fact that loop reversal is involutive.
-  sorry
+The pair part of the vertex sum vanishes by the S = -S argument using
+the pair involution. This is proved as `freshVertexSum_pair_part_zero_proved`
+in SAWPairInvolutionProof.lean (which imports this file). The proof uses
+`pairSigmaInvol_injective` + `pairSigmaContrib_neg` from the involution
+infrastructure. -/
 
 end

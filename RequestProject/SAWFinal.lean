@@ -38,6 +38,7 @@ The main theorem depends on three sorry'd lemmas:
 -/
 
 import RequestProject.SAWPaperChain
+import RequestProject.SAWWindingDiff
 
 open Real Complex ComplexConjugate Filter Topology
 
