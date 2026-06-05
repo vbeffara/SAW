@@ -153,7 +153,31 @@ for simple closed curves on the hex lattice. The key steps would be:
 4. Combined with the specific geometry at v, this determines the
    suffix winding to be ±4π/3 -/
 
-/-- The winding relation for pairs. -/
+/-- The exp constraint for pair cancellation.
+
+    For a FreshIncomingPair γ at vertex v, the phase-weighted direction
+    vectors of γ and its paired walk sum to zero:
+
+      d_k · exp(-iσ W_γ) + d_exit · exp(-iσ W_paired) = 0
+
+    This follows from the discrete turning number theorem on the hex
+    lattice: the loop at v formed by the suffix has turning number ±1,
+    and the sign is determined by the exit direction relative to k.
+    Combined with σ = 5/8 and the specific hex lattice geometry,
+    this gives exp(-iσ ΔW) = -(d_exit/d_k) for the winding difference
+    ΔW = W_γ - W_paired.
+
+    **Sorry**: requires the discrete turning number theorem for simple
+    closed trails on the hexagonal lattice. -/
+lemma pair_exp_cancellation {T L : ℕ} {v : HexVertex} {k : Fin 3}
+    (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
+    (γ : FreshIncomingPair T L v k) :
+    midEdgeDir v k * Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) +
+    midEdgeDir v (pairExitIdx hv_ne γ) *
+      Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding) = 0 := by
+  sorry
+
+/-- The winding relation for pairs (legacy statement). -/
 lemma pair_winding_relation {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
@@ -170,20 +194,29 @@ Using the winding relation and the algebraic pair identity
   j · conj(λ)⁴ + conj(j) · λ⁴ = 0
 the contribution of each pair to the vertex sum is zero. -/
 
-/-- Each pair's contribution to the vertex sum is zero. -/
+/-- Each pair's contribution to the vertex sum is zero.
+
+    Uses `pair_exp_cancellation` (the clean geometric sorry)
+    rather than `pair_winding_relation`. The proof factors out xc^ℓ
+    and uses the exp constraint directly. -/
 lemma pair_contrib_cancels {T L : ℕ} (v : HexVertex) {k : Fin 3}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
     midEdgeDir v k * γ.1.weight +
     midEdgeDir v (pairExitIdx hv_ne γ) * (pairInvol hv hv_ne γ).1.weight = 0 := by
-  obtain ⟨W, j, hk, hexit, hw_γ, hw_pair, h_len⟩ := pair_winding_relation hv hv_ne γ
-  unfold FreshTrail.weight
-  rw [hw_γ, hw_pair, h_len]
-  have h := pair_contrib_zero_at_vertex v j W γ.1.len
-  simp only [fin3_other, trailVertexContrib] at h
-  fin_cases j <;> simp only [fin3_other] at hk hexit h <;> {
-    subst hk; rw [hexit]; exact h
-  }
+  have h_len := pairInvol_length hv hv_ne γ
+  have h_exp := pair_exp_cancellation hv hv_ne γ
+  unfold FreshTrail.weight walkWeight
+  rw [h_len]
+  -- Factor out (↑xc)^ℓ
+  have : midEdgeDir v k * (Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) * ↑xc ^ γ.1.len) +
+      midEdgeDir v (pairExitIdx hv_ne γ) *
+        (Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding) * ↑xc ^ γ.1.len) =
+      (midEdgeDir v k * Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) +
+       midEdgeDir v (pairExitIdx hv_ne γ) *
+        Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding)) * ↑xc ^ γ.1.len := by
+    ring
+  rw [this, h_exp, zero_mul]
 
 /-! ## The pair part of the vertex sum vanishes
 

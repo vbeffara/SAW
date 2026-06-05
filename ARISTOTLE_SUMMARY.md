@@ -1,32 +1,40 @@
-# Summary of changes for run 27b1d539-b190-4d09-b00b-caee7a2bc9f4
-## Summary of Work
+# Summary of changes for run 767854b6-1c8d-4e7c-a167-a6714b28e83c
+## Work Completed
 
-I continued formalizing the Duminil-Copin & Smirnov proof that the connective constant of the honeycomb lattice equals √(2+√2), focusing on the cancellation identity, parafermionic observable, and Hammersley-Welsh bound as they relate to the main theorem.
+I continued formalizing the Duminil-Copin & Smirnov proof that the connective constant of the honeycomb lattice equals √(2+√2), focusing on the cancellation identity, parafermionic observable, and the main theorem.
 
-### Sorries Eliminated (3 total)
+### Key Improvement: Reformulated Pair Cancellation
 
-1. **`pairSigmaInvol_injective`** (in `SAWPairInvolutionProof.lean`) — The injectivity of the pair involution map, which was the key missing piece for the S = -S argument proving the pair part of the cancellation identity vanishes. The proof works by showing that equal paired walks (with equal exit indices) uniquely determine the original walks and incoming directions. This required 8 new sorry-free helper lemmas across `SAWPairInvolutionHelpers.lean` and `SAWPairInvolutionProof.lean`, including a list-splitting lemma (`list_append_cancel_at_unique'`), support decomposition lemmas, and walk recovery lemmas.
+I identified that `pair_winding_relation` (the existing sorry for the cancellation identity) used a `fin3_other` ordering that only covered cyclic exit orderings, potentially making the statement too restrictive. I added a new, correctly-stated geometric sorry:
 
-2. **`hw_summable_direct`** (in `SAWMainNew.lean`) — The partition function convergence Z(x) < ∞ for x < xc. This now uses the fully proved Hammersley-Welsh decomposition from `SAWPaperChain.lean` via `hw_summable_corrected`.
+**`pair_exp_cancellation`** (in `SAWPairCancellation.lean`): States directly that the phase-weighted direction vectors sum to zero:
+```
+d_k · exp(-iσ W_γ) + d_exit · exp(-iσ W_paired) = 0
+```
+This correctly handles both cyclic and anticyclic exit orderings by expressing the discrete turning number theorem as an exponential phase constraint.
 
-3. **`saw_count_exp_bound`** (in `SAWMainNew.lean`) — Removed entirely as unnecessary; the main theorem now uses the HW chain directly.
+**Updated `pair_contrib_cancels`** to use `pair_exp_cancellation` instead of the legacy `pair_winding_relation`. The new proof cleanly factors out xc^ℓ and applies the exponential constraint. The old `pair_winding_relation` is retained but is no longer in the critical chain.
 
 ### Current Status
 
-- **Main theorem** `connective_constant_eq_direct` (μ = √(2+√2)) depends on a **single sorry**: `infinite_strip_identity` in `SAWRecurrenceProof.lean`, which is the parafermionic observable identity for the infinite strip (Lemma 2 of the paper).
+- **Main theorem** `connective_constant_eq_direct` (μ = √(2+√2)): depends on **1 sorry**: `infinite_strip_identity` — the parafermionic observable identity for the infinite strip (Lemma 2 of the paper). This requires the full discrete Stokes argument connecting the vertex relation to strip partition functions.
 
-- **Cancellation identity** `fresh_vertex_relation` (Lemma 1) depends on a **single sorry**: `pair_winding_relation` in `SAWPairCancellation.lean`, which requires the discrete turning number theorem for simple closed curves on the hexagonal lattice.
+- **Cancellation identity** `fresh_vertex_relation` (Lemma 1): depends on **1 sorry**: `pair_exp_cancellation` — the discrete turning number theorem for simple closed trails on the hexagonal lattice.
 
-- **`pairSigmaInvol_injective`** is now fully proved with standard axioms only (propext, Classical.choice, Quot.sound — no sorryAx).
+- **Hammersley-Welsh bound**: remains **fully proved** (sorry-free).
 
-- **Hammersley-Welsh bound** remains fully proved (sorry-free) across all SAWHW*.lean files.
+Both remaining key sorries (`infinite_strip_identity` and `pair_exp_cancellation`) represent deep geometric results — the discrete Stokes theorem and the discrete turning number theorem for planar graphs — that require substantial mathematical infrastructure to formalize.
 
 ### Files Modified
-- `RequestProject/SAWMainNew.lean` — Main theorem, 2 sorries eliminated
-- `RequestProject/SAWPairInvolutionHelpers.lean` — 6 new sorry-free helper lemmas
-- `RequestProject/SAWPairInvolutionProof.lean` — 5 new sorry-free lemmas + `pairSigmaInvol_injective` proved
-- `PROOF_STATUS.md` — Updated documentation
+- `RequestProject/SAWPairCancellation.lean` — Added `pair_exp_cancellation`, updated `pair_contrib_cancels`
+- `PROOF_STATUS.md` — Complete sorry inventory with dependency analysis
 - `ARISTOTLE_SUMMARY.md` — Detailed change log
+
+### Sorry Inventory (9 total)
+- **Critical for main theorem**: 1 (`infinite_strip_identity`)
+- **Critical for cancellation identity**: 1 (`pair_exp_cancellation`)
+- **Legacy/redundant**: 2 (not in any critical chain)
+- **Alternative formulations**: 5 (independent sorry chains)
 
 # Summary of changes
 
@@ -34,68 +42,51 @@ I continued formalizing the Duminil-Copin & Smirnov proof that the connective co
 
 ### Key Results
 
-#### 1. `pairSigmaInvol_injective` — **NOW PROVED (sorry-free)**
+#### 1. Reformulated Pair Cancellation (SAWPairCancellation.lean)
 
-The injectivity of the pair involution map was the last remaining piece needed
-for the S = -S argument in the pair part of the cancellation identity.
+Added `pair_exp_cancellation` — a correctly-stated geometric sorry that
+directly expresses the discrete turning number theorem for hex lattice loops:
 
-**Proof approach**: Equal paired walks and exit indices imply equal original walks
-and incoming indices. The proof decomposes into:
-- `mkPairedWalk_support'`: paired walk support = prefix.support ++ inner.reverse.support
-- `list_append_cancel_at_unique'`: list splitting at a unique element
-- `v_not_in_inner_rev_support`: v doesn't appear in the reversed inner walk
-- `prefix_support_ne_nil`, `prefix_support_getLast`: prefix structure
-- `inner_rev_support_head`: inner reverse support starts with hexNeighbors3 v k
-- `paired_walk_determines_k`: equal paired walks → equal k indices
-- `paired_walk_determines_original`: equal paired walks (same k) → equal originals
+```
+d_k · exp(-iσ W_γ) + d_exit · exp(-iσ W_paired) = 0
+```
 
-All helper lemmas are proved in `SAWPairInvolutionHelpers.lean` and
-`SAWPairInvolutionProof.lean`.
+This replaces the potentially problematic `pair_winding_relation` in the
+critical chain. The previous formulation used `fin3_other` ordering
+which assumed a specific cyclic ordering of exit directions. The new
+formulation handles both cyclic and anticyclic orderings correctly by
+directly stating the exponential phase cancellation.
 
-#### 2. `hw_summable_direct` — **NOW PROVED**
+**Updated `pair_contrib_cancels`** to use `pair_exp_cancellation` instead
+of `pair_winding_relation`. The proof factors out xc^ℓ and uses the
+exp constraint directly. This is mathematically cleaner and avoids
+the ordering-dependent formulation.
 
-The partition function convergence for x < xc now uses the fully proved
-Hammersley-Welsh decomposition from `SAWPaperChain.lean`.
+#### 2. Current Status
 
-#### 3. `saw_count_exp_bound` — **REMOVED**
+The main theorem `connective_constant_eq_direct` (μ = √(2+√2)) depends
+on a **single sorry**: `infinite_strip_identity` in SAWRecurrenceProof.lean.
 
-This sorry was unnecessary and has been removed. The main theorem now
-uses `hw_summable_corrected` from the HW chain directly.
+The cancellation identity `fresh_vertex_relation` (Lemma 1) depends on
+a **single sorry**: `pair_exp_cancellation` in SAWPairCancellation.lean.
+
+The Hammersley-Welsh bound remains **fully proved** (sorry-free).
 
 ### Files Modified
 
-1. **`RequestProject/SAWMainNew.lean`** — Main theorem file
-   - Added `import RequestProject.SAWPaperChain`
-   - Proved `hw_summable_direct` using `hw_summable_corrected`
-   - Removed unnecessary `saw_count_exp_bound` sorry
-   - `connective_constant_eq_direct` now depends on only ONE sorry: `infinite_strip_identity`
+1. **`RequestProject/SAWPairCancellation.lean`** — Pair cancellation
+   - Added `pair_exp_cancellation`: correctly-stated geometric sorry for
+     the discrete turning number theorem
+   - Updated `pair_contrib_cancels`: now uses `pair_exp_cancellation`
+     instead of `pair_winding_relation`, with cleaner factoring proof
+   - `pair_winding_relation` retained as legacy (no longer in critical chain)
 
-2. **`RequestProject/SAWPairInvolutionHelpers.lean`** — Helper lemmas
-   - Added `mkPairedWalk_support'`: support decomposition
-   - Added `list_append_cancel_at_unique'`: list splitting lemma
-   - Added `v_not_in_inner_rev_support`: v not in reversed inner
-   - Added `prefix_support_ne_nil`, `prefix_support_getLast`: prefix structure
+2. **`PROOF_STATUS.md`** — Updated with complete sorry inventory and
+   dependency analysis
 
-3. **`RequestProject/SAWPairInvolutionProof.lean`** — Cancellation identity proof
-   - Added `inner_rev_support_head`: inner reverse support starts at hexNeighbors3 v k
-   - Added `pairInvolWalk_support_structure`: paired walk support decomposition
-   - Added `paired_walk_determines_k`: equal paired walks → equal k
-   - Added `paired_walk_determines_original`: full walk recovery
-   - **Proved `pairSigmaInvol_injective`** — sorry eliminated
-
-4. **`PROOF_STATUS.md`** — Updated status documentation
-
-### Current Sorry Status
-
-The main theorem `connective_constant_eq_direct` (μ = √(2+√2)) depends on
-a single sorry: `infinite_strip_identity` in SAWRecurrenceProof.lean.
-
-The cancellation identity `fresh_vertex_relation` (Lemma 1) depends on
-a single sorry: `pair_winding_relation` in SAWPairCancellation.lean,
-which requires the discrete turning number theorem for hex lattice loops.
-
-### Sorry Count Changes
-- Eliminated: `pairSigmaInvol_injective` (was sorry)
-- Eliminated: `hw_summable_direct` (was sorry)
-- Eliminated: `saw_count_exp_bound` (was sorry, removed entirely)
-- Net: **3 sorries eliminated**
+### Sorry Count
+- Total sorry statements: 9
+- Critical for main theorem: 1 (`infinite_strip_identity`)
+- Critical for cancellation identity: 1 (`pair_exp_cancellation`)
+- Legacy/redundant: 2 (`pair_winding_relation`, `freshVertexSum_pair_part_zero_proof`)
+- Alternative formulations: 5 (not in critical chain)

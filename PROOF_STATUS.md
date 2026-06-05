@@ -9,6 +9,18 @@
 The Hammersley-Welsh bound is fully proved (sorry-free), and the
 convergence proof `hw_summable_direct` now uses it via `hw_summable_corrected`.
 
+## Main Theorem Chain
+
+```
+infinite_strip_identity (SORRY — discrete Stokes + vertex relation)
+    ↓
+paper_bridge_recurrence_derived (PROVED)
+    ↓
+Z_xc_diverges_direct (PROVED)           hw_summable_direct (PROVED ✓)
+    ↓                                    ↓
+connective_constant_eq_direct (PROVED — main theorem)
+```
+
 ## Cancellation Identity (Lemma 1) — Status
 
 The cancellation identity (Lemma 1) from Section 2 of Duminil-Copin & Smirnov (2012) 
@@ -52,23 +64,15 @@ states that for every interior vertex v:
 - `prefix_support_getLast`: prefix support ends at v
 
 **Pair Involution Injectivity (sorry-free, SAWPairInvolutionProof.lean):**
-- `pairSigmaInvol_injective`: **NOW PROVED** — the pairing map is injective
-  Proof via support splitting: equal paired walks imply equal prefix and inner
-  supports (by `list_append_cancel_at_unique'`), hence equal k indices
-  (by `hexNeighbors3_injective`) and equal original walks (by Walk.ext_support).
-- `inner_rev_support_head`: inner reverse support starts with hexNeighbors3 v k
-- `pairInvolWalk_support_structure`: paired walk support decomposition
-- `paired_walk_determines_k`: equal paired walks → equal k indices
-- `paired_walk_determines_original`: equal paired walks (same k) → equal originals
+- `pairSigmaInvol_injective`: the pairing map is injective
 
-**Pair Algebraic Cancellation:**
+**Pair Algebraic Cancellation (SAWPairCancellation.lean):**
 - `pair_contrib_cancels`: each pair's contribution to vertex sum = 0
-  (uses pair_winding_relation)
+  (proved from `pair_exp_cancellation`, factoring out xc^ℓ)
 
 **Vertex Sum Structure (SAWPairInvolutionProof.lean):**
 - `freshVertexSum_pair_part_zero_proved`: The pair part of the vertex sum = 0.
   Uses the pairing map as a bijection on the sigma type.
-  Proved from pair_contrib_cancels + pairSigmaInvol_injective.
 - `fresh_vertex_relation`: **Lemma 1** — freshVertexSum T L v = 0.
   Proved from freshVertexSum_triplet_part_zero + freshVertexSum_pair_part_zero_proved.
 
@@ -87,47 +91,79 @@ states that for every interior vertex v:
 
 ### Remaining Sorry (1 for cancellation identity)
 
-1. **`pair_winding_relation`** (SAWPairCancellation.lean):
-   The winding relation for pairs: ∃ W_common, j such that
-   W(γ) = W_common - 4π/3 and W(pair) = W_common + 4π/3
+1. **`pair_exp_cancellation`** (SAWPairCancellation.lean):
+   The phase-weighted direction vectors of a paired walk sum to zero:
+   d_k · exp(-iσ W_γ) + d_exit · exp(-iσ W_paired) = 0
+   
+   This encapsulates the discrete turning number theorem for simple
+   closed trails on the hexagonal lattice:
+   - The suffix loop [v, exit_nbr, ..., k_nbr, v] has turning number ±1
+   - The sign is determined by the exit direction relative to k
+   - Combined with σ = 5/8, this gives exp(-iσ ΔW) = -(d_exit/d_k)
 
-   This requires formalizing the discrete turning number theorem
-   for simple closed curves on the hexagonal lattice.
+   This is a correctly stated version that handles both cyclic and
+   anticyclic orderings of the exit direction. The legacy
+   `pair_winding_relation` (also sorry'd) is no longer in the
+   critical chain for `pair_contrib_cancels`.
 
 ### Proof Chain
 
 ```
-pair_winding_relation (SORRY — turning number theorem on hex lattice)
+pair_exp_cancellation (SORRY — turning number theorem on hex lattice)
     ↓
-pair_contrib_cancels (PROVED — algebraic pair identity + winding)
+pair_contrib_cancels (PROVED — factors out xc^ℓ + uses exp constraint)
     ↓
-pairSigmaInvol_injective (PROVED ✓)    pairSigmaContrib_cancel (PROVED)
-    ↓                                  ↓
+pairSigmaContrib_cancel (PROVED)
+    ↓
+pairSigmaInvol_injective (PROVED ✓)
+    ↓
 freshVertexSum_pair_part_zero_proved (PROVED — S = -S argument)
     ↓
 fresh_vertex_relation (PROVED — triplet + pair = 0)
 ```
 
-## Main Theorem Chain
+## Remaining Sorries (total: 9 sorry statements across the project)
 
-```
-infinite_strip_identity (SORRY — discrete Stokes + vertex relation)
-    ↓
-paper_bridge_recurrence_derived (PROVED)
-    ↓
-Z_xc_diverges_direct (PROVED)           hw_summable_direct (PROVED ✓)
-    ↓                                    ↓
-connective_constant_eq_direct (PROVED — main theorem)
-```
+### Critical path (main theorem):
+1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): The parafermionic
+   observable identity for the infinite strip. This is the ONLY sorry that
+   affects the main theorem `connective_constant_eq_direct`.
+
+### Cancellation identity chain:
+2. **`pair_exp_cancellation`** (SAWPairCancellation.lean): The discrete
+   turning number theorem for hex lattice loops. This is the ONLY sorry
+   that affects the cancellation identity `fresh_vertex_relation`.
+
+### Legacy / redundant:
+3. **`pair_winding_relation`** (SAWPairCancellation.lean): Legacy statement
+   of the pair winding relation. No longer used by `pair_contrib_cancels`
+   (which now uses `pair_exp_cancellation` instead).
+4. **`freshVertexSum_pair_part_zero_proof`** (SAWPairCancellation.lean):
+   Redundant with `freshVertexSum_pair_part_zero_proved` in
+   SAWPairInvolutionProof.lean. Not used by any other lemma.
+
+### Alternative formulations (not in critical chain):
+5. **`trail_vertex_relation`** (SAWCancellationIdentity.lean): Alternative
+   trail-based vertex relation using `trailVertexSum` instead of `freshVertexSum`.
+6. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean): Bridge bound
+   for finite strip (alternative proof path, not used by main theorem).
+7. **`vertex_relation_strip`** (SAWStripObservable.lean): Strip vertex
+   relation using `stripVertexSum` definition.
+8. **`triplet_part_zero`** (SAWTrailVertexRelation.lean): Triplet part of
+   StripTrail vertex sum (uses different decomposition than FreshTrail).
+9. **`pair_part_zero`** (SAWTrailVertexRelation.lean): Pair part of
+   StripTrail vertex sum.
 
 ## Summary
 
-The main theorem `μ = √(2+√2)` has been reduced to a SINGLE sorry:
+The main theorem `μ = √(2+√2)` depends on a **single sorry**:
 `infinite_strip_identity`, which is the parafermionic observable identity
-for the infinite strip (Lemma 2 of the paper).
+for the infinite strip (Lemma 2 of the paper). This requires the full
+discrete Stokes argument connecting the vertex relation to the strip
+partition functions.
 
-The cancellation identity (Lemma 1) has been reduced to a SINGLE sorry:
-`pair_winding_relation`, which requires the discrete turning number theorem.
+The cancellation identity `fresh_vertex_relation` (Lemma 1) depends on
+a **single sorry**: `pair_exp_cancellation`, which requires the discrete
+turning number theorem for simple closed trails on the hexagonal lattice.
 
-Previous sorry `pairSigmaInvol_injective` has been ELIMINATED.
-Previous sorry `hw_summable_direct` / `saw_count_exp_bound` have been ELIMINATED.
+The Hammersley-Welsh bound is **fully proved** (sorry-free).
