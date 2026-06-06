@@ -155,16 +155,17 @@ lemma vertex_relation_iff_reduced (T L : ℕ) (v : HexVertex) :
 /-- **Lemma 1** (Vertex Relation). For every vertex v in the strip,
     the vertex relation sum is zero.
 
-    Proof: By `vertex_relation_iff_reduced`, it suffices to show
-    F₀ + j·F₁ + j̄·F₂ = 0 where Fᵢ is the total observable at mid-edge i.
-    This follows from the walk partition: each walk to v's mid-edges
-    belongs to a cancelling triplet (for vertex-SAWs, no pairs arise
-    since each vertex is visited at most once).
+    **WARNING**: This uses `stripPathObs` (based on `StripPathToMidEdge`),
+    which requires the half-edge endpoint to be a VERTEX not in the path.
+    For vertex-SAWs with this freshness condition, the triplet partition
+    is INCOMPLETE when one of the extension neighbors has already been
+    visited by the path. The vertex relation may NOT hold for this observable.
 
-    The walk partition uses `extend_zero_v_edges` (extension) and
-    `outgoing_1_v_edge_retract` (retraction) to biject incoming
-    root walks with outgoing extension walks. Each triplet's
-    algebraic sum is 0 by `triplet_cancellation`. -/
+    The correct statement uses `freshVertexSum` (based on `FreshTrail`
+    with EDGE freshness, not vertex freshness), proved as
+    `fresh_vertex_relation` in `SAWPairInvolutionProof.lean`.
+
+    This sorry is a **dead branch** — not on the critical path. -/
 lemma vertex_relation_strip (T L : ℕ) (v : HexVertex)
     (hv : PaperFinStrip T L v) :
     stripVertexSum T L v = 0 := by

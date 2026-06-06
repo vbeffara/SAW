@@ -288,25 +288,15 @@ def trailVertexSum (T L : ℕ) (v : HexVertex) : ℂ :=
 /-- **Lemma 1** (Cancellation Identity / Vertex Relation).
     For every interior vertex v ≠ paperStart, the trail-based vertex sum is zero.
 
-    **Proof strategy**: Partition trails to v's mid-edges into cancelling groups.
-    All ingredients are formalized:
+    **WARNING**: This uses `trailVertexSum` (based on `StripTrail`), which includes
+    non-fresh trails where the half-edge was already traversed. The vertex relation
+    may NOT hold for this observable. The correct statement uses `freshVertexSum`
+    (based on `FreshTrail`), proved as `fresh_vertex_relation` in
+    `SAWPairInvolutionProof.lean`.
 
-    1. **Trail classification** (PROVED):
-       - Incoming trails have 0 or 2 v-edges (`incoming_trail_vEdge_classify`)
-       - Outgoing trails have 1 or 3 v-edges (`outgoing_trail_vEdge_classify`)
-
-    2. **Triplet cancellation** (PROVED):
-       - 0-v-edge roots extend to both neighbors (`tripletExtendStrip`)
-       - Each triplet sums to zero (`strip_triplet_zero`)
-
-    3. **Pair cancellation** (PROVED algebraically):
-       - 2-v-edge incoming trails pair by loop reversal
-       - Each pair sums to zero (`strip_pair_zero`)
-
-    **Remaining gap**: The combinatorial walk partition bijection —
-    showing that every trail belongs to exactly one cancelling group,
-    and that the bijection preserves winding/length relations. This
-    is the only remaining step to close the cancellation identity. -/
+    This sorry is a **dead branch** — not on the critical path for the main theorem.
+    The infrastructure in this file (StripTrail, tripletExtendStrip, etc.) is still
+    used by other files through the import chain. -/
 theorem trail_vertex_relation (T L : ℕ) (v : HexVertex)
     (hv_strip : PaperFinStrip T L v)
     (hv_ne_start : v ≠ paperStart)
