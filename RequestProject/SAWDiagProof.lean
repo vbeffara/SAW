@@ -4,8 +4,9 @@
 This file provides infrastructure connecting diagonal bridges
 to the strip identity and saw_count.
 
-The fundamental sorry remains `B_paper_le_one_direct` from
-SAWStripIdentityCorrect.lean (the core strip identity).
+The fundamental sorry chain: `pair_winding_relation` (turning number theorem)
+→ `fresh_vertex_relation` (Lemma 1) → `finite_strip_identity_from_vr` (Lemma 2)
+→ `B_paper_le_one` → bounds used here.
 -/
 
 import Mathlib

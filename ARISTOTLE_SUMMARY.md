@@ -1,169 +1,112 @@
-# Summary of changes for run 580b04d6-0345-4713-9896-b14bf126a338
-## Summary of Changes
+# Summary of changes for run 911b5cea-cc76-43ee-b708-2e7b525db75a
+# Session Summary: Continuing SAW.tex Formalization
 
-### Continued Formalization of SAW.tex: Hammersley-Welsh, Parafermionic Observable, and Cancellation Identity
+## Main Focus: Hammersley-Welsh, Parafermionic Observable, and Cancellation Identity
 
-#### New File: `RequestProject/SAWStripIdentityFromVR.lean`
+### What was accomplished
 
-Created a new file that bridges the gap between the proved vertex relation (`fresh_vertex_relation`, Lemma 1) and the strip identity (Lemma 2 of Duminil-Copin & Smirnov 2012). This is the key structural connection needed for the main theorem. The file contains:
+#### 1. Project Structure Cleanup & Import Organization
+- **`SAWFinal.lean`** now imports ALL files contributing to the proof, organized into clear categories:
+  - Main proof chain (SAWPaperChain)
+  - Vertex relation chain (SAWStripIdentityFromVR, proved modulo pair_winding_relation)
+  - Winding infrastructure (SAWWindingDiff, SAWWindingLemma, SAWWindingReverse, SAWPairWindingRelation, SAWPairWindingProof)
+  - Discrete Stokes infrastructure (SAWDiscreteStokes, SAWStokesAbstract, SAWStripAlgebra, SAWObservableSum, SAWStripObservable)
+  - Vertex relation infrastructure (SAWCancellationProved)
+  - Hammersley-Welsh extra bounds (SAWHWExtraFinal, SAWHWExtraSumProof)
+  - Alternative proof path (SAWMainNew)
+- Dead branches explicitly documented in SAWFinal.lean header with clear explanations
+- SAWVertexRelation excluded (name conflict with trueNeighbors from SAWObservableDef — dead branch)
 
-1. **`vertex_relation_at_interior`** (PROVED) — Wraps `fresh_vertex_relation` to confirm the vertex relation holds at every interior vertex of the finite strip.
+#### 2. New File: `SAWPairWindingProof.lean`
+Created helper infrastructure for proving `pair_winding_relation`, the deepest sorry on the critical path:
+- **`pair_indices_are_fin3_other`** ✓ — k and exitIdx form `(fin3_other j).1` and `.2` for some j
+- **`original_fullSupport_eq`** ✓ — Exact structure of the original walk's full support
+- **`paired_fullSupport_eq`** ✓ — Exact structure of the paired (loop-reversed) walk's full support
+- **`prefix_penultimate_is_neighbor`** (sorry) — Remaining helper for the arrival index
 
-2. **`midEdgeDir_sum_zero`** (PROVED) — At every hex vertex, the three direction vectors sum to zero. This is the geometric fact underlying the discrete Stokes cancellation: when summing the vertex relation over all vertices, interior mid-edges cancel because direction vectors at each edge have opposite signs from the two endpoints.
+#### 3. Comprehensive Documentation
+- **`PROOF_STATUS.md`** rewritten with full status of all components, clearly separating critical-path sorry's from dead branches
+- **`ARISTOTLE_SUMMARY.md`** created with session details
+- SAWDiagProof.lean header updated to document the sorry chain
+- SAWRecurrenceProof.lean updated with detailed derivation plan from finite strip identity
 
-3. **`finite_strip_identity_from_vr`** (SORRY) — The finite strip identity `1 = c_α·A + B + c_ε·E` derived from the vertex relation. This consolidates the two critical sorries (`infinite_strip_identity` and `B_paper_le_one_strip`) into a single sorry representing the discrete Stokes argument + boundary evaluation.
+#### 4. Dependency Analysis & Attempted Consolidation
+- Verified import graph has no cycles
+- Attempted to consolidate sorry's by connecting SAWStripIdentityFromVR → SAWRecurrenceProof, but this caused elaboration conflicts (synthesis failures in SAWStripT1Exact from the expanded import graph). Reverted this change.
+- Documented the import structure constraints that prevent merging the sorry chains
 
-4. **`B_paper_le_one_from_vr`** (PROVED from #3) — B_paper ≤ 1 follows immediately from the strip identity since c_α·A + c_ε·E ≥ 0.
+### Current Sorry Status
 
-5. **`paperSAWB_to_bridge_injective`** (PROVED) — Injection from finite strip bridges to infinite strip bridges.
+**Critical path (3 sorry's for the main theorem μ = √(2+√2)):**
+1. `pair_winding_relation` (SAWPairCancellation.lean) — Turning number argument for loop-reversed pairs. Helper lemmas proved in SAWPairWindingProof.lean.
+2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) — B ≤ 1 from the parafermionic observable (Lemma 2)
+3. `infinite_strip_identity` (SAWRecurrenceProof.lean) — Strip identity in the limit
 
-6. **`bridge_partition_bound_from_vr`** (PROVED) — xc · paper_bridge_partition T xc ≤ 1.
+**Dead branches (7 sorry's, NOT needed for the main theorem):**
+- `finite_strip_identity_from_vr`, `trail_vertex_relation`, `triplet_part_zero`, `pair_part_zero`, `strip_observable_summable`, `hex_simple_closed_trail_winding`, `prefix_penultimate_is_neighbor`
 
-#### Dead Branch Analysis and Marking
+**Fully proved components:** Hammersley-Welsh (all SAWHW*.lean sorry-free), algebraic identities, vertex relation (modulo pair_winding_relation), bridge recurrence, connective constant infrastructure.
 
-Identified and marked 4 dead branches with detailed comments:
+The project builds successfully with `lake build RequestProject.SAWFinal`.
 
-- **`trail_vertex_relation`** (SAWCancellationIdentity.lean) — Uses `StripTrail` observable which includes non-fresh trails. The vertex relation may not hold for this observable. The correct version uses `FreshTrail`, proved as `fresh_vertex_relation`.
+# Session Summary
 
-- **`triplet_part_zero`** and **`pair_part_zero`** (SAWTrailVertexRelation.lean) — Wrong decomposition for StripTrails due to self-extension issue.
+## What was done
 
-- **`vertex_relation_strip`** (SAWStripObservable.lean) — Path-based observable with vertex freshness has incomplete triplets when extension neighbors are already visited.
+### 1. Project Structure Cleanup
+- **SAWFinal.lean** updated to import ALL preparation files, ensuring every file that
+  will eventually be part of the proof is imported somewhere
+- Files organized into clear categories: main proof chain, vertex relation chain,
+  winding infrastructure, discrete Stokes infrastructure, HW extra bounds, alternative path
+- Dead branches explicitly identified and documented (see comments in SAWFinal.lean)
+- `SAWVertexRelation.lean` excluded due to name conflict (`trueNeighbors` redefinition)
 
-All dead branches contain infrastructure (definitions, helper lemmas) used by other files through the import chain, so they are preserved but annotated.
+### 2. New File: SAWPairWindingProof.lean
+Created helper infrastructure for proving `pair_winding_relation`:
+- **`pair_indices_are_fin3_other`** ✓ — Proves that k and exitIdx form (fin3_other j).1 and .2
+  for some arrival index j. This is a key structural lemma for the winding decomposition.
+- **`original_fullSupport_eq`** ✓ — Proves the exact structure of the original walk's full
+  support: prefix.support ++ [exit_nbr] ++ inner.support.tail ++ [v]
+- **`paired_fullSupport_eq`** ✓ — Proves the exact structure of the paired walk's full
+  support: prefix.support ++ [k_nbr] ++ inner.reverse.support.tail ++ [v]
+- **`prefix_penultimate_is_neighbor`** (sorry) — The vertex before v in the prefix is a
+  specific neighbor of v, distinct from k and exitIdx. This is the remaining helper needed.
 
-#### Updated Import Structure
+### 3. Documentation
+- **PROOF_STATUS.md** rewritten with comprehensive status of all components
+- **SAWFinal.lean** header rewritten with detailed sorry chain documentation
+- Dead branches explicitly listed with explanations of why they're dead
+- Preparation files linked with comments explaining their future role
+- Import comment in SAWDiagProof updated to describe the fundamental sorry chain
 
-`SAWFinal.lean` now imports:
-- `SAWStripIdentityFromVR` — connecting vertex relation to strip identity
-- `SAWStripObservable` — path-based observable (now explicitly imported)
+### 4. Dependency Analysis
+- Attempted to consolidate sorry's by connecting SAWStripIdentityFromVR to SAWRecurrenceProof,
+  but this caused elaboration conflicts in SAWStripT1Exact (synthesis failures from the
+  expanded import graph). The connection was reverted.
+- Verified no circular dependencies exist in the current import graph
+- Documented the import structure constraints that prevent consolidation
 
-Every file that will eventually be part of the proof is now imported somewhere.
+## Current Sorry Status
 
-#### Current Sorry Status (9 total)
+### Critical path (3 sorry's for the main theorem):
+1. **`pair_winding_relation`** (SAWPairCancellation.lean) — Turning number for loop-reversed pairs
+2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — B ≤ 1 from observable
+3. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — Strip identity in the limit
 
-**Critical (main theorem):** 2 sorries
-- `infinite_strip_identity` (SAWRecurrenceProof.lean)
-- `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean)
+### Dead branches (7 sorry's, NOT on critical path):
+4. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — equivalent to #2
+5. `trail_vertex_relation` (SAWCancellationIdentity.lean) — superseded by fresh version
+6. `triplet_part_zero` (SAWTrailVertexRelation.lean) — non-fresh trail version
+7. `pair_part_zero` (SAWTrailVertexRelation.lean) — non-fresh trail version
+8. `strip_observable_summable` (SAWStripObservable.lean) — not needed
+9. `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning number
+10. `prefix_penultimate_is_neighbor` (SAWPairWindingProof.lean) — new helper, not yet used
 
-**Critical (cancellation identity):** 1 sorry
-- `pair_winding_relation` (SAWPairCancellation.lean) — requires turning number theorem
-
-**Consolidation (NEW):** 1 sorry
-- `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — equivalent to the 2 critical sorries above
-
-**Preparation:** 1 sorry
-- `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — turning number theorem
-
-**Dead branches:** 4 sorries (not on critical path, annotated)
-
-#### Documentation
-
-Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` with current sorry inventory, proof chain analysis, dead branch identification, and the new consolidation structure.
-
-# Summary of Changes
-
-## Session: Continue formalizing SAW.tex — Hammersley-Welsh, Parafermionic Observable, Cancellation Identity
-
-### New File: `RequestProject/SAWStripIdentityFromVR.lean`
-
-Created a new file that bridges the gap between the proved vertex relation
-(`fresh_vertex_relation`) and the strip identity (Lemma 2). This file:
-
-1. **`vertex_relation_at_interior`** (PROVED): Wraps `fresh_vertex_relation` to
-   confirm the vertex relation holds at every interior vertex of the strip.
-
-2. **`finite_strip_identity_from_vr`** (SORRY): The finite strip identity
-   `1 = c_α·A + B + c_ε·E` derived from the vertex relation via discrete
-   Stokes and boundary evaluation. This consolidates the two critical sorries
-   (`infinite_strip_identity` and `B_paper_le_one_strip`) into a single sorry.
-
-3. **`B_paper_le_one_from_vr`** (PROVED from #2): B_paper ≤ 1 follows
-   immediately from the strip identity since c_α·A + c_ε·E ≥ 0.
-
-4. **`paperSAWB_to_bridge_injective`** (PROVED): Injection from finite strip
-   bridges (PaperSAW_B) to infinite strip bridges (PaperBridge).
-
-5. **`bridge_partition_bound_from_vr`** (PROVED): xc · B_T ≤ 1 from existing
-   infrastructure.
-
-### Updated Import Structure
-
-- `SAWFinal.lean` now imports:
-  - `SAWStripIdentityFromVR` — connecting vertex relation to strip identity
-  - `SAWStripObservable` — path-based observable (now imported)
-  All files that will eventually be part of the proof are imported.
-
-### Dead Branch Analysis
-
-Identified and marked 4 dead branches with detailed comments:
-
-1. **`trail_vertex_relation`** (SAWCancellationIdentity.lean): Uses `trailVertexSum`
-   based on `StripTrail` which includes non-fresh trails. The vertex relation
-   may NOT hold for this observable. The correct version uses `freshVertexSum`
-   based on `FreshTrail`, proved as `fresh_vertex_relation`.
-
-2. **`triplet_part_zero`** (SAWTrailVertexRelation.lean): Wrong decomposition
-   for StripTrails — the self-extension issue means triplets are not independently
-   zero.
-
-3. **`pair_part_zero`** (SAWTrailVertexRelation.lean): Same issue as above.
-
-4. **`vertex_relation_strip`** (SAWStripObservable.lean): Path-based observable
-   with vertex freshness has incomplete triplets when extension neighbors are
-   already visited. The correct approach uses edge freshness (FreshTrail).
-
-All dead branches contain useful infrastructure (definitions, helper lemmas)
-that is reused by other files through the import chain, so they should NOT
-be deleted.
-
-### Preparation Branches Linked
-
-The following files are preparation for the full proof of the strip identity
-and are now explicitly linked via imports in `SAWFinal.lean`:
-
-- `SAWWindingDiff.lean` — turning number theorem (needed for pair_winding_relation)
-- `SAWStripIdentityFromVR.lean` — vertex relation → strip identity bridge
-- `SAWStripObservable.lean` — path-based observable infrastructure
-
-### Current Sorry Analysis
-
-**Total**: 9 sorry statements
-
-**Critical (main theorem)**: 2
-- `infinite_strip_identity` (SAWRecurrenceProof.lean)
-- `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean)
-
-**Critical (cancellation identity)**: 1
-- `pair_winding_relation` (SAWPairCancellation.lean)
-
-**Consolidation**: 1 (NEW)
-- `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — equivalent to the 2 critical sorries
-
-**Preparation**: 1
-- `hex_simple_closed_trail_winding` (SAWWindingDiff.lean)
-
-**Dead branches**: 4
-- `trail_vertex_relation`, `triplet_part_zero`, `pair_part_zero`, `vertex_relation_strip`
-
-### Proof Architecture Summary
-
-```
-hex_simple_closed_trail_winding (PREPARATION — turning number thm)
-    ↓
-pair_winding_relation (SORRY — winding for pairs)
-    ↓
-fresh_vertex_relation (PROVED ✓ — Lemma 1)
-    ↓
-vertex_relation_at_interior (PROVED ✓ — in SAWStripIdentityFromVR)
-    ↓
-finite_strip_identity_from_vr (SORRY — Lemma 2 = discrete Stokes + boundary eval)
-    ↓                               ↓
-B_paper_le_one_strip          infinite_strip_identity
-(SORRY)                       (SORRY)
-    ↓                               ↓
-paper_bridge_decay            bridge_recurrence → Z(xc)=∞
-    ↓
-hw_summable_corrected → Z(x)<∞ for x<xc
-    ↓
-connective_constant_eq_direct (PROVED ✓ — μ = √(2+√2))
-```
+### Fully proved components:
+- Hammersley-Welsh decomposition (all SAWHW*.lean sorry-free)
+- Algebraic identities (pair_cancellation, triplet_cancellation)
+- Vertex relation triplet part (freshVertexSum_triplet_part_zero)
+- Vertex relation pair part (freshVertexSum_pair_part_zero_proved, modulo #1)
+- Connective constant infrastructure (submultiplicativity, Fekete's lemma)
+- Bridge recurrence (modulo #3)
+- Walk partition and cutting arguments

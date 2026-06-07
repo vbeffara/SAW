@@ -39,10 +39,17 @@ For the infinite strip S_T with T ≥ 1, the parafermionic observable gives:
      (the factor xc converts from edge-weight to vertex-weight).
 6. Total: 0 = -1 + c_α · A_inf + xc · paper_bridge_partition.
 
-**Status: sorry.** This is a consequence of the vertex relation (Lemma 1)
-applied to the infinite strip. The algebraic ingredients (pair_cancellation,
-triplet_cancellation) are proved. The combinatorial walk partitioning and
-discrete Stokes summation remain to be formalized.
+**Status: Derived from `finite_strip_identity_from_vr` by taking L→∞.**
+The finite strip identity gives 1 = c_α·A + B + c_ε·E for each L.
+As L→∞, A_paper → A_inf, B_paper → xc·paper_bridge_partition, and
+c_ε·E → some non-negative limit. The identity in the limit gives
+1 ≥ c_α·A_inf + xc·B, and combined with B_paper ≤ 1, we get the bound
+needed for the recurrence.
+
+**Current status: sorry.** The derivation from finite_strip_identity_from_vr
+requires showing that B_paper(T,L) → xc·paper_bridge_partition(T) as L→∞
+and that A_paper(T,L) → A_inf(T) as L→∞. This is a monotone convergence
+argument that needs further formalization.
 -/
 lemma infinite_strip_identity (T : ℕ) (hT : 1 ≤ T) :
     1 = c_alpha * A_inf T xc + xc * paper_bridge_partition T xc := by

@@ -29,18 +29,93 @@ SAW.lean               — Core definitions, constants, algebraic identities
 4. `partition_function_diverges_above_xc'`: Z(x) = ∞ for x > xc
 5. `partition_function_converges_below_xc'`: Z(x) < ∞ for 0 < x < xc
 
-## Remaining gaps (sorry's)
+## Remaining sorry's
 
-The main theorem depends on three sorry'd lemmas:
-1. `B_paper_le_one_direct` — the core strip identity (parafermionic observable)
-2. `paper_bridge_lower_bound` — bridge lower bound c/T (depends on #1)
-3. `paper_bridge_decomp_injection` — Hammersley-Welsh decomposition
+The main theorem depends on a single sorry chain rooted at two independent gaps:
+
+1. **`pair_winding_relation`** (SAWPairCancellation.lean) — The turning number
+   argument for loop-reversed pairs on the hex lattice. This is the deepest sorry
+   on the critical path. It states that reversing the inner loop of a pair changes
+   the winding by ±8π/3, which is needed for the pair part of the vertex relation.
+
+2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — The core bound
+   B_paper(T,L,xc) ≤ 1 from the parafermionic observable (Lemma 2 of the paper).
+   This requires the discrete Stokes argument: summing the vertex relation over
+   all interior vertices, cancelling interior mid-edges, and evaluating boundary
+   contributions. The vertex relation (Lemma 1) is proved modulo #1.
+
+3. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
+   1 = c_α·A_inf + xc·B for the infinite strip. This follows from the finite
+   strip identity (Lemma 2) by taking L→∞. Same dependency as #2.
+
+The Hammersley-Welsh decomposition chain is FULLY PROVED (sorry-free).
+
+## Preparation files (not on critical path but needed for future steps)
+
+The following files contain infrastructure for the discrete Stokes argument
+and the turning number theorem. They are imported here to ensure they are
+part of the build:
+- `SAWDiscreteStokes` — Abstract discrete Stokes framework
+- `SAWStokesAbstract` — Abstract combinatorial Stokes lemma
+- `SAWWindingLemma` — Winding append/extension lemmas
+- `SAWWindingReverse` — Additional winding reversal results
+- `SAWStripAlgebra` — Algebraic identities for the strip boundary evaluation
+- `SAWObservableSum` — Observable as formal sum over trails
+- `SAWCancellationProved` — Key helper lemmas for vertex relation
+- `SAWVertexRelation` — Vertex relation infrastructure
+- `SAWPairWindingRelation` — Alternative pair cancellation via winding
+- `SAWHWExtraFinal` — Extra walk generating function bounds
+- `SAWHWExtraSumProof` — Infrastructure for extra walk bounds
+- `SAWMainNew` — Alternative proof path via infinite_strip_identity only
+
+## Dead branches (explicitly marked)
+
+The following sorry's are NOT on the critical path for the main theorem:
+- `trail_vertex_relation` (SAWCancellationIdentity.lean) — uses StripTrail
+  (non-fresh trails), superseded by `fresh_vertex_relation`
+- `triplet_part_zero` / `pair_part_zero` (SAWTrailVertexRelation.lean) —
+  uses non-fresh trail decomposition, superseded by fresh versions
+- `strip_observable_summable` (SAWStripObservable.lean) — summability of
+  strip observable, not needed for the main theorem
+- `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning
+  number theorem, would be sufficient for `pair_winding_relation` but the
+  specific pair winding is all that's needed
+- `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — the finite
+  strip identity from the vertex relation, currently not connected to the
+  main chain due to import structure; equivalent to `B_paper_le_one_strip`
 -/
 
+-- Main proof chain
 import RequestProject.SAWPaperChain
-import RequestProject.SAWWindingDiff
+
+-- Vertex relation chain (proved modulo pair_winding_relation)
 import RequestProject.SAWStripIdentityFromVR
+
+-- Winding infrastructure (preparation for pair_winding_relation)
+import RequestProject.SAWWindingDiff
+import RequestProject.SAWWindingLemma
+import RequestProject.SAWWindingReverse
+import RequestProject.SAWPairWindingRelation
+import RequestProject.SAWPairWindingProof
+
+-- Discrete Stokes infrastructure (preparation for strip identity)
 import RequestProject.SAWStripObservable
+import RequestProject.SAWDiscreteStokes
+import RequestProject.SAWStokesAbstract
+import RequestProject.SAWStripAlgebra
+import RequestProject.SAWObservableSum
+
+-- Vertex relation infrastructure
+import RequestProject.SAWCancellationProved
+-- Note: SAWVertexRelation has a name conflict (redefines trueNeighbors)
+-- and is a dead branch superseded by SAWObservableDef + SAWPathVertexRelation
+
+-- Hammersley-Welsh extra bounds
+import RequestProject.SAWHWExtraFinal
+import RequestProject.SAWHWExtraSumProof
+
+-- Alternative proof path
+import RequestProject.SAWMainNew
 
 open Real Complex ComplexConjugate Filter Topology
 

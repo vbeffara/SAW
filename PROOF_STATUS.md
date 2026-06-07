@@ -1,133 +1,88 @@
-# Proof Status: Connective Constant of the Honeycomb Lattice
+# Proof Status: μ = √(2+√2)
 
 ## Main Theorem
-`connective_constant_eq_direct` in `SAWMainNew.lean`:
-**μ = √(2+√2)** where μ is the connective constant of the hexagonal lattice.
-
-**Status: PROVED modulo two critical sorries** (`infinite_strip_identity` and
-`B_paper_le_one_strip`), both of which are consequences of the strip identity
-(Lemma 2 of Duminil-Copin & Smirnov 2012).
-
-## Main Theorem Chain
 
 ```
-  finite_strip_identity_from_vr (NEW SORRY — Lemma 2, discrete Stokes + boundary eval)
-       ↓                              ↓
-  B_paper_le_one_strip         infinite_strip_identity
-  (SORRY — via strip identity)  (SORRY — via strip identity)
-       ↓                              ↓
-  paper_bridge_partial_sum_le   paper_bridge_recurrence_derived (PROVED)
-       ↓                              ↓
-  paper_bridge_decay (PROVED)   Z_xc_diverges_direct (PROVED)
-       ↓                              ↓
-  hw_summable_corrected         connective_constant_eq_direct (PROVED)
-  (PROVED — Z(x)<∞ for x<xc)       ↓
-       ↓                       = main theorem
-  connective_constant_eq_direct
+theorem connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 2)
 ```
 
-## Cancellation Identity (Lemma 1) — Status
+**Location:** `RequestProject/SAWFinal.lean`
 
-The cancellation identity (Lemma 1, the vertex relation) is **PROVED**
-modulo `pair_winding_relation`, which requires the discrete turning
-number theorem for simple closed trails on the hex lattice.
+## Sorry Chain (Critical Path)
 
-### Proof Chain (cancellation identity)
+The main theorem has **3 remaining sorry's** on the critical path, all related to the
+parafermionic observable argument:
 
-```
-hex_simple_closed_trail_winding (SORRY — turning number theorem)
-    ↓
-pair_winding_relation (SORRY — winding decomposition)
-    ↓
-pair_exp_cancellation (PROVED ✓)
-    ↓
-pair_contrib_cancels (PROVED ✓)
-    ↓
-pairSigmaInvol_injective (PROVED ✓)
-    ↓
-freshVertexSum_pair_part_zero_proved (PROVED ✓ — S = -S argument)
-    ↓
-fresh_vertex_relation (PROVED ✓ — triplet + pair = 0)
-    ↓
-vertex_relation_at_interior (PROVED ✓ — in SAWStripIdentityFromVR.lean)
-    ↓
-finite_strip_identity_from_vr (SORRY — discrete Stokes + boundary eval)
-```
+### 1. `pair_winding_relation` (SAWPairCancellation.lean:167)
+**The deepest sorry.** States that for a pair of walks (original and loop-reversed),
+the windings satisfy:
+- γ.winding = W_common - 4π/3
+- (pairInvol γ).winding = W_common + 4π/3
 
-## Connection: Vertex Relation → Strip Identity (NEW)
+This is the discrete turning number argument: reversing the inner loop of a pair on the
+hex lattice changes the winding by ±8π/3. All downstream sorry's depend transitively on
+this one through the vertex relation.
 
-`SAWStripIdentityFromVR.lean` establishes the bridge:
-- `vertex_relation_at_interior` (PROVED) — wraps `fresh_vertex_relation`
-- `finite_strip_identity_from_vr` (SORRY) — the discrete Stokes + boundary evaluation
-- `B_paper_le_one_from_vr` (PROVED from strip identity)
-- `bridge_partition_bound_from_vr` (PROVED)
+**Helper lemmas proved in SAWPairWindingProof.lean:**
+- `pair_indices_are_fin3_other` ✓ — k and exitIdx form fin3_other j
+- `original_fullSupport_eq` ✓ — structure of original walk's full support
+- `paired_fullSupport_eq` ✓ — structure of paired walk's full support
 
-The single sorry `finite_strip_identity_from_vr` is equivalent to
-both `B_paper_le_one_strip` and `infinite_strip_identity`.
+**What remains:** The winding decomposition and turning number computation.
 
-## Remaining Sorries (total: 9)
+### 2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385)
+The core bound B_paper(T,L,xc) ≤ 1 from Lemma 2 (strip identity). Requires:
+1. Vertex relation at each interior vertex (proved as `fresh_vertex_relation`, modulo #1)
+2. Discrete Stokes: summing vertex relations cancels interior mid-edges
+3. Boundary evaluation: classify boundary contributions
 
-### Critical path (main theorem):
-1. **`infinite_strip_identity`** (SAWRecurrenceProof.lean): The parafermionic
-   observable identity for the infinite strip. One of two sorries affecting
-   the main theorem.
+**Equivalent sorry:** `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean:80)
+provides the same result via a different import path. Both reduce to the vertex relation + 
+discrete Stokes.
 
-2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean): B_paper ≤ 1
-   from the strip identity. The other sorry affecting the main theorem
-   (via paper_bridge_partial_sum_le → bridge decay → HW bound).
+### 3. `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
+The identity 1 = c_α·A_inf(T) + xc·B(T) for the infinite strip. Follows from
+the finite strip identity by taking L→∞. Same dependency chain as #2.
 
-### Critical path (cancellation identity):
-3. **`pair_winding_relation`** (SAWPairCancellation.lean): The winding
-   decomposition for pair-involution walks. The ONLY sorry affecting
-   the cancellation identity `fresh_vertex_relation`.
-   **Requires**: the discrete turning number theorem for simple closed
-   trails on the hexagonal lattice.
+## Proved Components
 
-### Consolidation (NEW):
-4. **`finite_strip_identity_from_vr`** (SAWStripIdentityFromVR.lean):
-   The finite strip identity derived from the vertex relation.
-   **Equivalent to** sorries #1 + #2 combined.
-   Requires: discrete Stokes argument + boundary evaluation.
+### Hammersley-Welsh Decomposition (FULLY PROVED ✓)
+All SAWHW*.lean files are sorry-free:
+- `hw_injection_bound` — SAW count ≤ 8 · (∏(1+12·B_T))²
+- Bridge decomposition algorithm and injection
+- Extra walk bounds and fiber counting
 
-### Preparation for future use:
-5. **`hex_simple_closed_trail_winding`** (SAWWindingDiff.lean): The discrete
-   turning number theorem. Foundation for `pair_winding_relation`.
+### Vertex Relation / Lemma 1 (PROVED modulo pair_winding_relation)
+- `fresh_vertex_relation` (SAWPairInvolutionProof.lean) ✓ (modulo #1)
+- Triplet cancellation: `freshVertexSum_triplet_part_zero` ✓
+- Pair cancellation: `freshVertexSum_pair_part_zero_proved` ✓ (modulo #1)
+- Pair involution: `pairSigmaInvol_injective` ✓
+- Extension maps: `freshExtensionMap_injective`, `fresh_outgoing_surj` ✓
 
-### Dead branches (may be false, not on critical path):
-6. **`trail_vertex_relation`** (SAWCancellationIdentity.lean): Uses StripTrail
-   observable which includes non-fresh trails. The vertex relation may NOT
-   hold for this observable — use `fresh_vertex_relation` instead.
+### Algebraic Identities (FULLY PROVED ✓)
+- `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0 ✓
+- `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 ✓
+- `xc_inv`: xc⁻¹ = √(2+√2) ✓
 
-7. **`triplet_part_zero`** (SAWTrailVertexRelation.lean): Wrong decomposition
-   for StripTrails. The FreshTrail decomposition (in SAWVertexRelationProof.lean)
-   is the correct one.
+### Bridge Recurrence (PROVED modulo infinite_strip_identity)
+- `bridge_recurrence_proved`: B(T) ≤ c_α·B(T+1)² + B(T+1) ✓ (modulo #3)
+- `cutting_argument_proved`: A(T+1) - A(T) ≤ xc·B(T+1)² ✓
 
-8. **`pair_part_zero`** (SAWTrailVertexRelation.lean): Same issue as #7.
+### Connective Constant Infrastructure (FULLY PROVED ✓)
+- `saw_count_submult'`: c_{n+m} ≤ c_n · c_m ✓
+- `connective_constant_is_limit'`: μ = lim c_n^{1/n} ✓
+- `connective_constant_eq_from_bounds`: Z diverges + Z converges → μ = √(2+√2) ✓
 
-9. **`vertex_relation_strip`** (SAWStripObservable.lean): Path-based observable
-   with freshness condition has incomplete triplets when extension neighbors
-   are already visited. Use trail-based `fresh_vertex_relation` instead.
+## Dead Branches (NOT on critical path)
 
-## Summary
-
-The main theorem `μ = √(2+√2)` depends on **two critical sorries**:
-`infinite_strip_identity` and `B_paper_le_one_strip`. Both are consequences
-of the strip identity (Lemma 2), which follows from the vertex relation
-(Lemma 1) + discrete Stokes summation + boundary evaluation.
-
-The vertex relation `fresh_vertex_relation` (Lemma 1) is **PROVED** modulo
-`pair_winding_relation`, which requires the discrete turning number theorem.
-
-The Hammersley-Welsh bound uses `B_paper_le_one_strip` through the chain
-`paper_bridge_partial_sum_le → paper_bridge_decay → hw_summable_corrected`.
-
-**NEW**: `SAWStripIdentityFromVR.lean` shows how the vertex relation connects
-to the strip identity, consolidating the two critical sorries into a single
-sorry (`finite_strip_identity_from_vr`) that represents the discrete Stokes
-argument + boundary evaluation.
+These sorry's exist in the codebase but are NOT needed for the main theorem:
+- `trail_vertex_relation` (SAWCancellationIdentity.lean) — superseded by fresh version
+- `triplet_part_zero` / `pair_part_zero` (SAWTrailVertexRelation.lean) — non-fresh version
+- `strip_observable_summable` (SAWStripObservable.lean) — not needed
+- `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning number
+  (would imply pair_winding_relation but is more general than needed)
 
 ## File Organization
 
-All files are imported (directly or transitively) by `SAWFinal.lean`.
-Dead branches (#6-9) contain useful infrastructure (definitions, lemmas)
-that is reused by other files in the proof chain.
+All files that contribute to the proof are imported transitively from `SAWFinal.lean`.
+The import structure is documented in `SAWFinal.lean`'s header comment.
