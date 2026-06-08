@@ -31,12 +31,14 @@ SAW.lean               — Core definitions, constants, algebraic identities
 
 ## Remaining sorry's
 
-The main theorem depends on a single sorry chain rooted at two independent gaps:
+The main theorem depends on three independent sorry chains:
 
 1. **`pair_winding_relation`** (SAWPairCancellation.lean) — The turning number
-   argument for loop-reversed pairs on the hex lattice. This is the deepest sorry
-   on the critical path. It states that reversing the inner loop of a pair changes
-   the winding by ±8π/3, which is needed for the pair part of the vertex relation.
+   argument for loop-reversed pairs on the hex lattice. CORRECTED to allow both
+   orderings (clockwise/counterclockwise loops). The winding relation follows
+   from the discrete turning number theorem (`hex_closed_trail_turning_number`
+   in SAWTurningNumber.lean). Extensive winding infrastructure is proved:
+   additivity, reversal, suffix trail conditions, suffix winding negation.
 
 2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — The core bound
    B_paper(T,L,xc) ≤ 1 from the parafermionic observable (Lemma 2 of the paper).
@@ -47,6 +49,10 @@ The main theorem depends on a single sorry chain rooted at two independent gaps:
 3. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
    1 = c_α·A_inf + xc·B for the infinite strip. This follows from the finite
    strip identity (Lemma 2) by taking L→∞. Same dependency as #2.
+
+4. **`hex_closed_trail_turning_number`** (SAWTurningNumber.lean) — NEW.
+   The discrete Gauss-Bonnet theorem: a simple closed hex trail has total
+   turning ±2π. This is the deepest unproved mathematical fact.
 
 The Hammersley-Welsh decomposition chain is FULLY PROVED (sorry-free).
 
@@ -59,6 +65,8 @@ part of the build:
 - `SAWStokesAbstract` — Abstract combinatorial Stokes lemma
 - `SAWWindingLemma` — Winding append/extension lemmas
 - `SAWWindingReverse` — Additional winding reversal results
+- `SAWWindingDecomp` — Winding decomposition for pair walks (suffix trail, reversal)
+- `SAWTurningNumber` — Turning number theorem for hex trails (sorry'd)
 - `SAWStripAlgebra` — Algebraic identities for the strip boundary evaluation
 - `SAWObservableSum` — Observable as formal sum over trails
 - `SAWCancellationProved` — Key helper lemmas for vertex relation
@@ -97,6 +105,8 @@ import RequestProject.SAWWindingLemma
 import RequestProject.SAWWindingReverse
 import RequestProject.SAWPairWindingRelation
 import RequestProject.SAWPairWindingProof
+import RequestProject.SAWWindingDecomp
+import RequestProject.SAWTurningNumber
 
 -- Discrete Stokes infrastructure (preparation for strip identity)
 import RequestProject.SAWStripObservable

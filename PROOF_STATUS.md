@@ -10,25 +10,30 @@ theorem connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 
 
 ## Sorry Chain (Critical Path)
 
-The main theorem has **3 remaining sorry's** on the critical path, all related to the
-parafermionic observable argument:
+The main theorem has **3 remaining sorry's** on the critical path:
 
-### 1. `pair_winding_relation` (SAWPairCancellation.lean:167)
-**The deepest sorry.** States that for a pair of walks (original and loop-reversed),
-the windings satisfy:
-- γ.winding = W_common - 4π/3
-- (pairInvol γ).winding = W_common + 4π/3
+### 1. `pair_winding_relation` (SAWPairCancellation.lean:173)
+**Corrected formulation.** States that for a pair of walks (original and loop-reversed),
+the windings satisfy one of two orderings:
+- EITHER: k = (fin3_other j).1, exit = .2, W_orig = W-4π/3, W_paired = W+4π/3
+- OR: k = (fin3_other j).2, exit = .1, W_orig = W+4π/3, W_paired = W-4π/3
 
-This is the discrete turning number argument: reversing the inner loop of a pair on the
-hex lattice changes the winding by ±8π/3. All downstream sorry's depend transitively on
-this one through the vertex relation.
+The disjunction covers both loop orientations (clockwise/counterclockwise).
+This was corrected from a previous version that only stated one ordering
+(which was incorrect for half the cases).
 
-**Helper lemmas proved in SAWPairWindingProof.lean:**
+**Depends on:** The discrete turning number theorem for simple closed curves
+on the hex lattice (`hex_closed_trail_turning_number` in SAWTurningNumber.lean).
+
+**Proved helpers:**
+- `pair_suffix_hex_trail` ✓ — suffix forms a hex trail list
+- `pair_suffix_hex_trail_rev` ✓ — reversed suffix forms a hex trail list  
+- `pair_suffix_reverse` ✓ — reversed suffix is the reverse of the suffix
+- `pair_suffix_winding_neg` ✓ — reversed suffix has negated winding
+- `pair_suffix_length` ✓ — suffix has length ≥ 3
+- `pair_inner_loop_trail` ✓ — full support with prefix forms hex trail list
+- `hexWalkWinding_split` ✓ — winding additivity at 2-vertex overlap
 - `pair_indices_are_fin3_other` ✓ — k and exitIdx form fin3_other j
-- `original_fullSupport_eq` ✓ — structure of original walk's full support
-- `paired_fullSupport_eq` ✓ — structure of paired walk's full support
-
-**What remains:** The winding decomposition and turning number computation.
 
 ### 2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385)
 The core bound B_paper(T,L,xc) ≤ 1 from Lemma 2 (strip identity). Requires:
@@ -40,9 +45,16 @@ The core bound B_paper(T,L,xc) ≤ 1 from Lemma 2 (strip identity). Requires:
 provides the same result via a different import path. Both reduce to the vertex relation + 
 discrete Stokes.
 
-### 3. `infinite_strip_identity` (SAWRecurrenceProof.lean:49)
+### 3. `infinite_strip_identity` (SAWRecurrenceProof.lean:56)
 The identity 1 = c_α·A_inf(T) + xc·B(T) for the infinite strip. Follows from
 the finite strip identity by taking L→∞. Same dependency chain as #2.
+
+### 4. `hex_closed_trail_turning_number` (SAWTurningNumber.lean:75)
+**NEW.** The discrete turning number theorem for simple closed hex trails:
+  hexWalkWinding L + closure = ±2π
+This is the deepest unproved mathematical fact. It is the discrete analogue
+of the Gauss-Bonnet theorem: a simple closed polygon has total exterior
+angle ±2π.
 
 ## Proved Components
 
@@ -59,10 +71,22 @@ All SAWHW*.lean files are sorry-free:
 - Pair involution: `pairSigmaInvol_injective` ✓
 - Extension maps: `freshExtensionMap_injective`, `fresh_outgoing_surj` ✓
 
+### Winding Infrastructure (MOSTLY PROVED ✓)
+- `hexWalkWinding_split` ✓ — winding additivity for list splitting
+- `hex_turn_value` ✓ — all hex turns are ±π/3
+- `hexWalkWinding_reverse_list'` ✓ — winding reversal for hex trails
+- `pair_suffix_hex_trail` ✓ — suffix is a hex trail list
+- `pair_suffix_hex_trail_rev` ✓ — reversed suffix is a hex trail list
+- `pair_suffix_reverse` ✓ — reversed suffix = reverse of suffix
+- `pair_suffix_winding_neg` ✓ — reversed suffix winding is negated
+- `pair_inner_loop_trail` ✓ — full walk support is hex trail
+
 ### Algebraic Identities (FULLY PROVED ✓)
 - `pair_cancellation`: j·conj(λ)⁴ + conj(j)·λ⁴ = 0 ✓
 - `triplet_cancellation`: 1 + xc·j·conj(λ) + xc·conj(j)·λ = 0 ✓
 - `xc_inv`: xc⁻¹ = √(2+√2) ✓
+- `fin3_other_pair_cancel` ✓ — pair algebraic cancellation for all j_idx
+- `exp_shift_minus'`, `exp_shift_plus'` ✓ — exponential shift formulas
 
 ### Bridge Recurrence (PROVED modulo infinite_strip_identity)
 - `bridge_recurrence_proved`: B(T) ≤ c_α·B(T+1)² + B(T+1) ✓ (modulo #3)
@@ -81,8 +105,14 @@ These sorry's exist in the codebase but are NOT needed for the main theorem:
 - `strip_observable_summable` (SAWStripObservable.lean) — not needed
 - `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning number
   (would imply pair_winding_relation but is more general than needed)
+- `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — equivalent to
+  B_paper_le_one_strip via different import path
+- `prefix_penultimate_is_neighbor` (SAWPairWindingProof.lean) — helper, not yet used
+- `pair_inner_loop_trail_rev` (SAWWindingDecomp.lean) — preparation for future use
 
 ## File Organization
 
 All files that contribute to the proof are imported transitively from `SAWFinal.lean`.
-The import structure is documented in `SAWFinal.lean`'s header comment.
+New files added:
+- `SAWWindingDecomp.lean` — winding decomposition infrastructure for pairs
+- `SAWTurningNumber.lean` — discrete turning number theorem (sorry'd)

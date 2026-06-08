@@ -1,112 +1,120 @@
-# Summary of changes for run 911b5cea-cc76-43ee-b708-2e7b525db75a
-# Session Summary: Continuing SAW.tex Formalization
+# Summary of changes for run b210c783-5114-4353-bcba-19576d1bf4b1
+# Summary of Formalization Progress
+
+## Focus: Hammersley-Welsh, Parafermionic Observable, and Cancellation Identity
+
+### Key Accomplishments
+
+#### 1. Critical Bug Fix: Corrected `pair_winding_relation` (SAWPairCancellation.lean)
+The previous statement of `pair_winding_relation` was **incorrect** for half the walk configurations. It claimed `k = (fin3_other j).1` and `exit = (fin3_other j).2`, but for walks where the exit is clockwise from k, no such `j` exists. This made the statement unprovable (false).
+
+**Fix:** Replaced with a disjunction covering both loop orientations:
+- EITHER `k = .1, exit = .2` with `W_orig = W - 4π/3, W_paired = W + 4π/3`  
+- OR `k = .2, exit = .1` with `W_orig = W + 4π/3, W_paired = W - 4π/3`
+
+Updated `pair_exp_cancellation` and `pair_winding_diff` to handle both branches. The algebraic cancellation works in both cases because `fin3_other_pair_cancel` is symmetric.
+
+#### 2. New File: `SAWWindingDecomp.lean` — 8 Proved Lemmas
+Built comprehensive winding decomposition infrastructure for pair walks:
+- **`hexWalkWinding_split`** ✓ — Winding additivity at 2-vertex overlaps
+- **`pair_suffix_hex_trail`** ✓ — Suffix [v, exit, inner..., v] is a valid hex trail list
+- **`pair_suffix_hex_trail_rev`** ✓ — Reversed suffix is also a valid hex trail list  
+- **`pair_suffix_reverse`** ✓ — Reversed suffix is List.reverse of the original
+- **`pair_suffix_winding_neg`** ✓ — Reversed suffix has negated winding (key for pair cancellation)
+- **`pair_suffix_length`** ✓ — Suffix has length ≥ 3
+- **`pair_inner_loop_trail`** ✓ — Full support (prefix + loop + v) forms hex trail list
+- **`hexWalkWinding_cons3`** ✓ — Winding decomposition for prepended triples
+
+#### 3. New File: `SAWTurningNumber.lean` — Clean Statement of the Key Sorry
+Isolated the deepest unproved mathematical fact as a clean, self-contained statement:
+
+`hex_closed_trail_turning_number`: For a simple closed trail on the hex lattice, `hexWalkWinding L + closure = ±2π`
+
+This is the discrete Gauss-Bonnet theorem. All other sorry's (pair_winding_relation, B_paper_le_one_strip, infinite_strip_identity) ultimately depend on this result.
+
+#### 4. Updated Import Structure
+Both new files are imported in `SAWFinal.lean`, ensuring they are part of the build.
+
+### Current Sorry Status
+
+**Critical path (4 sorry's):**
+1. `pair_winding_relation` — corrected, needs turning number theorem
+2. `B_paper_le_one_strip` — needs discrete Stokes argument  
+3. `infinite_strip_identity` — needs limit of strip identity
+4. `hex_closed_trail_turning_number` — discrete Gauss-Bonnet (deepest mathematical fact)
+
+**Dead branches (8 sorry's, NOT on critical path):** trail_vertex_relation, prefix_penultimate_is_neighbor, finite_strip_identity_from_vr, strip_observable_summable, triplet_part_zero, pair_part_zero, pair_inner_loop_trail_rev, hex_simple_closed_trail_winding
+
+**Fully proved:** Hammersley-Welsh (all SAWHW*.lean), algebraic identities, vertex relation (modulo #1), bridge recurrence, connective constant infrastructure, winding decomposition (8 new lemmas).
+
+The project builds successfully with `lake build RequestProject.SAWFinal`.
+See `PROOF_STATUS.md` for detailed status.
+
+# Summary of Formalization Progress
 
 ## Main Focus: Hammersley-Welsh, Parafermionic Observable, and Cancellation Identity
 
 ### What was accomplished
 
-#### 1. Project Structure Cleanup & Import Organization
-- **`SAWFinal.lean`** now imports ALL files contributing to the proof, organized into clear categories:
-  - Main proof chain (SAWPaperChain)
-  - Vertex relation chain (SAWStripIdentityFromVR, proved modulo pair_winding_relation)
-  - Winding infrastructure (SAWWindingDiff, SAWWindingLemma, SAWWindingReverse, SAWPairWindingRelation, SAWPairWindingProof)
-  - Discrete Stokes infrastructure (SAWDiscreteStokes, SAWStokesAbstract, SAWStripAlgebra, SAWObservableSum, SAWStripObservable)
-  - Vertex relation infrastructure (SAWCancellationProved)
-  - Hammersley-Welsh extra bounds (SAWHWExtraFinal, SAWHWExtraSumProof)
-  - Alternative proof path (SAWMainNew)
-- Dead branches explicitly documented in SAWFinal.lean header with clear explanations
-- SAWVertexRelation excluded (name conflict with trueNeighbors from SAWObservableDef — dead branch)
+#### 1. Fixed Incorrect Statement of `pair_winding_relation` (SAWPairCancellation.lean)
+**Critical bug fix.** The previous statement of `pair_winding_relation` claimed that
+`k = (fin3_other j).1` and `exit = (fin3_other j).2` for all pair walks. Analysis showed
+this is only true for walks where the exit is counterclockwise from k in the cyclic ordering;
+for the opposite ordering, no valid `j` exists with those constraints.
 
-#### 2. New File: `SAWPairWindingProof.lean`
-Created helper infrastructure for proving `pair_winding_relation`, the deepest sorry on the critical path:
-- **`pair_indices_are_fin3_other`** ✓ — k and exitIdx form `(fin3_other j).1` and `.2` for some j
-- **`original_fullSupport_eq`** ✓ — Exact structure of the original walk's full support
-- **`paired_fullSupport_eq`** ✓ — Exact structure of the paired (loop-reversed) walk's full support
-- **`prefix_penultimate_is_neighbor`** (sorry) — Remaining helper for the arrival index
+**Fix:** Replaced with a disjunction covering both orderings:
+- EITHER: `k = .1, exit = .2` with `W_orig = W - 4π/3, W_paired = W + 4π/3`
+- OR: `k = .2, exit = .1` with `W_orig = W + 4π/3, W_paired = W - 4π/3`
 
-#### 3. Comprehensive Documentation
-- **`PROOF_STATUS.md`** rewritten with full status of all components, clearly separating critical-path sorry's from dead branches
-- **`ARISTOTLE_SUMMARY.md`** created with session details
-- SAWDiagProof.lean header updated to document the sorry chain
-- SAWRecurrenceProof.lean updated with detailed derivation plan from finite strip identity
+This makes the statement PROVABLE (the previous version was false for half the cases).
 
-#### 4. Dependency Analysis & Attempted Consolidation
-- Verified import graph has no cycles
-- Attempted to consolidate sorry's by connecting SAWStripIdentityFromVR → SAWRecurrenceProof, but this caused elaboration conflicts (synthesis failures in SAWStripT1Exact from the expanded import graph). Reverted this change.
-- Documented the import structure constraints that prevent merging the sorry chains
+#### 2. Fixed `pair_exp_cancellation` (SAWPairCancellation.lean)
+Updated to handle both branches of the disjunction. The algebraic cancellation identity
+`fin3_other_pair_cancel` applies in both cases because addition is commutative.
+
+#### 3. Fixed `pair_winding_diff` (SAWWindingDiff.lean)
+Updated to work with the corrected `pair_winding_relation`.
+
+#### 4. New File: `SAWWindingDecomp.lean` — Winding Decomposition Infrastructure
+Created comprehensive infrastructure for the pair winding decomposition:
+- **`hexWalkWinding_split`** ✓ — Winding additivity when splitting at a 2-vertex overlap
+- **`hexWalkWinding_cons3`** ✓ — Decomposition of winding for prepended triples
+- **`pair_suffix_hex_trail`** ✓ — Suffix [v, exit, inner..., v] is a HexTrailList
+- **`pair_suffix_hex_trail_rev`** ✓ — Reversed suffix is a HexTrailList
+- **`pair_suffix_reverse`** ✓ — Reversed suffix is the List.reverse of the suffix
+- **`pair_suffix_winding_neg`** ✓ — Winding of reversed suffix = -winding of suffix
+- **`pair_suffix_length`** ✓ — Suffix has length ≥ 3
+- **`pair_inner_loop_trail`** ✓ — Full walk support (with prefix) is a HexTrailList
+
+#### 5. New File: `SAWTurningNumber.lean` — Discrete Turning Number Theorem
+Cleanly stated the discrete Gauss-Bonnet theorem for hex lattice trails:
+  `hex_closed_trail_turning_number`: hexWalkWinding L + closure = ±2π
+
+This is the deepest unproved mathematical fact that all other sorry's depend on.
+It represents the discrete analogue of the Gauss-Bonnet theorem.
+
+#### 6. Updated Import Structure and Documentation
+- `SAWFinal.lean` now imports `SAWWindingDecomp` and `SAWTurningNumber`
+- All files contributing to the proof are transitively imported
+- `PROOF_STATUS.md` updated with comprehensive status
 
 ### Current Sorry Status
 
-**Critical path (3 sorry's for the main theorem μ = √(2+√2)):**
-1. `pair_winding_relation` (SAWPairCancellation.lean) — Turning number argument for loop-reversed pairs. Helper lemmas proved in SAWPairWindingProof.lean.
-2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) — B ≤ 1 from the parafermionic observable (Lemma 2)
-3. `infinite_strip_identity` (SAWRecurrenceProof.lean) — Strip identity in the limit
+**Critical path (4 sorry's for the main theorem):**
+1. `pair_winding_relation` (SAWPairCancellation.lean) — Corrected, needs turning number
+2. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) — Discrete Stokes argument
+3. `infinite_strip_identity` (SAWRecurrenceProof.lean) — Limit of strip identity
+4. `hex_closed_trail_turning_number` (SAWTurningNumber.lean) — Discrete Gauss-Bonnet
 
-**Dead branches (7 sorry's, NOT needed for the main theorem):**
-- `finite_strip_identity_from_vr`, `trail_vertex_relation`, `triplet_part_zero`, `pair_part_zero`, `strip_observable_summable`, `hex_simple_closed_trail_winding`, `prefix_penultimate_is_neighbor`
+**Dead branches (NOT on critical path):**
+- `trail_vertex_relation`, `triplet_part_zero`, `pair_part_zero` — superseded by fresh versions
+- `strip_observable_summable` — not needed
+- `hex_simple_closed_trail_winding` — more general turning number (dead branch)
+- `finite_strip_identity_from_vr` — equivalent to B_paper_le_one_strip
+- `prefix_penultimate_is_neighbor`, `pair_inner_loop_trail_rev` — preparation
 
-**Fully proved components:** Hammersley-Welsh (all SAWHW*.lean sorry-free), algebraic identities, vertex relation (modulo pair_winding_relation), bridge recurrence, connective constant infrastructure.
+**Fully proved components:** Hammersley-Welsh (all SAWHW*.lean), algebraic identities,
+vertex relation (modulo pair_winding_relation), bridge recurrence, connective constant
+infrastructure, winding decomposition infrastructure (8 new lemmas).
 
 The project builds successfully with `lake build RequestProject.SAWFinal`.
-
-# Session Summary
-
-## What was done
-
-### 1. Project Structure Cleanup
-- **SAWFinal.lean** updated to import ALL preparation files, ensuring every file that
-  will eventually be part of the proof is imported somewhere
-- Files organized into clear categories: main proof chain, vertex relation chain,
-  winding infrastructure, discrete Stokes infrastructure, HW extra bounds, alternative path
-- Dead branches explicitly identified and documented (see comments in SAWFinal.lean)
-- `SAWVertexRelation.lean` excluded due to name conflict (`trueNeighbors` redefinition)
-
-### 2. New File: SAWPairWindingProof.lean
-Created helper infrastructure for proving `pair_winding_relation`:
-- **`pair_indices_are_fin3_other`** ✓ — Proves that k and exitIdx form (fin3_other j).1 and .2
-  for some arrival index j. This is a key structural lemma for the winding decomposition.
-- **`original_fullSupport_eq`** ✓ — Proves the exact structure of the original walk's full
-  support: prefix.support ++ [exit_nbr] ++ inner.support.tail ++ [v]
-- **`paired_fullSupport_eq`** ✓ — Proves the exact structure of the paired walk's full
-  support: prefix.support ++ [k_nbr] ++ inner.reverse.support.tail ++ [v]
-- **`prefix_penultimate_is_neighbor`** (sorry) — The vertex before v in the prefix is a
-  specific neighbor of v, distinct from k and exitIdx. This is the remaining helper needed.
-
-### 3. Documentation
-- **PROOF_STATUS.md** rewritten with comprehensive status of all components
-- **SAWFinal.lean** header rewritten with detailed sorry chain documentation
-- Dead branches explicitly listed with explanations of why they're dead
-- Preparation files linked with comments explaining their future role
-- Import comment in SAWDiagProof updated to describe the fundamental sorry chain
-
-### 4. Dependency Analysis
-- Attempted to consolidate sorry's by connecting SAWStripIdentityFromVR to SAWRecurrenceProof,
-  but this caused elaboration conflicts in SAWStripT1Exact (synthesis failures from the
-  expanded import graph). The connection was reverted.
-- Verified no circular dependencies exist in the current import graph
-- Documented the import structure constraints that prevent consolidation
-
-## Current Sorry Status
-
-### Critical path (3 sorry's for the main theorem):
-1. **`pair_winding_relation`** (SAWPairCancellation.lean) — Turning number for loop-reversed pairs
-2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — B ≤ 1 from observable
-3. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — Strip identity in the limit
-
-### Dead branches (7 sorry's, NOT on critical path):
-4. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — equivalent to #2
-5. `trail_vertex_relation` (SAWCancellationIdentity.lean) — superseded by fresh version
-6. `triplet_part_zero` (SAWTrailVertexRelation.lean) — non-fresh trail version
-7. `pair_part_zero` (SAWTrailVertexRelation.lean) — non-fresh trail version
-8. `strip_observable_summable` (SAWStripObservable.lean) — not needed
-9. `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning number
-10. `prefix_penultimate_is_neighbor` (SAWPairWindingProof.lean) — new helper, not yet used
-
-### Fully proved components:
-- Hammersley-Welsh decomposition (all SAWHW*.lean sorry-free)
-- Algebraic identities (pair_cancellation, triplet_cancellation)
-- Vertex relation triplet part (freshVertexSum_triplet_part_zero)
-- Vertex relation pair part (freshVertexSum_pair_part_zero_proved, modulo #1)
-- Connective constant infrastructure (submultiplicativity, Fekete's lemma)
-- Bridge recurrence (modulo #3)
-- Walk partition and cutting arguments

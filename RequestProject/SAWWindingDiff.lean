@@ -86,7 +86,9 @@ lemma pair_winding_diff {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (γ : FreshIncomingPair T L v k) :
     (pairInvol hv hv_ne γ).1.winding - γ.1.winding = 8 * Real.pi / 3 ∨
     (pairInvol hv hv_ne γ).1.winding - γ.1.winding = -(8 * Real.pi / 3) := by
-  have := pair_winding_relation hv hv_ne γ;
-  grind
+  obtain ⟨W, j, h_cases, _⟩ := pair_winding_relation hv hv_ne γ
+  rcases h_cases with ⟨_, _, hw1, hw2⟩ | ⟨_, _, hw1, hw2⟩
+  · left; linarith
+  · right; linarith
 
 end

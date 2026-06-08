@@ -153,16 +153,22 @@ for simple closed curves on the hex lattice. The key steps would be:
 4. Combined with the specific geometry at v, this determines the
    suffix winding to be ±4π/3 -/
 
-/-- The winding relation for pairs.
+/-- The winding relation for pairs (corrected: allows both orderings).
     **Sorry**: requires the discrete turning number theorem for
-    simple closed trails on the hexagonal lattice. -/
+    simple closed trails on the hexagonal lattice.
+
+    The disjunction covers both loop orientations (clockwise/counterclockwise).
+    In each case, the algebraic pair cancellation identity applies. -/
 lemma pair_winding_relation {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
     ∃ (W_common : ℝ) (j : Fin 3),
-      k = (fin3_other j).1 ∧ pairExitIdx hv_ne γ = (fin3_other j).2 ∧
-      γ.1.winding = W_common - 4 * Real.pi / 3 ∧
-      (pairInvol hv hv_ne γ).1.winding = W_common + 4 * Real.pi / 3 ∧
+      ((k = (fin3_other j).1 ∧ pairExitIdx hv_ne γ = (fin3_other j).2 ∧
+        γ.1.winding = W_common - 4 * Real.pi / 3 ∧
+        (pairInvol hv hv_ne γ).1.winding = W_common + 4 * Real.pi / 3) ∨
+       (k = (fin3_other j).2 ∧ pairExitIdx hv_ne γ = (fin3_other j).1 ∧
+        γ.1.winding = W_common + 4 * Real.pi / 3 ∧
+        (pairInvol hv hv_ne γ).1.winding = W_common - 4 * Real.pi / 3)) ∧
       (pairInvol hv hv_ne γ).1.len = γ.1.len := by
   sorry
 
@@ -210,17 +216,19 @@ private lemma exp_shift_plus' (W : ℝ) :
 
     **Proved** from pair_winding_relation + algebraic lemmas.
     The only remaining sorry in the chain is pair_winding_relation
-    (the discrete turning number theorem for hex lattice loops). -/
+    (the discrete turning number theorem for hex lattice loops).
+    Handles both orderings of the pair indices. -/
 lemma pair_exp_cancellation {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv : PaperFinStrip T L v) (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
     midEdgeDir v k * Complex.exp (-Complex.I * ↑sigma * ↑γ.1.winding) +
     midEdgeDir v (pairExitIdx hv_ne γ) *
       Complex.exp (-Complex.I * ↑sigma * ↑(pairInvol hv hv_ne γ).1.winding) = 0 := by
-  obtain ⟨W_common, j_idx, hk, hexit, hw1, hw2, _⟩ := pair_winding_relation hv hv_ne γ
-  simp only [hw1, hw2, hk, hexit, exp_shift_minus', exp_shift_plus']
+  obtain ⟨W_common, j_idx, h_cases, _⟩ := pair_winding_relation hv hv_ne γ
   have h := fin3_other_pair_cancel v j_idx
-  linear_combination Complex.exp (-Complex.I * ↑sigma * ↑W_common) * h
+  rcases h_cases with ⟨hk, hexit, hw1, hw2⟩ | ⟨hk, hexit, hw1, hw2⟩ <;>
+    simp only [hw1, hw2, hk, hexit, exp_shift_minus', exp_shift_plus'] <;>
+    linear_combination Complex.exp (-Complex.I * ↑sigma * ↑W_common) * h
 
 /-! ## Pair contribution cancels
 
