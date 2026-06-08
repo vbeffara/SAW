@@ -12,6 +12,7 @@ The fundamental sorry chain: `pair_winding_relation` (turning number theorem)
 import Mathlib
 import RequestProject.SAWDiagConnection
 import RequestProject.SAWStripIdentityCorrect
+import RequestProject.SAWStripIdentityFromVR
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -126,7 +127,7 @@ lemma paper_bridge_partial_sum_shifted_le (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤
           (fun s _ _ => pow_nonneg xc_pos.le _)
     _ = B_paper T L xc := by rw [show B_paper T L xc = ∑ s : PaperSAW_B T L, xc ^ (s.len + 1)
           from by unfold B_paper; exact tsum_fintype _]
-    _ ≤ 1 := B_paper_le_one_direct T L hT hL
+    _ ≤ 1 := B_paper_le_one_from_vr T L hT hL
 
 /-
 Finite partial sums of paper bridge weights are ≤ 1/xc.

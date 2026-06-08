@@ -18,11 +18,15 @@ This file establishes the bridge between the proved `fresh_vertex_relation`
 and the needed `infinite_strip_identity`. The key sorry is
 `finite_strip_identity_from_vr` — the finite strip identity derived
 from the vertex relation.
+
+## Import note
+
+This file does NOT import SAWDiagProof to avoid a circular import.
+Instead, SAWDiagProof imports this file and uses B_paper_le_one_from_vr.
 -/
 
 import Mathlib
 import RequestProject.SAWPairInvolutionProof
-import RequestProject.SAWDiagProof
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -91,53 +95,22 @@ lemma B_paper_le_one_from_vr (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
   have h_ce := c_eps_pos
   nlinarith
 
-/-! ## Bridge partition bound from the strip identity -/
-
-/-- Each PaperSAW_B T L maps injectively to PaperBridge T. -/
-def paperSAWB_to_bridge {T L : ℕ} (s : PaperSAW_B T L) : PaperBridge T where
-  end_v := s.saw.w
-  walk := s.saw.p
-  end_right := s.end_right
-  in_strip := fun v hv => (s.in_strip v hv).1
-
-lemma paperSAWB_to_bridge_injective (T L : ℕ) :
-    Function.Injective (@paperSAWB_to_bridge T L) := by
-  intro s1 s2 h_eq;
-  cases s1 ; cases s2 ; simp_all +decide [ paperSAWB_to_bridge ];
-  cases ‹SAW paperStart _› ; cases ‹SAW paperStart _› ; aesop
-
-lemma paperSAWB_to_bridge_len {T L : ℕ} (s : PaperSAW_B T L) :
-    (paperSAWB_to_bridge s).walk.1.length = s.len := s.saw.l
-
-/-- From the strip identity: xc · paper_bridge_partition T xc ≤ 1. -/
-lemma bridge_partition_bound_from_vr (T : ℕ) (hT : 1 ≤ T) :
-    xc * paper_bridge_partition T xc ≤ 1 := by
-  have h := paper_bridge_upper_bound T hT
-  have hxc := xc_pos
-  calc xc * paper_bridge_partition T xc
-      ≤ xc * (1 / xc) := by exact mul_le_mul_of_nonneg_left h xc_pos.le
-    _ = 1 := by field_simp
-
 /-! ## Summary
 
 This file provides:
 1. `vertex_relation_at_interior` — PROVED (from fresh_vertex_relation)
 2. `finite_strip_identity_from_vr` — SORRY (discrete Stokes + boundary eval)
 3. `B_paper_le_one_from_vr` — PROVED from #2
-4. `bridge_partition_bound_from_vr` — PROVED from existing infrastructure
 
 The single sorry `finite_strip_identity_from_vr` represents the
 discrete Stokes argument + boundary evaluation. It is equivalent to
-both `B_paper_le_one_strip` and (combined with the limit argument)
-`infinite_strip_identity`.
+`B_paper_le_one_strip` (in SAWStripIdentityCorrect.lean).
 
 ### Connection to the main theorem
 
-The main theorem `connective_constant_eq_direct` depends on:
-- `infinite_strip_identity` (for the bridge recurrence → Z(xc) = ∞)
-- `B_paper_le_one_strip` (for paper_bridge_partial_sum_le → bridge decay → HW bound → Z(x) < ∞)
-
-Both of these follow from `finite_strip_identity_from_vr`.
+SAWDiagProof imports this file and uses `B_paper_le_one_from_vr`
+instead of `B_paper_le_one_strip`, connecting the vertex relation
+chain to the bridge partition bounds.
 -/
 
 end

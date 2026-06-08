@@ -31,28 +31,27 @@ SAW.lean               — Core definitions, constants, algebraic identities
 
 ## Remaining sorry's
 
-The main theorem depends on three independent sorry chains:
+The main theorem depends on two independent sorry chains:
 
-1. **`pair_winding_relation`** (SAWPairCancellation.lean) — The turning number
-   argument for loop-reversed pairs on the hex lattice. CORRECTED to allow both
-   orderings (clockwise/counterclockwise loops). The winding relation follows
-   from the discrete turning number theorem (`hex_closed_trail_turning_number`
-   in SAWTurningNumber.lean). Extensive winding infrastructure is proved:
-   additivity, reversal, suffix trail conditions, suffix winding negation.
-
-2. **`B_paper_le_one_strip`** (SAWStripIdentityCorrect.lean) — The core bound
-   B_paper(T,L,xc) ≤ 1 from the parafermionic observable (Lemma 2 of the paper).
-   This requires the discrete Stokes argument: summing the vertex relation over
-   all interior vertices, cancelling interior mid-edges, and evaluating boundary
-   contributions. The vertex relation (Lemma 1) is proved modulo #1.
-
-3. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
-   1 = c_α·A_inf + xc·B for the infinite strip. This follows from the finite
-   strip identity (Lemma 2) by taking L→∞. Same dependency as #2.
-
-4. **`hex_closed_trail_turning_number`** (SAWTurningNumber.lean) — NEW.
-   The discrete Gauss-Bonnet theorem: a simple closed hex trail has total
+**Chain A** (Z(x) < ∞ for x < xc): Three sorry's in sequence:
+1. **`hex_closed_trail_turning_number`** (SAWTurningNumber.lean) — ROOT CAUSE.
+   The discrete Gauss-Bonnet/Umlaufsatz: a simple closed hex trail has total
    turning ±2π. This is the deepest unproved mathematical fact.
+2. **`pair_winding_relation`** (SAWPairCancellation.lean) — needs #1.
+   The turning number argument for loop-reversed pairs on the hex lattice.
+3. **`finite_strip_identity_from_vr`** (SAWStripIdentityFromVR.lean) — needs
+   vertex relation (from #2) + discrete Stokes argument. The Lemma 2 of the
+   paper: 1 = c_α·A + B + c_ε·E. Now connected to the main chain via
+   SAWDiagProof (which uses B_paper_le_one_from_vr).
+
+**Chain B** (Z(xc) = ∞): One independent sorry:
+4. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
+   1 = c_α·A_inf + xc·B for the infinite strip. This is the L→∞ limit of #3.
+   Could be derived from #3 via monotone convergence.
+
+**Note:** `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) is NO LONGER
+on the critical path. SAWDiagProof now uses `B_paper_le_one_from_vr` from
+SAWStripIdentityFromVR, connecting through the vertex relation chain.
 
 The Hammersley-Welsh decomposition chain is FULLY PROVED (sorry-free).
 
@@ -88,9 +87,9 @@ The following sorry's are NOT on the critical path for the main theorem:
 - `hex_simple_closed_trail_winding` (SAWWindingDiff.lean) — general turning
   number theorem, would be sufficient for `pair_winding_relation` but the
   specific pair winding is all that's needed
-- `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — the finite
-  strip identity from the vertex relation, currently not connected to the
-  main chain due to import structure; equivalent to `B_paper_le_one_strip`
+- `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) — SUPERSEDED by
+  `B_paper_le_one_from_vr` in SAWStripIdentityFromVR.lean. The main theorem
+  now goes through the vertex relation chain.
 -/
 
 -- Main proof chain

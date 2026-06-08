@@ -19,6 +19,7 @@ open Real Complex ComplexConjugate Filter Topology
 noncomputable section
 
 set_option maxHeartbeats 1600000
+set_option synthInstance.maxHeartbeats 40000
 
 /-! ## Path graph structure of width-1 strip
 
