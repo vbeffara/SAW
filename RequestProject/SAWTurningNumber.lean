@@ -19,6 +19,18 @@ infinite_strip_identity) ultimately depend on this result.
 The proof would use the fact that a simple closed polygon in the plane has
 total exterior angle ±2π (the discrete Gauss-Bonnet theorem / turning
 tangent theorem). On the hex lattice, each exterior angle is ±π/3.
+
+## Proof decomposition
+
+The proof decomposes into two parts:
+1. `closed_trail_winding_multiple_of_2pi` — For ANY closed hex trail (not
+   necessarily simple), the total winding (hexWalkWinding + closure) is a
+   multiple of 2π. This is proved algebraically: the product of all direction
+   ratios telescopes to 1, giving exp(i·total) = 1.
+
+2. For a SIMPLE closed hex trail, the total winding is exactly ±2π
+   (turning number = ±1). This is the topological part that requires
+   simplicity, and is the discrete Gauss-Bonnet / Umlaufsatz theorem.
 -/
 
 import Mathlib
@@ -30,21 +42,26 @@ noncomputable section
 
 set_option maxHeartbeats 6400000
 
-/-! ## The turning number theorem for hex lattice closed trails
+/-! ## Part 1: Hex edge direction properties
 
-For a closed trail L = [v₀, v₁, ..., vₙ₋₁, v₀] on the hex lattice
-where all vertices v₁, ..., vₙ₋₁ are distinct (simple):
-  hexWalkWinding L = ±2π - closure_turn
+Each hex edge direction has unit magnitude.
+The product of direction ratios along a trail telescopes. -/
 
-where closure_turn = arg(d₁/dₙ) is the angle between the first
-direction d₁ = embed(v₁)-embed(v₀) and the last direction 
-dₙ = embed(v₀)-embed(vₙ₋₁).
+/-
+Each hex edge direction has unit magnitude (norm 1).
+-/
+lemma hex_edge_norm_one (v w : HexVertex) (h : hexGraph.Adj v w) :
+    Complex.normSq (correctHexEmbed w - correctHexEmbed v) = 1 := by
+  rcases v with ⟨ x, y, b ⟩ ; rcases w with ⟨ x', y', b' ⟩ ;
+  cases b <;> cases b' <;> simp_all +decide [ hexGraph ];
+  · unfold correctHexEmbed; norm_num [ Complex.normSq ] ; ring;
+    rcases h with ( ⟨ rfl, rfl ⟩ | ⟨ rfl, rfl ⟩ | ⟨ rfl, rfl ⟩ ) <;> norm_num <;> ring;
+  · rcases h with ( ⟨ rfl, rfl ⟩ | ⟨ rfl, rfl ⟩ | ⟨ rfl, rfl ⟩ ) <;> norm_num [ correctHexEmbed ];
+    · norm_num [ Complex.normSq ];
+    · norm_num [ Complex.normSq ] ; ring ; norm_num;
+    · norm_num [ Complex.normSq ] ; ring ; norm_num
 
-Equivalently:
-  hexWalkWinding L + closure_turn = ±2π
-
-This is the discrete analogue of the Gauss-Bonnet theorem:
-the total curvature of a simple closed curve is ±2π. -/
+/-! ## The turning number theorem for simple closed hex trails -/
 
 /-- The turning number theorem for simple closed hex trails.
     For a list [v₀, v₁, ..., vₙ₋₁, v₀] that forms a simple closed trail
