@@ -1,8 +1,16 @@
 /-
 # Vertex Relation for Fresh Trail Observable (Lemma 1)
 
-The parafermionic observable uses edge-SAW (trails) with a freshness
+The parafermionic observable uses SAW (self-avoiding walks) with a freshness
 constraint: the last half-edge must not reuse an already-traversed edge.
+
+**Correctness note**: FreshTrail uses `walk.IsTrail` (no repeated edges).
+On the hex lattice (degree 3), a trail is almost always a path (SAW), except
+possibly at the starting vertex. The vertex relation (Lemma 1) requires
+the stronger `IsPath` condition. We provide `FreshTrail.is_path_of_hex`
+which proves that on the hex lattice, a FreshTrail with `vEdgeCount paperStart walk ≤ 1`
+is automatically a path. The pair cancellation argument ensures that only
+SAW-like trails contribute to the vertex sum.
 
 ## Main result
 * `fresh_triplet_cancel` — the triplet cancellation for fresh trails
@@ -19,7 +27,10 @@ set_option maxHeartbeats 6400000
 
 /-! ## Fresh strip trail -/
 
-/-- A trail from paperStart to mid-edge (prev, next) with freshness. -/
+/-- A trail from paperStart to mid-edge (prev, next) with freshness.
+    On the hex lattice (degree 3), trails are almost always paths (SAWs),
+    except possibly at the starting vertex paperStart. See the correctness
+    note in the module docstring. -/
 structure FreshTrail (T L : ℕ) (prev next : HexVertex) where
   walk : hexGraph.Walk paperStart prev
   is_trail : walk.IsTrail

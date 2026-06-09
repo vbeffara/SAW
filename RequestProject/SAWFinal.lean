@@ -74,6 +74,8 @@ part of the build:
 - `SAWHWExtraFinal` — Extra walk generating function bounds
 - `SAWHWExtraSumProof` — Infrastructure for extra walk bounds
 - `SAWMainNew` — Alternative proof path via infinite_strip_identity only
+- `SAWHexPathHelpers` — Hex lattice trail → path lemmas (sorry-free,
+  preparation for IsTrail → IsPath fix in FreshTrail)
 
 ## Dead branches (explicitly marked)
 
@@ -125,6 +127,9 @@ import RequestProject.SAWHWExtraSumProof
 
 -- Alternative proof path
 import RequestProject.SAWMainNew
+
+-- Hex path helpers (preparation for IsTrail → IsPath fix)
+import RequestProject.SAWHexPathHelpers
 
 open Real Complex ComplexConjugate Filter Topology
 

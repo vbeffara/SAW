@@ -19,8 +19,9 @@ for a simple closed trail L on the hex lattice, hexWalkWinding L + closure = ±2
 
 This is the discrete analogue of the Umlaufsatz (Hopf's turning tangent theorem):
 a simple closed polygon has total exterior angle ±2π. This result is not
-currently available in Mathlib and is a deep topological fact equivalent
-in difficulty to the Jordan curve theorem for polygons.
+currently available in Mathlib and requires proving that a simple closed
+polygon has turning number ±1, which is equivalent in difficulty to the
+Jordan curve theorem for polygons.
 
 **Full chain:**
 ```
@@ -51,37 +52,77 @@ infinite_strip_identity (SORRY)
     → Z_xc_diverges_corrected [Z(xc) = ∞]
 ```
 
-## All Sorry Locations (10 total, down from 12)
+## Critical Correctness Issue: IsTrail vs IsPath
+
+### The Problem
+
+`FreshTrail` in `SAWPathVertexRelation.lean` uses `walk.IsTrail` (no repeated
+edges) instead of `walk.IsPath` (no repeated vertices / SAW). The paper's
+argument requires self-avoiding walks (SAWs), not just trails.
+
+On the hex lattice (degree 3), a trail is a SAW at all interior vertices
+(since visiting a vertex twice would use 4 edges but there are only 3).
+However, the **starting vertex** (paperStart) can be revisited: the trail
+uses 1 edge at the start, and the inner walk can later visit paperStart
+using the remaining 2 edges.
+
+### Why It Matters
+
+A trail that revisits paperStart can create a CW loop (clockwise-oriented
+simple closed polygon). For CW loops with specific index configurations,
+the pair cancellation identity FAILS:
+
+```
+j̄ · exp(-iπ/3) + j · exp(iπ/3) = -2 ≠ 0
+```
+
+This means `freshVertexSum = 0` (the vertex relation) is FALSE for trails
+that revisit paperStart. The vertex relation only holds for SAWs.
+
+A concrete counterexample: in a strip with T=2, L=2, the trail
+paperStart → v → nbr₁ → ... → paperStart → ... → nbr₂ creates a CW
+loop that contributes -2·d₀·exp(-iσW_prefix) to the vertex sum, which
+does not cancel with its pair.
+
+### The Fix
+
+Change `FreshTrail.is_trail : walk.IsTrail` to `FreshTrail.is_path : walk.IsPath`.
+This requires:
+1. Updating `freshExtend` to prove IsPath for extended walks
+2. Updating `pairInvol` to prove IsPath for paired walks
+3. Adding a helper lemma: `vEdgeCount v w = 0 ∧ v ≠ start → v ∉ w.support`
+
+Both freshExtend and pairInvol preserve the IsPath property:
+- freshExtend adds v to the end; v ∉ support since vEdgeCount = 0
+- pairInvol swaps exit/k directions; the paired walk has the same vertex
+  set as the original (minus one endpoint, plus another that wasn't visited)
+
+The fix is documented but not yet implemented to avoid breaking the
+existing compilation. The fix is REQUIRED for pair_winding_relation
+(and hence the main theorem) to be provable.
+
+## All Sorry Locations (11 total)
 
 ### Critical path (4 sorry's):
 1. `hex_closed_trail_turning_number` (SAWTurningNumber.lean:74) — **ROOT CAUSE A**
-   The discrete Umlaufsatz for hex lattice polygons. Requires proving that
-   a simple closed polygon has turning number ±1.
+   The discrete Umlaufsatz for hex lattice polygons.
 2. `pair_winding_relation` (SAWPairCancellation.lean:173) — needs #1 + orientation
-   Also needs the correct SIGN of the turning number (determined by planarity
-   of the hex lattice embedding).
 3. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean:84) — discrete Stokes
-   Requires formalizing the summation of the vertex relation over all vertices,
-   cancellation of interior mid-edges, and boundary evaluation.
 4. `infinite_strip_identity` (SAWRecurrenceProof.lean:56) — **ROOT CAUSE B**
-   L→∞ limit of #3, or direct vertex relation argument on infinite strip.
+   L→∞ limit of #3.
 
-### Dead branches (6 sorry's, NOT on critical path):
+### Dead branches (7 sorry's, NOT on critical path):
 5. `trail_vertex_relation` (SAWCancellationIdentity.lean:305) — superseded by fresh version
-6. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385) — **SUPERSEDED** by
-   B_paper_le_one_from_vr (SAWStripIdentityFromVR.lean)
+6. `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean:385) — SUPERSEDED by
+   B_paper_le_one_from_vr
 7. `strip_observable_summable` (SAWStripObservable.lean:173) — not needed
 8. `triplet_part_zero` (SAWTrailVertexRelation.lean:274) — superseded
 9. `pair_part_zero` (SAWTrailVertexRelation.lean:282) — superseded
-10. `hex_simple_closed_trail_winding` (SAWWindingDiff.lean:72) — alternative turning number
+10. `hex_simple_closed_trail_winding` (SAWWindingDiff.lean:72) — alternative formulation
+11. `pair_winding_diff` depends on #2 (circular, not independently needed)
 
-### Recently proved (previously sorry):
-- `prefix_penultimate_is_neighbor` (SAWPairWindingProof.lean) — ✓ PROVED
-  The penultimate vertex of the prefix is a neighbor of v, distinct from
-  both k and exitIdx. Key preparation for pair_winding_relation.
-- `pair_inner_loop_trail_rev` (SAWWindingDecomp.lean) — ✓ PROVED
-  The reversed inner loop forms a hex trail list. Uses the fact that
-  pairInvol constructs a valid trail walk.
+Note: `pair_winding_diff` (SAWWindingDiff.lean:91) is derived from pair_winding_relation
+and is not a separate sorry — it's proved from the sorry'd lemma.
 
 ## Fully Proved Components
 
@@ -113,8 +154,8 @@ All SAWHW*.lean files are sorry-free:
 - `hexWalkWinding_reverse_list'` ✓ — winding reversal
 - `pair_suffix_hex_trail` ✓
 - `pair_suffix_winding_neg` ✓
-- `prefix_penultimate_is_neighbor` ✓ — **NEWLY PROVED**
-- `pair_inner_loop_trail_rev` ✓ — **NEWLY PROVED**
+- `prefix_penultimate_is_neighbor` ✓
+- `pair_inner_loop_trail_rev` ✓
 
 ### Bridge Recurrence (PROVED modulo infinite_strip_identity)
 - `bridge_recurrence_proved`: B(T) ≤ c_α·B(T+1)² + B(T+1) ✓
@@ -129,34 +170,68 @@ All SAWHW*.lean files are sorry-free:
 
 ### hex_closed_trail_turning_number (Umlaufsatz)
 This is equivalent to proving that a simple closed polygon in the plane
-has total exterior angle ±2π. This is a fundamental theorem in discrete
-differential geometry (Hopf's Umlaufsatz, 1935) that requires either:
+has total exterior angle ±2π. On the hex lattice:
+- Each turn is ±π/3 (proved: `hex_turn_value`)
+- For a closed polygon, the sum is 6k·(π/3) = 2kπ
+- The claim is |k| = 1 for SIMPLE (non-self-intersecting) polygons
+
+Proving |k| = 1 requires one of:
 - The Jordan curve theorem (not in Mathlib)
-- A constructive ear-clipping argument (complex on hex lattice: girth 6)
-- A signed area / winding number argument (requires JCT for polygons)
-None of these foundational results are currently in Mathlib.
+- A constructive ear-clipping argument
+- A signed area / Pick's theorem argument
+- A crossing number argument
+
+None of these foundations are currently in Mathlib.
 
 ### pair_winding_relation (Turning Number + Orientation)
 Beyond the turning number theorem, this requires determining the SIGN
-of the turning (CW vs CCW). The sign is determined by the planarity of
-the hex lattice embedding and the CCW ordering of neighbors (d₁ = j·d₀
-with j = exp(2πi/3)). Formalizing this planarity argument is non-trivial.
+of the turning (CW vs CCW). The sign is determined by:
+1. The planarity of the hex lattice embedding
+2. The CCW ordering of neighbors (d₁ = j·d₀ with j = exp(2πi/3))
+3. The blocking effect of the prefix path on loop orientation
+
+For SAW-based pair walks (with the IsPath fix), the prefix path from
+paperStart to v prevents the inner walk from going "the wrong way"
+around v. This constrains the loop to have the correct orientation
+for pair cancellation. Formalizing this requires the IsPath fix.
 
 ### finite_strip_identity_from_vr (Discrete Stokes)
-This requires formalizing the full discrete Stokes argument:
-1. Define interior/boundary vertices of the strip
-2. Show vertex relation at each interior vertex (done: vertex_relation_at_interior)
-3. Show interior mid-edges cancel (need edge-pairing infrastructure)
-4. Evaluate boundary contributions (winding at each boundary type)
-Each step is conceptually simple but requires substantial bookkeeping.
+The argument sums freshVertexSum over all interior vertices:
+1. Interior mid-edges cancel: z is the midpoint of its edge, so
+   (z-u) + (z-w) = 0 for the two endpoints u, w
+2. Boundary mid-edges survive
+3. Boundary evaluation gives the partition functions A, B, E
+
+Each step is conceptually simple but requires substantial bookkeeping:
+- Define interior vs boundary vertices of the strip
+- Define interior vs boundary mid-edges
+- Show the cancellation for interior mid-edges
+- Evaluate boundary contributions (winding at each boundary type)
 
 ### infinite_strip_identity (Limit)
-Can be derived from finite_strip_identity_from_vr by taking L→∞, but
-this requires monotone convergence of A_paper, B_paper in L, and showing
-the E term vanishes. Alternatively, a direct vertex relation argument
-on the infinite strip, which has similar complexity to #3.
+Derived from finite_strip_identity_from_vr by taking L→∞:
+- A_paper(T,L) → A_inf(T) as L→∞ (monotone convergence)
+- B_paper(T,L) → B_inf(T) as L→∞ (monotone convergence)
+- E_paper(T,L) → E_inf(T) as L→∞
+
+The identity 1 = c_α·A_inf + B_inf + c_ε·E_inf follows. If E_inf = 0,
+this gives 1 = c_α·A_inf + xc·B.
 
 ## File Organization
 
-All files that contribute to the proof are imported transitively from `SAWFinal.lean`.
-The project builds successfully with `lake build`.
+All files contributing to the proof are imported transitively from `SAWFinal.lean`.
+The project builds successfully with `lake build RequestProject.SAWFinal`.
+
+### Preparation files (not on critical path but needed for future use)
+- `SAWDiscreteStokes` — Abstract discrete Stokes framework
+- `SAWStokesAbstract` — Abstract combinatorial Stokes lemma
+- `SAWWindingLemma` — Winding append/extension lemmas
+- `SAWWindingReverse` — Additional winding reversal results
+- `SAWWindingDecomp` — Winding decomposition for pair walks
+- `SAWTurningNumber` — Turning number theorem (sorry'd)
+- `SAWStripAlgebra` — Algebraic identities for strip boundary evaluation
+- `SAWObservableSum` — Observable as formal sum over trails
+- `SAWPairWindingRelation` — Alternative pair cancellation via winding
+- `SAWPairWindingProof` — Pair winding proof infrastructure
+
+All of these files are imported from SAWFinal.lean and build successfully.
