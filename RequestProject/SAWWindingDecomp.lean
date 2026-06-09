@@ -80,7 +80,9 @@ lemma pair_inner_loop_trail {T L : ℕ} {v : HexVertex} {k : Fin 3}
     exact?;
   aesop
 
-/-- The reversed inner loop also forms a hex trail list. -/
+/-
+The reversed inner loop also forms a hex trail list.
+-/
 lemma pair_inner_loop_trail_rev {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv : PaperFinStrip T L v)
     (hv_ne : v ≠ paperStart)
@@ -88,7 +90,27 @@ lemma pair_inner_loop_trail_rev {T L : ℕ} {v : HexVertex} {k : Fin 3}
     HexTrailList ((pairPrefix hv_ne γ).support ++
       [hexNeighbors3 v k] ++
       (pairInner hv_ne γ).reverse.support.tail ++ [v]) := by
-  sorry
+  have h_trail : (pairInvol hv hv_ne γ).1.walk.IsTrail := by
+    exact pairInvol hv hv_ne γ |>.1 |>.2;
+  have h_support : (pairInvol hv hv_ne γ).1.walk.support ++ [v] = (pairPrefix hv_ne γ).support ++ [hexNeighbors3 v k] ++ (pairInner hv_ne γ).reverse.support.tail ++ [v] := by
+    convert congr_arg ( fun x : List HexVertex => x ++ [ v ] ) ( show ( pairInvol hv hv_ne γ ).1.walk.support = ( pairPrefix hv_ne γ ).support ++ [ hexNeighbors3 v k ] ++ ( pairInner hv_ne γ ).reverse.support.tail from ?_ ) using 1;
+    unfold pairInvol;
+    unfold pairInvolWalk; simp +decide [ mkPairedWalk ] ;
+    simp +decide [ SimpleGraph.Walk.support_append, SimpleGraph.Walk.support_cons ];
+    rw [ List.dropLast_append_getLast? ];
+    cases h : ( pairInner hv_ne γ ).support <;> simp_all +decide [ SimpleGraph.Walk.support ];
+    rw [ ← h ];
+    rw [ List.getLast?_eq_some_getLast ];
+    all_goals norm_num [ ← h ];
+  convert walk_support_is_hex_trail_list' _ _ using 1;
+  convert h_support.symm using 1;
+  rotate_left;
+  exact paperStart;
+  exact v;
+  exact ( pairInvol hv hv_ne γ ).1.walk.append ( SimpleGraph.Walk.cons ( hexNeighbors3_adj v ( pairExitIdx hv_ne γ ) |> SimpleGraph.Adj.symm ) SimpleGraph.Walk.nil );
+  · simp_all +decide [ SimpleGraph.Walk.isTrail_def ];
+    grind +suggestions;
+  · simp +decide [ SimpleGraph.Walk.support_append ]
 
 /-
 The closed suffix [v, exit_nbr, ..., k_nbr, v] forms a hex trail list.

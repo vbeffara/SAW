@@ -32,15 +32,46 @@ edge is s(hexNeighbors3 v k, v), the two v-edges are:
 And j, k, exitIdx are all distinct, so k and exitIdx are fin3_other j.
 -/
 
-/-- The vertex just before v in the prefix is a neighbor of v,
-    distinct from both k and exitIdx. -/
+/-
+The vertex just before v in the prefix is a neighbor of v,
+    distinct from both k and exitIdx.
+-/
 lemma prefix_penultimate_is_neighbor {T L : ℕ} {v : HexVertex} {k : Fin 3}
     (hv_ne : v ≠ paperStart)
     (γ : FreshIncomingPair T L v k) :
     ∃ j : Fin 3,
       (pairPrefix hv_ne γ).support.dropLast.getLast! = hexNeighbors3 v j ∧
       j ≠ k ∧ j ≠ pairExitIdx hv_ne γ := by
-  sorry
+  -- The prefix walk is a walk from paperStart to v, so its support has length at least 2.
+  have h_support_length : 2 ≤ (pairPrefix hv_ne γ).support.length := by
+    simp [pairPrefix];
+    cases h : ( γ.1.walk.takeUntil v ( pair_walk_v_in_support γ hv_ne ) ) <;> aesop;
+  obtain ⟨j, hj⟩ : ∃ j : Fin 3, (pairPrefix hv_ne γ).support.dropLast.getLast! = hexNeighbors3 v j := by
+    -- The second-to-last vertex in the prefix walk is a neighbor of v.
+    have h_neighbor : hexGraph.Adj ((pairPrefix hv_ne γ).support.dropLast.getLast!) v := by
+      have h_neighbor : ∀ {u w : HexVertex} {p : hexGraph.Walk u w}, p.length > 0 → hexGraph.Adj (p.support.dropLast.getLast!) w := by
+        intros u w p hp_pos
+        induction' p with u w p ih;
+        · contradiction;
+        · cases ‹SimpleGraph.Walk hexGraph p ih› <;> simp_all +decide [ List.dropLast ];
+      grind +qlia;
+    have := hexNeighbors3_complete v _ h_neighbor.symm; aesop;
+  have h_last_edge : s(hexNeighbors3 v j, v) ∈ (pairPrefix hv_ne γ).edges := by
+    have h_last_edge : ∀ {u v : HexVertex} {p : hexGraph.Walk u v}, 2 ≤ p.support.length → s(p.support.dropLast.getLast!, v) ∈ p.edges := by
+      intros u v p hp_length
+      induction' p with u v p ih;
+      · contradiction;
+      · cases ‹hexGraph.Walk p ih› <;> simp_all +decide [ List.dropLast ];
+    exact hj ▸ h_last_edge h_support_length;
+  refine' ⟨ j, hj, _, _ ⟩ <;> intro hj' <;> simp_all +decide [ FreshIncomingPair ];
+  · have := γ.1.fresh;
+    contrapose! this;
+    rw [ pairDecomp ];
+    simp +decide [ SimpleGraph.Walk.edges_append, h_last_edge ];
+    assumption;
+  · have h_last_edge : s(hexNeighbors3 v (pairExitIdx hv_ne γ), v) ∈ (pairInvolWalk hv_ne γ).edges := by
+      unfold pairInvolWalk at *; simp_all +decide [ mkPairedWalk ] ;
+    exact absurd h_last_edge ( by simpa using pairInvolWalk_fresh hv_ne γ )
 
 /-
 k and exitIdx are the fin3_other of the arrival index j.

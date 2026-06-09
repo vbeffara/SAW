@@ -12,25 +12,15 @@ a simple closed trail on the hex lattice has turning number ±1.
 
 ## Status
 
-This lemma is sorry'd. It is the single deepest unproved fact in the
-formalization. All other sorry's (pair_winding_relation, B_paper_le_one_strip,
+This lemma is a sorry. It is the single deepest unproved fact in the
+formalization. All other sorry's (pair_winding_relation, finite_strip_identity,
 infinite_strip_identity) ultimately depend on this result.
 
 The proof would use the fact that a simple closed polygon in the plane has
 total exterior angle ±2π (the discrete Gauss-Bonnet theorem / turning
-tangent theorem). On the hex lattice, each exterior angle is ±π/3.
-
-## Proof decomposition
-
-The proof decomposes into two parts:
-1. `closed_trail_winding_multiple_of_2pi` — For ANY closed hex trail (not
-   necessarily simple), the total winding (hexWalkWinding + closure) is a
-   multiple of 2π. This is proved algebraically: the product of all direction
-   ratios telescopes to 1, giving exp(i·total) = 1.
-
-2. For a SIMPLE closed hex trail, the total winding is exactly ±2π
-   (turning number = ±1). This is the topological part that requires
-   simplicity, and is the discrete Gauss-Bonnet / Umlaufsatz theorem.
+tangent theorem / Umlaufsatz). On the hex lattice, each exterior angle is
+±π/3, and the total is constrained to be a multiple of 2π. For simple
+polygons, this multiple is exactly ±1.
 -/
 
 import Mathlib
@@ -42,14 +32,9 @@ noncomputable section
 
 set_option maxHeartbeats 6400000
 
-/-! ## Part 1: Hex edge direction properties
+/-! ## Part 1: Hex edge direction properties -/
 
-Each hex edge direction has unit magnitude.
-The product of direction ratios along a trail telescopes. -/
-
-/-
-Each hex edge direction has unit magnitude (norm 1).
--/
+/-- Each hex edge direction has unit norm squared. -/
 lemma hex_edge_norm_one (v w : HexVertex) (h : hexGraph.Adj v w) :
     Complex.normSq (correctHexEmbed w - correctHexEmbed v) = 1 := by
   rcases v with ⟨ x, y, b ⟩ ; rcases w with ⟨ x', y', b' ⟩ ;
@@ -69,14 +54,11 @@ lemma hex_edge_norm_one (v w : HexVertex) (h : hexGraph.Adj v w) :
     hexWalkWinding L + closure_turn = ±2π
 
     **Sorry**: This is the discrete Gauss-Bonnet theorem applied to
-    simple closed polygons on the hexagonal lattice. The proof requires
-    showing that a simple (non-self-intersecting) closed polygon in
-    the plane has turning number ±1, which is a fundamental result
-    in computational geometry / discrete differential geometry.
-
-    On the hex lattice, each turn is ±π/3, so the sum of n+1 turns
-    (n interior + 1 closure) of ±π/3 must equal ±2π = ±6·(π/3).
-    This means the number of right turns minus left turns is ±6. -/
+    simple closed polygons on the hexagonal lattice (Umlaufsatz).
+    The proof requires showing that a simple (non-self-intersecting)
+    closed polygon in the plane has turning number ±1, which is a
+    fundamental result in computational geometry / discrete differential
+    geometry that is not currently available in Mathlib. -/
 lemma hex_closed_trail_turning_number (L : List HexVertex)
     (hL : 4 ≤ L.length)
     (h_trail : HexTrailList L)

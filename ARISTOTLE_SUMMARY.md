@@ -1,108 +1,127 @@
-# Summary of changes for run b312c309-0a26-427d-81da-6fd895bde0a2
-# Formalization Progress: μ = √(2+√2)
+# Summary of changes for run 193f6f52-050a-4c21-a961-bcc703b18174
+## Progress on the Main Theorem (μ = √(2+√2))
 
-## What was accomplished
+### Proved Two Preparation Sorry's (12 → 10 sorry's)
 
-### 1. Import Refactoring — Eliminated `B_paper_le_one_strip` from Critical Path
+**`prefix_penultimate_is_neighbor`** (`RequestProject/SAWPairWindingProof.lean`)
+- The penultimate vertex of the pair prefix walk is `hexNeighbors3 v j` for some `j ≠ k ∧ j ≠ exitIdx`.
+- Proved using the fresh-edge property and the paired walk's fresh-edge property.
+- Key infrastructure for the pair winding relation (Lemma 1 cancellation identity).
 
-**Key architectural change:** The main theorem previously depended on three independent sorry chains. By refactoring the import structure, I reduced this to two chains:
+**`pair_inner_loop_trail_rev`** (`RequestProject/SAWWindingDecomp.lean`)
+- The reversed inner loop of a pair walk forms a valid hex trail list.
+- Proved by showing the paired walk (pairInvol) constructs a valid trail, then extracting the trail list property.
+- Key infrastructure for the winding decomposition.
 
-- **`SAWStripIdentityFromVR.lean`**: Removed the import of `SAWDiagProof.lean`, breaking a circular import dependency. The file now only imports `SAWPairInvolutionProof.lean`.
-- **`SAWDiagProof.lean`**: Added import of `SAWStripIdentityFromVR.lean` and replaced `B_paper_le_one_direct` (from the standalone sorry `B_paper_le_one_strip`) with `B_paper_le_one_from_vr` (derived from the vertex relation chain via `finite_strip_identity_from_vr`).
+Both lemmas are verified sorry-free (`#print axioms` shows no `sorryAx`).
 
-**Result:** `B_paper_le_one_strip` is no longer on the critical path. It is now a dead branch, superseded by `B_paper_le_one_from_vr`. The main theorem's convergence direction (Z(x) < ∞ for x < xc) now flows through the vertex relation chain.
+### Status of the Three Requested Components
 
-### 2. Fixed Build Failure in `SAWStripT1Exact.lean`
+**Hammersley-Welsh**: Fully proved (all 15+ SAWHW*.lean files are sorry-free). No changes needed.
 
-Added `set_option synthInstance.maxHeartbeats 40000` to fix a `grind` tactic synthesis timeout (`Lean.Grind.NoNatZeroDivisors (ℤ × ℤ × Bool)`).
+**Cancellation Identity (Lemma 1)**: The vertex relation `fresh_vertex_relation` is proved. The pair part vanishes via the pair involution (`freshVertexSum_pair_part_zero_proved`), and the triplet part vanishes via algebraic cancellation. The only remaining gap is `pair_winding_relation`, which requires the discrete Umlaufsatz (turning number theorem for simple closed polygons on the hex lattice). This is a deep topological result not available in Mathlib.
 
-### 3. Updated Documentation
+**Parafermionic Observable (Lemma 2)**: The finite strip identity `finite_strip_identity_from_vr` and `infinite_strip_identity` remain sorry'd. These require formalizing the full discrete Stokes argument (summing the vertex relation over all vertices, cancelling interior edges, evaluating boundary contributions).
 
-- **`PROOF_STATUS.md`**: Comprehensive status with two-chain architecture, all 12 sorry locations classified (4 critical, 2 preparation, 6 dead branches)
-- **`ARISTOTLE_SUMMARY.md`**: High-level summary of changes
-- **`SAWFinal.lean`**: Updated docstring to reflect the refactored import structure
+### Remaining Critical Sorry's (4)
 
-## Current State
+1. **`hex_closed_trail_turning_number`** — The discrete Umlaufsatz: a simple closed hex trail has total turning ±2π. This is equivalent to the Jordan curve theorem for polygons and is not in Mathlib.
 
-### Sorry Architecture (2 independent chains):
+2. **`pair_winding_relation`** — Needs the turning number (#1) plus the correct sign (planarity of hex lattice).
 
-**Chain A** (3 sorry's → Z(x) < ∞ for x < xc):
-1. `hex_closed_trail_turning_number` (SAWTurningNumber.lean) — ROOT CAUSE. The discrete Gauss-Bonnet theorem: a simple closed hex trail has total turning ±2π.
-2. `pair_winding_relation` (SAWPairCancellation.lean) — needs #1
-3. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean) — needs vertex relation (proved from #2) + discrete Stokes argument
+3. **`finite_strip_identity_from_vr`** — The discrete Stokes summation + boundary evaluation.
 
-**Chain B** (1 sorry → Z(xc) = ∞):
-4. `infinite_strip_identity` (SAWRecurrenceProof.lean) — could be derived as L→∞ limit of #3
+4. **`infinite_strip_identity`** — L→∞ limit of #3.
 
-### Dead branches (6 sorry's, NOT on critical path):
-- `B_paper_le_one_strip` — **SUPERSEDED** by vertex relation chain
-- `trail_vertex_relation`, `triplet_part_zero`, `pair_part_zero` — superseded by fresh versions
-- `strip_observable_summable` — not needed
-- `hex_simple_closed_trail_winding` — general turning number (dead branch)
+### Dead Branches (6 sorry's, NOT on critical path)
+Explicitly documented in `PROOF_STATUS.md`. These include superseded versions of the vertex relation and strip identity.
 
-### Preparation (2 sorry's, for future pair_winding_relation proof):
-- `prefix_penultimate_is_neighbor`, `pair_inner_loop_trail_rev`
+### Documentation
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` with comprehensive status information, including explanations of why each remaining sorry is difficult and how the critical path flows through the proof.
 
-### Fully proved (sorry-free):
-- **Hammersley-Welsh decomposition** — all SAWHW*.lean files ✓
-- **Algebraic identities** — pair_cancellation, triplet_cancellation, xc_inv ✓
-- **Vertex relation / Lemma 1** — proved modulo pair_winding_relation ✓
-- **Connective constant infrastructure** — submultiplicativity, Fekete's lemma ✓
-- **Bridge recurrence** — proved modulo infinite_strip_identity ✓
-- **Winding infrastructure** — additivity, reversal, suffix properties ✓
+# Summary of Formalization Progress
 
-## Build Status
+## What Was Accomplished This Session
 
-The project builds successfully with `lake build RequestProject.SAWFinal` (8105 jobs). All files that contribute to the proof are imported transitively from `SAWFinal.lean`.
+### 1. Proved Two Preparation Sorry's
 
-# Formalization Progress: μ = √(2+√2)
+**`prefix_penultimate_is_neighbor`** (SAWPairWindingProof.lean) — ✓ PROVED
+- The penultimate vertex of the prefix walk is a specific neighbor of v
+  with index j ≠ k and j ≠ exitIdx.
+- Key preparation for proving `pair_winding_relation`.
+- Proof uses the fresh-edge property and injectivity of hexNeighbors3.
 
-## Overview
+**`pair_inner_loop_trail_rev`** (SAWWindingDecomp.lean) — ✓ PROVED
+- The reversed inner loop of a pair walk forms a valid hex trail list.
+- Uses the fact that pairInvol constructs a valid trail walk.
+- Key preparation for the winding decomposition.
 
-Formalization of the main theorem from Duminil-Copin & Smirnov (2012):
-the connective constant of the hexagonal lattice equals √(2+√2).
+These reduce the total sorry count from 12 to 10.
 
-## Session Changes
+### 2. Updated Documentation
 
-### 1. Import Refactoring: B_paper ≤ 1 now flows through vertex relation chain
+- `PROOF_STATUS.md` — Comprehensive status with sorry classification
+- `SAWTurningNumber.lean` — Updated docstring explaining why the Umlaufsatz is hard
 
-**Key change:** Refactored the import structure so that the strip bound
-`B_paper(T,L,xc) ≤ 1` flows through the vertex relation chain instead
-of being an independent sorry.
-
-- `SAWStripIdentityFromVR.lean` no longer imports `SAWDiagProof.lean`
-  (breaking the circular import dependency)
-- `SAWDiagProof.lean` now imports `SAWStripIdentityFromVR.lean` and uses
-  `B_paper_le_one_from_vr` instead of `B_paper_le_one_strip`
-- Result: `B_paper_le_one_strip` is no longer on the critical path
-
-This reduces the number of independent sorry chains from 3 to 2.
-
-### 2. Fixed SAWStripT1Exact build failure
-
-Added `set_option synthInstance.maxHeartbeats 40000` to fix a `grind` tactic
-synthesis timeout for `Lean.Grind.NoNatZeroDivisors (ℤ × ℤ × Bool)`.
-
-### 3. Updated documentation
-
-- `PROOF_STATUS.md` — comprehensive status with two-chain architecture
-- `SAWFinal.lean` — updated docstring to reflect refactored imports
-- `SAWStripIdentityFromVR.lean` — updated docstring
-
-## Current Sorry Summary
+## Current Sorry Architecture
 
 ### Critical path (4 sorry's in 2 chains):
-1. `hex_closed_trail_turning_number` — ROOT CAUSE (discrete Gauss-Bonnet)
-2. `pair_winding_relation` — needs #1
+
+**Chain A** (3 sorry's):
+1. `hex_closed_trail_turning_number` — ROOT CAUSE: the discrete Umlaufsatz
+2. `pair_winding_relation` — needs #1 + orientation
 3. `finite_strip_identity_from_vr` — needs vertex relation + discrete Stokes
-4. `infinite_strip_identity` — independent, or L→∞ limit of #3
 
-### Dead branches (6 sorry's): B_paper_le_one_strip (superseded), trail_vertex_relation,
-triplet_part_zero, pair_part_zero, strip_observable_summable, hex_simple_closed_trail_winding
+**Chain B** (1 sorry):
+4. `infinite_strip_identity` — L→∞ limit of #3
 
-### Preparation (2 sorry's): prefix_penultimate_is_neighbor, pair_inner_loop_trail_rev
+### Dead branches (6 sorry's, NOT on critical path):
+- `trail_vertex_relation`, `B_paper_le_one_strip`, `strip_observable_summable`,
+  `triplet_part_zero`, `pair_part_zero`, `hex_simple_closed_trail_winding`
+
+## Why the Critical Sorry's Are Hard
+
+### `hex_closed_trail_turning_number` (The Umlaufsatz)
+This is the discrete Gauss-Bonnet/Hopf Umlaufsatz theorem: a simple
+closed polygon in the plane has total exterior angle ±2π. On the hex
+lattice, each exterior angle is ±π/3, so this requires showing the
+net turn count is ±6.
+
+This result is NOT in Mathlib and is equivalent in difficulty to the
+Jordan curve theorem for polygons. All known proofs require either:
+- The Jordan curve theorem (not in Mathlib)
+- A deformation/ear-clipping argument (complex for hex lattice: girth 6)
+- A signed area argument (requires relating area to turning number)
+
+### `pair_winding_relation` (Turning Number + Orientation)
+Beyond the Umlaufsatz, this requires determining the SIGN of the
+turning number. The sign is determined by the planarity of the hex
+lattice and the CCW ordering of neighbors. Specifically:
+- exit = CCW neighbor of arrival → loop is CCW → W = +2π
+- exit = CW neighbor of arrival → loop is CW → W = -2π
+
+### `finite_strip_identity_from_vr` (Discrete Stokes)
+Requires formalizing the full Stokes summation:
+1. Sum vertex relation over all interior vertices (= 0)
+2. Show interior mid-edges cancel (edge-pairing)
+3. Evaluate boundary contributions (winding at each boundary type)
+
+### `infinite_strip_identity` (Limit Argument)
+Derivable from the finite strip identity by taking L→∞, using:
+- Monotonicity of A_paper and B_paper in L
+- Boundedness from the strip identity
+- Convergence of the limits
+
+## Fully Proved Components
+
+- **Hammersley-Welsh decomposition** — all 15+ SAWHW*.lean files sorry-free ✓
+- **Algebraic identities** — pair/triplet cancellation, xc_inv, strip_algebraic ✓
+- **Vertex relation (Lemma 1)** — proved modulo pair_winding_relation ✓
+- **Winding infrastructure** — additivity, reversal, suffix properties, **NEW: prefix/reversed inner** ✓
+- **Bridge recurrence** — proved modulo infinite_strip_identity ✓
+- **Connective constant** — submultiplicativity, Fekete's lemma ✓
 
 ## Build Status
 
-The project builds successfully with `lake build RequestProject.SAWFinal` (8105 jobs).
-All files are imported transitively from `SAWFinal.lean`.
+The project builds successfully with `lake build RequestProject.SAWFinal`.
+All files are imported transitively from SAWFinal.lean.
