@@ -12,16 +12,32 @@ theorem connective_constant_eq : connective_constant = Real.sqrt (2 + Real.sqrt 
 
 ### Chain A: Vertex Relation → Strip Identity → Z(x) < ∞
 
-**Root cause:** `hex_closed_trail_turning_number` (SAWTurningNumber.lean:74)
+**Root cause:** `umlaufsatz_pm_one` (in SAWTurningNumber.lean), the
+"hard half" of `hex_closed_trail_turning_number`.
 
 The discrete Gauss-Bonnet theorem for simple closed hex trails:
 for a simple closed trail L on the hex lattice, hexWalkWinding L + closure = ±2π.
 
-This is the discrete analogue of the Umlaufsatz (Hopf's turning tangent theorem):
-a simple closed polygon has total exterior angle ±2π. This result is not
-currently available in Mathlib and requires proving that a simple closed
-polygon has turning number ±1, which is equivalent in difficulty to the
-Jordan curve theorem for polygons.
+This theorem is now **split into two halves**:
+
+* **Easy half — PROVED:** `hex_closed_winding_int_mul` shows the total turning
+  `hexWalkWinding L + closure` is an integer multiple `2π·n`. Proved via a new
+  telescoping identity `hexTrailList_winding_telescope` (every hex turn ratio
+  has unit modulus, so `exp(i·arg(d₂/d₁)) = d₂/d₁`, and the product telescopes;
+  for a closed trail the first and last edge directions coincide, giving
+  `exp(i·(W+closure)) = 1`). Supporting lemmas (`hexFirstDir`,
+  `hexFirstDir_append`, `hexFirstDir_eq_get`, `hex_edge_norm_one'`,
+  `exp_I_arg_of_norm_one`, `hexTrailList_adj_last`,
+  `list_get_last_eq_get_zero_of_closed`) are all sorry-free.
+
+* **Hard half — REMAINING SORRY:** `umlaufsatz_pm_one` shows that for a *simple*
+  (non-self-intersecting) closed trail, the multiple `n` equals `±1`. This is
+  the genuine content of Hopf's Umlaufsatz / turning tangent theorem and is
+  equivalent in difficulty to the Jordan curve theorem for polygons; it is not
+  currently available in Mathlib.
+
+`hex_closed_trail_turning_number` itself is fully proved *from* these two
+halves, so the only remaining gap in this chain is `umlaufsatz_pm_one`.
 
 **Full chain:**
 ```

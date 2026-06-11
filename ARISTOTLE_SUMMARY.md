@@ -1,3 +1,26 @@
+# Summary of changes for run 55b62f86-feb3-48c5-a5ae-10643251de4a
+Focused exclusively on the Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete turning-number theorem for simple closed trails on the honeycomb lattice, which was previously a single monolithic `sorry`.
+
+What was accomplished:
+
+1. Split the theorem into two halves and **fully proved the "easy half"** — that the total turning `hexWalkWinding L + closure` of any closed hex trail is an integer multiple `2π·n`. The following are now all sorry-free and verified to depend only on the standard axioms (`propext`, `Classical.choice`, `Quot.sound`):
+   - `hexFirstDir`, `hexFirstDir_append`, `hexFirstDir_eq_get` — first-edge-direction bookkeeping.
+   - `hex_edge_norm_one'`, `exp_I_arg_of_norm_one` — unit-modulus edges give `exp(i·arg z) = z`.
+   - `hexTrailList_winding_telescope` — the key telescoping identity: every hex turn ratio has unit modulus, so the windings multiply out to a ratio of the last to the first edge direction.
+   - `hexTrailList_adj_last`, `list_get_last_eq_get_zero_of_closed` — index lemmas for the closing edge.
+   - `hex_closed_winding_exp_eq_one` — for a closed trail the first/last directions coincide, so `exp(i·(W+closure)) = 1`.
+   - `hex_closed_winding_int_mul` — hence the total turning is `2π·n` for some integer `n`.
+
+2. **Reduced the main theorem** `hex_closed_trail_turning_number` so that it is now *proved from* the easy half plus one sharply isolated remaining fact, `umlaufsatz_pm_one`: that for a *simple* (non-self-intersecting) closed trail the integer `n` equals `±1`. This is the genuine topological content of Hopf's Umlaufsatz / turning-tangent theorem, equivalent in difficulty to the Jordan curve theorem for polygons; it is not available in Mathlib and remains the single `sorry` in this chain. I attempted it directly but it requires foundational planar-topology machinery that would need to be built up separately.
+
+3. Documented the structure in the file header and in `PROOF_STATUS.md`, and explicitly noted that `hex_closed_trail_turning_number`, while not yet consumed by any other declaration, is a **preparation branch** intended to feed `pair_winding_relation` in `SAWCancellationLemma1`/`SAWPairCancellation` (which currently carries its own independent `sorry`) — i.e. it looks dead but is future infrastructure.
+
+4. Cleaned up linter (unused-simp-argument) warnings introduced during the proofs.
+
+Build status: the whole proof tree builds successfully (`RequestProject.SAWFinal`), with the only `sorry` in this file now being the isolated hard core `umlaufsatz_pm_one`. The file is imported transitively from `SAWFinal.lean`. No other files were modified, in keeping with the request to work only on the main theorem.
+
+The main theorem is not yet fully closed: the irreducible `|n| = 1` core of the discrete Umlaufsatz remains open and would require building substantial new planar-topology (Jordan-curve-level) infrastructure.
+
 # Summary of changes for run 856f5b51-d198-46f6-90da-0250a004b9cc
 # Progress on the Main Theorem (μ = √(2+√2))
 
