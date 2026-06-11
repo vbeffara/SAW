@@ -39,6 +39,24 @@ This theorem is now **split into two halves**:
 `hex_closed_trail_turning_number` itself is fully proved *from* these two
 halves, so the only remaining gap in this chain is `umlaufsatz_pm_one`.
 
+**Signed-area route to `umlaufsatz_pm_one` (algebraic half built, sorry-free).**
+The `±1` value is the sign of the polygon's signed area. The algebraic backbone
+of this route is now in place:
+
+* `RequestProject/SAWSignedArea.lean` — the shoelace functional
+  `HexArea.shoelace2` (twice the signed area) with `cross`/`shoelace2` algebra,
+  `shoelace2_reverse` (reversal negates area), `shoelace2_map_add_const`
+  (translation invariance) and `shoelace2_ear` (the exact ear-clipping change of
+  signed area). All sorry-free.
+* `RequestProject/SAWUmlaufBridge.lean` — `hex_turn_cross`: each turn's sign
+  equals the sign of the cross product (`±√3/2`) of its two unit edge vectors,
+  and `cross_eq_normSq_mul_im_div`. All sorry-free.
+
+Both files are imported from `SAWFinal.lean`. What remains for `umlaufsatz_pm_one`
+is the irreducible *topological* half (a simple polygon has nonzero signed area,
+and the turning number equals the sign of that area), which is the same content
+as the Jordan curve theorem for polygons and is still absent from Mathlib.
+
 **Full chain:**
 ```
 hex_closed_trail_turning_number (SORRY — root cause, Umlaufsatz)

@@ -51,6 +51,21 @@ The theorem is split into two halves:
   characteristic argument over the enclosed honeycomb faces — both of which
   require building planar-topology infrastructure absent from Mathlib.
 
+  **Signed-area route (algebraic half now built).** The `±1` value is the sign
+  of the polygon's signed area `A`. The *algebraic* backbone of this route is
+  now established sorry-free:
+  * `RequestProject.SAWSignedArea` develops the shoelace functional
+    `HexArea.shoelace2` (twice the signed area) with `shoelace2_reverse`
+    (reversal negates the area), `shoelace2_map_add_const` (translation
+    invariance) and `shoelace2_ear` (the exact change of signed area when a
+    vertex is cut, the ear-clipping step); and
+  * `RequestProject.SAWUmlaufBridge`'s `hex_turn_cross` shows each turn's sign
+    equals the sign of the cross product `±√3/2` of its two unit edge vectors,
+    linking the turning data to the signed triangle areas.
+  What remains is the irreducible *topological* half: that a simple polygon has
+  nonzero signed area and that the turning number equals `sign(A)` — the same
+  content as the Jordan curve theorem for polygons.
+
 ## Downstream use (preparation branch)
 
 `hex_closed_trail_turning_number` is **not yet consumed** by any other

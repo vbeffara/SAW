@@ -66,6 +66,12 @@ part of the build:
 - `SAWWindingReverse` — Additional winding reversal results
 - `SAWWindingDecomp` — Winding decomposition for pair walks (suffix trail, reversal)
 - `SAWTurningNumber` — Turning number theorem for hex trails (sorry'd)
+- `SAWSignedArea` — Signed-area (shoelace) functional and its algebraic theory
+  (reversal antisymmetry, translation invariance, ear step); sorry-free
+  preparation for the signed-area route to the Umlaufsatz
+- `SAWUmlaufBridge` — Local bridge `hex_turn_cross` connecting each hex turn
+  sign to the signed-area cross product; sorry-free preparation for the
+  Umlaufsatz
 - `SAWStripAlgebra` — Algebraic identities for the strip boundary evaluation
 - `SAWObservableSum` — Observable as formal sum over trails
 - `SAWCancellationProved` — Key helper lemmas for vertex relation
@@ -108,6 +114,11 @@ import RequestProject.SAWPairWindingRelation
 import RequestProject.SAWPairWindingProof
 import RequestProject.SAWWindingDecomp
 import RequestProject.SAWTurningNumber
+-- Signed-area (shoelace) infrastructure: the algebraic backbone of the
+-- signed-area route to the discrete Umlaufsatz (`umlaufsatz_pm_one`).
+import RequestProject.SAWSignedArea
+-- Local bridge tying each hex turn sign to the signed-area cross product.
+import RequestProject.SAWUmlaufBridge
 
 -- Discrete Stokes infrastructure (preparation for strip identity)
 import RequestProject.SAWStripObservable

@@ -1,3 +1,22 @@
+# Summary of changes for run f47013b3-020c-4795-8793-bfcae27c25ed
+I focused exclusively on the top-priority Umlaufsatz (`umlaufsatz_pm_one`, the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`) — the discrete Hopf turning-number theorem for simple closed honeycomb trails. I did not touch any other branch.
+
+What I did this session:
+
+1. Made two mathematically distinct, high-effort proof attempts on the full theorem — an ear-clipping induction and a signed-area (shoelace) argument. Both confirmed what prior work found: closing this single `sorry` requires Jordan-curve-grade planar-topology infrastructure that Mathlib does not have (it has no turning-number, winding-number, or Jordan-curve machinery). So the theorem cannot be discharged outright in one step.
+
+2. Rather than stop there, I built the algebraic backbone of the signed-area route to the Umlaufsatz as genuine, reusable, fully-proved (sorry-free) infrastructure, in two new files:
+   - `RequestProject/SAWSignedArea.lean` — the shoelace functional `HexArea.shoelace2` (twice the signed area of a closed polygon) and its theory: the cross-product algebra, `shoelace2_reverse` (reversing the vertex order negates the signed area), `shoelace2_map_add_const` (translation invariance), `shoelace2_ear` (the exact change of signed area when a vertex is cut — the ear-clipping step), and the triangle formula.
+   - `RequestProject/SAWUmlaufBridge.lean` — `hex_turn_cross`, which proves each turn's sign equals the sign of the cross product (±√3/2) of its two unit edge vectors, plus the helper `cross_eq_normSq_mul_im_div`. This links the existing local turning data (`hex_turn_value`) to the signed triangle areas.
+
+   All new lemmas build and depend only on the standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
+
+3. Wiring/housekeeping requested in the task: both new files are explicitly imported from `SAWFinal.lean` and documented there as Umlaufsatz-preparation infrastructure; I confirmed the whole library still builds (`RequestProject.SAWFinal`, 8108 jobs). I verified the project's only non-imported files remain `SAWFinal` (the import root) and `SAWVertexRelation` (the previously-documented dead branch with a name conflict), and that the lakefile globs build every file. The turning-number branch's preparation role toward `pair_winding_relation` is documented.
+
+4. Updated the docstrings of `SAWTurningNumber.lean`, `SAWFinal.lean`, and `PROOF_STATUS.md` to record exactly what is now proved on the signed-area route and precisely what irreducible topological content remains.
+
+Honest status of the main theorem: the Umlaufsatz is still not fully closed. The single remaining `sorry` is `umlaufsatz_pm_one`. The algebraic half of the signed-area route to it is now established sorry-free; what remains is the irreducible topological half — that a simple polygon has nonzero signed area and that the turning number equals the sign of that area — which is the same content as the Jordan curve theorem for polygons and would require building substantial new planar-topology infrastructure.
+
 # Summary of changes for run 09255a80-e8d6-414e-8b65-48d175850415
 Focused exclusively on the top-priority Umlaufsatz (`umlaufsatz_pm_one`, the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete turning-number theorem for simple closed trails on the honeycomb lattice. I did not work on any other branch.
 
