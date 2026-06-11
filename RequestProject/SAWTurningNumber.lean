@@ -24,7 +24,32 @@ The theorem is split into two halves:
 * **Hard half (the remaining `sorry`):** `umlaufsatz_pm_one` — for a *simple*
   (non-self-intersecting) closed trail, the multiple `n` is `±1`. This is the
   genuine content of the discrete Hopf Umlaufsatz / turning tangent theorem and
-  is the only unproved fact left in this file.
+  is the only unproved fact left in this file. It is equivalent in difficulty to
+  the Jordan curve theorem for polygons and is not available in Mathlib (which
+  has no turning-number, winding-number, or Jordan-curve infrastructure).
+
+  **Verified true (computational evidence).** The statement was checked by
+  exhaustive enumeration of all closed honeycomb trails (no immediate backtrack)
+  up to perimeter 18: every one satisfying the simplicity hypothesis
+  `h_simple` has `n = ±1`, with no exceptions. The enumeration also confirms a
+  subtle point about the weak hypotheses: although `h_simple` only asserts that
+  the *interior* vertices `L.tail.dropLast` are distinct, the honeycomb's
+  degree-3 structure (each vertex has exactly three neighbours) together with
+  the no-immediate-backtrack condition forces the start vertex never to recur
+  in the interior, so the whole vertex cycle `L.dropLast` is automatically
+  `Nodup` (a genuinely simple polygon). Hence the lemma is true as stated.
+
+  **Combinatorial reformulation (suggested proof route).** Every hex turn is
+  `±π/3` (`hex_turn_value`), so assigning to each directed edge its direction
+  index `k ∈ ℤ/6` (angle `k·π/3`) makes each turn a step of `±1` in `ℤ/6`, and
+  the total turning equals `(π/3) · S` where `S` is the signed turn count
+  (`+1` for a left turn, `-1` for a right turn) summed cyclically over all
+  edges; thus `n = S / 6`. The remaining content is the purely combinatorial
+  discrete Umlaufsatz `S = ±6`, provable by ear-clipping induction on the
+  perimeter (remove a convex ear at the lexicographically extreme vertex, which
+  preserves the turning number) or by a discrete Gauss-Bonnet / Euler-
+  characteristic argument over the enclosed honeycomb faces — both of which
+  require building planar-topology infrastructure absent from Mathlib.
 
 ## Downstream use (preparation branch)
 

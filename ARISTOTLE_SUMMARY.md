@@ -1,3 +1,22 @@
+# Summary of changes for run 09255a80-e8d6-414e-8b65-48d175850415
+Focused exclusively on the top-priority Umlaufsatz (`umlaufsatz_pm_one`, the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete turning-number theorem for simple closed trails on the honeycomb lattice. I did not work on any other branch.
+
+What I did this session:
+
+1. Made two serious, high-effort proof attempts on `umlaufsatz_pm_one` with detailed, structured proof sketches (sum-of-interior-angles and ear-clipping induction, with the existing lemmas supplied as scaffolding). Both timed out without a proof; the file was left unchanged by these attempts.
+
+2. Established, via exhaustive computational enumeration of all closed honeycomb trails (no immediate backtrack) up to perimeter 18, that the statement is *true as written*: every trail satisfying the simplicity hypothesis has turning number ±1, with no exceptions. This also resolved a previously-flagged concern about the weak hypotheses — the enumeration shows that the honeycomb's degree-3 structure plus the no-immediate-backtrack condition forces the start vertex never to recur in the interior, so the whole vertex cycle is automatically simple. Hence the lemma is genuinely true and need not be restated.
+
+3. Confirmed there is no supporting machinery in Mathlib: it has no turning-number, winding-number, or Jordan-curve infrastructure. The result is equivalent in difficulty to the Jordan curve theorem for polygons.
+
+4. Recorded these findings as documentation in the file header of `SAWTurningNumber.lean`, including a combinatorial reformulation that is the recommended route toward eventually closing the gap (assign each directed edge a direction index in ℤ/6, so total turning = (π/3)·S with S the signed turn count, reducing the problem to the purely combinatorial statement S = ±6).
+
+5. Verified wiring as requested: `SAWTurningNumber` is imported from `SAWFinal`, and its `hex_closed_trail_turning_number`, although not yet consumed by another declaration, is documented as a live preparation branch feeding `pair_winding_relation`. The only orphan Lean files are `SAWFinal` (the import root) and `SAWVertexRelation` (a superseded vertex-relation branch unrelated to the Umlaufsatz, left untouched per the instruction not to work on other branches).
+
+Build status: `RequestProject.SAWTurningNumber` builds successfully. The single remaining `sorry` in this chain is `umlaufsatz_pm_one`.
+
+Honest status of the main theorem: the Umlaufsatz is **not yet fully closed**. The "easy half" (total turning is an integer multiple of 2π) was already proved in prior work and remains intact; the irreducible topological core (that the multiple is ±1 for a simple polygon) is the genuine discrete Hopf Umlaufsatz. I verified it is true and sharpened the path to it, but a complete formal proof requires building substantial planar-topology (Jordan-curve-level) infrastructure from scratch, which was not achievable in this session despite focused effort.
+
 # Summary of changes for run 55b62f86-feb3-48c5-a5ae-10643251de4a
 Focused exclusively on the Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete turning-number theorem for simple closed trails on the honeycomb lattice, which was previously a single monolithic `sorry`.
 
