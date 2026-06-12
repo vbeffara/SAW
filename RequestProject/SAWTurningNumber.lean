@@ -162,7 +162,7 @@ lemma hexTrailList_winding_telescope (L : List HexVertex)
   rcases L with ( _ | ⟨ b, _ | ⟨ c, L ⟩ ⟩ ) <;> simp_all +decide [ hexWalkWinding ];
   have h_ind : Complex.exp (Complex.I * hexWalkWinding (b :: c :: L)) * hexFirstDir (b :: c :: L) = -hexFirstDir (L.reverse ++ [c, b]) := by
     rcases L with ( _ | ⟨ d, L ⟩ ) <;> simp_all +decide [ HexTrailList ];
-    unfold hexWalkWinding hexFirstDir; simp +decide [ Complex.exp_add, mul_comm ] ;
+    unfold hexWalkWinding hexFirstDir; simp +decide [ mul_comm ] ;
   have h_exp : Complex.exp (Complex.I * Complex.arg ((correctHexEmbed c - correctHexEmbed b) / (correctHexEmbed b - correctHexEmbed a))) = (correctHexEmbed c - correctHexEmbed b) / (correctHexEmbed b - correctHexEmbed a) := by
     apply exp_I_arg_of_norm_one;
     have h_norm : ‖correctHexEmbed c - correctHexEmbed b‖ = 1 ∧ ‖correctHexEmbed b - correctHexEmbed a‖ = 1 := by
@@ -176,7 +176,7 @@ lemma hexTrailList_winding_telescope (L : List HexVertex)
   · convert h_ind using 1;
     rw [ div_mul_eq_mul_div, div_eq_iff ] <;> ring!;
     · rw [ show hexFirstDir ( b :: c :: L ) = correctHexEmbed c - correctHexEmbed b from rfl ] ; ring;
-    · exact sub_ne_zero_of_ne <| by intro h; have := h_trail.1; simp_all +decide [ hexGraph ] ;
+    · exact sub_ne_zero_of_ne <| by intro h; have := h_trail.1; simp_all +decide ;
   · convert hexFirstDir_append ( L.reverse ++ [ c, b ] ) a _ using 1;
     · simp +decide [ List.append_assoc ];
     · simp +arith +decide
