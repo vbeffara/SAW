@@ -1,3 +1,14 @@
+# Summary of changes for run 1f262e42-d179-4ae4-bbf3-36f0821532d4
+I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched.
+
+**State of the Umlaufsatz.** The whole chain `hex_closed_trail_turning_number → umlaufsatz_pm_one` in `RequestProject/SAWTurningNumber.lean` is reduced, sorry-free, to a single purely-combinatorial integer statement `hex_total_signed_turn_pm_six`: for a simple closed honeycomb trail the total signed turn count (interior turns plus the closing-turn sign) equals ±6, i.e. the turning number is ±1. This is the genuine topological content of the discrete Umlaufsatz (equivalent to the Jordan curve theorem for simple polygons) and is not available in Mathlib (which has no winding/turning-number infrastructure). A high-effort proof attempt confirmed it is not closable in one step without further planar-topology infrastructure, so it remains a single, clearly-documented `sorry` — durable partial progress, exactly as requested.
+
+**New sorry-free progress this session (signed-area route).** I added two reusable, fully-proved lemmas to `RequestProject/SAWUmlaufBridge.lean`, advancing the signed-area route toward the core:
+- `hex_turn_cross_ne_zero` — every non-backtracking hex turn has nonzero edge cross product (the non-degeneracy/non-collinearity fact the signed-area argument needs).
+- `hexTurnSign_eq_cross_sign` — the **linchpin**: the combinatorial turn sign `hexTurnSign` (which defines `hexSignedTurnCount`) equals the sign of the geometric cross product `HexArea.cross` of the two edge vectors. This is the exact bridge that converts the integer signed-turn count into the sign of the shoelace signed area `HexArea.shoelace2`, connecting the combinatorial and geometric pictures that the eventual ear-clipping / signed-area proof will assemble.
+
+**Housekeeping.** `SAWUmlaufBridge.lean`'s header was updated to document the new lemmas and to explicitly link this file as Umlaufsatz preparation (it is imported transitively from `SAWFinal`, so it is not dead code). The full library builds successfully (`RequestProject.SAWFinal`, 8109 jobs), and the only remaining `sorry` in the entire Umlaufsatz chain is `hex_total_signed_turn_pm_six`; my additions introduced no new sorries and no new axioms.
+
 # Summary of changes for run e76119b4-6d43-4dd5-bf22-8913a3176760
 I worked exclusively on the top-priority Umlaufsatz (the discrete Hopf turning-number theorem for simple closed honeycomb trails), in `RequestProject/SAWTurningNumber.lean`. I did not touch any other branch.
 
