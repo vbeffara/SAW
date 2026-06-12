@@ -1,3 +1,22 @@
+# Summary of changes for run 4064cb9c-f494-4e45-9330-96be13b0934b
+I worked exclusively on the top-priority Umlaufsatz (`umlaufsatz_pm_one`, the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete Hopf turning-number theorem for a simple closed honeycomb trail. I did not touch any other branch.
+
+What I did this session:
+
+1. Re-confirmed (a fresh high-effort attempt) that the monolithic `umlaufsatz_pm_one` is not closable in one step: its irreducible content is the Jordan-curve theorem for polygons (turning number = sign of signed area), which Mathlib lacks.
+
+2. Built genuine, fully sorry-free, on-path infrastructure in a new file `RequestProject/SAWUmlaufEmbed.lean` — the complete **simplicity transfer** that the signed-area route to the Umlaufsatz needs (turning the weak hypothesis `h_simple : L.tail.dropLast.Nodup`, which only asserts the interior vertices are distinct, into a genuine "simple polygon in the plane"). All proved sorry-free, depending only on the standard axioms:
+   - `correctHexEmbed_injective`, `correctHexEmbed_ne`, `correctHexEmbed_map_nodup` — the hex embedding into ℂ is injective.
+   - `hexGraph_adj_mem_three`, `hex_four_neighbours_not_nodup` — the lattice's 3-regularity (pigeonhole: four common neighbours can't be distinct).
+   - `hexTrailList_adj_get`, `hexTrailList_nobacktrack_get`, `hex_interior_getElem_ne` — reusable index-level adjacency / no-backtrack / interior-distinctness extraction from `HexTrailList`.
+   - `hex_closed_trail_start_not_interior` — the degree-3 + no-backtrack argument showing the start vertex never recurs among the interior vertices.
+   - `hex_closed_trail_dropLast_nodup` — hence the full vertex cycle is `Nodup`.
+   - `hex_closed_trail_embed_nodup` — therefore the embedded polygon `L.dropLast.map correctHexEmbed` has pairwise distinct points in ℂ, exactly the "simple polygon" hypothesis the topological half of `umlaufsatz_pm_one` consumes.
+
+3. Wiring/housekeeping as requested: the new file is imported from `SAWFinal.lean` and documented there (and in its own header) as preparation for the Umlaufsatz; I verified the whole library builds (`RequestProject.SAWFinal`, 8109 jobs) and that the new file is sorry-free and warning-free. I also recorded the new infrastructure in `PROOF_STATUS.md`.
+
+Honest status: the Umlaufsatz is still not fully closed. The single remaining `sorry` in this chain is `umlaufsatz_pm_one` (SAWTurningNumber.lean). Everything it can build on is now sorry-free — the easy half (total turning = 2π·n), the combinatorial reduction (total turning = (π/3)·signed-turn-count), the algebraic signed-area backbone, and now the full simplicity-transfer layer proving the embedded polygon is genuinely simple. What remains is the irreducible topological fact (a simple polygon has nonzero signed area and turning number equal to its sign), the same content as the Jordan curve theorem for polygons, which is absent from Mathlib and is a large multi-stage development rather than a single proof step. No axioms or `@[implemented_by]` were introduced.
+
 # Summary of changes for run 26472b00-485b-414a-9fb0-8da1a5f08623
 I worked exclusively on the top-priority Umlaufsatz, `umlaufsatz_pm_one` (the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`) — the discrete Hopf turning-number theorem for a simple closed honeycomb trail. I did not touch any other branch.
 

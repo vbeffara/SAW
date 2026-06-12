@@ -72,6 +72,15 @@ part of the build:
 - `SAWUmlaufBridge` — Local bridge `hex_turn_cross` connecting each hex turn
   sign to the signed-area cross product; sorry-free preparation for the
   Umlaufsatz
+- `SAWUmlaufEmbed` — Sorry-free **simplicity transfer** for the signed-area route
+  to the Umlaufsatz: injectivity of `correctHexEmbed`, the hex lattice's
+  3-regularity (`hex_four_neighbours_not_nodup`), index-level adjacency /
+  no-backtrack extraction from `HexTrailList`, and the main combinatorial
+  results `hex_closed_trail_start_not_interior`,
+  `hex_closed_trail_dropLast_nodup`, and `hex_closed_trail_embed_nodup` —
+  proving that a simple closed hex trail's full vertex cycle is `Nodup` and its
+  embedded polygon has pairwise distinct points in ℂ (the "simple polygon in
+  the plane" hypothesis the topological half of `umlaufsatz_pm_one` consumes)
 - `SAWStripAlgebra` — Algebraic identities for the strip boundary evaluation
 - `SAWObservableSum` — Observable as formal sum over trails
 - `SAWCancellationProved` — Key helper lemmas for vertex relation
@@ -119,6 +128,10 @@ import RequestProject.SAWTurningNumber
 import RequestProject.SAWSignedArea
 -- Local bridge tying each hex turn sign to the signed-area cross product.
 import RequestProject.SAWUmlaufBridge
+-- Injectivity of the hex embedding: lets the combinatorial simplicity
+-- hypothesis be transferred to "distinct points in ℂ" for the embedded
+-- polygon; sorry-free preparation for the signed-area route to the Umlaufsatz.
+import RequestProject.SAWUmlaufEmbed
 
 -- Discrete Stokes infrastructure (preparation for strip identity)
 import RequestProject.SAWStripObservable

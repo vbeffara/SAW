@@ -57,6 +57,22 @@ is the irreducible *topological* half (a simple polygon has nonzero signed area,
 and the turning number equals the sign of that area), which is the same content
 as the Jordan curve theorem for polygons and is still absent from Mathlib.
 
+**Simplicity transfer (now built sorry-free).** A further prerequisite for the
+signed-area route — that the embedded polygon is a *genuine* simple polygon in
+`ℂ` — is now established sorry-free in `RequestProject/SAWUmlaufEmbed.lean`:
+* `correctHexEmbed_injective` — the hex embedding is injective;
+* `hex_four_neighbours_not_nodup` — the lattice's 3-regularity (pigeonhole);
+* `hexTrailList_adj_get`, `hexTrailList_nobacktrack_get`,
+  `hex_interior_getElem_ne` — index-level trail structure;
+* `hex_closed_trail_start_not_interior` — the start vertex of a simple closed
+  hex trail never recurs among the interior vertices (degree-3 + no-backtrack);
+* `hex_closed_trail_dropLast_nodup` — hence the full vertex cycle is `Nodup`;
+* `hex_closed_trail_embed_nodup` — therefore the embedded polygon
+  `L.dropLast.map correctHexEmbed` has pairwise distinct points in `ℂ`.
+This turns the weak hypothesis `h_simple : L.tail.dropLast.Nodup` into the
+"simple polygon in the plane" statement the topological half consumes. The file
+is imported from `SAWFinal.lean` and depends only on the standard axioms.
+
 **Full chain:**
 ```
 hex_closed_trail_turning_number (SORRY — root cause, Umlaufsatz)
