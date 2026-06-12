@@ -30,14 +30,35 @@ This theorem is now **split into two halves**:
   `exp_I_arg_of_norm_one`, `hexTrailList_adj_last`,
   `list_get_last_eq_get_zero_of_closed`) are all sorry-free.
 
-* **Hard half — REMAINING SORRY:** `umlaufsatz_pm_one` shows that for a *simple*
-  (non-self-intersecting) closed trail, the multiple `n` equals `±1`. This is
-  the genuine content of Hopf's Umlaufsatz / turning tangent theorem and is
-  equivalent in difficulty to the Jordan curve theorem for polygons; it is not
-  currently available in Mathlib.
+* **Hard half — now REDUCED to a clean combinatorial core:** `umlaufsatz_pm_one`
+  shows that for a *simple* (non-self-intersecting) closed trail, the multiple
+  `n` equals `±1`. This is the genuine content of Hopf's Umlaufsatz / turning
+  tangent theorem and is equivalent in difficulty to the Jordan curve theorem
+  for polygons.
+
+  `umlaufsatz_pm_one` is **no longer itself a sorry**: it is now *derived*,
+  sorry-free, from a single purely-combinatorial (integer) statement
+  `hex_total_signed_turn_pm_six` (in SAWTurningNumber.lean). The analytic
+  connective tissue is all proved sorry-free:
+  - `hexWalkWinding_eq_signedTurnCount`: total interior winding
+    `= (π/3)·hexSignedTurnCount L`;
+  - `hex_closure_adj`, `hex_closure_nobacktrack`, `hex_closure_arg_eq_sign`
+    (NEW): the closing turn `L[m-2]→L[0]→L[1]` is a genuine non-backtracking
+    hex turn whose angle is `(π/3)·hexTurnSign …`;
+  - `hex_interior_get_ne` (NEW): distinct interior indices give distinct
+    vertices.
+  Together these give `hexSignedTurnCount L + closingSign = 6·n`, so `n = ±1`
+  iff the total signed turn equals `±6`.
+
+  **The ONLY remaining sorry in this chain is now**
+  `hex_total_signed_turn_pm_six`: for a simple closed hex trail the sum of the
+  `±1` per-vertex turn signs (interior turns `hexSignedTurnCount L` plus the
+  closing-turn sign) equals `±6`. Same topological content (Jordan curve
+  theorem for polygons) but in its cleanest analysis-free integer form, ready
+  for an ear-clipping / discrete Gauss–Bonnet attack. Not currently in Mathlib.
 
 `hex_closed_trail_turning_number` itself is fully proved *from* these two
-halves, so the only remaining gap in this chain is `umlaufsatz_pm_one`.
+halves, so the only remaining gap in this chain is `hex_total_signed_turn_pm_six`.
 
 **Signed-area route to `umlaufsatz_pm_one` (algebraic half built, sorry-free).**
 The `±1` value is the sign of the polygon's signed area. The algebraic backbone

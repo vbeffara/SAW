@@ -21,12 +21,18 @@ The theorem is split into two halves:
   and the product telescopes; for a *closed* trail the last edge direction
   equals the first, giving `exp (i·(W + closure)) = 1`.
 
-* **Hard half (the remaining `sorry`):** `umlaufsatz_pm_one` — for a *simple*
-  (non-self-intersecting) closed trail, the multiple `n` is `±1`. This is the
-  genuine content of the discrete Hopf Umlaufsatz / turning tangent theorem and
-  is the only unproved fact left in this file. It is equivalent in difficulty to
-  the Jordan curve theorem for polygons and is not available in Mathlib (which
-  has no turning-number, winding-number, or Jordan-curve infrastructure).
+* **Hard half:** `umlaufsatz_pm_one` — for a *simple* (non-self-intersecting)
+  closed trail, the multiple `n` is `±1`. This is the genuine content of the
+  discrete Hopf Umlaufsatz / turning tangent theorem. It is now **reduced**,
+  sorry-free, to a single purely *combinatorial* (integer) statement
+  `hex_total_signed_turn_pm_six`: the sum of the `±1` per-vertex turn signs
+  (the interior turns `hexSignedTurnCount L` plus the closing-turn sign) equals
+  `±6`.  The reduction (`hex_closure_adj`, `hex_closure_nobacktrack`,
+  `hex_closure_arg_eq_sign`, and `umlaufsatz_pm_one` itself) is fully proved;
+  the **only remaining `sorry`** in this file is `hex_total_signed_turn_pm_six`,
+  which is equivalent in difficulty to the Jordan curve theorem for polygons
+  and is not available in Mathlib (which has no turning-number, winding-number,
+  or Jordan-curve infrastructure).
 
   **Verified true (computational evidence).** The statement was checked by
   exhaustive enumeration of all closed honeycomb trails (no immediate backtrack)
@@ -345,19 +351,123 @@ lemma hexWalkWinding_eq_signedTurnCount (L : List HexVertex) (h : HexTrailList L
     · rw [ ← mul_add, show hexSignedTurnCount ( v₀ :: v₁ :: v₂ :: L ) = hexTurnSign v₀ v₁ v₂ + hexSignedTurnCount ( v₁ :: v₂ :: L ) from rfl ] ; push_cast ; ring;
     · simp +arith +decide [ ← n ]
 
+/-! ## Reduction of the Umlaufsatz to a purely combinatorial signed-turn count
+
+The analytic content of `umlaufsatz_pm_one` is reduced here to a single,
+purely *combinatorial* (integer) statement, `hex_total_signed_turn_pm_six`:
+the sum of the `±1` turn signs over all polygon vertices (the interior turns
+plus the closing turn) is `±6`.  All the surrounding analysis — turning the
+turning angles into `±1` signs, and the closing turn into its sign — is proved
+here, so the only remaining gap is the genuinely topological discrete
+Umlaufsatz in its cleanest integer form. -/
+
+/-
+Distinct *interior* indices of a list whose interior `L.tail.dropLast` is
+    `Nodup` give distinct vertices.  (`get` version; mirrors
+    `hex_interior_getElem_ne` but stays within this file so it is available to
+    the closing-turn argument below.)
+-/
+lemma hex_interior_get_ne (L : List HexVertex)
+    (h_simple : L.tail.dropLast.Nodup)
+    {p q : ℕ} (hp1 : 1 ≤ p) (hq1 : 1 ≤ q)
+    (hp2 : p < L.length - 1) (hq2 : q < L.length - 1) (hpq : p ≠ q) :
+    L.get ⟨p, by omega⟩ ≠ L.get ⟨q, by omega⟩ := by
+  have h_distinct : ∀ p q : Fin (L.tail.dropLast.length), p ≠ q → (L.tail.dropLast.get p) ≠ (L.tail.dropLast.get q) := by
+    exact fun p q hpq => fun h => hpq <| List.nodup_iff_injective_get.mp h_simple h;
+  convert h_distinct ⟨ p - 1, by
+    grind ⟩ ⟨ q - 1, by
+    grind ⟩ ( by
+    exact fun h => hpq <| by injection h with h; omega; ) using 1
+  generalize_proofs at *;
+  · grind;
+  · grind
+
+/-
+For a simple closed hex trail the closing turn `L[m-2] → L[0] → L[1]` does
+    not immediately backtrack: the last edge and the first edge are distinct.
+-/
+lemma hex_closure_nobacktrack (L : List HexVertex) (hL : 4 ≤ L.length)
+    (h_simple : L.tail.dropLast.Nodup) :
+    s(L.get ⟨L.length - 2, by omega⟩, L.get ⟨0, by omega⟩) ≠
+      s(L.get ⟨0, by omega⟩, L.get ⟨1, by omega⟩) := by
+  have h_diff : L.get ⟨L.length - 2, by omega⟩ ≠ L.get ⟨1, by omega⟩ := by
+    apply hex_interior_get_ne L h_simple (by omega) (by omega) (by omega) (by omega) (by omega);
+  contrapose! h_diff; aesop;
+
+/-
+The closing turn is a genuine hex-graph turn: both its edges are adjacencies
+    of `hexGraph`.
+-/
+lemma hex_closure_adj (L : List HexVertex) (hL : 4 ≤ L.length)
+    (h_trail : HexTrailList L) (h_closed : L.head? = L.getLast?) :
+    hexGraph.Adj (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩) ∧
+    hexGraph.Adj (L.get ⟨0, by omega⟩) (L.get ⟨1, by omega⟩) := by
+  have h_last : hexGraph.Adj (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨L.length - 1, by omega⟩) := by
+    convert hexTrailList_adj_last L h_trail ( by omega ) using 1;
+  have h_first : hexGraph.Adj (L.get ⟨0, by omega⟩) (L.get ⟨1, by omega⟩) := by
+    rcases L with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | L ⟩ ⟩ ⟩ ) <;> simp_all +decide [ HexTrailList ];
+  grind +suggestions
+
+/-- The closure angle equals `(π/3)` times the closing-turn sign.  This is the
+    closing-turn analogue of `hexTurn_arg_eq_sign`, applied to the turn
+    `L[m-2] → L[0] → L[1]`. -/
+lemma hex_closure_arg_eq_sign (L : List HexVertex) (hL : 4 ≤ L.length)
+    (h_trail : HexTrailList L) (h_closed : L.head? = L.getLast?)
+    (h_simple : L.tail.dropLast.Nodup) :
+    Complex.arg ((correctHexEmbed (L.get ⟨1, by omega⟩) - correctHexEmbed (L.get ⟨0, by omega⟩)) /
+        (correctHexEmbed (L.get ⟨0, by omega⟩) -
+          correctHexEmbed (L.get ⟨L.length - 2, by omega⟩)))
+      = (Real.pi / 3) *
+        (hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+          (L.get ⟨1, by omega⟩) : ℝ) := by
+  obtain ⟨h₁, h₂⟩ := hex_closure_adj L hL h_trail h_closed
+  have h_ne := hex_closure_nobacktrack L hL h_simple
+  have h := hexTurn_arg_eq_sign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+      (L.get ⟨1, by omega⟩) h₁ h₂ h_ne
+  simpa using h
+
 /-! ## The turning number theorem for simple closed hex trails (Umlaufsatz)
 
 The "hard half": for a *simple* (non-self-intersecting) closed trail, the
 integer multiple is exactly `±1`. This is the discrete analogue of Hopf's
-Umlaufsatz / the turning tangent theorem. -/
+Umlaufsatz / the turning tangent theorem.
+
+It is now reduced (`umlaufsatz_pm_one`) to the purely combinatorial
+`hex_total_signed_turn_pm_six` below. -/
+
+/-- **Combinatorial core of the discrete Umlaufsatz (remaining gap).**  For a
+    simple closed hex trail, the total signed-turn count over all polygon
+    vertices — the interior turns `hexSignedTurnCount L` plus the closing turn
+    sign at the start vertex — equals `±6`.  Equivalently the turning number is
+    `±1`.
+
+    **Sorry**: this is the genuine topological content of the discrete
+    Umlaufsatz / turning-tangent theorem (equivalently the Jordan curve theorem
+    for polygons), now in its cleanest purely-integer form.  Provable by an
+    ear-clipping induction on the perimeter (`HexArea.shoelace2_ear` provides the
+    algebraic ear step; `hex_turn_cross` links each turn sign to the signed
+    triangle area) or by a discrete Gauss–Bonnet argument over the enclosed
+    honeycomb faces. -/
+lemma hex_total_signed_turn_pm_six (L : List HexVertex)
+    (hL : 4 ≤ L.length)
+    (h_trail : HexTrailList L)
+    (h_closed : L.head? = L.getLast?)
+    (h_simple : L.tail.dropLast.Nodup) :
+    hexSignedTurnCount L +
+      hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+        (L.get ⟨1, by omega⟩) = 6 ∨
+    hexSignedTurnCount L +
+      hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+        (L.get ⟨1, by omega⟩) = -6 := by
+  sorry
 
 /-- The magnitude part of the Umlaufsatz: for a simple closed hex trail whose
     total turning is `2π·n`, the integer `n` is `±1`.
 
-    **Sorry**: this is the genuine content of the discrete Umlaufsatz —
-    that a simple (non-self-intersecting) closed polygon on the hexagonal
-    lattice has turning number `±1`. It is the only remaining gap in
-    `hex_closed_trail_turning_number`. -/
+    This is now *derived* from the combinatorial core
+    `hex_total_signed_turn_pm_six` together with the signed-turn-count
+    reduction (`hexWalkWinding_eq_signedTurnCount`) and the closing-turn sign
+    (`hex_closure_arg_eq_sign`). -/
 lemma umlaufsatz_pm_one (L : List HexVertex)
     (hL : 4 ≤ L.length)
     (h_trail : HexTrailList L)
@@ -370,7 +480,23 @@ lemma umlaufsatz_pm_one (L : List HexVertex)
           correctHexEmbed (L.get ⟨L.length - 2, by omega⟩)))
       = 2 * Real.pi * n) :
     n = 1 ∨ n = -1 := by
-  sorry
+  have hw := hexWalkWinding_eq_signedTurnCount L h_trail
+  have hc := hex_closure_arg_eq_sign L hL h_trail h_closed h_simple
+  rw [hw, hc] at hn
+  set S : ℤ := hexSignedTurnCount L with hS
+  set cs : ℤ := hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+    (L.get ⟨1, by omega⟩) with hcs
+  -- hn : π/3 * S + π/3 * cs = 2π·n, with S, cs, n integers.
+  have hpi : (Real.pi : ℝ) ≠ 0 := Real.pi_ne_zero
+  have key : ((S + cs : ℤ) : ℝ) = ((6 * n : ℤ) : ℝ) := by
+    push_cast
+    have h2 : Real.pi * (((S : ℝ) + cs) / 3) = Real.pi * (2 * n) := by ring_nf; ring_nf at hn; linarith [hn]
+    have h3 : ((S : ℝ) + cs) / 3 = 2 * n := mul_left_cancel₀ hpi h2
+    linarith
+  have key' : S + cs = 6 * n := by exact_mod_cast key
+  rcases hex_total_signed_turn_pm_six L hL h_trail h_closed h_simple with h | h
+  · left; rw [← hS, ← hcs] at h; omega
+  · right; rw [← hS, ← hcs] at h; omega
 
 /-- The turning number theorem for simple closed hex trails.
     For a list [v₀, v₁, ..., vₙ₋₁, v₀] that forms a simple closed trail

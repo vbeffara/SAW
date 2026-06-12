@@ -1,3 +1,21 @@
+# Summary of changes for run e76119b4-6d43-4dd5-bf22-8913a3176760
+I worked exclusively on the top-priority Umlaufsatz (the discrete Hopf turning-number theorem for simple closed honeycomb trails), in `RequestProject/SAWTurningNumber.lean`. I did not touch any other branch.
+
+**What changed.** Previously the "hard half" `umlaufsatz_pm_one` was itself an unproved `sorry` (an analysis-flavored statement about `Complex.arg`). I reduced it, fully sorry-free, to a single self-contained, purely *combinatorial* integer statement, isolating the genuine topological content.
+
+Concretely, `umlaufsatz_pm_one` is now **derived** (no longer a `sorry`) from:
+- `hex_interior_get_ne` (NEW, proved): distinct interior indices of a simple trail give distinct vertices.
+- `hex_closure_adj` (NEW, proved): the closing turn `L[m-2] → L[0] → L[1]` uses two genuine hex-graph edges.
+- `hex_closure_nobacktrack` (NEW, proved): the closing turn does not immediately backtrack (last edge ≠ first edge).
+- `hex_closure_arg_eq_sign` (NEW, proved): hence the closure angle equals `(π/3)·hexTurnSign …`, the closing-turn analogue of the already-proved `hexTurn_arg_eq_sign`.
+- the existing `hexWalkWinding_eq_signedTurnCount`.
+
+Combining these turns the easy-half integer identity (`total turning = 2π·n`) into `hexSignedTurnCount L + closingSign = 6·n`, so `n = ±1` is now equivalent to the total signed-turn count being `±6`.
+
+**Remaining gap.** The only `sorry` left in this chain is the new `hex_total_signed_turn_pm_six`: for a simple closed hex trail the sum of the ±1 per-vertex turn signs (interior turns plus the closing-turn sign) equals ±6. This is the same irreducible topological content as the Jordan curve theorem for polygons, but now in its cleanest analysis-free integer form, ready for an ear-clipping / discrete Gauss–Bonnet attack (the algebraic ear step `HexArea.shoelace2_ear` and the turn↔cross-product bridge `hex_turn_cross` are already available sorry-free). I made a high-effort attempt to close this core directly; it confirmed it is not closable in one step without further planar-topology infrastructure, so I kept it as a clearly-documented `sorry` (durable partial progress) rather than discarding the reduction.
+
+**Verification & housekeeping.** The whole library builds successfully (`RequestProject.SAWFinal`, 8109 jobs); `RequestProject/SAWTurningNumber.lean` contains exactly one `sorry` (`hex_total_signed_turn_pm_six`), and the three new connective lemmas plus the `umlaufsatz_pm_one` derivation are all sorry-free. I removed an unused-hypothesis warning, updated the file header docstring, and updated `PROOF_STATUS.md` to record the new state. All previously-built Umlaufsatz preparation files (`SAWUmlaufEmbed`, `SAWSignedArea`, `SAWUmlaufBridge`) remain imported via `SAWFinal.lean` and continue to build.
+
 # Summary of changes for run 4064cb9c-f494-4e45-9330-96be13b0934b
 I worked exclusively on the top-priority Umlaufsatz (`umlaufsatz_pm_one`, the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`), the discrete Hopf turning-number theorem for a simple closed honeycomb trail. I did not touch any other branch.
 
