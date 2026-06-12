@@ -132,6 +132,10 @@ import RequestProject.SAWUmlaufBridge
 -- hypothesis be transferred to "distinct points in ℂ" for the embedded
 -- polygon; sorry-free preparation for the signed-area route to the Umlaufsatz.
 import RequestProject.SAWUmlaufEmbed
+-- Top-level discrete Umlaufsatz statements (relocated here so the topological
+-- core `hex_total_signed_turn_pm_six` has the signed-area toolkit in scope),
+-- plus the Gauss–Bonnet base case `hexHexagon_signed_turn`.
+import RequestProject.SAWUmlaufGaussBonnet
 
 -- Discrete Stokes infrastructure (preparation for strip identity)
 import RequestProject.SAWStripObservable

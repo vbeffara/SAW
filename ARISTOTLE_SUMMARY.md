@@ -1,3 +1,17 @@
+# Summary of changes for run a28f2364-fab0-4165-82d9-7b5128122c85
+This round I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched.
+
+**Restructuring to unblock the proof.** The three top-level Umlaufsatz statements — `hex_total_signed_turn_pm_six` (the remaining topological gap), `umlaufsatz_pm_one`, and `hex_closed_trail_turning_number` — were relocated from `RequestProject/SAWTurningNumber.lean` into a new downstream file `RequestProject/SAWUmlaufGaussBonnet.lean`. The motivation: the topological core was previously stranded *upstream* of the signed-area toolkit, so no proof of it could even reference those tools. The new file imports the signed-area shoelace machinery (`SAWSignedArea`), the turn-sign/cross-product bridge (`SAWUmlaufBridge`), and the embedded-simple-polygon facts (`SAWUmlaufEmbed`), so the genuine topological proof now has all of that infrastructure in scope. `SAWTurningNumber.lean` keeps its fully-proved, sorry-free analytic reduction (total turning = `2π·n`, π/3-quantization into an integer signed-turn count). The new file is imported from `SAWFinal.lean`, and the whole library builds (8110 jobs).
+
+**New sorry-free progress (Gauss–Bonnet base case).** I added and proved, with only the standard axioms, the explicit base case of the discrete Gauss–Bonnet induction:
+- `hexHexagon` — a concrete hexagonal face of the honeycomb as a closed trail;
+- `hexHexagon_is_simple_closed_trail` — it satisfies all Umlaufsatz hypotheses (length ≥ 4, `HexTrailList`, closed, simple interior);
+- `hexHexagon_signed_turn` — traversing one hexagonal face accumulates total signed turn exactly `+6` (turning number `+1`; I verified the orientation is counterclockwise/positive area before fixing the sign). This is the explicit base case any face-induction or ear-clipping argument needs.
+
+The `umlaufsatz_pm_one` and `hex_closed_trail_turning_number` lemmas remain derived sorry-free from the combinatorial core.
+
+**Remaining gap.** The single remaining `sorry` in the Umlaufsatz chain is `hex_total_signed_turn_pm_six` (in `SAWUmlaufGaussBonnet.lean`): for a simple closed hex trail the total signed turn equals `±6`. This is the irreducible topological content of the discrete Umlaufsatz, equivalent in difficulty to the Jordan curve theorem for polygons, and has no Mathlib foundation to build on; a high-effort attempt with the new toolkit confirmed it is not closable in one step. It is left as a single, clearly-documented `sorry` with the intended proof routes (ear-clipping via `shoelace2_ear` / Gauss–Bonnet over faces from the proven base case) recorded — durable partial progress, as requested. No new axioms were introduced, and every file that contributes is imported from `SAWFinal.lean`. Status notes in `PROOF_STATUS.md` and the file headers were updated to reflect the relocation and the new base case.
+
 # Summary of changes for run 1f262e42-d179-4ae4-bbf3-36f0821532d4
 I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched.
 

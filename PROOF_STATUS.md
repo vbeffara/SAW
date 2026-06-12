@@ -175,8 +175,16 @@ existing compilation. The fix is REQUIRED for pair_winding_relation
 ## All Sorry Locations (11 total)
 
 ### Critical path (4 sorry's):
-1. `hex_closed_trail_turning_number` (SAWTurningNumber.lean:74) — **ROOT CAUSE A**
-   The discrete Umlaufsatz for hex lattice polygons.
+1. `hex_total_signed_turn_pm_six` (SAWUmlaufGaussBonnet.lean) — **ROOT CAUSE A**
+   The discrete Umlaufsatz for hex lattice polygons, in its cleanest
+   purely-integer form (turning number ±1). The three top-level Umlaufsatz
+   statements (`hex_total_signed_turn_pm_six`, `umlaufsatz_pm_one`,
+   `hex_closed_trail_turning_number`) were relocated from SAWTurningNumber.lean
+   to SAWUmlaufGaussBonnet.lean so the topological core has the signed-area
+   toolkit (`SAWSignedArea`, `SAWUmlaufBridge`, `SAWUmlaufEmbed`) in scope.
+   The Gauss–Bonnet base case `hexHexagon_signed_turn` (one hexagonal face has
+   total signed turn +6) and `hexHexagon_is_simple_closed_trail` are now
+   proved sorry-free in that file.
 2. `pair_winding_relation` (SAWPairCancellation.lean:173) — needs #1 + orientation
 3. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean:84) — discrete Stokes
 4. `infinite_strip_identity` (SAWRecurrenceProof.lean:56) — **ROOT CAUSE B**
