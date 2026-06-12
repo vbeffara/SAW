@@ -39,13 +39,20 @@ The theorem is split into two halves:
   in the interior, so the whole vertex cycle `L.dropLast` is automatically
   `Nodup` (a genuinely simple polygon). Hence the lemma is true as stated.
 
-  **Combinatorial reformulation (suggested proof route).** Every hex turn is
-  `±π/3` (`hex_turn_value`), so assigning to each directed edge its direction
-  index `k ∈ ℤ/6` (angle `k·π/3`) makes each turn a step of `±1` in `ℤ/6`, and
-  the total turning equals `(π/3) · S` where `S` is the signed turn count
-  (`+1` for a left turn, `-1` for a right turn) summed cyclically over all
-  edges; thus `n = S / 6`. The remaining content is the purely combinatorial
-  discrete Umlaufsatz `S = ±6`, provable by ear-clipping induction on the
+  **Combinatorial reformulation (suggested proof route; reduction now built
+  sorry-free).** Every hex turn is `±π/3` (`hex_turn_value`), so assigning to
+  each turn the sign `±1` (`+1` for a left turn, `-1` for a right turn) makes the
+  total turning equal `(π/3) · S` where `S` is the integer signed-turn count.
+  This reduction is now established here as reusable, sorry-free infrastructure:
+  * `hexTurnSign` assigns each turn its `±1` sign (via the imaginary part of the
+    turn ratio);
+  * `hexTurn_arg_eq_sign` proves each turning angle equals `(π/3)·hexTurnSign`;
+  * `hexSignedTurnCount` sums the signs over the list; and
+  * `hexWalkWinding_eq_signedTurnCount` proves `hexWalkWinding L =
+    (π/3) · hexSignedTurnCount L`.
+  Combined with `hex_closed_winding_int_mul` (`total turning = 2π·n`), this
+  reduces `umlaufsatz_pm_one` to the purely combinatorial discrete Umlaufsatz
+  `S = ±6`. That last step is provable by ear-clipping induction on the
   perimeter (remove a convex ear at the lexicographically extreme vertex, which
   preserves the turning number) or by a discrete Gauss-Bonnet / Euler-
   characteristic argument over the enclosed honeycomb faces — both of which
@@ -273,6 +280,70 @@ lemma hex_closed_winding_int_mul (L : List HexVertex)
     apply mul_left_cancel₀ Complex.I_ne_zero
     rw [hn]; push_cast; ring
   exact_mod_cast key
+
+/-! ## Combinatorial reduction: turning as an integer signed-turn count
+
+This section establishes, sorry-free, the *combinatorial* reduction of the
+turning recommended in this file's header: every hex turn is `±π/3`
+(`hex_turn_value`), so assigning to each turn a sign `±1` (a left turn `+1`,
+a right turn `-1`) makes the total turning equal `(π/3) · S`, where `S` is the
+integer signed-turn count.  Combined with `hex_closed_winding_int_mul`
+(`total turning = 2π·n`), this reduces the remaining `umlaufsatz_pm_one` to the
+purely combinatorial statement `S = ±6`.
+
+These declarations are reusable infrastructure for the combinatorial route to
+the Umlaufsatz; they are not yet consumed by `umlaufsatz_pm_one` (which is the
+remaining topological gap), but are imported transitively via `SAWFinal.lean`. -/
+
+/-- The sign of a single hex turn `v₀ → v₁ → v₂`: `+1` for a left turn
+    (`arg(d₂/d₁) = +π/3`, equivalently `Im(d₂/d₁) > 0`) and `-1` for a right
+    turn.  Defined via the imaginary part of the turn ratio so that it is a
+    genuine integer with no dependence on `Complex.arg`. -/
+noncomputable def hexTurnSign (v₀ v₁ v₂ : HexVertex) : ℤ :=
+  if 0 < ((correctHexEmbed v₂ - correctHexEmbed v₁) /
+          (correctHexEmbed v₁ - correctHexEmbed v₀)).im then 1 else -1
+
+/-
+At a non-backtracking hex turn, the turning angle is `(π/3)` times the
+    integer turn sign.
+-/
+lemma hexTurn_arg_eq_sign (v₀ v₁ v₂ : HexVertex)
+    (h₁ : hexGraph.Adj v₀ v₁) (h₂ : hexGraph.Adj v₁ v₂)
+    (h_ne : s(v₀, v₁) ≠ s(v₁, v₂)) :
+    Complex.arg ((correctHexEmbed v₂ - correctHexEmbed v₁) /
+                 (correctHexEmbed v₁ - correctHexEmbed v₀))
+      = (Real.pi / 3) * (hexTurnSign v₀ v₁ v₂ : ℝ) := by
+  obtain h | h := hex_turn_value v₀ v₁ v₂ h₁ h₂ h_ne;
+  · have h_im_pos : ((correctHexEmbed v₂ - correctHexEmbed v₁) / (correctHexEmbed v₁ - correctHexEmbed v₀)).im = Real.sin (Real.pi / 3) := by
+      rw [ ← Complex.norm_mul_sin_arg ] ; norm_num [ h ];
+      rw [ div_eq_iff ] <;> norm_num [ hex_edge_norm_one' _ _ h₁, hex_edge_norm_one' _ _ h₂ ];
+    unfold hexTurnSign; aesop;
+  · -- Since the argument is -(π/3), the imaginary part of the ratio is negative.
+    have h_im_neg : ((correctHexEmbed v₂ - correctHexEmbed v₁) / (correctHexEmbed v₁ - correctHexEmbed v₀)).im < 0 := by
+      rw [ ← Complex.norm_mul_sin_arg ] ; norm_num [ h ];
+      exact div_pos ( norm_pos_iff.mpr ( hex_embed_sub_ne_zero' _ _ h₂ ) ) ( norm_pos_iff.mpr ( hex_embed_sub_ne_zero' _ _ h₁ ) );
+    unfold hexTurnSign;
+    rw [ if_neg ( not_lt_of_gt h_im_neg ) ] ; push_cast ; linarith
+
+/-- The integer signed-turn count of a vertex list: the sum of the per-turn
+    signs over all consecutive triples. -/
+noncomputable def hexSignedTurnCount : List HexVertex → ℤ
+  | v₀ :: v₁ :: v₂ :: rest => hexTurnSign v₀ v₁ v₂ + hexSignedTurnCount (v₁ :: v₂ :: rest)
+  | _ => 0
+
+/-- The total winding of a hex trail equals `(π/3)` times its integer
+    signed-turn count. -/
+lemma hexWalkWinding_eq_signedTurnCount (L : List HexVertex) (h : HexTrailList L) :
+    hexWalkWinding L = (Real.pi / 3) * (hexSignedTurnCount L : ℝ) := by
+  induction' n : L.length using Nat.strong_induction_on with n ih generalizing L;
+  rcases L with ( _ | ⟨ v₀, _ | ⟨ v₁, _ | ⟨ v₂, L ⟩ ⟩ ⟩ ) <;> norm_num at *;
+  · unfold hexWalkWinding hexSignedTurnCount; norm_num;
+  · unfold hexWalkWinding hexSignedTurnCount; norm_num;
+  · unfold hexWalkWinding hexSignedTurnCount; norm_num;
+  · rcases h with ⟨ h₁, h₂, h₃, h₄ ⟩;
+    convert congr_arg₂ ( · + · ) ( hexTurn_arg_eq_sign v₀ v₁ v₂ h₁ h₂ h₃ ) ( ih _ _ _ h₄ rfl ) using 1;
+    · rw [ ← mul_add, show hexSignedTurnCount ( v₀ :: v₁ :: v₂ :: L ) = hexTurnSign v₀ v₁ v₂ + hexSignedTurnCount ( v₁ :: v₂ :: L ) from rfl ] ; push_cast ; ring;
+    · simp +arith +decide [ ← n ]
 
 /-! ## The turning number theorem for simple closed hex trails (Umlaufsatz)
 

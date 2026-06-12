@@ -1,3 +1,23 @@
+# Summary of changes for run 26472b00-485b-414a-9fb0-8da1a5f08623
+I worked exclusively on the top-priority Umlaufsatz, `umlaufsatz_pm_one` (the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`) — the discrete Hopf turning-number theorem for a simple closed honeycomb trail. I did not touch any other branch.
+
+What I did this session:
+
+1. Made a fresh high-effort proof attempt on the full `umlaufsatz_pm_one` via the signed-area / ear-clipping route, supplying all existing infrastructure (`hex_turn_value`, `hex_turn_cross`, the `HexArea.shoelace2` shoelace theory). As in prior attempts it timed out: the irreducible content of this lemma is the Jordan-curve theorem for polygons (that a simple polygon has nonzero signed area and turning number equal to its sign), which is not available in Mathlib and is a large standalone development.
+
+2. Rather than only re-confirm that, I built and fully proved (sorry-free) the *combinatorial reduction* of the turning that this file's own header recommends as the route forward. Four new, reusable declarations in `SAWTurningNumber.lean`:
+   - `hexTurnSign` — the ±1 sign of a single hex turn (defined via the imaginary part of the turn ratio, so it is a genuine integer);
+   - `hexTurn_arg_eq_sign` — each turning angle equals `(π/3)·hexTurnSign`;
+   - `hexSignedTurnCount` — the integer signed-turn count of a vertex list;
+   - `hexWalkWinding_eq_signedTurnCount` — `hexWalkWinding L = (π/3)·hexSignedTurnCount L` for any hex trail.
+   Together with the already-proved `hex_closed_winding_int_mul` (total turning `= 2π·n`), these reduce `umlaufsatz_pm_one` to the clean purely-combinatorial statement `S = ±6`. All four depend only on the standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
+
+3. Updated the file header to document the now-sorry-free reduction and the precise remaining topological gap.
+
+4. Verified wiring as requested. The whole library builds (`RequestProject.SAWFinal`, 8108 jobs). Every file that is part of the proof is imported transitively from `SAWFinal.lean` (the import root); the Umlaufsatz preparation files `SAWTurningNumber`, `SAWSignedArea`, `SAWUmlaufBridge` are all wired in and documented as preparation for `pair_winding_relation`. The only non-imported files are `SAWFinal` itself (the root) and `SAWVertexRelation` (a documented dead branch about Lemma 1, unrelated to the Umlaufsatz, left untouched).
+
+Honest status: the Umlaufsatz is not yet fully closed. The single remaining `sorry` is `umlaufsatz_pm_one`; everything it depends on (the easy half, the signed-area algebra, and now the combinatorial reduction to `S = ±6`) is sorry-free. Closing the last gap requires building Jordan-curve-level planar topology that does not exist in Mathlib — a multi-stage development rather than a single proof step.
+
 # Summary of changes for run 8d333984-38f4-49a3-9cd7-d6a85b4498b7
 I worked exclusively on the top-priority Umlaufsatz `umlaufsatz_pm_one` (the "hard half" of `hex_closed_trail_turning_number` in `RequestProject/SAWTurningNumber.lean`) — the discrete Hopf turning-number theorem for a simple closed honeycomb trail. I did not touch any other branch.
 
