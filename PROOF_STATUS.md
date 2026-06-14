@@ -1,6 +1,28 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz round note.** New sorry-free preparation file
+> **Umlaufsatz round note (latest).** The discrete-Umlaufsatz core
+> `hex_signed_turn_eq_six_sign_shoelace` (in `SAWUmlaufSignedArea.lean`) is now
+> **proved sorry-free**, *derived* from a new general planar-polygon framework in
+> `RequestProject/SAWUmlaufPolygon.lean` (imported via `SAWUmlaufSignedArea` →
+> `SAWUmlaufGaussBonnet` → `SAWFinal`). The new file:
+> * defines `polyWind` (exterior-angle turning of a `List ℂ` polygon) and proves
+>   the bridge `hexWalkWinding_eq_polyWind`, the additivity
+>   `polyWind_append_singleton`, and the cyclic-turning identity
+>   `polyWind_hexEmbedded_cyclic` (cyclic turning = `hexWalkWinding L + closure`)
+>   — **all sorry-free**;
+> * proves `hexEmbeddedPolygon_polygonSimple`'s `Nodup` half via
+>   `hex_closed_trail_embed_nodup`.
+> The single hex-specific topological `sorry` has thus been replaced by **two
+> clean, reusable, genuinely-true topological gaps**:
+> 1. `polygon_umlaufsatz` — the classical turning-tangent theorem for a
+>    non-self-intersecting polygon in `ℂ` (`total turning = 2π·sign(area)`);
+> 2. `hexEmbeddedPolygon_edges_disjoint` — honeycomb planarity (non-adjacent
+>    edges of the embedded polygon are disjoint segments).
+> All analytic glue connecting the integer signed-turn count ↔ real turning ↔
+> signed-area sign is now proved. Suggested next steps: ear-clipping induction
+> for (1), and lattice segment-disjointness case analysis for (2).
+>
+> **Earlier round note.** New sorry-free preparation file
 > `RequestProject/SAWUmlaufEarStep.lean` (imported from
 > `SAWUmlaufGaussBonnet`, hence from `SAWFinal`) adds the *per-vertex ear-step
 > compatibility* for the ear-clipping route to the discrete Umlaufsatz core

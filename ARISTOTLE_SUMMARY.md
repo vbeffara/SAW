@@ -1,3 +1,24 @@
+# Summary of changes for run fbd41952-2e9b-4b2f-a786-c95139d2f9a2
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (8116 jobs) and every new declaration is imported transitively from `RequestProject/SAWFinal.lean`.
+
+**Main result of this round.** The previously monolithic, Jordan-curve-theorem-level `sorry` `hex_signed_turn_eq_six_sign_shoelace` (the discrete-Umlaufsatz core, in `RequestProject/SAWUmlaufSignedArea.lean`) is now **proved sorry-free**. It is derived from a new, general planar-polygon framework, with all the connecting analytic glue proved.
+
+**New file `RequestProject/SAWUmlaufPolygon.lean`** (imported by `SAWUmlaufSignedArea`, hence by `SAWFinal`). It introduces the general planar-polygon Umlaufsatz and the bridge to honeycomb trails. The following are **proved sorry-free**:
+- `polyWind` — the exterior-angle turning of an arbitrary polygon in `ℂ` (the lattice-free analogue of `hexWalkWinding`);
+- `hexWalkWinding_eq_polyWind` — honeycomb winding = `polyWind` of the planar embedding;
+- `polyWind_append_singleton` — the single-vertex additivity step of `polyWind`;
+- `hexEmbeddedPolygon_length`, and the key bridge `polyWind_hexEmbedded_cyclic` — the cyclic total turning of the embedded polygon equals `hexWalkWinding L + closure`;
+- `hexEmbeddedPolygon_polygonSimple` — honeycomb planarity, with its `Nodup` half discharged via the existing `hex_closed_trail_embed_nodup`.
+
+The hex core is then assembled sorry-free in `SAWUmlaufSignedArea`: apply the general theorem to the embedded polygon, rewrite the cyclic turning via the bridge, and divide out the common `π/3` against the already-proved combinatorial reductions (`hexWalkWinding_eq_signedTurnCount`, `hex_closure_arg_eq_sign`).
+
+**Remaining gaps (two clean, reusable, genuinely-true topological facts).** The single hex-specific topological `sorry` has been replaced by exactly two well-documented sorries, each strictly smaller and more fundamental than the original:
+1. `polygon_umlaufsatz` — the classical turning-tangent theorem for a non-self-intersecting polygon in `ℂ` (total exterior-angle turning = `2π·sign(signed area)`); and
+2. `hexEmbeddedPolygon_edges_disjoint` — honeycomb planarity (non-adjacent edges of the embedded polygon are disjoint segments).
+Suggested next steps are recorded in the file/docstrings: an ear-clipping induction for (1) and a lattice segment-disjointness case analysis for (2).
+
+**Verification.** `#print axioms` confirms `polyWind_hexEmbedded_cyclic` is sorry-free (standard axioms only) and that `hex_signed_turn_eq_six_sign_shoelace` now depends on `sorryAx` solely through the two isolated gaps above. Documentation in `SAWUmlaufSignedArea.lean` and `PROOF_STATUS.md` was updated to reflect the new structure; no partial progress was lost.
+
 # Summary of changes for run f30e5d90-fc19-4fac-815a-9c887c76a536
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully and every new declaration is imported transitively from `RequestProject/SAWFinal.lean`.
 

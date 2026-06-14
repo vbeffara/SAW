@@ -32,15 +32,26 @@ The bare `±6` disjunction is then an immediate consequence (the right-hand side
 `RequestProject.SAWUmlaufGaussBonnet`.
 
 This file is imported from `RequestProject.SAWUmlaufGaussBonnet` (hence
-transitively from `RequestProject.SAWFinal`).  It is **preparation** for the
-Umlaufsatz: the single remaining `sorry` here,
-`hex_signed_turn_eq_six_sign_shoelace`, is the irreducible Jordan-curve-level
-content, now in its cleanest signed-area form.
+transitively from `RequestProject.SAWFinal`).
+
+**Status.**  `hex_signed_turn_eq_six_sign_shoelace` is now **proved sorry-free**
+here by *deriving* it from the general planar-polygon Umlaufsatz
+(`polygon_umlaufsatz`) applied to the embedded polygon, via the bridge
+`polyWind_hexEmbedded_cyclic` (cyclic turning = `hexWalkWinding L + closure`)
+and the already-proved combinatorial reductions
+(`hexWalkWinding_eq_signedTurnCount`, `hex_closure_arg_eq_sign`).  The remaining
+Umlaufsatz gaps are the two clean, reusable topological facts in
+`RequestProject.SAWUmlaufPolygon`:
+* `polygon_umlaufsatz` — the classical turning-tangent theorem for a
+  non-self-intersecting polygon in `ℂ`; and
+* `hexEmbeddedPolygon_edges_disjoint` — honeycomb planarity (the embedded
+  polygon's edges meet only at shared vertices).
 -/
 
 import Mathlib
 import RequestProject.SAWUmlaufHexagon
 import RequestProject.SAWUmlaufEmbed
+import RequestProject.SAWUmlaufPolygon
 
 open Real Complex ComplexConjugate
 
@@ -66,8 +77,13 @@ noncomputable section
     * the base case is one hexagonal face, with total signed turn `+6` and
       positive signed area (`hexHexagon_signed_turn`, `hexHexagon_shoelace2_pos`).
 
-    **Sorry**: this is the irreducible Jordan-curve-level content, absent from
-    Mathlib. -/
+    **Now proved sorry-free** by deriving it from the general planar-polygon
+    Umlaufsatz `polygon_umlaufsatz` (applied to `hexEmbeddedPolygon L`) through
+    the bridge `polyWind_hexEmbedded_cyclic` and the combinatorial reductions
+    `hexWalkWinding_eq_signedTurnCount` / `hex_closure_arg_eq_sign`.  The two
+    remaining irreducible topological gaps live in
+    `RequestProject.SAWUmlaufPolygon` (`polygon_umlaufsatz` and
+    `hexEmbeddedPolygon_edges_disjoint`). -/
 lemma hex_signed_turn_eq_six_sign_shoelace (L : List HexVertex)
     (hL : 4 ≤ L.length)
     (h_trail : HexTrailList L)
@@ -77,6 +93,41 @@ lemma hex_signed_turn_eq_six_sign_shoelace (L : List HexVertex)
       hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
         (L.get ⟨1, by omega⟩)
       = 6 * (if 0 < HexArea.shoelace2 (hexEmbeddedPolygon L) then 1 else -1) := by
-  sorry
+  -- Apply the general planar-polygon Umlaufsatz to the embedded polygon, then
+  -- divide out the common `π/3` against the proved combinatorial reductions.
+  have hlen3 : 3 ≤ (hexEmbeddedPolygon L).length := by
+    rw [hexEmbeddedPolygon_length]; omega
+  have hsimple' : PolygonSimple (hexEmbeddedPolygon L) :=
+    hexEmbeddedPolygon_polygonSimple L hL h_trail h_closed h_simple
+  have hum := polygon_umlaufsatz (hexEmbeddedPolygon L) hlen3 hsimple'
+  have hglue := polyWind_hexEmbedded_cyclic L hL h_closed
+  -- Combine: `hexWalkWinding L + closure = 2π · sign(area)`.
+  rw [hglue] at hum
+  -- Reduce the two turning terms to `(π/3)·(integer count)`.
+  rw [hexWalkWinding_eq_signedTurnCount L h_trail,
+      hex_closure_arg_eq_sign L hL h_trail h_closed h_simple] at hum
+  set S : ℤ := hexSignedTurnCount L with hS
+  set cs : ℤ := hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
+    (L.get ⟨1, by omega⟩) with hcs
+  set b : ℝ := (if 0 < HexArea.shoelace2 (hexEmbeddedPolygon L) then 1 else -1) with hb
+  -- hum : π/3 * S + π/3 * cs = 2π · b
+  have hpi : (Real.pi : ℝ) ≠ 0 := Real.pi_ne_zero
+  have key : ((S + cs : ℤ) : ℝ) = 6 * b := by
+    push_cast
+    have h2 : Real.pi * (((S : ℝ) + cs) / 3) = Real.pi * (2 * b) := by
+      ring_nf; ring_nf at hum; linarith [hum]
+    have h3 : ((S : ℝ) + cs) / 3 = 2 * b := mul_left_cancel₀ hpi h2
+    linarith
+  by_cases hpos : 0 < HexArea.shoelace2 (hexEmbeddedPolygon L)
+  · have hb1 : b = 1 := by rw [hb, if_pos hpos]
+    rw [hb1] at key
+    have : ((S + cs : ℤ) : ℝ) = ((6 : ℤ) : ℝ) := by push_cast at key ⊢; linarith
+    have hSc : S + cs = 6 := by exact_mod_cast this
+    rw [if_pos hpos]; push_cast; omega
+  · have hb1 : b = -1 := by rw [hb, if_neg hpos]
+    rw [hb1] at key
+    have : ((S + cs : ℤ) : ℝ) = ((-6 : ℤ) : ℝ) := by push_cast at key ⊢; linarith
+    have hSc : S + cs = -6 := by exact_mod_cast this
+    rw [if_neg hpos]; push_cast; omega
 
 end
