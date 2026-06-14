@@ -43,6 +43,7 @@ This file is imported from `RequestProject.SAWFinal`.
 import Mathlib
 import RequestProject.SAWUmlaufBridge
 import RequestProject.SAWUmlaufEmbed
+import RequestProject.SAWUmlaufSignedArea
 
 open Real Complex ComplexConjugate
 
@@ -82,7 +83,10 @@ lemma hex_total_signed_turn_pm_six (L : List HexVertex)
     hexSignedTurnCount L +
       hexTurnSign (L.get ⟨L.length - 2, by omega⟩) (L.get ⟨0, by omega⟩)
         (L.get ⟨1, by omega⟩) = -6 := by
-  sorry
+  have h := hex_signed_turn_eq_six_sign_shoelace L hL h_trail h_closed h_simple
+  by_cases hpos : 0 < HexArea.shoelace2 (hexEmbeddedPolygon L)
+  · left; rw [h, if_pos hpos]; norm_num
+  · right; rw [h, if_neg hpos]; norm_num
 
 /-- The magnitude part of the Umlaufsatz: for a simple closed hex trail whose
     total turning is `2π·n`, the integer `n` is `±1`.
@@ -148,48 +152,5 @@ lemma hex_closed_trail_turning_number (L : List HexVertex)
   rcases umlaufsatz_pm_one L hL h_trail h_closed h_simple n hn with h | h
   · left; rw [show closure = _ from rfl, hn, h]; push_cast; ring
   · right; rw [show closure = _ from rfl, hn, h]; push_cast; ring
-
-/-! ## Base case of the discrete Gauss–Bonnet route: one hexagonal face
-
-A single hexagonal face of the honeycomb, traversed as a closed trail, has total
-signed turn `±6` (here `-6`).  This is the base case of the Gauss–Bonnet
-induction over enclosed faces: every closed simple honeycomb trail bounds a
-union of hexagonal faces, the boundary turning telescopes over the faces, and a
-single face contributes `±2π = ±6·(π/3)`. -/
-
-/-- A concrete hexagonal face of the honeycomb, written as a closed trail
-    (the last vertex repeats the first).  Its six edges are the six sides of one
-    hexagon; one checks directly that consecutive vertices are `hexGraph`-adjacent
-    and that the closing vertex returns to the start. -/
-def hexHexagon : List HexVertex :=
-  [(0, 0, false), (0, 0, true), (0, -1, false), (1, -1, true),
-   (1, -1, false), (1, 0, true), (0, 0, false)]
-
-/-
-The concrete hexagon is a simple closed hex trail: it has length `7 ≥ 4`, is
-    a `HexTrailList` (consecutive adjacencies, no immediate backtracking), is
-    closed (`head? = getLast?`), and its interior vertices are distinct.
--/
-lemma hexHexagon_is_simple_closed_trail :
-    4 ≤ hexHexagon.length ∧ HexTrailList hexHexagon ∧
-    hexHexagon.head? = hexHexagon.getLast? ∧ hexHexagon.tail.dropLast.Nodup := by
-  unfold hexHexagon; simp +decide [ HexTrailList ] ;
-
-/-
-**Base case of the discrete Gauss–Bonnet induction.**  Going once around a
-    single hexagonal face accumulates total signed turn `+6` (equivalently
-    turning number `+1`, i.e. counterclockwise for this orientation: the
-    embedded hexagon has positive shoelace signed area).
--/
-lemma hexHexagon_signed_turn :
-    hexSignedTurnCount hexHexagon +
-      hexTurnSign (hexHexagon.get ⟨hexHexagon.length - 2, by decide⟩)
-        (hexHexagon.get ⟨0, by decide⟩) (hexHexagon.get ⟨1, by decide⟩) = 6 := by
-  unfold hexTurnSign; norm_num [ hexHexagon ] ;
-  unfold correctHexEmbed; norm_num [ Complex.normSq, Complex.div_re, Complex.div_im ] ;
-  ring_nf; norm_num;
-  simp +decide [ hexSignedTurnCount, hexTurnSign ];
-  unfold correctHexEmbed; norm_num [ Complex.normSq, Complex.div_im ] ; ring_nf ;
-  norm_num [ Real.sqrt_lt ]
 
 end

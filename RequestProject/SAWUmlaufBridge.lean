@@ -115,4 +115,41 @@ lemma hexTurnSign_eq_cross_sign (v₀ v₁ v₂ : HexVertex)
   · rw [if_pos hsign, if_pos (hiff.mpr hsign)]
   · rw [if_neg hsign, if_neg (fun h => hsign (hiff.mp h))]
 
+/-! ## Ear step: signed-area change versus turn sign
+
+For the ear-clipping / discrete Gauss–Bonnet induction toward
+`hex_signed_turn_eq_six_sign_shoelace`, the key compatibility fact is that the
+exact change of the shoelace signed area when a vertex is cut
+(`HexArea.shoelace2_ear`, which is the *triangle* term
+`cross a b + cross b c + cross c a` on the three points) has the **same sign as
+the combinatorial turn sign** at the cut vertex.  The two lemmas below supply
+this, purely algebraically. -/
+
+/-- The triangle signed-area term on three points equals the cross product of
+    the two edge vectors: `cross a b + cross b c + cross c a = cross (b-a) (c-b)`.
+    (`HexArea.shoelace2_ear` expresses the ear-step area change as the left-hand
+    side; this rewrites it into the edge-vector cross product whose sign is the
+    turn sign.) -/
+lemma cross_triangle_eq_cross_edges (a b c : ℂ) :
+    HexArea.cross a b + HexArea.cross b c + HexArea.cross c a
+      = HexArea.cross (b - a) (c - b) := by
+  simp [HexArea.cross]; ring
+
+/-- **Ear-step sign compatibility.**  At a hex turn `v₀ → v₁ → v₂` (the first
+    edge being a genuine adjacency), the sign of the ear-step signed-area change
+    `cross a b + cross b c + cross c a` (the triangle term cut off when removing
+    `v₁`) equals the combinatorial turn sign `hexTurnSign v₀ v₁ v₂`.  This is the
+    exact compatibility the ear-clipping induction needs: removing a vertex
+    changes the total signed turn by its turn sign and the signed area by a term
+    of the *same* sign, preserving the invariant
+    `total signed turn = 6 · sign (signed area)`. -/
+lemma hexTurnSign_eq_ear_area_sign (v₀ v₁ v₂ : HexVertex)
+    (h₁ : hexGraph.Adj v₀ v₁) :
+    (hexTurnSign v₀ v₁ v₂ : ℤ) =
+      (if 0 < HexArea.cross (correctHexEmbed v₀) (correctHexEmbed v₁)
+              + HexArea.cross (correctHexEmbed v₁) (correctHexEmbed v₂)
+              + HexArea.cross (correctHexEmbed v₂) (correctHexEmbed v₀) then 1
+       else -1) := by
+  rw [cross_triangle_eq_cross_edges, hexTurnSign_eq_cross_sign v₀ v₁ v₂ h₁]
+
 end

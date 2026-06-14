@@ -1,3 +1,22 @@
+# Summary of changes for run 1fff48c8-248d-4330-92ed-a9074581a3e5
+I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds (8114 jobs) and every new file is imported transitively from `RequestProject/SAWFinal.lean`.
+
+**What changed (net progress on the Umlaufsatz core).**
+
+1. **Reformulated the remaining topological core into its inductive-friendly form.** New file `RequestProject/SAWUmlaufSignedArea.lean` states the single remaining gap as the *equality*
+   `hexSignedTurnCount L + closingSign = 6 · sign(HexArea.shoelace2 (hexEmbeddedPolygon L))`
+   (`hex_signed_turn_eq_six_sign_shoelace`). This is strictly stronger than the previous bare `±6` disjunction (it pins the orientation by the embedded polygon's signed area) and is exactly the invariant an ear-clipping / discrete Gauss–Bonnet induction maintains. The sign convention was verified consistent (the base hexagon has total signed turn `+6` and positive area).
+
+2. **`hex_total_signed_turn_pm_six` is now proved sorry-free** (in `SAWUmlaufGaussBonnet.lean`), derived from the new core — the `±6` disjunction is an immediate consequence since `6·(if 0<area then 1 else -1)` is always `±6`. `umlaufsatz_pm_one` and `hex_closed_trail_turning_number` continue to follow sorry-free.
+
+3. **New sorry-free base case** (new file `RequestProject/SAWUmlaufHexagon.lean`, deliberately placed upstream of the core so its computations cannot circularly invoke the unproved core): `hexHexagon_signed_turn` (one hexagonal face has total signed turn `+6`), `hexHexagon_shoelace2_eq` (its embedded signed area is `3√3`) and `hexHexagon_shoelace2_pos` (area `> 0`). These fix the orientation/sign convention and are the base case of the induction.
+
+4. **New sorry-free ear-step infrastructure** (in `RequestProject/SAWUmlaufBridge.lean`): `cross_triangle_eq_cross_edges` and `hexTurnSign_eq_ear_area_sign`, which prove that the exact signed-area change when a vertex is cut (`HexArea.shoelace2_ear`) has the *same sign* as the combinatorial turn sign at that vertex — the precise compatibility the induction's invariant requires.
+
+All four computational additions were checked to use only the standard axioms (no `sorryAx`).
+
+**Remaining gap.** The single remaining `sorry` in the Umlaufsatz chain is now `hex_signed_turn_eq_six_sign_shoelace`: the irreducible topological content (a simple polygon has an ear / the Jordan curve theorem for polygons), which has no foundation in Mathlib. A high-effort attempt with the full new toolkit confirmed it is not closable in one step; it is left as a single, clearly-documented sorry with the ear-clipping route and all available tools spelled out, so future rounds have a clean attack surface. The status notes in `PROOF_STATUS.md` were updated to reflect the new structure.
+
 # Summary of changes for run a28f2364-fab0-4165-82d9-7b5128122c85
 This round I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched.
 

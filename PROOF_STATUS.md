@@ -175,16 +175,34 @@ existing compilation. The fix is REQUIRED for pair_winding_relation
 ## All Sorry Locations (11 total)
 
 ### Critical path (4 sorry's):
-1. `hex_total_signed_turn_pm_six` (SAWUmlaufGaussBonnet.lean) — **ROOT CAUSE A**
-   The discrete Umlaufsatz for hex lattice polygons, in its cleanest
-   purely-integer form (turning number ±1). The three top-level Umlaufsatz
-   statements (`hex_total_signed_turn_pm_six`, `umlaufsatz_pm_one`,
-   `hex_closed_trail_turning_number`) were relocated from SAWTurningNumber.lean
-   to SAWUmlaufGaussBonnet.lean so the topological core has the signed-area
-   toolkit (`SAWSignedArea`, `SAWUmlaufBridge`, `SAWUmlaufEmbed`) in scope.
-   The Gauss–Bonnet base case `hexHexagon_signed_turn` (one hexagonal face has
-   total signed turn +6) and `hexHexagon_is_simple_closed_trail` are now
-   proved sorry-free in that file.
+1. `hex_signed_turn_eq_six_sign_shoelace` (SAWUmlaufSignedArea.lean) —
+   **ROOT CAUSE A**.  The discrete Umlaufsatz for hex lattice polygons, now in
+   its cleanest *inductive* signed-area form: total signed turn
+   `= 6 · sign (HexArea.shoelace2 (hexEmbeddedPolygon L))`.  This equality is
+   strictly stronger than the bare `±6` disjunction (it pins the orientation)
+   and is the invariant maintained by an ear-clipping / discrete Gauss–Bonnet
+   induction.
+
+   **Now derived sorry-free from this single core:**
+   * `hex_total_signed_turn_pm_six` (SAWUmlaufGaussBonnet.lean) — the bare `±6`
+     disjunction, an immediate consequence (`6 · (if 0<area then 1 else -1)` is
+     always `±6`).
+   * `umlaufsatz_pm_one`, `hex_closed_trail_turning_number` — as before.
+
+   **Supporting sorry-free infrastructure added for the inductive proof:**
+   * base case (SAWUmlaufHexagon.lean): `hexHexagon_signed_turn` (one face has
+     total signed turn +6), `hexHexagon_shoelace2_eq` (its embedded area is
+     `3√3`), `hexHexagon_shoelace2_pos` (area > 0) — fixing the sign convention;
+   * ear step (SAWUmlaufBridge.lean): `cross_triangle_eq_cross_edges` and
+     `hexTurnSign_eq_ear_area_sign` (the ear-step signed-area change has the
+     same sign as the turn sign at the cut vertex), the exact compatibility the
+     induction's invariant needs;
+   * `HexArea.shoelace2_ear` (area change on cutting a vertex) and
+     `hex_closed_trail_embed_nodup` (the embedded polygon is genuinely simple).
+
+   What remains is the irreducible topological content: a simple polygon has an
+   ear (two-ears theorem / Jordan curve theorem for polygons), absent from
+   Mathlib.
 2. `pair_winding_relation` (SAWPairCancellation.lean:173) — needs #1 + orientation
 3. `finite_strip_identity_from_vr` (SAWStripIdentityFromVR.lean:84) — discrete Stokes
 4. `infinite_strip_identity` (SAWRecurrenceProof.lean:56) — **ROOT CAUSE B**
