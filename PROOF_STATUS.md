@@ -1,6 +1,24 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz round note (latest).** The discrete-Umlaufsatz core
+> **Umlaufsatz round note (newest).** Fixed a genuine **falsity** in the general
+> planar-polygon Umlaufsatz `polygon_umlaufsatz` (`SAWUmlaufPolygon.lean`):
+> `PolygonSimple` does not exclude three consecutive collinear vertices (e.g.
+> the spike `0,2,1` has `polyWind = 2π` but signed area `0`), so the statement
+> was unprovable. Added the non-degeneracy hypothesis
+> `polyNondeg (V ++ [V[0], V[1]])` (no flat/spike turns), making it true, and
+> **proved sorry-free** that the honeycomb embedding satisfies it
+> (`hexEmbeddedPolygon_polyNondeg`, with helpers
+> `hexTrailList_map_emb_polyNondeg` and
+> `hexClosedTrail_dropLast_append_trailList`). Also **proved sorry-free** the
+> triangle base case `polyWind_triangle`
+> (`polyWind [a,b,c,a,b] = 2π·sign(area)` for a non-degenerate triangle), the
+> base case of the ear-clipping induction. The two remaining Umlaufsatz gaps
+> are now both *correctly stated* and genuinely true: `polygon_umlaufsatz`
+> (ear-clipping induction / two-ears theorem) and
+> `hexEmbeddedPolygon_edges_disjoint` (honeycomb planarity). All four new
+> lemmas depend only on `propext, Classical.choice, Quot.sound`.
+>
+> **Umlaufsatz round note (previous).** The discrete-Umlaufsatz core
 > `hex_signed_turn_eq_six_sign_shoelace` (in `SAWUmlaufSignedArea.lean`) is now
 > **proved sorry-free**, *derived* from a new general planar-polygon framework in
 > `RequestProject/SAWUmlaufPolygon.lean` (imported via `SAWUmlaufSignedArea` →

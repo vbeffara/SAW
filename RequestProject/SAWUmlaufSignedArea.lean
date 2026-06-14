@@ -99,7 +99,8 @@ lemma hex_signed_turn_eq_six_sign_shoelace (L : List HexVertex)
     rw [hexEmbeddedPolygon_length]; omega
   have hsimple' : PolygonSimple (hexEmbeddedPolygon L) :=
     hexEmbeddedPolygon_polygonSimple L hL h_trail h_closed h_simple
-  have hum := polygon_umlaufsatz (hexEmbeddedPolygon L) hlen3 hsimple'
+  have hnd' := hexEmbeddedPolygon_polyNondeg L hL h_trail h_closed h_simple
+  have hum := polygon_umlaufsatz (hexEmbeddedPolygon L) hlen3 hsimple' hnd'
   have hglue := polyWind_hexEmbedded_cyclic L hL h_closed
   -- Combine: `hexWalkWinding L + closure = 2π · sign(area)`.
   rw [hglue] at hum
