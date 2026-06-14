@@ -1,3 +1,19 @@
+# Summary of changes for run f30e5d90-fc19-4fac-815a-9c887c76a536
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully and every new declaration is imported transitively from `RequestProject/SAWFinal.lean`.
+
+**Starting point.** The Umlaufsatz chain had been reduced (in prior work) to a single isolated `sorry`, the inductive signed-area core `hex_signed_turn_eq_six_sign_shoelace` in `RequestProject/SAWUmlaufSignedArea.lean`: for a simple closed honeycomb polygon, total signed turn = `6 · sign(signed area of the embedded polygon)`. This is genuinely Jordan-curve-theorem-level content (a simple polygon has an ear; ear removal preserves planar simplicity), which is absent from Mathlib.
+
+**What I verified.** A direct full-strength proof attempt on the core confirmed it is not closable as-is — it needs new planar-topology infrastructure (the "two-ears" theorem and edge non-crossing). The file was left unmodified, so the isolated `sorry` and the green build are fully preserved (no progress lost).
+
+**New verified progress (all sorry-free, standard axioms only).** Added `RequestProject/SAWUmlaufEarStep.lean`, the *algebraic per-vertex half* of the ear-clipping induction step, and imported it from `SAWUmlaufGaussBonnet` (hence from `SAWFinal`):
+- `shoelace2_triple_eq_cross` — the signed area of an ear triangle `[a,b,c]` equals the edge cross product `cross (b-a) (c-b)`;
+- `shoelace2_triple_sign` — hence its orientation equals that cross product's orientation;
+- `hexTurnSign_eq_shoelace2_triple_sign` — the combinatorial turn sign at a genuine hex turn equals the orientation of the embedded ear triangle.
+
+Together these pin down the precise compatibility the ear-clipping induction consumes at each clipping step: cutting a vertex changes the total signed turn by exactly its turn sign and the signed area by the matching triangle term (`HexArea.shoelace2_ear`), and the two changes have the same sign — so the invariant `total signed turn = 6 · sign(area)` is preserved per step. The only content still missing is the irreducible topological half (ear existence + simplicity preservation), which remains the lone `sorry` `hex_signed_turn_eq_six_sign_shoelace`.
+
+**Bookkeeping.** Recorded the new file and the remaining gap at the top of `PROOF_STATUS.md` so future rounds can build directly on the ear-step lemmas. Full build verified (8115 jobs).
+
 # Summary of changes for run 1fff48c8-248d-4330-92ed-a9074581a3e5
 I worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds (8114 jobs) and every new file is imported transitively from `RequestProject/SAWFinal.lean`.
 

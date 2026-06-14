@@ -44,6 +44,7 @@ import Mathlib
 import RequestProject.SAWUmlaufBridge
 import RequestProject.SAWUmlaufEmbed
 import RequestProject.SAWUmlaufSignedArea
+import RequestProject.SAWUmlaufEarStep
 
 open Real Complex ComplexConjugate
 

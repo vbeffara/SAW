@@ -1,5 +1,17 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz round note.** New sorry-free preparation file
+> `RequestProject/SAWUmlaufEarStep.lean` (imported from
+> `SAWUmlaufGaussBonnet`, hence from `SAWFinal`) adds the *per-vertex ear-step
+> compatibility* for the ear-clipping route to the discrete Umlaufsatz core
+> `hex_signed_turn_eq_six_sign_shoelace`:
+> `shoelace2_triple_eq_cross`, `shoelace2_triple_sign`, and
+> `hexTurnSign_eq_shoelace2_triple_sign` (the combinatorial turn sign equals the
+> orientation of the embedded ear triangle). The single irreducible
+> Jordan-curve-level gap (a simple polygon with `≥4` vertices has an ear, and
+> ear removal preserves planar simplicity) remains the lone `sorry`
+> `hex_signed_turn_eq_six_sign_shoelace` in `SAWUmlaufSignedArea.lean`.
+
 ## Main Theorem
 
 ```
