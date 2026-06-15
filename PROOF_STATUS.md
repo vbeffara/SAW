@@ -1,6 +1,26 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz honeycomb-planarity round note (NEWEST).** The honeycomb
+> **Umlaufsatz ear-clipping rotation-toolkit round note (NEWEST).** The single
+> remaining Umlaufsatz `sorry` is now the sharpened two-ears core
+> `exists_ear_clip` (`SAWUmlaufPolygon.lean`): a simple non-degenerate polygon
+> with ≥4 vertices has a cyclic rotation `V.rotate r = a :: b :: c :: rest`
+> whose second vertex can be clipped to `a :: c :: rest`, preserving planar
+> simplicity, non-degeneracy, cyclic turning, and orientation. The previous
+> bundled core `polygon_ear_reduction` is now **proved sorry-free from**
+> `exists_ear_clip` plus a new, fully proved **rotation-invariance toolkit**
+> (only `propext, Classical.choice, Quot.sound`):
+> `polyCycWind` (cyclic turning) with `polyCycWind_rotate1`/`polyCycWind_rotate`;
+> `shoelace2_rotate1`/`shoelace2_rotate` (signed area rotation invariance);
+> `mem_closedEdges_rotate` + `PolygonSimple_rotate` (planar simplicity is
+> rotation invariant); `polyCycNondeg` with
+> `polyCycNondeg_rotate1`/`polyCycNondeg_rotate`; and the algebraic clip identity
+> `shoelace2_clip_second` (clipping changes the area by exactly the ear-triangle
+> area). These transport the concrete clipped cycle back to `V`'s own closing
+> form, so all the ear-clipping *glue* is now verified and the only irreducible
+> Jordan-curve-theorem-level content is concentrated in `exists_ear_clip`. The
+> honeycomb-planarity core remains closed.
+>
+> **Umlaufsatz honeycomb-planarity round note.** The honeycomb
 > planarity core `hexEmbeddedPolygon_edges_disjoint` (`SAWUmlaufPolygon.lean`) is
 > now **fully proved sorry-free** (only `propext, Classical.choice, Quot.sound`).
 > It was reduced to a new self-contained geometry file

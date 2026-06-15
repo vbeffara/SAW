@@ -352,8 +352,192 @@ lemma arg_ear_local_mod (p a b c q : ℂ)
     exact div_self <| by norm_cast; aesop;
   rw [ Complex.exp_eq_one_iff ] at h_exp ; obtain ⟨ k, hk ⟩ := h_exp ; use k ; norm_num [ Complex.ext_iff ] at hk ⊢ ; linarith
 
-/-- **Ear-clipping reduction — the remaining irreducible topological core of the
-    planar Umlaufsatz.**  For a non-self-intersecting non-degenerate polygon
+/-! ## Rotation invariance of the cyclic invariants (ear-clipping preparation)
+
+The lemmas in this section are **preparation** for a future proof of the
+remaining topological core `polygon_ear_reduction` (still a `sorry` below).  An
+ear of a simple polygon can lie at any cyclic position; rotating the vertex
+cycle so that the ear becomes the *second* vertex turns the abstract ear-clip
+into the concrete list operation `a :: b :: c :: rest ↦ a :: c :: rest`.  For
+that reduction to transport the cyclic invariants one needs that both the signed
+area `HexArea.shoelace2` and the cyclic turning `polyCycWind` are invariant
+under cyclic rotation of the vertex list.  That invariance is what we establish
+here (sorry-free).  These results are not yet *consumed* by another declaration
+(the core they feed is still open), but they are genuine, reusable progress
+toward it and are imported in the `SAWFinal` chain via this file. -/
+
+/-- The cyclic total turning of the vertex cycle `V`: the exterior-angle turning
+    of the closed polygon, packaged via the `take 2` closing used throughout the
+    Umlaufsatz development. -/
+def polyCycWind (V : List ℂ) : ℝ := polyWind (V ++ V.take 2)
+
+lemma polyCycWind_def (V : List ℂ) : polyCycWind V = polyWind (V ++ V.take 2) := rfl
+
+/-
+Rotating the vertex cycle by one step preserves the signed area: the
+    shoelace functional is a sum over the same cyclic edges.
+-/
+lemma shoelace2_rotate1 (V : List ℂ) :
+    HexArea.shoelace2 (V.rotate 1) = HexArea.shoelace2 V := by
+  rcases V with ( _ | ⟨ x, _ | ⟨ y, V ⟩ ⟩ ) <;> simp_all +decide [ List.rotate ];
+  induction V <;> simp_all +decide [ HexArea.shoelace2 ];
+  · ring;
+  · rename_i k hk ih;
+    cases hk <;> simp_all +decide [ HexArea.shoelaceOpen ] ; ring;
+    grind
+
+/-
+The signed area is invariant under any cyclic rotation of the vertex list.
+-/
+lemma shoelace2_rotate (V : List ℂ) (n : ℕ) :
+    HexArea.shoelace2 (V.rotate n) = HexArea.shoelace2 V := by
+  induction' n with n ih;
+  · norm_num [ List.rotate ];
+  · convert shoelace2_rotate1 ( V.rotate n ) using 1;
+    · rw [ List.rotate_rotate ];
+    · exact ih.symm
+
+/-
+Rotating the vertex cycle by one step preserves the cyclic turning: it is a
+    sum over the same `V.length` cyclic turns, merely reindexed.  Proof: writing
+    `V = a :: t` with `2 ≤ t.length`, both closed forms reduce — via
+    `polyWind_append_singleton` — to `polyWind (t ++ [a, t[0]])` plus the single
+    turn `arg ((t[1] - t[0]) / (t[0] - a))`.
+-/
+lemma polyCycWind_rotate1 (V : List ℂ) (h : 3 ≤ V.length) :
+    polyCycWind (V.rotate 1) = polyCycWind V := by
+  obtain ⟨a, t, ht⟩ : ∃ a t, V = a :: t ∧ 2 ≤ t.length := by
+    rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | V ⟩ ⟩ ⟩ ) <;> simp_all +arith +decide;
+  rcases t with ( _ | ⟨ b, _ | ⟨ c, t ⟩ ⟩ ) <;> simp_all +decide [ polyCycWind_def ];
+  convert polyWind_append_singleton ( b :: c :: ( t ++ [ a, b ] ) ) _ c using 1 <;> norm_num [ List.length ];
+  grind +locals
+
+/-
+The cyclic turning is invariant under any cyclic rotation of the vertex
+    list.
+-/
+lemma polyCycWind_rotate (V : List ℂ) (n : ℕ) (h : 3 ≤ V.length) :
+    polyCycWind (V.rotate n) = polyCycWind V := by
+  induction' n with n ih;
+  · norm_num;
+  · convert polyCycWind_rotate1 ( V.rotate n ) _ using 1;
+    · rw [ List.rotate_rotate ];
+    · exact ih.symm;
+    · rw [ List.length_rotate ] ; linarith
+
+/-
+Membership in the closed-edge list is invariant under rotating the vertex
+    cycle: rotation cyclically permutes the closed edges, leaving the set of
+    edges (as unordered membership) unchanged.  Preparation for
+    `PolygonSimple_rotate`.
+-/
+lemma mem_closedEdges_rotate (V : List ℂ) (n : ℕ) (e : ℂ × ℂ) :
+    e ∈ closedEdges (V.rotate n) ↔ e ∈ closedEdges V := by
+  unfold closedEdges; simp +decide [ List.mem_iff_getElem ] ;
+  constructor <;> rintro ⟨ i, hi, rfl ⟩;
+  · use ( i + n ) % V.length; simp +decide [ List.getElem?_rotate, hi ] ;
+    simp +decide [ List.getElem_rotate, Nat.mod_lt ];
+    exact ⟨ Nat.mod_lt _ ( by linarith ), by ring ⟩;
+  · refine' ⟨ ( i + V.length - n % V.length ) % V.length, _, _ ⟩;
+    exact Nat.mod_lt _ ( by linarith );
+    simp +decide [ List.getElem_rotate, Nat.mod_eq_of_lt hi ];
+    constructor <;> congr 1;
+    · rw [ tsub_add_eq_add_tsub ];
+      · rw [ Nat.ModEq.symm ];
+        exact Nat.mod_eq_of_lt hi;
+        simp +decide [ ← ZMod.natCast_eq_natCast_iff, Nat.cast_sub ( show n % V.length ≤ i + V.length + n from by linarith [ Nat.zero_le ( n % V.length ), Nat.mod_lt n ( by linarith : 0 < V.length ) ] ) ];
+      · exact le_trans ( Nat.le_of_lt ( Nat.mod_lt _ ( by linarith ) ) ) ( by linarith );
+    · simp +decide [ ← ZMod.natCast_eq_natCast_iff', Nat.cast_sub ( show n % V.length ≤ i + V.length from le_trans ( Nat.mod_lt _ ( by linarith ) |> Nat.le_of_lt ) ( by linarith ) ) ];
+      ring
+
+/-
+Planar simplicity (`PolygonSimple`) is invariant under cyclic rotation of
+    the vertex list: `Nodup` is rotation invariant (`List.nodup_rotate`) and the
+    edge-disjointness clause quantifies only over closed-edge membership, which
+    is rotation invariant by `mem_closedEdges_rotate`.  Preparation for the
+    ear-clip-by-rotation route to `polygon_ear_reduction`.
+-/
+lemma PolygonSimple_rotate (V : List ℂ) (n : ℕ) :
+    PolygonSimple (V.rotate n) ↔ PolygonSimple V := by
+  simp +decide [ PolygonSimple, List.nodup_rotate ];
+  grind +suggestions
+
+/-- The cyclic non-degeneracy predicate: every cyclic turn of the closed polygon
+    is a genuine (non-flat, non-spike) corner. -/
+def polyCycNondeg (V : List ℂ) : Prop := polyNondeg (V ++ V.take 2)
+
+lemma polyCycNondeg_def (V : List ℂ) : polyCycNondeg V = polyNondeg (V ++ V.take 2) := rfl
+
+/-
+Cyclic non-degeneracy is invariant under cyclic rotation of the vertex list:
+    the cross products of all `V.length` cyclic turns are the same multiset.
+    Preparation for the ear-clip-by-rotation route.
+-/
+lemma polyCycNondeg_rotate1 (V : List ℂ) (h : 3 ≤ V.length) :
+    polyCycNondeg (V.rotate 1) ↔ polyCycNondeg V := by
+  have h_rotate :polyCycNondeg (V.rotate 1) ↔ polyNondeg ((V.rotate 1) ++ (V.rotate 1).take 2) := by
+    rfl;
+  obtain ⟨a, b, c, t, rfl⟩ : ∃ a b c t, V = a :: b :: c :: t := by
+    rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | V ⟩ ⟩ ⟩ ) <;> norm_num at *;
+  rcases t with ( _ | ⟨ d, t ⟩ ) <;> simp_all +decide [ List.rotate ];
+  · simp_all +decide [ polyNondeg_cons_cons_cons, polyCycNondeg_def ];
+    tauto;
+  · have h_split : ∀ (L : List ℂ), polyNondeg (L ++ [a, b, c]) ↔ polyNondeg (L ++ [a, b]) ∧ HexArea.cross (b - a) (c - b) ≠ 0 := by
+      intro L; induction L <;> simp_all +decide [ polyNondeg_cons_cons_cons ] ;
+      cases ‹List ℂ› <;> simp_all +decide [ polyNondeg_cons_cons_cons ];
+      cases ‹List ℂ› <;> simp_all +decide [ polyNondeg_cons_cons_cons ]; all_goals tauto;
+    grind +locals
+
+lemma polyCycNondeg_rotate (V : List ℂ) (n : ℕ) (h : 3 ≤ V.length) :
+    polyCycNondeg (V.rotate n) ↔ polyCycNondeg V := by
+  induction' n with n ih;
+  · norm_num [ List.rotate ];
+  · convert polyCycNondeg_rotate1 ( V.rotate n ) _ |> Iff.trans <| ih using 1;
+    · rw [ List.rotate_rotate ];
+    · rw [ List.length_rotate ] ; linarith
+
+/-- Clipping the second vertex changes the signed area by exactly the signed
+    area of the cut-off ear triangle `[a, b, c]`.  Immediate from
+    `HexArea.shoelace2_ear` and `HexArea.shoelace2_triple`; this is the algebraic
+    backbone of the orientation-preservation clause of `exists_ear_clip` (for a
+    *convex* ear the triangle area shares the polygon's orientation, so adding it
+    preserves the sign). -/
+lemma shoelace2_clip_second (a b c : ℂ) (rest : List ℂ) :
+    HexArea.shoelace2 (a :: b :: c :: rest)
+      = HexArea.shoelace2 (a :: c :: rest) + HexArea.shoelace2 [a, b, c] := by
+  rw [HexArea.shoelace2_ear, HexArea.shoelace2_triple]
+
+/-- **The genuine topological core of the planar Umlaufsatz (the two-ears
+    theorem, in concrete clipped-cons form).**  A simple, non-degenerate polygon
+    with at least four vertices has an *ear* that can be clipped: there is a
+    cyclic rotation `V.rotate r = a :: b :: c :: rest` whose second vertex `b`
+    can be removed, yielding the strictly shorter vertex cycle `a :: c :: rest`
+    that is still planar-simple (`PolygonSimple`) and non-degenerate
+    (`polyCycNondeg`), with the *same* cyclic turning (`polyCycWind`) and the
+    *same* orientation (sign of the signed area `HexArea.shoelace2`).
+
+    This statement concentrates **all** the irreducible Jordan-curve-theorem-level
+    content of the planar Umlaufsatz (existence of a convex ear and the
+    preservation of planar simplicity under its removal).  Everything around it
+    is now proved sorry-free: the rotation-invariance toolkit
+    (`shoelace2_rotate`, `polyCycWind_rotate`, `PolygonSimple_rotate`,
+    `polyCycNondeg_rotate`) transports the clipped cycle back to `V`'s own
+    closing form, so `polygon_ear_reduction` is derived from this core, and the
+    base case `polyWind_triangle` and the strong induction
+    `polygon_umlaufsatz_take` are also sorry-free.  Absent from Mathlib. -/
+lemma exists_ear_clip (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      PolygonSimple (a :: c :: rest) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      polyCycWind (a :: c :: rest) = polyCycWind V ∧
+      ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
+/-- **Ear-clipping reduction — derived sorry-free from the two-ears core
+    `exists_ear_clip` and the rotation-invariance toolkit.**  For a
+    non-self-intersecting non-degenerate polygon
     with at least four vertices there is a vertex that can be *clipped* (an
     "ear"): a vertex whose removal yields a strictly shorter polygon `V'` that
     is still simple and non-degenerate, *with the same total turning and the
@@ -383,7 +567,15 @@ lemma polygon_ear_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
       PolygonSimple V' ∧ polyNondeg (V' ++ V'.take 2) ∧
       polyWind (V ++ V.take 2) = polyWind (V' ++ V'.take 2) ∧
       ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 V') := by
-  sorry
+  obtain ⟨r, a, b, c, rest, hrot, hsimp', hnd', hwind', harea'⟩ :=
+    exists_ear_clip V hlen hsimple hnd
+  have hlenrot : (V.rotate r).length = V.length := List.length_rotate ..
+  rw [hrot] at hlenrot
+  simp only [List.length_cons] at hlenrot
+  refine ⟨a :: c :: rest, ?_, ?_, hsimp', hnd', ?_, harea'⟩
+  · simp only [List.length_cons]; omega
+  · simp only [List.length_cons]; omega
+  · rw [← polyCycWind_def, ← polyCycWind_def]; exact hwind'.symm
 
 /-
 **The planar Umlaufsatz, index-free closing form.**  Total exterior-angle

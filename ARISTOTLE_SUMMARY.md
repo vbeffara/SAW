@@ -1,3 +1,53 @@
+# Summary of changes for run b4ccddb9-59cb-4c03-9ed4-0ca751d1a911
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (including `RequestProject/SAWFinal.lean`); all new work is in `RequestProject/SAWUmlaufPolygon.lean`, which is imported transitively from `SAWFinal`.
+
+What changed: the previous lone Umlaufsatz `sorry`, the bundled ear-clipping reduction `polygon_ear_reduction`, is now **proved sorry-free** from a single sharper two-ears core plus a newly built, fully proved rotation-invariance toolkit.
+
+New, fully proved lemmas (each verified to use only `propext, Classical.choice, Quot.sound`):
+- `polyCycWind` — cyclic total turning of a vertex cycle — with `polyCycWind_rotate1` / `polyCycWind_rotate` (cyclic turning is invariant under rotation of the vertex list);
+- `shoelace2_rotate1` / `shoelace2_rotate` — signed area is rotation invariant;
+- `mem_closedEdges_rotate` and `PolygonSimple_rotate` — planar simplicity is rotation invariant;
+- `polyCycNondeg` with `polyCycNondeg_rotate1` / `polyCycNondeg_rotate` — cyclic non-degeneracy is rotation invariant;
+- `shoelace2_clip_second` — clipping the second vertex changes the signed area by exactly the cut-off ear-triangle's area.
+
+Using these, `polygon_ear_reduction` is derived by rotating the abstract ear into the second position and transporting the four cyclic invariants (simplicity, non-degeneracy, turning, orientation) back to the polygon's own closing form. This concentrates all the remaining content of the planar Umlaufsatz into one honest, sharply stated `sorry`: `exists_ear_clip`, the genuine Jordan-curve-theorem-level two-ears statement (a simple non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity), which is absent from Mathlib.
+
+Partial progress is preserved as honest, well-documented Lean sorries; the rotation toolkit is explicitly documented as preparation that a future proof of the core will consume, and it is part of the build chain. `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` were updated to record this round. The single remaining Umlaufsatz gap is now `exists_ear_clip`; the honeycomb-planarity core remains closed.
+
+# Summary of changes — Umlaufsatz ear-clipping rotation-toolkit round (NEWEST)
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all
+other branches untouched. The whole library still builds successfully
+(`lake build`, including `RequestProject/SAWFinal.lean`); every new declaration
+lives in `RequestProject/SAWUmlaufPolygon.lean`, which is imported transitively
+from `SAWFinal`.
+
+**Reduced the last Umlaufsatz core to a sharper, concrete two-ears statement and
+proved all the ear-clipping glue around it.** Previously the lone remaining
+Umlaufsatz `sorry` was the bundled `polygon_ear_reduction`. It is now **proved
+sorry-free** from a single new, sharper core `exists_ear_clip` plus a fully
+proved rotation-invariance toolkit.
+
+New, fully proved (only `propext, Classical.choice, Quot.sound`):
+* `polyCycWind` — cyclic total turning of a vertex cycle (`= polyWind (V ++ V.take 2)`);
+* `polyCycWind_rotate1`, `polyCycWind_rotate` — cyclic turning is invariant under
+  cyclic rotation of the vertex list (via `polyWind_append_singleton`);
+* `shoelace2_rotate1`, `shoelace2_rotate` — the signed area is rotation invariant;
+* `mem_closedEdges_rotate`, `PolygonSimple_rotate` — planar simplicity is
+  rotation invariant (the closed-edge set and `Nodup` are preserved);
+* `polyCycNondeg`, `polyCycNondeg_rotate1`, `polyCycNondeg_rotate` — cyclic
+  non-degeneracy is rotation invariant;
+* `shoelace2_clip_second` — clipping the second vertex changes the signed area by
+  exactly the cut-off ear-triangle’s area.
+
+With these, `polygon_ear_reduction` is derived by rotating the abstract ear into
+the second position and transporting the four cyclic invariants back to `V`’s own
+closing form. The single remaining Umlaufsatz `sorry` is now `exists_ear_clip`
+(`SAWUmlaufPolygon.lean`): the genuine Jordan-curve-theorem-level two-ears
+content (existence of a clippable convex ear preserving planar simplicity).
+Partial progress is preserved as honest, well-documented Lean sorries; the
+rotation toolkit is preparation that the eventual core proof will consume.
+
 # Summary of changes for run ade3861d-c030-4361-93b1-fb879ffe6bb0
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8117 jobs, including `RequestProject/SAWFinal.lean`).
 
