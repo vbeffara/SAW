@@ -1,3 +1,56 @@
+# Summary of changes for run c1251b50-91ce-4dab-808a-51a0f85be02d
+Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8118 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content was already factored, in prior rounds, into a single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem-level and absent from Mathlib. A direct attempt to discharge it confirmed it is not closable in one pass, so this round builds the proved, reusable geometric foundation that the eventual proof (via Meisters' ear-existence argument) will consume, and preserves the clean single-core state.
+
+New file `RequestProject/SAWUmlaufEar.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so it is part of the build chain), all proved sorry-free (verified to depend only on `propext, Classical.choice, Quot.sound`):
+- `HexArea.cross_smul_left/right`, `cross_sub_left/right` — the ℝ-bilinearity/scalar laws of the 2-D cross product underlying every orientation computation;
+- `cross_edges_eq_shoelace2_triple` — the corner orientation `cross (b-a) (c-b)` equals the signed area `shoelace2 [a,b,c]` of the triangle it cuts off (the bridge between corner convexity and the sign of its area, used in Steps 1 and 3 of the ear argument);
+- `cross_eq_zero_of_mem_segment`, `collinear_of_mem_segment` — a point on `segment ℝ a b` is collinear with `a,b` (degenerate-diagonal test);
+- `exists_lex_min_mem` — every nonempty vertex list has a lexicographically minimal (leftmost-lowest) vertex, the convex extreme vertex the ear search starts from (Step 1);
+- the strict-interior predicate `inTriangleStrict` with `inTriangleStrict_ne_a/b/c` and `inTriangleStrict_nondeg` — the empty-triangle / farthest-vertex machinery for Step 2.
+
+These are explicitly documented as preparation for `exists_ear_clip`: they are imported into the chain but not yet referenced by another declaration only because the core they feed is still open, so they are recorded partial progress, not a dead branch. The only other change is the one-line `import` added to `SAWUmlaufPolygon.lean` and the status notes in `PROOF_STATUS.md` / `ARISTOTLE_SUMMARY.md`. No axioms or `@[implemented_by]` were introduced. The single remaining Umlaufsatz gap is `exists_ear_clip`, preserved as an honest, well-documented Lean `sorry`.
+
+# Summary of changes — Umlaufsatz ear-existence geometry-toolkit round (NEWEST)
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all
+other branches untouched. The whole library still builds successfully
+(`lake build`, 8118 jobs, including `RequestProject/SAWFinal.lean`).
+
+The single remaining Umlaufsatz `sorry` is still the two-ears /
+ear-existence core `exists_ear_clip` (`RequestProject/SAWUmlaufPolygon.lean`),
+which is genuinely Jordan-curve-theorem-level and absent from Mathlib. This
+round builds the **proved, reusable plane-geometry toolkit** that the eventual
+proof of `exists_ear_clip` (via Meisters' ear-existence argument) will consume,
+in a new file `RequestProject/SAWUmlaufEar.lean`, imported by
+`SAWUmlaufPolygon` (hence transitively from `SAWFinal`), so it is part of the
+build chain. It is explicitly **preparation**: its lemmas are not yet referenced
+by another declaration because the core they feed is still open, but they are
+recorded partial progress toward it, not a dead branch.
+
+New, fully proved (only `propext, Classical.choice, Quot.sound`):
+* `HexArea.cross_smul_left/right`, `HexArea.cross_sub_left/right` — the `ℝ`-
+  bilinearity / scalar laws of the 2-D cross product used for every orientation
+  computation;
+* `HexArea.cross_edges_eq_shoelace2_triple` — the orientation of a corner
+  `a,b,c` equals the signed area `HexArea.shoelace2 [a,b,c]` it cuts off (the
+  Step-1/Step-3 bridge between convexity of a corner and the sign of its area);
+* `HexArea.cross_eq_zero_of_mem_segment`, `HexArea.collinear_of_mem_segment` —
+  a point on `segment ℝ a b` is collinear with `a,b` (degenerate-diagonal test);
+* `HexArea.exists_lex_min_mem` — every nonempty vertex list has a
+  lexicographically minimal (leftmost-lowest) vertex, the convex extreme vertex
+  Meisters' ear search starts from (Step 1);
+* `HexArea.inTriangleStrict` predicate (strict interior of an oriented triangle
+  via the three edge cross products) with `inTriangleStrict_ne_a/b/c` (an
+  interior point differs from each vertex) and `inTriangleStrict_nondeg` (a
+  triangle with a strict interior point is non-degenerate) — the Step-2
+  machinery for the empty-triangle test and the farthest-vertex diagonal.
+
+No other files were changed except the one-line `import` added to
+`SAWUmlaufPolygon.lean` and the documentation. The clean single-core state of
+the Umlaufsatz reduction is preserved; `exists_ear_clip` remains the lone gap.
+
 # Summary of changes for run b4ccddb9-59cb-4c03-9ed4-0ca751d1a911
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (including `RequestProject/SAWFinal.lean`); all new work is in `RequestProject/SAWUmlaufPolygon.lean`, which is imported transitively from `SAWFinal`.
 

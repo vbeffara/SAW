@@ -40,6 +40,7 @@ import Mathlib
 import RequestProject.SAWUmlaufHexagon
 import RequestProject.SAWUmlaufEmbed
 import RequestProject.SAWUmlaufHexEdge
+import RequestProject.SAWUmlaufEar
 
 open Real Complex ComplexConjugate
 

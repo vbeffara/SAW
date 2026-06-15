@@ -1,6 +1,22 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-clipping rotation-toolkit round note (NEWEST).** The single
+> **Umlaufsatz ear-existence geometry-toolkit round note (NEWEST).** The single
+> remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
+> `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a new, fully
+> proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation
+> file `SAWUmlaufEar.lean`, imported by `SAWUmlaufPolygon` (hence in the
+> `SAWFinal` chain), supplying the elementary building blocks of Meisters'
+> ear-existence argument: `HexArea.cross` bilinearity (`cross_smul_left/right`,
+> `cross_sub_left/right`); the corner-orientation–signed-area bridge
+> `cross_edges_eq_shoelace2_triple`; collinearity of a segment point
+> (`cross_eq_zero_of_mem_segment`, `collinear_of_mem_segment`); the extreme
+> (leftmost-lowest) vertex `exists_lex_min_mem` (Step 1); and the
+> oriented-triangle strict-interior predicate `inTriangleStrict` with
+> `inTriangleStrict_ne_a/b/c` and `inTriangleStrict_nondeg` (Step 2). This is
+> explicitly preparation that the eventual proof of `exists_ear_clip` will
+> consume; the clean single-core reduction is otherwise unchanged.
+>
+> **Umlaufsatz ear-clipping rotation-toolkit round note.** The single
 > remaining Umlaufsatz `sorry` is now the sharpened two-ears core
 > `exists_ear_clip` (`SAWUmlaufPolygon.lean`): a simple non-degenerate polygon
 > with ≥4 vertices has a cyclic rotation `V.rotate r = a :: b :: c :: rest`
