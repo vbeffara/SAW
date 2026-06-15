@@ -1,3 +1,18 @@
+# Summary of changes for run f23da842-d81c-4d3e-998a-5d89ca99a1e7
+Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8120 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content is still concentrated in a single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem-level and absent from Mathlib; it cannot be closed in one pass because it needs plane-topology infrastructure (interior/empty-triangle geometry) that Mathlib lacks. Following the project's established pattern, this round builds more of the proved, reusable geometric foundation that the eventual ear-existence proof will consume, while keeping the clean single-core reduction intact.
+
+New file `RequestProject/SAWUmlaufEarConvex.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so it is part of the build chain), all proved sorry-free (verified to depend only on `propext, Classical.choice, Quot.sound`). It supplies the barycentric backbone of Meisters' Step 2 (deciding which polygon vertices lie inside a candidate ear triangle):
+- `cross_bary_sum` — the three oriented edge cross products of a point against a triangle sum to the triangle orientation `cross (b-a) (c-b)` (the three sub-triangles tile the whole);
+- `cross_bary_recon` — the affine reconstruction identity `area2 • x = (γ-weight)•a + (α-weight)•b + (β-weight)•c`;
+- `inTriangleStrict_pos_area` — a positively-oriented strict interior point forces `cross (b-a) (c-b) > 0`;
+- `inTriangleStrict_pos_convexCombo` — a strict interior point is a strict convex combination of the vertices (positive weights summing to 1);
+- `convexCombo_pos_inTriangleStrict` — its converse;
+- `inTriangleStrict_pos_iff_convexCombo` — the bundled characterization converting the cross-product interior test to honest convex-hull membership.
+
+These are explicitly documented as preparation for `exists_ear_clip`: they are imported into the chain but not yet referenced by another declaration only because the core they feed is still open, so they are recorded partial progress, not a dead branch. The only other changes are the one-line `import` added to `SAWUmlaufPolygon.lean` and a round note prepended to `PROOF_STATUS.md`. No other files were modified, and no new sorries were introduced (the new file is entirely sorry-free).
+
 # Summary of changes for run acc724f9-ddc4-4f16-9b93-866ae671d8d4
 Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8119 jobs, including `RequestProject/SAWFinal.lean`).
 

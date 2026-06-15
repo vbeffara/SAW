@@ -1,6 +1,27 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-existence geometry-toolkit round note (NEWEST).** The single
+> **Umlaufsatz ear-existence barycentric-backbone round note (NEWEST).** The
+> single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
+> `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a third, fully
+> proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation
+> file `SAWUmlaufEarConvex.lean`, imported by `SAWUmlaufPolygon` (hence in the
+> `SAWFinal` chain), supplying the **barycentric backbone** of Meisters' Step 2
+> (which vertices lie inside a candidate ear triangle): `cross_bary_sum` (the
+> three edge cross products of `x` against `a,b,c` sum to the triangle
+> orientation `cross (b-a) (c-b)` — the three sub-triangles tile the whole);
+> `cross_bary_recon` (the affine reconstruction `area2 • x = (γ-wt)•a + (α-wt)•b
+> + (β-wt)•c`); `inTriangleStrict_pos_area` (a positively-oriented strict
+> interior point forces `cross (b-a) (c-b) > 0`); and the two-way conversion
+> between the cross-product interior test and honest convex-hull membership —
+> `inTriangleStrict_pos_convexCombo` (interior point ⇒ strict convex
+> combination), `convexCombo_pos_inTriangleStrict` (its converse), and the
+> bundled characterization `inTriangleStrict_pos_iff_convexCombo`. Like
+> `SAWUmlaufEar`/`SAWUmlaufEarExist`, this is explicitly preparation that the
+> eventual proof of `exists_ear_clip` will consume; the clean single-core
+> reduction is otherwise unchanged. Whole library still builds (`lake build`,
+> 8120 jobs).
+>
+> **Umlaufsatz ear-existence geometry-toolkit round note.** The single
 > remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
 > `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a second,
 > fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry

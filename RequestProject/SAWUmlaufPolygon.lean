@@ -42,6 +42,7 @@ import RequestProject.SAWUmlaufEmbed
 import RequestProject.SAWUmlaufHexEdge
 import RequestProject.SAWUmlaufEar
 import RequestProject.SAWUmlaufEarExist
+import RequestProject.SAWUmlaufEarConvex
 
 open Real Complex ComplexConjugate
 
