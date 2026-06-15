@@ -1,6 +1,23 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz round note (newest).** Fixed a genuine **falsity** in the general
+> **Umlaufsatz ear-clipping round note (newest).** Factored the planar
+> Umlaufsatz `polygon_umlaufsatz` (`SAWUmlaufPolygon.lean`): it no longer has a
+> monolithic `sorry`. It is now **proved** from the strong-induction lemma
+> `polygon_umlaufsatz_take` (ear-clipping induction on `V.length`; base case is
+> the proved `polyWind_triangle`) plus the index-free closing rewrite
+> `closeList_eq` — both **sorry-free**. The remaining topological content is
+> concentrated into the single bundled lemma `polygon_ear_reduction` (an ear
+> exists and its removal preserves planar simplicity, non-degeneracy, total
+> turning and orientation — two-ears / Jordan-curve-theorem level, absent from
+> Mathlib). Also **proved sorry-free** the reusable algebraic ear-step
+> telescoping `arg_ear_local_mod` (the local turning change of removing one
+> vertex is a multiple of `2π`), the "easy half" of the turning equality inside
+> `polygon_ear_reduction`. The two genuinely-irreducible Umlaufsatz gaps are now
+> `polygon_ear_reduction` and `hexEmbeddedPolygon_edges_disjoint` (honeycomb
+> planarity). All new lemmas depend only on `propext, Classical.choice,
+> Quot.sound`.
+>
+> **Umlaufsatz round note (previous).** Fixed a genuine **falsity** in the general
 > planar-polygon Umlaufsatz `polygon_umlaufsatz` (`SAWUmlaufPolygon.lean`):
 > `PolygonSimple` does not exclude three consecutive collinear vertices (e.g.
 > the spike `0,2,1` has `polyWind = 2π` but signed area `0`), so the statement

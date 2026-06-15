@@ -1,3 +1,65 @@
+# Summary of changes for run e1ca65fb-ca29-43d8-8322-d4d6d86119d6
+Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8116 jobs, including `RequestProject/SAWFinal.lean`); all new declarations live in `RequestProject/SAWUmlaufPolygon.lean`, which is imported transitively from `SAWFinal` (`SAWUmlaufSignedArea → SAWUmlaufPolygon`).
+
+What changed (all in `RequestProject/SAWUmlaufPolygon.lean`):
+
+- The general planar-polygon Umlaufsatz `polygon_umlaufsatz` previously had a single monolithic `sorry`. It is now **proved**, factored into a clean ear-clipping induction:
+  - `closeList_eq` (new, sorry-free): the public closing form `V ++ [V[0], V[1]]` equals the index-free `V ++ V.take 2` used by the induction.
+  - `polygon_umlaufsatz_take` (new, **proved** modulo the single bundled core below): the Umlaufsatz in `take 2` closing form, by strong induction on `V.length` — base case `V.length = 3` is the already-proved `polyWind_triangle`, and the inductive step clips an ear via `polygon_ear_reduction`, which keeps total turning and orientation fixed while shortening the polygon.
+  - `polygon_umlaufsatz` itself is now derived (sorry-free body) from `polygon_umlaufsatz_take` via `closeList_eq`.
+  - `arg_ear_local_mod` (new, **proved sorry-free**): a reusable algebraic lemma — removing one vertex between its neighbours changes the local turning by a multiple of 2π (the turn ratios telescope so `exp(I·Δ)=1`). This is the "easy half" of the turning equality and is preparation for the exact ear step.
+
+- All remaining topological content is now concentrated into a single, honestly-stated `sorry` lemma `polygon_ear_reduction` (a simple non-degenerate polygon with ≥4 vertices has an ear whose removal preserves planar simplicity, non-degeneracy, total turning and orientation — the two-ears / Jordan-curve-theorem-level core, absent from Mathlib). The second remaining Umlaufsatz gap, `hexEmbeddedPolygon_edges_disjoint` (honeycomb planarity), is unchanged.
+
+Verification: the new `closeList_eq` and `arg_ear_local_mod` depend only on the standard axioms (`propext, Classical.choice, Quot.sound`); `polygon_umlaufsatz_take` reduces (via `sorryAx`) exactly to `polygon_ear_reduction` as designed. Partial progress is preserved as Lean files with honest sorries, and the documentation (`PROOF_STATUS.md`, `ARISTOTLE_SUMMARY.md`) was updated to reflect the new factoring and the two remaining cores.
+
+# Summary of changes — Umlaufsatz ear-clipping round (newest)
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all
+other branches untouched. The whole library still builds successfully
+(`lake build`, 8116 jobs, including `RequestProject/SAWFinal.lean`) and every new
+declaration lives in `RequestProject/SAWUmlaufPolygon.lean`, imported
+transitively from `SAWFinal` (via `SAWUmlaufSignedArea → SAWUmlaufPolygon`).
+
+**Factored the planar Umlaufsatz into proven induction + one bundled core.**
+The general planar-polygon Umlaufsatz `polygon_umlaufsatz`
+(`RequestProject/SAWUmlaufPolygon.lean`) previously had a single monolithic
+`sorry`. It is now **proved sorry-free from** a clean ear-clipping reduction:
+
+* `closeList_eq` (NEW, sorry-free) — the public closing form
+  `V ++ [V[0], V[1]]` equals the index-free `V ++ V.take 2` used by the
+  induction.
+* `polygon_umlaufsatz_take` (NEW, **proved sorry-free** modulo the bundled
+  reduction below) — the Umlaufsatz in `take 2` closing form, by strong
+  induction on `V.length`: base case `V.length = 3` is the already-proved
+  `polyWind_triangle`; the inductive step clips an ear via
+  `polygon_ear_reduction`, which keeps both the total turning and the
+  orientation (sign of signed area) fixed while strictly shortening the polygon.
+* `polygon_umlaufsatz` (now sorry-free) — derived from `polygon_umlaufsatz_take`
+  via `closeList_eq`.
+* `arg_ear_local_mod` (NEW, **proved sorry-free**) — the reusable algebraic
+  "easy half" of the ear-step turning equality: removing one vertex `b` between
+  `a` and `c` (preceded by `p`, followed by `q`) changes the local turning by a
+  multiple of `2π` (the three turn ratios telescope to the two merged ratios, so
+  `exp(I·Δ) = 1`). Isolates the purely-algebraic content; the exact-equality
+  (`k = 0`) upgrade is the convexity content inside `polygon_ear_reduction`.
+
+**Remaining Umlaufsatz gaps (two honest, genuinely-true topological cores):**
+1. `polygon_ear_reduction` — ear existence + preservation of planar simplicity /
+   non-degeneracy / turning / orientation under ear removal
+   (two-ears / Jordan-curve-theorem-level; absent from Mathlib). This now
+   concentrates *all* of the remaining topological content of the planar
+   Umlaufsatz into a single statement; the base case and the entire inductive
+   glue around it are proved sorry-free.
+2. `hexEmbeddedPolygon_edges_disjoint` — honeycomb planarity (non-adjacent
+   embedded edges are disjoint segments), a lattice-geometry fact absent from
+   Mathlib.
+
+All new lemmas depend only on `propext, Classical.choice, Quot.sound` (plus, for
+the ones built on top of `polygon_ear_reduction`, the recorded `sorry`).
+
+---
+
 # Summary of changes for run dbbabf08-1f66-48fc-be7c-f6d5ae403050
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8116 jobs) and every new declaration is imported transitively from `RequestProject/SAWFinal.lean` (via `SAWUmlaufSignedArea → SAWUmlaufPolygon`).
 

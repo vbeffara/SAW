@@ -308,12 +308,109 @@ lemma polyWind_triangle (a b c : ℂ)
       rw [ Complex.exp_eq_one_iff ] at h_sum_mul; obtain ⟨ k, hk ⟩ := h_sum_mul; exact ⟨ k, by norm_num [ Complex.ext_iff ] at hk; linarith ⟩ ;
     obtain ⟨ k, hk ⟩ := h_sum_mul; rcases k with ( ⟨ _ | _ | k ⟩ | ⟨ _ | _ | k ⟩ ) <;> norm_num at hk <;> nlinarith [ Real.pi_pos, Complex.neg_pi_lt_arg ( ( c - b ) / ( b - a ) ), Complex.arg_le_pi ( ( c - b ) / ( b - a ) ), Complex.neg_pi_lt_arg ( ( a - c ) / ( c - b ) ), Complex.arg_le_pi ( ( a - c ) / ( c - b ) ), Complex.neg_pi_lt_arg ( ( b - a ) / ( a - c ) ), Complex.arg_le_pi ( ( b - a ) / ( a - c ) ) ] ;
 
+/-- The closing append `V ++ [V[0], V[1]]` (used in the public Umlaufsatz
+    statement) equals the index-free form `V ++ V.take 2`.  The latter is much
+    easier to manipulate under the ear-clipping induction (no dependent index
+    proofs), so the induction is carried out on it and transported back here. -/
+lemma closeList_eq (V : List ℂ) (h : 2 ≤ V.length) :
+    V ++ [V[0]'(by omega), V[1]'(by omega)] = V ++ V.take 2 := by
+  obtain ⟨a, b, rest, rfl⟩ : ∃ a b rest, V = a :: b :: rest := by
+    rcases V with (_ | ⟨a, _ | ⟨b, rest⟩⟩) <;> simp_all
+  simp [List.take]
+
+/-
+**Local ear-step turning telescoping (mod `2π`).**  Reusable preparation for
+    the turning equality inside `polygon_ear_reduction`.  Removing a single
+    vertex `b` from between its neighbours `a` and `c` (with a preceding vertex
+    `p` and a following vertex `q`) replaces the three local turns at `a`, `b`,
+    `c` by the two local turns at `a`, `c` of the merged edge `c - a`, and the
+    net turning change is a multiple of `2π`.
+
+    Reason: the moduli are positive reals, so `exp (I · arg z)` equals `z / ‖z‖`
+    for `z ≠ 0`, and the product of the three original turn ratios telescopes to
+    `(q - c) / (a - p)`, which is exactly the product of the two merged turn
+    ratios; hence the difference of the two arg-sums has `exp (I · ·) = 1`, i.e.
+    is a multiple of `2π`.  Promoting this to an *exact* equality (`k = 0`) is
+    the genuinely geometric content supplied by ear convexity inside
+    `polygon_ear_reduction`; this lemma isolates the purely algebraic half.
+-/
+lemma arg_ear_local_mod (p a b c q : ℂ)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0) :
+    ∃ k : ℤ,
+      (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+        + Complex.arg ((q - c) / (c - b)))
+      - (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)))
+      = 2 * Real.pi * k := by
+  -- By definition of exponentiation, we know that if $e^{i\theta} = 1$, then $\theta$ must be an integer multiple of $2\pi$.
+  have h_exp : Complex.exp (Complex.I * (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a)) + Complex.arg ((q - c) / (c - b)) - (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))))) = 1 := by
+    have h_exp : ∀ z : ℂ, z ≠ 0 → Complex.exp (Complex.I * Complex.arg z) = z / ‖z‖ := by
+      intro z hz; rw [ mul_comm ] ; rw [ Complex.ext_iff ] ; simp +decide [ Complex.exp_re, Complex.exp_im, Complex.cos_arg, Complex.sin_arg, hz ] ;
+    simp_all +decide [ Complex.exp_sub, Complex.exp_add, mul_add, add_mul, mul_sub, sub_mul ];
+    field_simp;
+    exact div_self <| by norm_cast; aesop;
+  rw [ Complex.exp_eq_one_iff ] at h_exp ; obtain ⟨ k, hk ⟩ := h_exp ; use k ; norm_num [ Complex.ext_iff ] at hk ⊢ ; linarith
+
+/-- **Ear-clipping reduction — the remaining irreducible topological core of the
+    planar Umlaufsatz.**  For a non-self-intersecting non-degenerate polygon
+    with at least four vertices there is a vertex that can be *clipped* (an
+    "ear"): a vertex whose removal yields a strictly shorter polygon `V'` that
+    is still simple and non-degenerate, *with the same total turning and the
+    same orientation (sign of signed area)*.
+
+    This bundles exactly the four facts an ear-clipping step needs:
+    * `V'.length = V.length - 1` and `3 ≤ V'.length` (the induction descends);
+    * `PolygonSimple V'` and `polyNondeg (V' ++ V'.take 2)` (planar simplicity /
+      non-degeneracy are preserved by ear removal);
+    * `polyWind (V ++ V.take 2) = polyWind (V' ++ V'.take 2)` (the total
+      exterior-angle turning is unchanged: the three local turns at the ear and
+      its two neighbours merge into two turns with the same net angle — the
+      arg-telescoping identity, made *exact* rather than only mod `2π` by the
+      convexity of a genuine ear);
+    * `0 < shoelace2 V ↔ 0 < shoelace2 V'` (the orientation is unchanged: by
+      `HexArea.shoelace2_ear` the area changes by the ear-triangle term, which —
+      for a convex ear — has the same sign as the whole polygon).
+
+    The genuinely hard, Jordan-curve-theorem-level content (existence of a
+    convex ear and that its removal preserves planar simplicity) is concentrated
+    in this single statement; everything that consumes it — the base case
+    `polyWind_triangle` and the strong induction `polygon_umlaufsatz_take` — is
+    proved sorry-free.  Absent from Mathlib. -/
+lemma polygon_ear_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyNondeg (V ++ V.take 2)) :
+    ∃ V' : List ℂ, V'.length = V.length - 1 ∧ 3 ≤ V'.length ∧
+      PolygonSimple V' ∧ polyNondeg (V' ++ V'.take 2) ∧
+      polyWind (V ++ V.take 2) = polyWind (V' ++ V'.take 2) ∧
+      ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 V') := by
+  sorry
+
+/-
+**The planar Umlaufsatz, index-free closing form.**  Total exterior-angle
+    turning `= 2π · sign(signed area)`, with the cycle closed by `V.take 2`.
+    Proved by strong induction on `V.length`: the base case `V.length = 3` is
+    `polyWind_triangle`; the inductive step clips an ear via
+    `polygon_ear_reduction`, which keeps both the turning and the orientation
+    fixed while strictly shortening the polygon.
+-/
+lemma polygon_umlaufsatz_take (V : List ℂ) (hlen : 3 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyNondeg (V ++ V.take 2)) :
+    polyWind (V ++ V.take 2) =
+      2 * Real.pi * (if 0 < HexArea.shoelace2 V then 1 else -1) := by
+  induction' n : V.length using Nat.strong_induction_on with n ih generalizing V;
+  by_cases hlen4 : 4 ≤ V.length;
+  · obtain ⟨ V', hV'₁, hV'₂, hV'₃, hV'₄, hV'₅, hV'₆ ⟩ := polygon_ear_reduction V hlen4 hsimple hnd ; specialize ih ( List.length V' ) ( by omega ) V' hV'₂ hV'₃ hV'₄ rfl ; aesop ( simp_config := { singlePass := true } ) ;
+  · rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | V ⟩ ⟩ ⟩ ) <;> norm_num at *;
+    convert polyWind_triangle a b c _ using 1;
+    · split_ifs <;> ring;
+    · exact hnd.1
+
 lemma polygon_umlaufsatz (V : List ℂ) (hlen : 3 ≤ V.length)
     (hsimple : PolygonSimple V)
     (hnd : polyNondeg (V ++ [V[0]'(by omega), V[1]'(by omega)])) :
     polyWind (V ++ [V[0]'(by omega), V[1]'(by omega)]) =
       2 * Real.pi * (if 0 < HexArea.shoelace2 V then 1 else -1) := by
-  sorry
+  rw [closeList_eq V (by omega)] at hnd ⊢
+  exact polygon_umlaufsatz_take V hlen hsimple hnd
 
 /-- **Honeycomb edge-disjointness (remaining geometric core).**  For a simple
     closed hex trail, two closed edges of the embedded polygon that share no
