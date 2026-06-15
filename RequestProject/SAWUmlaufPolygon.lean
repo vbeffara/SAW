@@ -39,6 +39,7 @@ Umlaufsatz core.
 import Mathlib
 import RequestProject.SAWUmlaufHexagon
 import RequestProject.SAWUmlaufEmbed
+import RequestProject.SAWUmlaufHexEdge
 
 open Real Complex ComplexConjugate
 
@@ -412,14 +413,24 @@ lemma polygon_umlaufsatz (V : List ℂ) (hlen : 3 ≤ V.length)
   rw [closeList_eq V (by omega)] at hnd ⊢
   exact polygon_umlaufsatz_take V hlen hsimple hnd
 
-/-- **Honeycomb edge-disjointness (remaining geometric core).**  For a simple
+/-
+**Honeycomb edge-disjointness (remaining geometric core).**  For a simple
     closed hex trail, two closed edges of the embedded polygon that share no
     endpoint have disjoint segments.  This is the *only* genuinely geometric
     content of honeycomb planarity (the `Nodup` half being already established by
     `hex_closed_trail_embed_nodup`).
 
-    **Sorry**: a finite geometric fact about unit honeycomb edges — two distinct
-    honeycomb lattice edges meet only at a shared vertex — absent from Mathlib. -/
+    The genuinely geometric content (two distinct unit honeycomb edges meet only
+    at a shared vertex) is factored out as the general, reusable lemma
+    `hexEdge_segments_disjoint` in `RequestProject.SAWUmlaufHexEdge`; what remains
+    here is the combinatorial wiring (each polygon edge is a `hexGraph`
+    adjacency between consecutive trail vertices, and the four point-inequalities
+    transfer to vertex-inequalities via `correctHexEmbed_injective`).
+
+    **Sorry**: reduces to the geometric core `hexEdge_segments_disjoint` plus the
+    `closedEdges`/`hexGraph`-adjacency wiring; the geometry is absent from
+    Mathlib.
+-/
 lemma hexEmbeddedPolygon_edges_disjoint (L : List HexVertex)
     (hL : 4 ≤ L.length)
     (h_trail : HexTrailList L)
@@ -429,7 +440,31 @@ lemma hexEmbeddedPolygon_edges_disjoint (L : List HexVertex)
       ∀ e₂ ∈ closedEdges (hexEmbeddedPolygon L),
         e₁.1 ≠ e₂.1 → e₁.1 ≠ e₂.2 → e₁.2 ≠ e₂.1 → e₁.2 ≠ e₂.2 →
         Disjoint (segment ℝ e₁.1 e₁.2) (segment ℝ e₂.1 e₂.2) := by
-  sorry
+  unfold closedEdges hexEmbeddedPolygon; simp +decide ;
+  intros a b hab a_2 b_1 hab_2 hneq1 hneq2 hneq3 hneq4
+  obtain ⟨i, hi⟩ : ∃ i, i < (List.map correctHexEmbed L).dropLast.length ∧ a = (List.map correctHexEmbed L).dropLast[i]! ∧ b = ((List.map correctHexEmbed L).dropLast.rotate 1)[i]! := by
+    rw [ List.mem_iff_get ] at hab;
+    obtain ⟨ n, hn ⟩ := hab; use n; simp_all +decide [ List.get ] ;
+    grind
+  obtain ⟨j, hj⟩ : ∃ j, j < (List.map correctHexEmbed L).dropLast.length ∧ a_2 = (List.map correctHexEmbed L).dropLast[j]! ∧ b_1 = ((List.map correctHexEmbed L).dropLast.rotate 1)[j]! := by
+    rw [ List.mem_iff_get ] at hab_2;
+    obtain ⟨ j, hj ⟩ := hab_2; use j; simp_all +decide [ List.get ] ;
+    grind;
+  simp_all +decide [ List.getElem?_eq_getElem, List.getElem_rotate ];
+  apply hexEdge_segments_disjoint;
+  any_goals intro H; simp_all +decide [ correctHexEmbed_injective.eq_iff ];
+  · by_cases hi' : i + 1 < L.length - 1;
+    · convert hexTrailList_adj_get L h_trail ( by omega ) i ( by omega ) using 1;
+      norm_num [ Nat.mod_eq_of_lt hi' ];
+    · convert hex_closure_adj L hL h_trail h_closed |>.1 using 1;
+      · grind;
+      · norm_num [ show i + 1 = L.length - 1 by omega ];
+  · by_cases h : j + 1 < L.length - 1 <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+    · convert hexTrailList_adj_get L h_trail ( by omega ) j ( by omega ) using 1;
+    · cases h.eq_or_lt <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+      · convert hex_closure_adj L ( by linarith ) h_trail h_closed |>.1 using 1;
+        simp +decide [ *, Nat.sub_sub ];
+      · omega
 
 /-- For any honeycomb trail `M` (a `HexTrailList`), the embedded chain
     `M.map correctHexEmbed` is non-degenerate: every consecutive triple is a

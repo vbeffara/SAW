@@ -1,6 +1,28 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-clipping round note (newest).** Factored the planar
+> **Umlaufsatz honeycomb-planarity round note (NEWEST).** The honeycomb
+> planarity core `hexEmbeddedPolygon_edges_disjoint` (`SAWUmlaufPolygon.lean`) is
+> now **fully proved sorry-free** (only `propext, Classical.choice, Quot.sound`).
+> It was reduced to a new self-contained geometry file
+> `SAWUmlaufHexEdge.lean` (imported by `SAWUmlaufPolygon`, hence in the
+> `SAWFinal` chain) developing, all sorry-free:
+> `hexEdge_dir` (an oriented honeycomb edge embeds to one of three explicit unit
+> directions `1, -1/2 ± (√3/2)·I`), `hexEdge_false_or` (false/true parity of an
+> edge's endpoints), the nine direction-pair leaf cases
+> `hexEdge_disjoint_leaf_ij` (two unit honeycomb segments sharing no vertex are
+> disjoint — the three off-diagonal `i>j` derived from `i<j` by `Disjoint.symm`),
+> their dispatchers `hexEdge_disjoint_d1/d2/d3`, the oriented core
+> `hexEdge_segments_disjoint_oriented`, and the general
+> `hexEdge_segments_disjoint`. The combinatorial wiring inside
+> `hexEmbeddedPolygon_edges_disjoint` (each polygon edge is a `hexGraph`
+> adjacency between consecutive trail vertices; endpoint inequalities transfer to
+> vertex inequalities via `correctHexEmbed_injective`) is also proved.
+> Consequently `hexEmbeddedPolygon_polygonSimple` is sorry-free.
+> **The single remaining Umlaufsatz gap is now `polygon_ear_reduction`** (the
+> ear-clipping / two-ears topological core); the honeycomb-planarity gap is
+> closed.
+>
+> **Umlaufsatz ear-clipping round note.** Factored the planar
 > Umlaufsatz `polygon_umlaufsatz` (`SAWUmlaufPolygon.lean`): it no longer has a
 > monolithic `sorry`. It is now **proved** from the strong-induction lemma
 > `polygon_umlaufsatz_take` (ear-clipping induction on `V.length`; base case is

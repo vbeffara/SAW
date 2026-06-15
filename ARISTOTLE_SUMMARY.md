@@ -1,3 +1,55 @@
+# Summary of changes for run ade3861d-c030-4361-93b1-fb879ffe6bb0
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8117 jobs, including `RequestProject/SAWFinal.lean`).
+
+**Result: the honeycomb-planarity core of the Umlaufsatz is now completely eliminated.** Previously the Umlaufsatz had two remaining `sorry` cores; one of them — `hexEmbeddedPolygon_edges_disjoint` in `RequestProject/SAWUmlaufPolygon.lean` (and hence the planarity lemma `hexEmbeddedPolygon_polygonSimple`) — is now **fully proved, sorry-free**, depending only on the standard axioms `propext, Classical.choice, Quot.sound`.
+
+What was added / proved:
+- New self-contained geometry file `RequestProject/SAWUmlaufHexEdge.lean`, imported by `RequestProject/SAWUmlaufPolygon.lean` (hence transitively from `SAWFinal`), so it is part of the proof chain. It develops, all sorry-free:
+  - `hexEdge_dir` — an oriented honeycomb edge embeds to one of three explicit unit directions (`1`, `-1/2 ± (√3/2)·I`);
+  - `hexEdge_false_or` — the false/true sublattice parity of an edge's two endpoints;
+  - the nine direction-pair leaf lemmas `hexEdge_disjoint_leaf_ij` (two unit honeycomb segments sharing no vertex are disjoint), with the three off-diagonal cases derived from the others by `Disjoint.symm`;
+  - the dispatchers `hexEdge_disjoint_d1/d2/d3`, the oriented core `hexEdge_segments_disjoint_oriented`, and the general `hexEdge_segments_disjoint`.
+- In `SAWUmlaufPolygon.lean`, the combinatorial wiring of `hexEmbeddedPolygon_edges_disjoint` is now proved: each polygon edge is a `hexGraph` adjacency between consecutive trail vertices, and the endpoint inequalities transfer to vertex inequalities via `correctHexEmbed_injective`, closing the goal with the general geometric lemma.
+
+Remaining Umlaufsatz gap (now a single one): `polygon_ear_reduction` in `RequestProject/SAWUmlaufPolygon.lean` — the ear-clipping / two-ears topological core (Jordan-curve-theorem level, absent from Mathlib). Everything around it (the strong-induction `polygon_umlaufsatz_take`, the triangle base case, the closing rewrites, the bridge to the hex core, and now the entire honeycomb planarity side) is proved. Partial progress is preserved as honest, well-documented Lean sorries, and `PROOF_STATUS.md` / `ARISTOTLE_SUMMARY.md` were updated to record that the honeycomb-planarity core is closed and `polygon_ear_reduction` is the single remaining core.
+
+No axioms or `@[implemented_by]` were introduced; all new lemmas were verified to use only `propext, Classical.choice, Quot.sound`, and new-file linter warnings were fixed at the source.
+
+# Summary of changes — Umlaufsatz honeycomb-planarity round (newest)
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all
+other branches untouched. The whole library still builds successfully
+(`lake build`, including `RequestProject/SAWFinal.lean`).
+
+**Closed the honeycomb-planarity core of the Umlaufsatz entirely.** The lemma
+`hexEmbeddedPolygon_edges_disjoint` (`RequestProject/SAWUmlaufPolygon.lean`) —
+previously one of the two remaining Umlaufsatz `sorry`s — is now **proved
+sorry-free** (only `propext, Classical.choice, Quot.sound`), so
+`hexEmbeddedPolygon_polygonSimple` is sorry-free too.
+
+New file `RequestProject/SAWUmlaufHexEdge.lean` (imported by
+`SAWUmlaufPolygon`, hence transitively from `SAWFinal`) isolates and proves the
+geometric content, all sorry-free:
+* `hexEdge_dir` — an oriented honeycomb edge embeds to one of three explicit unit
+  directions `1, -1/2 ± (√3/2)·I`;
+* `hexEdge_false_or` — false/true parity of an edge's two endpoints;
+* the nine direction-pair leaf cases `hexEdge_disjoint_leaf_ij` (two unit
+  honeycomb segments sharing no vertex are disjoint; the three off-diagonal
+  `i>j` are obtained from `i<j` by `Disjoint.symm`);
+* the dispatchers `hexEdge_disjoint_d1/d2/d3`, the oriented core
+  `hexEdge_segments_disjoint_oriented`, and the general
+  `hexEdge_segments_disjoint`.
+The combinatorial wiring in `hexEmbeddedPolygon_edges_disjoint` (each polygon
+edge is a `hexGraph` adjacency between consecutive trail vertices, with endpoint
+inequalities transferred to vertex inequalities via `correctHexEmbed_injective`)
+is also proved.
+
+**Remaining Umlaufsatz gap (now a single one):** `polygon_ear_reduction`
+(`RequestProject/SAWUmlaufPolygon.lean`) — the ear-clipping / two-ears
+topological core. The honeycomb-planarity gap is closed.
+
+---
+
 # Summary of changes for run e1ca65fb-ca29-43d8-8322-d4d6d86119d6
 Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8116 jobs, including `RequestProject/SAWFinal.lean`); all new declarations live in `RequestProject/SAWUmlaufPolygon.lean`, which is imported transitively from `SAWFinal` (`SAWUmlaufSignedArea → SAWUmlaufPolygon`).
 
