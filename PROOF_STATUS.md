@@ -2,6 +2,23 @@
 
 > **Umlaufsatz ear-existence geometry-toolkit round note (NEWEST).** The single
 > remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
+> `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a second,
+> fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry
+> preparation file `SAWUmlaufEarExist.lean`, imported by `SAWUmlaufPolygon`
+> (hence in the `SAWFinal` chain), supplying the Step-2 (farthest-vertex)
+> building blocks of Meisters' ear-existence argument:
+> `collinear_iff_cross_eq_zero` (three points are collinear iff the 2-D cross
+> product of their edge vectors vanishes — the degenerate-diagonal test);
+> `exists_max_cross` (over a nonempty vertex list there is one maximizing the
+> signed distance `cross d (·-a)` to a base direction — the *farthest from the
+> base diagonal* pivot of Step 2); and the symmetry/distinctness facts of the
+> strict-interior predicate `inTriangleStrict_cyclic`,
+> `inTriangleStrict_ne_ab/bc/ca`. Like `SAWUmlaufEar`, this is explicitly
+> preparation that the eventual proof of `exists_ear_clip` will consume; the
+> clean single-core reduction is otherwise unchanged.
+>
+> **Umlaufsatz ear-existence geometry-toolkit round note.** The single
+> remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
 > `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a new, fully
 > proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation
 > file `SAWUmlaufEar.lean`, imported by `SAWUmlaufPolygon` (hence in the

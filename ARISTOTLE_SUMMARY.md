@@ -1,3 +1,16 @@
+# Summary of changes for run acc724f9-ddc4-4f16-9b93-866ae671d8d4
+Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8119 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content is still concentrated in a single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem-level and absent from Mathlib; it is not closable in a single pass because it needs plane-topology infrastructure (segment-crossing / empty-triangle geometry) that does not exist in Mathlib. So this round, following the project's established pattern, builds more of the proved, reusable geometric foundation that the eventual ear-existence proof will consume, while keeping the clean single-core reduction intact.
+
+New file `RequestProject/SAWUmlaufEarExist.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so it is part of the build chain), all proved sorry-free (verified to depend only on `propext, Classical.choice, Quot.sound`). It supplies the Step-2 (farthest-vertex) building blocks of Meisters' ear-existence argument:
+- `collinear_iff_cross_eq_zero` — three points are collinear iff the 2-D cross product of their edge vectors vanishes (the degenerate-diagonal test);
+- `exists_max_cross` — over a nonempty vertex list there is one maximizing the signed distance `cross d (·-a)` to a fixed base direction (the "farthest from the base diagonal" pivot that drives Step 2);
+- `inTriangleStrict_cyclic` — the strict-interior predicate is invariant under cyclic relabeling `a,b,c ↦ b,c,a` of the triangle;
+- `inTriangleStrict_ne_ab/bc/ca` — a triangle with a strict interior point has three pairwise distinct vertices.
+
+These are explicitly documented as preparation for `exists_ear_clip`: they are imported into the chain but not yet referenced by another declaration only because the core they feed is still open, so they are recorded partial progress, not a dead branch. The only other changes are the one-line `import` added to `SAWUmlaufPolygon.lean` and a round note prepended to `PROOF_STATUS.md`. No other files, and no other (dead-branch) sorries, were touched.
+
 # Summary of changes for run c1251b50-91ce-4dab-808a-51a0f85be02d
 Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8118 jobs, including `RequestProject/SAWFinal.lean`).
 
