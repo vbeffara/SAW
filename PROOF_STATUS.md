@@ -1,6 +1,32 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-clip turning-preservation round note (NEWEST).**
+> **Umlaufsatz core-isolation / rotation-prep-consumption round note (NEWEST).**
+> The remaining Umlaufsatz topological content is now isolated in a single core
+> `exists_ear_rotation` (`SAWUmlaufPolygon.lean`), stated **locally at the front
+> of one rotation** `V.rotate r = a :: b :: c :: rest`: clipping the second
+> vertex `b` preserves `PolygonSimple`, `polyCycNondeg`, the cyclic turning
+> `polyCycWind`, and the orientation — **all relative to the rotated polygon
+> `a :: b :: c :: rest` itself**. This round:
+> * Adds `exists_ear_rotation` (the new single `sorry`) and **derives the
+>   former core `exists_ear_clip` from it sorry-free**, transporting each
+>   clause back to `V` through the rotation-invariance toolkit
+>   (`polyCycWind_rotate`, `shoelace2_rotate`). Those two prep lemmas were
+>   previously proved-but-unconsumed; they are now **genuinely used**, closing
+>   the "looks dead but is preparation" gap for the rotation bookkeeping.
+> * Adds `PolygonSimple_clip_of_far_sameSide`, a fully proved
+>   (`propext, Classical.choice, Quot.sound`) one-step bundling of the two
+>   prepared simplicity-preservation halves (`PolygonSimple_clip` and
+>   `diag_disjoint_of_far_sameSide`) into the single planar-simplicity clause
+>   the ear core will consume.
+> The whole library still builds (`lake build`, 8123 jobs, through
+> `RequestProject/SAWFinal.lean`); the top-level discrete Umlaufsatz
+> (`hex_closed_trail_turning_number`) depends only on `sorryAx` plus the allowed
+> `propext, Classical.choice, Quot.sound`. The genuinely irreducible
+> Jordan-curve-theorem-level content (existence of a convex empty ear, with the
+> same-side / convexity range bounds that drive simplicity, turning, and
+> orientation preservation) is what `exists_ear_rotation` now concentrates.
+>
+> **Umlaufsatz ear-clip turning-preservation round note.**
 > The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
 > core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds, **in the
 > chain file `SAWUmlaufPolygon.lean` itself** (just above `exists_ear_clip`),

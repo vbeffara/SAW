@@ -648,6 +648,54 @@ lemma polyWind_clip_step (p a b c q : ℂ) (rest : List ℂ) :
   simp only [polyWind_cons_cons_cons]
   ring
 
+/-- **Planar simplicity is preserved by an ear clip, from the far same-side
+    condition (prep-consuming form).**  Specialisation of `PolygonSimple_clip`
+    in which the diagonal-disjointness hypothesis is produced from the
+    *same-side* emptiness condition on the far edges via
+    `diag_disjoint_of_far_sameSide`.  If the cycle `a :: b :: c :: rest` is
+    planar-simple and every far edge `e` of the clip has both endpoints strictly
+    on the same side of the base line `a–c`
+    (`0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)`), then the clipped cycle
+    `a :: c :: rest` is planar-simple.  This bundles the two prepared
+    simplicity-preservation halves (`PolygonSimple_clip` and
+    `diag_disjoint_of_far_sameSide`) into the single ready clause the ear core
+    `exists_ear_rotation` consumes; producing the same-side condition from an
+    empty convex ear is the remaining topological content. -/
+lemma PolygonSimple_clip_of_far_sameSide (a b c : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (h : ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) :
+    PolygonSimple (a :: c :: rest) :=
+  PolygonSimple_clip a b c rest hsimple (diag_disjoint_of_far_sameSide a c rest h)
+
+/-- **The genuine topological core of the planar Umlaufsatz, isolated at the
+    front of a single rotation (ear-existence form).**  A simple, non-degenerate
+    polygon with at least four vertices has a cyclic rotation
+    `V.rotate r = a :: b :: c :: rest` whose second vertex `b` is an *ear*: it
+    can be removed, yielding the strictly shorter cycle `a :: c :: rest` that is
+    still planar-simple (`PolygonSimple`) and cyclically non-degenerate
+    (`polyCycNondeg`), with the *same* cyclic turning and the *same* orientation
+    — all stated **relative to the rotated polygon** `a :: b :: c :: rest`
+    itself.
+
+    This is the form in which the genuine Jordan-curve-theorem-level content
+    lives: it speaks only about the front three vertices of one open list, so
+    every clause is a *local* statement about clipping `b`.  The full cyclic
+    `exists_ear_clip` is then derived sorry-free from this by transporting the
+    rotated conclusions back to `V` through the rotation-invariance toolkit
+    (`polyCycWind_rotate`, `shoelace2_rotate`), which is *consumed* in that
+    derivation.  Absent from Mathlib; this is the single remaining open core. -/
+lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      PolygonSimple (a :: c :: rest) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      polyCycWind (a :: c :: rest) = polyCycWind (a :: b :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 (a :: b :: c :: rest)
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
 /-- **The genuine topological core of the planar Umlaufsatz (the two-ears
     theorem, in concrete clipped-cons form).**  A simple, non-degenerate polygon
     with at least four vertices has an *ear* that can be clipped: there is a
@@ -674,7 +722,16 @@ lemma exists_ear_clip (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycNondeg (a :: c :: rest) ∧
       polyCycWind (a :: c :: rest) = polyCycWind V ∧
       ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  obtain ⟨r, a, b, c, rest, hrot, hsimp', hnd', hwind', harea'⟩ :=
+    exists_ear_rotation V hlen hsimple hnd
+  refine ⟨r, a, b, c, rest, hrot, hsimp', hnd', ?_, ?_⟩
+  · -- turning: transport via rotation invariance `polyCycWind_rotate`
+    rw [hwind', ← hrot]
+    exact polyCycWind_rotate V r (by omega)
+  · -- area sign: transport via rotation invariance `shoelace2_rotate`
+    have hV : HexArea.shoelace2 V = HexArea.shoelace2 (a :: b :: c :: rest) := by
+      rw [← hrot]; exact (shoelace2_rotate V r).symm
+    rw [hV]; exact harea'
 
 /-- **Ear-clipping reduction — derived sorry-free from the two-ears core
     `exists_ear_clip` and the rotation-invariance toolkit.**  For a

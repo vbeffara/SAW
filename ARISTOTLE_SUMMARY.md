@@ -1,3 +1,14 @@
+# Summary of changes for run b3aae96b-e265-462c-b077-366e7c11e02c
+Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, touching no other branch. The whole library still builds (`lake build`, 8123 jobs, through `RequestProject/SAWFinal.lean`), and the top-level discrete Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`) depends only on `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`.
+
+This round isolates the remaining topological content into a single, cleaner core and consumes previously-unused preparation, in `RequestProject/SAWUmlaufPolygon.lean`:
+
+- Added `exists_ear_rotation` — the genuine two-ears / ear-existence core, restated **locally at the front of one cyclic rotation** `V.rotate r = a :: b :: c :: rest`: clipping the second vertex `b` preserves planar simplicity (`PolygonSimple`), cyclic non-degeneracy (`polyCycNondeg`), the cyclic turning (`polyCycWind`) and the orientation, all stated relative to the rotated polygon `a :: b :: c :: rest` itself. This is now the single remaining Umlaufsatz `sorry`, and every clause is a local statement about removing `b`.
+- **Derived the former core `exists_ear_clip` from it sorry-free**, transporting each clause back to the original cycle `V` through the rotation-invariance toolkit `polyCycWind_rotate` and `shoelace2_rotate`. Those two lemmas were proved in earlier rounds but not yet consumed by anything; they are now genuinely used, explicitly linking that "looks-dead-but-is-preparation" rotation bookkeeping into the proof.
+- Added `PolygonSimple_clip_of_far_sameSide`, a fully proved (`propext, Classical.choice, Quot.sound`, verified sorry-free) one-step bundling of the two prepared simplicity-preservation halves (`PolygonSimple_clip` and `diag_disjoint_of_far_sameSide`) into the single planar-simplicity clause the ear core will consume.
+
+Net effect: the irreducible Jordan-curve-theorem-level content (existence of a convex empty ear together with the same-side / convexity range bounds that drive simplicity, turning and orientation preservation) is now concentrated in `exists_ear_rotation`, with the surrounding rotation/area/turning bookkeeping proved and wired in. Partial progress is preserved as the single localized sorry, and the new round note is recorded in `PROOF_STATUS.md`. Every Umlaufsatz file remains imported in the `SAWFinal` build chain.
+
 # Summary of changes for run 63770091-b8f2-4c0b-b9fd-a55a05297164
 Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, touching no other branch. The whole library still builds (`lake build`, 8123 jobs, through `RequestProject/SAWFinal.lean`), and the only Umlaufsatz `sorry` remains the single irreducible two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean`.
 
