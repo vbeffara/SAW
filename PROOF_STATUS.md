@@ -1,6 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz gap-simplification round note (NEWEST).**
+> **Umlaufsatz one-sided-ear round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
+> (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
+> (Jordan-curve-theorem level, absent from Mathlib).  The whole library still
+> builds and the top-level discrete Umlaufsatz
+> (`hex_closed_trail_turning_number`) still reduces to exactly this one gap
+> (axioms: `propext, sorryAx, Classical.choice, Quot.sound`).  This round made
+> one safe, sorry-free gap-simplification plus reusable building blocks:
+> * **Simplified the gap's hardest output clause again.**  `exists_front_ear`
+>   previously had to produce a *per-edge far-edge same-side* clause.  It now
+>   only has to produce the cleaner, more geometric **one-sidedness** clause
+>   `∀ x y ∈ rest, 0 < cross (c-a)(x-a) * cross (c-a)(y-a)` — every far vertex
+>   strictly on one and the same side of the diagonal line `a–c` (the defining
+>   property of a *one-sided ear*).  A worked example shows a generic empty
+>   convex ear (e.g. at the extreme vertex) need NOT satisfy the per-edge
+>   same-side clause, while a genuine one-sided ear does; so this states the
+>   true geometric heart of the gap.  The downstream `exists_ear_rotation`
+>   recovers the per-edge same-side condition (still sorry-free) via the new
+>   bridge `HexArea.oneSided_far_edges_sameSide`.
+> * **New reusable, sorry-free building blocks** in new file
+>   `SAWUmlaufEarOneSided.lean` (imported from `SAWUmlaufPolygon.lean`, hence in
+>   the `SAWFinal` chain): `oneSided_far_edges_sameSide` (one-sidedness ⇒ the
+>   per-edge same-side clause), `sameSide_pairwise_of_allPos/allNeg`
+>   (repackaging), and `clip_turn_at_a_ne_zero` / `clip_turn_at_c_ne_zero` (the
+>   two new cyclic turns created by the clip are non-degenerate, for the
+>   `polyCycNondeg (a :: c :: rest)` clause).  The first of these is now
+>   *consumed* by `exists_ear_rotation`, so it is live, not dead prep.
+
+> **Umlaufsatz gap-simplification round note.**
 > The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
 > (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
 > (Jordan-curve-theorem level, absent from Mathlib).  A direct high-effort proof

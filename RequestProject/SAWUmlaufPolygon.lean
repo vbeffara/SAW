@@ -46,6 +46,7 @@ import RequestProject.SAWUmlaufEarConvex
 import RequestProject.SAWUmlaufEarEmpty
 import RequestProject.SAWUmlaufEarExtreme
 import RequestProject.SAWUmlaufEarSide
+import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
 
 open Real Complex ComplexConjugate
@@ -767,11 +768,16 @@ lemma shoelace2_orient_clip (a b c : ℂ) (rest : List ℂ)
     * the five edge non-degeneracies `a-p, b-a, c-b, q-c, c-a ≠ 0`;
     * the three turning *range bounds* (the `Set.Ioc (-π, π]` clauses) feeding
       `polyCycWind_clip_eq` to preserve the cyclic turning;
-    * the *far-edge same-side* condition feeding `diag_disjoint_of_far_sameSide'`
-      and hence `PolygonSimple_clip` to preserve planar simplicity (every far
-      edge that shares no endpoint with the diagonal `a–c` has both endpoints
-      strictly on the same side of the line `a–c`, an *algebraic* cross-product
-      sign condition);
+    * the *one-sidedness* condition `0 < cross (c-a) (x-a) * cross (c-a) (y-a)`
+      for **all** `x, y ∈ rest` — i.e. every far vertex lies strictly on one
+      and the same side of the line `a–c` (the defining property of a
+      *one-sided ear*).  Via `HexArea.oneSided_far_edges_sameSide` this yields
+      the far-edge same-side condition, which feeds
+      `diag_disjoint_of_far_sameSide'` and hence `PolygonSimple_clip` to
+      preserve planar simplicity.  This is strictly cleaner than the previous
+      per-edge same-side clause: a *generic* empty convex ear (e.g. at the
+      extreme vertex) need not have all far edges same-side — only a genuine
+      one-sided ear does — so this states the true geometric heart of the gap;
     * `polyCycNondeg (a :: c :: rest)` (the clip stays non-degenerate);
     * the *triangle orientation* clause feeding `shoelace2_orient_clip` to
       preserve orientation.
@@ -794,9 +800,8 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
           ∈ Set.Ioc (-Real.pi) Real.pi) ∧
       (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
           ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (∀ e ∈ (c :: rest).zip (rest ++ [a]),
-          a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
-          0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) ∧
+      (∀ x ∈ rest, ∀ y ∈ rest,
+          0 < HexArea.cross (c - a) (x - a) * HexArea.cross (c - a) (y - a)) ∧
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
@@ -835,7 +840,8 @@ lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   refine ⟨r, a, b, c, rest, hrot, ?_, hndclip, ?_, ?_⟩
   · exact PolygonSimple_clip a b c rest hsimprot
-      (diag_disjoint_of_far_sameSide' a c rest hside)
+      (diag_disjoint_of_far_sameSide' a c rest
+        (HexArea.oneSided_far_edges_sameSide a c rest hside))
   · exact polyCycWind_clip_eq a b c p q rest hp hq hpa hab hbc hcq hca hr1 hr2 hr3
   · exact shoelace2_orient_clip a b c rest htri
 

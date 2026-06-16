@@ -1,3 +1,16 @@
+# Summary of changes for run 91bdafd4-4f35-4a19-9b1c-863073bd9cf3
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds (`lake build`, 8125 jobs through `RequestProject/SAWFinal.lean`), and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number` (`RequestProject/SAWUmlaufGaussBonnet.lean`) still reduces to **exactly one** remaining gap, depending only on `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
+
+The single remaining `sorry` is `exists_front_ear` (`RequestProject/SAWUmlaufPolygon.lean`): the genuine Meisters two-ears / ear-existence core (Jordan-curve-theorem level, absent from Mathlib). A high-effort direct proof attempt again times out, confirming it intrinsically needs the full convex-hull / diagonal-split argument; everything that consumes it remains sorry-free.
+
+This round made one safe, sorry-free gap-simplification plus reusable building blocks (no new gaps, no false/unproven intermediate lemmas):
+
+- **Simplified the gap's hardest output clause.** `exists_front_ear` previously had to produce a *per-edge far-edge same-side* clause. It now only has to produce the cleaner, more geometric **one-sidedness** clause `∀ x y ∈ rest, 0 < cross (c-a)(x-a) * cross (c-a)(y-a)` — every far vertex strictly on one and the same side of the diagonal line `a–c` (the defining property of a *one-sided ear*). A worked example shows a generic empty convex ear (e.g. at the extreme vertex) need not satisfy the per-edge same-side clause, whereas a genuine one-sided ear does, so this states the true geometric heart of the gap. The downstream `exists_ear_rotation` recovers the per-edge same-side condition (still sorry-free) via the new bridge lemma.
+
+- **Added a new reusable, verified building-block file** `RequestProject/SAWUmlaufEarOneSided.lean`, imported from `SAWUmlaufPolygon.lean` (hence transitively from `SAWFinal.lean`, in the build chain). It contains five sorry-free lemmas: `oneSided_far_edges_sameSide` (one-sidedness ⇒ the per-edge same-side clause, now *consumed* by `exists_ear_rotation`, so it is live rather than dead prep), `sameSide_pairwise_of_allPos`/`sameSide_pairwise_of_allNeg` (repackaging one-sidedness), and `clip_turn_at_a_ne_zero`/`clip_turn_at_c_ne_zero` (the two new cyclic turns created by the ear clip are non-degenerate, preparation for the `polyCycNondeg (a :: c :: rest)` clause).
+
+All partial progress is preserved as building Lean files; the round is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run e1cc6738-2382-41ee-9c75-9bcc72ecac51
 Continued the SAW.tex formalization working **exclusively on the top-priority discrete Hopf Umlaufsatz**, touching no other branch. The whole library still builds (`lake build`, 8124 jobs through `RequestProject/SAWFinal.lean`), and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number` (in `RequestProject/SAWUmlaufGaussBonnet.lean`) still reduces to **exactly one** remaining gap, depending only on `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
 
