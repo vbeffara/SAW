@@ -1,3 +1,14 @@
+# Summary of changes for run 63770091-b8f2-4c0b-b9fd-a55a05297164
+Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, touching no other branch. The whole library still builds (`lake build`, 8123 jobs, through `RequestProject/SAWFinal.lean`), and the only Umlaufsatz `sorry` remains the single irreducible two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean`.
+
+This round added three new, fully proved (only `propext, Classical.choice, Quot.sound`) preparation lemmas directly in the chain file `SAWUmlaufPolygon.lean`, just above `exists_ear_clip`, assembling the turning-preservation half of an ear clip plus the rotation bookkeeping it needs:
+
+- `rotate_cons_triple` — any rotation `V.rotate r` of a length-≥3 vertex cycle has the explicit head form `a :: b :: c :: rest`, the bookkeeping that lets the chosen ear (at any cyclic position `r`) be presented in the concrete clipped-cons shape.
+- `arg_ear_local_exact` — the exact local turning preservation (the `k = 0` case of the already-present `arg_ear_local_mod`): given the three relevant partial argument-sums lie in `(-π, π]`, removing the middle vertex `b` leaves the net exterior-angle turning unchanged. Proved by pure `Complex.arg_mul` telescoping — both sides equal `arg ((q-c)/(a-p))`. (I first confirmed numerically that the local turning difference is in general a nonzero multiple of 2π, so range/convexity hypotheses are genuinely required to pin it to 0.)
+- `polyWind_clip_step` — on an open chain `p :: a :: b :: c :: q :: rest`, removing `b` changes the total turning `polyWind` by exactly the local 5-point ear difference (all turns from `c` onward cancel), via `polyWind_cons_cons_cons` unfolding.
+
+Composed, `polyWind_clip_step` reduces the clip's turning change to the 5-point difference, which `arg_ear_local_exact` makes vanish under the convexity range bounds — supplying the turning-preservation clause of `exists_ear_clip` modulo producing those `(-π, π]` bounds from a convex ear. Each lemma is documented as preparation for `exists_ear_clip` and is in the `SAWFinal` build chain. Together with the existing ear-geometry toolkit and the planar-simplicity-preservation reduction from prior rounds, the remaining open content of the core is now narrowed to: ear existence (Meisters), the convexity range bounds, and area-sign preservation. Progress is recorded in `PROOF_STATUS.md`. Verified all new lemmas are sorry-free via `#print axioms`.
+
 # Summary of changes for run b33e2b21-802e-4b49-8e6f-7d90309d0da4
 Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, touching no other branch. The whole library still builds (`lake build`, 8123 jobs, through `RequestProject/SAWFinal.lean`).
 

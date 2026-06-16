@@ -583,6 +583,71 @@ lemma diag_disjoint_of_far_sameSide (a c : ℂ) (rest : List ℂ)
   intro e he _ _ _ _
   exact HexArea.segment_disjoint_of_strictSameSide a c e.1 e.2 (h e he)
 
+/-- **Cons-triple normal form of any rotation of a length-≥3 cycle.**  Any
+    rotation `V.rotate r` of a vertex cycle with at least three vertices has the
+    explicit head form `a :: b :: c :: rest`.  This is the bookkeeping step that
+    lets `exists_ear_clip` present the chosen ear (at cyclic position `r`) in the
+    concrete clipped-cons shape `a :: b :: c :: rest ↦ a :: c :: rest`.
+    Preparation for `exists_ear_clip`. -/
+lemma rotate_cons_triple (V : List ℂ) (h : 3 ≤ V.length) (r : ℕ) :
+    ∃ a b c rest, V.rotate r = a :: b :: c :: rest := by
+  have hlen : (V.rotate r).length = V.length := List.length_rotate ..
+  rcases hrot : V.rotate r with _ | ⟨a, _ | ⟨b, _ | ⟨c, rest⟩⟩⟩
+  · rw [hrot] at hlen; simp at hlen; omega
+  · rw [hrot] at hlen; simp at hlen; omega
+  · rw [hrot] at hlen; simp at hlen; omega
+  · exact ⟨a, b, c, rest, rfl⟩
+
+/-
+**Exact local turning preservation for an ear clip (range form).**  Removing
+    the middle vertex `b` from between its neighbours `a, c` (with preceding
+    vertex `p` and following vertex `q`) replaces the three local turns at
+    `a, b, c` by the two local turns at `a, c` of the merged edge, and — *given*
+    that the three relevant partial arg-sums stay within `(-π, π]` — the net
+    turning is exactly preserved (the `k = 0` case of `arg_ear_local_mod`).
+
+    The range hypotheses `hr1, hr2, hr3` are exactly what a *convex* ear of a
+    *simple* polygon supplies; isolating the analytic identity here (pure
+    `Complex.arg_mul` telescoping: both sides equal `arg ((q-c)/(a-p))`) reduces
+    the turning-preservation clause of `exists_ear_clip` to producing those
+    bounds from convexity.  Preparation for `exists_ear_clip`.
+-/
+lemma arg_ear_local_exact (p a b c q : ℂ)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hr1 : Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+              ∈ Set.Ioc (-Real.pi) Real.pi)
+    (hr2 : Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
+              ∈ Set.Ioc (-Real.pi) Real.pi)
+    (hr3 : Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
+              ∈ Set.Ioc (-Real.pi) Real.pi) :
+    (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+        + Complex.arg ((q - c) / (c - b)))
+      = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) := by
+  rw [ ← Complex.arg_mul ] <;> norm_num [ hpa, hab, hbc, hcq, hca ];
+  · rw [ ← Complex.arg_mul, ← Complex.arg_mul ];
+    all_goals simp_all +decide [ div_eq_mul_inv ];
+    grind +qlia;
+  · exact hr1
+
+/-- **Open-chain local turning difference of an ear clip.**  On an open polygonal
+    chain `p :: a :: b :: c :: q :: rest`, removing the middle vertex `b`
+    changes the total exterior-angle turning `polyWind` by exactly the local
+    5-point difference at the ear (with predecessor `p` and successor `q`): all
+    turns from `c` onward are shared and cancel.  Combined with
+    `arg_ear_local_exact` (which makes that difference vanish under convexity
+    range bounds) this is the turning-preservation step of `exists_ear_clip`.
+    Pure `polyWind_cons_cons_cons` unfolding.  Preparation for
+    `exists_ear_clip`. -/
+lemma polyWind_clip_step (p a b c q : ℂ) (rest : List ℂ) :
+    polyWind (p :: a :: b :: c :: q :: rest)
+      = polyWind (p :: a :: c :: q :: rest)
+        + ((Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+              + Complex.arg ((q - c) / (c - b)))
+           - (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)))) := by
+  simp only [polyWind_cons_cons_cons]
+  ring
+
 /-- **The genuine topological core of the planar Umlaufsatz (the two-ears
     theorem, in concrete clipped-cons form).**  A simple, non-degenerate polygon
     with at least four vertices has an *ear* that can be clipped: there is a

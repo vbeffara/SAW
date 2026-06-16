@@ -1,6 +1,35 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-clip planar-simplicity-preservation round note (NEWEST).**
+> **Umlaufsatz ear-clip turning-preservation round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
+> core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds, **in the
+> chain file `SAWUmlaufPolygon.lean` itself** (just above `exists_ear_clip`),
+> three fully proved (`propext, Classical.choice, Quot.sound`) preparation
+> lemmas assembling the **turning-preservation half** of an ear clip plus the
+> rotation bookkeeping:
+> * `rotate_cons_triple` — any rotation `V.rotate r` of a length-≥3 cycle has
+>   the explicit head form `a :: b :: c :: rest` (the bookkeeping that presents
+>   the chosen ear in clipped-cons shape).
+> * `arg_ear_local_exact` — the **exact** local turning preservation (the
+>   `k = 0` case of the existing `arg_ear_local_mod`): given the three relevant
+>   partial arg-sums lie in `(-π, π]`, removing the middle vertex `b` leaves the
+>   net exterior-angle turning unchanged. Pure `Complex.arg_mul` telescoping —
+>   both sides equal `arg ((q-c)/(a-p))`.
+> * `polyWind_clip_step` — on an open chain `p :: a :: b :: c :: q :: rest`,
+>   removing `b` changes `polyWind` by exactly the local 5-point ear difference
+>   (all turns from `c` onward cancel). Pure `polyWind_cons_cons_cons`
+>   unfolding.
+>
+> Composed (`polyWind_clip_step` reduces the clip's turning change to the
+> 5-point difference, which `arg_ear_local_exact` makes vanish under the
+> convexity range bounds), these supply the turning-preservation clause of
+> `exists_ear_clip` modulo producing the `(-π, π]` range bounds from a convex
+> ear — which, together with ear existence and area-sign preservation, is the
+> remaining topological content of the open core. They are documented as
+> preparation for `exists_ear_clip` (not yet consumed by it). Whole library
+> still builds (`lake build`, 8123 jobs).
+>
+> **Umlaufsatz ear-clip planar-simplicity-preservation round note.**
 > The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
 > core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds, **in the
 > chain file `SAWUmlaufPolygon.lean` itself** (just above `exists_ear_clip`),
