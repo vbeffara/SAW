@@ -1,3 +1,15 @@
+# Summary of changes for run 52a8f1b7-bc8c-408f-8d02-7f136c9025cb
+Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8121 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content is still concentrated in the single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem level and absent from Mathlib; following the project's established pattern this round adds more of the proved, reusable geometric foundation that the eventual ear-existence proof will consume, while keeping the clean single-core reduction intact.
+
+New file `RequestProject/SAWUmlaufEarEmpty.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so part of the build chain), all three lemmas proved sorry-free (verified to depend only on `propext, Classical.choice, Quot.sound`). It supplies the Step-2 (empty-triangle / farthest-vertex) geometry of Meisters' ear argument, and crucially it now **consumes** the barycentric backbone of `SAWUmlaufEarConvex` (so that earlier preparation is no longer feeding only the open core):
+- `subTri_axc_orient_pos` — a positively-oriented strict interior point `x` of the triangle `a,b,c` makes the sub-triangle `a,x,c` itself positively oriented (`0 < cross (x-a) (c-x)`), the barycentric weight of `b` being the proportionality factor;
+- `inTriangleStrict_pos_nest` — strict interiors nest: a point strictly inside the positively-oriented sub-triangle `a,q,c` (with `q` strictly inside `a,b,c`) is strictly inside `a,b,c`, the convexity/transitivity fact that lets the ear search recurse into the smaller triangle;
+- `farthest_region_empty` — the maximality clause: no candidate vertex is strictly farther from the base line `a–c` than the chosen farthest vertex `q`, i.e. the region of the corner triangle beyond `q` is empty, which is what makes the Step-2 diagonal `v–q` valid.
+
+These are documented as preparation for `exists_ear_clip`: they are imported into the chain and now also link the previously stand-alone `SAWUmlaufEarConvex` lemmas into a consumed sub-chain, so they are recorded partial progress rather than dead branches. The status note at the top of `PROOF_STATUS.md` was updated to record this round.
+
 # Summary of changes for run f23da842-d81c-4d3e-998a-5d89ca99a1e7
 Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8120 jobs, including `RequestProject/SAWFinal.lean`).
 

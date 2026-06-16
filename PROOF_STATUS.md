@@ -1,6 +1,26 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-existence barycentric-backbone round note (NEWEST).** The
+> **Umlaufsatz ear-existence sub-triangle/nesting round note (NEWEST).** The
+> single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
+> `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a fourth, fully
+> proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation
+> file `SAWUmlaufEarEmpty.lean`, imported by `SAWUmlaufPolygon` (hence in the
+> `SAWFinal` chain), supplying the Step-2 (empty-triangle / farthest-vertex)
+> geometry that **consumes** the barycentric backbone of `SAWUmlaufEarConvex`
+> (so that file is no longer feeding only the open core): `subTri_axc_orient_pos`
+> (a positively-oriented strict interior point `x` of `a,b,c` makes the
+> sub-triangle `a,x,c` itself positively oriented — `0 < cross (x-a) (c-x)`);
+> `inTriangleStrict_pos_nest` (strict interiors nest: a point strictly inside the
+> sub-triangle `a,q,c`, with `q` strictly inside `a,b,c`, is strictly inside
+> `a,b,c`); and `farthest_region_empty` (the maximality clause: no candidate
+> vertex is strictly farther from the base line `a-c` than the chosen farthest
+> vertex `q`, i.e. the region beyond `q` is empty — what makes the Step-2
+> diagonal `v-q` valid). Like the earlier `SAWUmlaufEar*` files this is
+> explicitly preparation that the eventual proof of `exists_ear_clip` will
+> consume; the clean single-core reduction is otherwise unchanged. Whole library
+> still builds (`lake build`, 8121 jobs).
+>
+> **Umlaufsatz ear-existence barycentric-backbone round note.** The
 > single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
 > `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a third, fully
 > proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation
