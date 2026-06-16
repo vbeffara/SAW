@@ -45,6 +45,7 @@ import RequestProject.SAWUmlaufEarExist
 import RequestProject.SAWUmlaufEarConvex
 import RequestProject.SAWUmlaufEarEmpty
 import RequestProject.SAWUmlaufEarExtreme
+import RequestProject.SAWUmlaufEarSide
 import RequestProject.SAWUmlaufSegment
 
 open Real Complex ComplexConjugate
@@ -583,6 +584,27 @@ lemma diag_disjoint_of_far_sameSide (a c : ℂ) (rest : List ℂ)
   intro e he _ _ _ _
   exact HexArea.segment_disjoint_of_strictSameSide a c e.1 e.2 (h e he)
 
+/-- **Same-side emptiness gives diagonal disjointness (guarded form).**  The
+    satisfiable variant of `diag_disjoint_of_far_sameSide`: the same-side product
+    is only required for the *guarded* far edges (those sharing no endpoint with
+    the diagonal `a`–`c`).  This is exactly the form a genuine ear can supply —
+    every far vertex of an empty convex ear lies strictly on the far side of the
+    diagonal `a`–`c`, so each guarded far edge has both endpoints strictly on the
+    same side — and it directly yields the diagonal-disjointness hypothesis of
+    `PolygonSimple_clip`.  Pointwise application of
+    `HexArea.segment_disjoint_of_strictSameSide`.  This makes the remaining
+    topological gap (`exists_front_ear`) an *algebraic* cross-product sign
+    condition rather than a segment-disjointness condition. -/
+lemma diag_disjoint_of_far_sameSide' (a c : ℂ) (rest : List ℂ)
+    (h : ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+       0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) :
+    ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+       Disjoint (segment ℝ a c) (segment ℝ e.1 e.2) := by
+  intro e he h1 h2 h3 h4
+  exact HexArea.segment_disjoint_of_strictSameSide a c e.1 e.2 (h e he h1 h2 h3 h4)
+
 /-- **Cons-triple normal form of any rotation of a length-≥3 cycle.**  Any
     rotation `V.rotate r` of a vertex cycle with at least three vertices has the
     explicit head form `a :: b :: c :: rest`.  This is the bookkeeping step that
@@ -745,9 +767,11 @@ lemma shoelace2_orient_clip (a b c : ℂ) (rest : List ℂ)
     * the five edge non-degeneracies `a-p, b-a, c-b, q-c, c-a ≠ 0`;
     * the three turning *range bounds* (the `Set.Ioc (-π, π]` clauses) feeding
       `polyCycWind_clip_eq` to preserve the cyclic turning;
-    * the *diagonal-disjointness* condition feeding `PolygonSimple_clip` to
-      preserve planar simplicity (the diagonal `a–c`, as a segment, misses every
-      far edge that shares no endpoint with it);
+    * the *far-edge same-side* condition feeding `diag_disjoint_of_far_sameSide'`
+      and hence `PolygonSimple_clip` to preserve planar simplicity (every far
+      edge that shares no endpoint with the diagonal `a–c` has both endpoints
+      strictly on the same side of the line `a–c`, an *algebraic* cross-product
+      sign condition);
     * `polyCycNondeg (a :: c :: rest)` (the clip stays non-degenerate);
     * the *triangle orientation* clause feeding `shoelace2_orient_clip` to
       preserve orientation.
@@ -772,7 +796,7 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
           ∈ Set.Ioc (-Real.pi) Real.pi) ∧
       (∀ e ∈ (c :: rest).zip (rest ++ [a]),
           a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
-          Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)) ∧
+          0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) ∧
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
@@ -810,7 +834,8 @@ lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
   have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   refine ⟨r, a, b, c, rest, hrot, ?_, hndclip, ?_, ?_⟩
-  · exact PolygonSimple_clip a b c rest hsimprot hside
+  · exact PolygonSimple_clip a b c rest hsimprot
+      (diag_disjoint_of_far_sameSide' a c rest hside)
   · exact polyCycWind_clip_eq a b c p q rest hp hq hpa hab hbc hcq hca hr1 hr2 hr3
   · exact shoelace2_orient_clip a b c rest htri
 

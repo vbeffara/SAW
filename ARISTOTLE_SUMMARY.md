@@ -1,3 +1,16 @@
+# Summary of changes for run e1cc6738-2382-41ee-9c75-9bcc72ecac51
+Continued the SAW.tex formalization working **exclusively on the top-priority discrete Hopf Umlaufsatz**, touching no other branch. The whole library still builds (`lake build`, 8124 jobs through `RequestProject/SAWFinal.lean`), and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number` (in `RequestProject/SAWUmlaufGaussBonnet.lean`) still reduces to **exactly one** remaining gap, depending only on `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
+
+The single remaining `sorry` is `exists_front_ear` (in `RequestProject/SAWUmlaufPolygon.lean`): the genuine Meisters two-ears / ear-existence core, which is Jordan-curve-theorem level and absent from Mathlib. A direct high-effort proof attempt times out, confirming it intrinsically needs the full diagonal-split recursion; everything that consumes it remains sorry-free.
+
+This round made two safe, sorry-free advances around that core, introducing no new gaps and no unproven/false intermediate lemmas:
+
+- **Simplified the remaining gap's hypothesis.** `exists_front_ear` previously had to produce a *segment-disjointness* clause for the diagonal `a–c`. It now only has to produce the more elementary, orientation-agnostic *algebraic* cross-product same-side condition `0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)` on the guarded far edges. A new lemma `diag_disjoint_of_far_sameSide'` converts that into the segment-disjointness hypothesis required by `PolygonSimple_clip`, and the downstream `exists_ear_rotation` was updated to use it (still sorry-free). This turns the hardest output clause of the gap from a topological statement into an algebraic sign condition, strictly easier to eventually discharge.
+
+- **Added a reusable, verified geometric building block.** New file `RequestProject/SAWUmlaufEarSide.lean` contains `HexArea.inTriangleStrict_apex_sameSide`: a strict interior point of a triangle lies strictly on the apex side of the base diagonal (`0 < cross (c-a) (x-a) * cross (c-a) (b-a)`), proved from the barycentric convex-combination characterization. This is the per-point side geometry underpinning the same-side condition above. The file is imported from `SAWUmlaufPolygon.lean` (hence transitively from `SAWFinal.lean`), is part of the build chain, and is documented as preparation for the eventual `exists_front_ear` proof.
+
+I also recorded the round in `PROOF_STATUS.md`. All partial progress is preserved as building Lean files; the only `sorry` in the Umlaufsatz chain is the isolated `exists_front_ear` core.
+
 # Summary of changes for run c4f35717-99f1-4141-bf88-207b46e9881d
 Continued the SAW.tex formalization working **exclusively on the top-priority discrete Hopf Umlaufsatz**, touching no other branch. The whole library still builds (`lake build`, 8123 jobs through `RequestProject/SAWFinal.lean`), and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number` (in `RequestProject/SAWUmlaufGaussBonnet.lean`) depends only on `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
 

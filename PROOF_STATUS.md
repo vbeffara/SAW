@@ -1,6 +1,31 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz clip-bookkeeping extraction round note (NEWEST).**
+> **Umlaufsatz gap-simplification round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
+> (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
+> (Jordan-curve-theorem level, absent from Mathlib).  A direct high-effort proof
+> attempt times out, confirming it needs the full diagonal-split recursion.
+> This round made two safe, sorry-free advances around that core, keeping the
+> whole library building and the top-level discrete Umlaufsatz
+> (`hex_closed_trail_turning_number`) reducing to exactly this one gap
+> (axioms: `propext, sorryAx, Classical.choice, Quot.sound`):
+> * **Simplified the gap's hypothesis.**  `exists_front_ear` previously had to
+>   produce a *segment-disjointness* clause for the diagonal `a–c`.  It now only
+>   has to produce the more elementary, orientation-agnostic *algebraic*
+>   cross-product same-side condition
+>   `0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)` on the guarded far edges.
+>   The new lemma `diag_disjoint_of_far_sameSide'` converts that into the
+>   segment-disjointness hypothesis of `PolygonSimple_clip`, and
+>   `exists_ear_rotation` was updated accordingly (still sorry-free).
+> * **Added a reusable building block** `HexArea.inTriangleStrict_apex_sameSide`
+>   (new file `SAWUmlaufEarSide.lean`, imported from `SAWUmlaufPolygon.lean`):
+>   a strict interior point of a triangle lies strictly on the apex side of the
+>   base diagonal (`0 < cross (c-a) (x-a) * cross (c-a) (b-a)`), proved from the
+>   barycentric convex-combination characterization.  This is the per-point
+>   side geometry underpinning the same-side condition above; preparation for
+>   the eventual `exists_front_ear` proof.
+>
+> **Umlaufsatz clip-bookkeeping extraction round note.**
 > `exists_ear_rotation` (`SAWUmlaufPolygon.lean`) is now **proved sorry-free**:
 > the remaining Umlaufsatz topological content has been pushed one level deeper
 > into a single, cleaner geometric-data core `exists_front_ear`, and the three
