@@ -1,3 +1,15 @@
+# Summary of changes for run b33e2b21-802e-4b49-8e6f-7d90309d0da4
+Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, touching no other branch. The whole library still builds (`lake build`, 8123 jobs, through `RequestProject/SAWFinal.lean`).
+
+The Umlaufsatz's remaining content is still concentrated in a single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is Jordan-curve-theorem-level and absent from Mathlib. Following the project's established incremental pattern, this round adds verified, reusable preparation that the eventual ear-existence proof consumes, while keeping the clean single-core reduction intact.
+
+New, fully proved (`propext, Classical.choice, Quot.sound`) lemmas added directly in the chain file `RequestProject/SAWUmlaufPolygon.lean` just above `exists_ear_clip`, assembling the planar-simplicity-preservation half of an ear clip into a ready-to-consume reduction:
+- `closedEdges_clip` — the closed edges of `a :: b :: c :: rest` are the two ear edges `(a,b),(b,c)` followed by the shared far-edge tail `M := (c :: rest).zip (rest ++ [a])`, and the clipped cycle `a :: c :: rest` has exactly the diagonal `(a,c)` followed by the same `M` (pure list algebra on `closedEdges = V.zip (V.rotate 1)`).
+- `PolygonSimple_clip` — if the original cycle is `PolygonSimple` and the new diagonal `a–c` is disjoint from every far edge sharing no endpoint with it (`hdiag`), then `a :: c :: rest` is `PolygonSimple`: `Nodup` is inherited (sublist), far/far disjointness is inherited verbatim (`M` is a common suffix), and the only new obligation is exactly `hdiag`.
+- `diag_disjoint_of_far_sameSide` — the bridge from the empty-ear same-side condition (`0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)` for every far edge `e`) to `hdiag`, via `segment_disjoint_of_strictSameSide`.
+
+Composed, these reduce "the ear clip preserves `PolygonSimple`" to the single geometric fact that every far edge of an empty convex ear lies strictly on one side of the base diagonal — the remaining topological content of `exists_ear_clip`. Each new lemma carries a docstring explicitly marking it as preparation for `exists_ear_clip` (it is in the `SAWFinal` build chain but not yet consumed by `exists_ear_clip`, whose ear-existence core is still open), so the partial progress is preserved rather than discarded. `PROOF_STATUS.md` is updated with a round note. Verified the three new lemmas depend only on the allowed axioms, and the single Umlaufsatz `sorry` is unchanged.
+
 # Summary of changes for run 935b3a5b-3213-4903-ba50-7363a563008d
 Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8123 jobs, including `RequestProject/SAWFinal.lean`).
 

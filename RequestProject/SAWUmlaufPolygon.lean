@@ -513,6 +513,76 @@ lemma shoelace2_clip_second (a b c : ℂ) (rest : List ℂ) :
       = HexArea.shoelace2 (a :: c :: rest) + HexArea.shoelace2 [a, b, c] := by
   rw [HexArea.shoelace2_ear, HexArea.shoelace2_triple]
 
+/-! ## Closed-edge bookkeeping for an ear clip (preparation for `exists_ear_clip`)
+
+The two lemmas below are **preparation** consumed by the planar-simplicity half
+of `exists_ear_clip`.  They isolate the purely combinatorial part of removing
+the second vertex `b` from a closed cycle `a :: b :: c :: rest`: its closed
+edges are the two ear edges `(a,b), (b,c)` followed by a *shared tail*
+`M := (c :: rest).zip (rest ++ [a])` (the far edges), and the clipped cycle
+`a :: c :: rest` has exactly the new diagonal `(a,c)` followed by the *same*
+tail `M`.  This reduces planar-simplicity preservation to a single new
+disjointness obligation — that the diagonal `a–c` misses every far edge — while
+the far/far disjointness is inherited verbatim from the original polygon. -/
+
+/-
+**Closed-edge clip identity.**  Removing the second vertex `b` leaves the
+    far edges `M := (c :: rest).zip (rest ++ [a])` untouched, replacing the two
+    ear edges `(a,b), (b,c)` by the single diagonal `(a,c)`.  Pure list algebra
+    (`closedEdges = V.zip (V.rotate 1)` and `rotate 1` of a `cons`).  Preparation
+    for `PolygonSimple_clip` / `exists_ear_clip`.
+-/
+lemma closedEdges_clip (a b c : ℂ) (rest : List ℂ) :
+    closedEdges (a :: b :: c :: rest)
+        = (a, b) :: (b, c) :: (c :: rest).zip (rest ++ [a]) ∧
+    closedEdges (a :: c :: rest)
+        = (a, c) :: (c :: rest).zip (rest ++ [a]) := by
+  unfold closedEdges; aesop;
+
+/-
+**Planar simplicity is preserved by an ear clip, given diagonal
+    disjointness.**  If the cycle `a :: b :: c :: rest` is planar-simple and the
+    new diagonal `a–c` is disjoint from every far edge `e ∈ M` that shares no
+    endpoint with it, then the clipped cycle `a :: c :: rest` is planar-simple.
+
+    The `Nodup` clause is inherited (`a :: c :: rest` is a sublist of
+    `a :: b :: c :: rest`); the far/far disjointness is inherited verbatim (the
+    far edges `M` are a common suffix by `closedEdges_clip`); and the only new
+    obligation — the diagonal against the far edges — is exactly `hdiag`.
+    Preparation for `exists_ear_clip`: producing `hdiag` from an empty convex
+    ear is the remaining topological core.
+-/
+lemma PolygonSimple_clip (a b c : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hdiag : ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+       Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)) :
+    PolygonSimple (a :: c :: rest) := by
+  constructor;
+  · have := hsimple.1; simp_all +decide [ List.nodup_cons ] ;
+  · obtain ⟨h₁, h₂⟩ := hsimple;
+    simp +decide [ closedEdges ] at *;
+    grind +splitIndPred
+
+/-- **Same-side emptiness gives diagonal disjointness.**  If every far edge `e`
+    of the clip has *both* endpoints strictly on the same side of the base line
+    `a–c` (the side test product `cross (c-a) (e.1-a) * cross (c-a) (e.2-a)` is
+    positive), then the diagonal `a–c` is disjoint from every far edge that
+    shares no endpoint with it — exactly the `hdiag` hypothesis of
+    `PolygonSimple_clip`.  Pointwise application of
+    `HexArea.segment_disjoint_of_strictSameSide` (with `p,q := a,c`).  This is
+    the bridge from the empty-ear same-side condition to planar-simplicity
+    preservation; producing the same-side condition from an empty convex ear is
+    the remaining topological content of `exists_ear_clip`. -/
+lemma diag_disjoint_of_far_sameSide (a c : ℂ) (rest : List ℂ)
+    (h : ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) :
+    ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+       Disjoint (segment ℝ a c) (segment ℝ e.1 e.2) := by
+  intro e he _ _ _ _
+  exact HexArea.segment_disjoint_of_strictSameSide a c e.1 e.2 (h e he)
+
 /-- **The genuine topological core of the planar Umlaufsatz (the two-ears
     theorem, in concrete clipped-cons form).**  A simple, non-degenerate polygon
     with at least four vertices has an *ear* that can be clipped: there is a

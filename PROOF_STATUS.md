@@ -1,6 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-existence segment-non-crossing round note (NEWEST).**
+> **Umlaufsatz ear-clip planar-simplicity-preservation round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
+> core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds, **in the
+> chain file `SAWUmlaufPolygon.lean` itself** (just above `exists_ear_clip`),
+> three fully proved (`propext, Classical.choice, Quot.sound`) lemmas that
+> assemble the **planar-simplicity-preservation half of an ear clip** into a
+> ready-to-consume reduction:
+> * `closedEdges_clip` — the closed edges of `a :: b :: c :: rest` are the two
+>   ear edges `(a,b),(b,c)` followed by the shared far-edge tail
+>   `M := (c :: rest).zip (rest ++ [a])`, and the clipped cycle `a :: c :: rest`
+>   has exactly the diagonal `(a,c)` followed by the *same* `M` (pure list
+>   algebra on `closedEdges = V.zip (V.rotate 1)`).
+> * `PolygonSimple_clip` — given the original cycle is `PolygonSimple` and the
+>   diagonal `a–c` is disjoint from every far edge sharing no endpoint with it
+>   (`hdiag`), the clipped cycle `a :: c :: rest` is `PolygonSimple`: `Nodup` is
+>   inherited (sublist), far/far disjointness is inherited verbatim (`M` is a
+>   common suffix), and the only new obligation is exactly `hdiag`.
+> * `diag_disjoint_of_far_sameSide` — the bridge from the empty-ear *same-side*
+>   condition (`0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)` for every far edge
+>   `e`) to `hdiag`, via `HexArea.segment_disjoint_of_strictSameSide`.
+>
+> Composed, these reduce "the clip preserves `PolygonSimple`" to the single
+> geometric fact that every far edge of an empty convex ear lies strictly on one
+> side of the base diagonal — the remaining topological content of
+> `exists_ear_clip`. They are documented as preparation for `exists_ear_clip`
+> (not yet consumed by it, since the ear-existence core is still open). Whole
+> library still builds (`lake build`, 8123 jobs).
+>
+> **Umlaufsatz ear-existence segment-non-crossing round note.**
 > The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
 > core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a sixth,
 > fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry
