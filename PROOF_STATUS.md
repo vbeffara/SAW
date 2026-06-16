@@ -1,6 +1,28 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-existence extreme-vertex/convex-hull round note (NEWEST).**
+> **Umlaufsatz ear-existence segment-non-crossing round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
+> core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a sixth,
+> fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry
+> preparation file `SAWUmlaufSegment.lean`, imported by `SAWUmlaufPolygon`
+> (hence in the `SAWFinal` chain), supplying the **algebraic heart of the
+> planar-simplicity-preservation half of an ear clip** — that the clipped
+> diagonal misses the far edges of the polygon. It **consumes** the
+> `cross`-bilinearity toolkit of `SAWUmlaufEar`/`SAWSignedArea`, the barycentric
+> backbone (`inTriangleStrict_convexCombo`) of `SAWUmlaufEarExtreme` and the
+> non-degeneracy of a strict-interior triangle (`inTriangleStrict_nondeg`):
+> `cross_combo_segment` (the carrier-line side test `cross (q-p) (u-p)` vanishes
+> for `u ∈ segment ℝ p q`); `segment_disjoint_of_strictSameSide` (if both
+> endpoints of one segment lie strictly on the same side of the other's carrier
+> line — `0 < cross (q-p) (r-p) * cross (q-p) (s-p)` — the two segments are
+> disjoint); and `inTriangleStrict_diag_side` (a strict interior point of the
+> corner triangle `a,b,c` lies strictly on the apex side of the base diagonal
+> `a–c`: `0 < cross (c-a) (x-a) * cross (c-a) (b-a)`). Like the earlier
+> `SAWUmlaufEar*` files this is explicitly preparation that the eventual proof
+> of `exists_ear_clip` will consume; the clean single-core reduction is
+> otherwise unchanged. Whole library still builds (`lake build`, 8123 jobs).
+>
+> **Umlaufsatz ear-existence extreme-vertex/convex-hull round note.**
 > The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
 > core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a fifth,
 > fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry

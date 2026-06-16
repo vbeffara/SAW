@@ -45,6 +45,7 @@ import RequestProject.SAWUmlaufEarExist
 import RequestProject.SAWUmlaufEarConvex
 import RequestProject.SAWUmlaufEarEmpty
 import RequestProject.SAWUmlaufEarExtreme
+import RequestProject.SAWUmlaufSegment
 
 open Real Complex ComplexConjugate
 

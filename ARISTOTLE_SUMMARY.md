@@ -1,3 +1,15 @@
+# Summary of changes for run 935b3a5b-3213-4903-ba50-7363a563008d
+Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8123 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content is still concentrated in the single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem-level and absent from Mathlib; following the project's established pattern, this round adds more of the proved, reusable geometric foundation that the eventual ear-existence proof consumes, while keeping the clean single-core reduction intact.
+
+New file `RequestProject/SAWUmlaufSegment.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so part of the build chain). All its lemmas are proved sorry-free and verified to depend only on `propext, Classical.choice, Quot.sound`. It supplies the algebraic heart of the planar-simplicity-preservation half of an ear clip (that the clipped diagonal `a–c` misses the far edges of the polygon), consuming the `cross`-bilinearity toolkit of `SAWUmlaufEar`/`SAWSignedArea`, the barycentric backbone `inTriangleStrict_convexCombo` of `SAWUmlaufEarExtreme`, and the non-degeneracy `inTriangleStrict_nondeg`:
+- `cross_combo_segment` — the carrier-line side test `cross (q-p) (u-p)` vanishes for `u ∈ segment ℝ p q`;
+- `segment_disjoint_of_strictSameSide` — if both endpoints of one segment lie strictly on the same side of the other's carrier line (`0 < cross (q-p) (r-p) * cross (q-p) (s-p)`), the two segments are disjoint (the test used to show the clipped diagonal does not meet the polygon's far edges);
+- `inTriangleStrict_diag_side` — a strict interior point of the corner triangle `a,b,c` lies strictly on the apex side of the base diagonal `a–c` (`0 < cross (c-a) (x-a) * cross (c-a) (b-a)`), linking the empty-triangle/interior machinery of the earlier parts to the same-side disjointness test.
+
+The file is documented as preparation for `exists_ear_clip`: it is imported into the chain and links the interior-point machinery into the planar-simplicity argument. All Umlauf-related files remain imported somewhere (none are dead branches), and the recorded partial progress (PROOF_STATUS.md updated) preserves the work for future rounds. The single remaining Umlaufsatz `sorry` is unchanged and is the only one in the Umlauf chain.
+
 # Summary of changes for run 5187f9ea-6897-4043-90bf-276bffacec28
 Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8122 jobs, including `RequestProject/SAWFinal.lean`).
 
