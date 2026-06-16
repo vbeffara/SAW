@@ -1,6 +1,28 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-existence sub-triangle/nesting round note (NEWEST).** The
+> **Umlaufsatz ear-existence extreme-vertex/convex-hull round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence
+> core `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a fifth,
+> fully proved (`propext, Classical.choice, Quot.sound`) plane-geometry
+> preparation file `SAWUmlaufEarExtreme.lean`, imported by `SAWUmlaufPolygon`
+> (hence in the `SAWFinal` chain), supplying the **Step-1 convexity of the
+> extreme vertex**, and **consuming** the barycentric backbone of
+> `SAWUmlaufEarConvex` (`inTriangleStrict_pos_convexCombo`) together with the
+> strict-interior predicate of `SAWUmlaufEar`: `inTriangleStrict_convexCombo`
+> (a strict interior point of *either* orientation is a strict convex
+> combination of the triangle vertices); `inTriangleStrict_not_lexMin` (such an
+> interior point is never lexicographically minimal — leftmost, then lowest —
+> among the three vertices, since its coordinates are strict positive-weight
+> averages); and `lexMin_not_inTriangleStrict` (combining with
+> `SAWUmlaufEar.exists_lex_min_mem`: the lex-minimal vertex of the polygon is
+> never in the strict interior of any triangle spanned by polygon vertices —
+> i.e. the extreme vertex is a convex-hull vertex, which is precisely what makes
+> Meisters' Step-1 corner convex). Like the earlier `SAWUmlaufEar*` files this
+> is explicitly preparation that the eventual proof of `exists_ear_clip` will
+> consume; the clean single-core reduction is otherwise unchanged. Whole
+> library still builds (`lake build`, 8122 jobs).
+>
+> **Umlaufsatz ear-existence sub-triangle/nesting round note.** The
 > single remaining Umlaufsatz `sorry` is still the two-ears / ear-existence core
 > `exists_ear_clip` (`SAWUmlaufPolygon.lean`). This round adds a fourth, fully
 > proved (`propext, Classical.choice, Quot.sound`) plane-geometry preparation

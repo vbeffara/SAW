@@ -1,3 +1,15 @@
+# Summary of changes for run 5187f9ea-6897-4043-90bf-276bffacec28
+Continued the SAW.tex formalization working exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8122 jobs, including `RequestProject/SAWFinal.lean`).
+
+Status of the Umlaufsatz: its remaining content is still concentrated in the single honest `sorry` — the two-ears / ear-existence core `exists_ear_clip` in `RequestProject/SAWUmlaufPolygon.lean` (a simple, non-degenerate polygon with ≥4 vertices has a clippable convex ear preserving planar simplicity, non-degeneracy, total turning and orientation). This is genuinely Jordan-curve-theorem-level and absent from Mathlib. Following the project's established pattern, this round adds more of the proved, reusable geometric foundation that the eventual ear-existence proof consumes, while keeping the clean single-core reduction intact.
+
+New file `RequestProject/SAWUmlaufEarExtreme.lean`, imported by `SAWUmlaufPolygon` (hence transitively from `SAWFinal`, so part of the build chain). All its lemmas are proved sorry-free and verified to depend only on `propext, Classical.choice, Quot.sound`. It supplies the Step-1 convexity of Meisters' ear argument — that the extreme vertex is a convex-hull vertex — and crucially it now consumes the barycentric backbone of `SAWUmlaufEarConvex` and the strict-interior predicate of `SAWUmlaufEar` (so earlier preparation is no longer feeding only the open core):
+- `inTriangleStrict_convexCombo` — a strict interior point of a triangle in either orientation is a strict convex combination of the three vertices (the negative-orientation case reduces to the proved positive case by swapping two vertices);
+- `inTriangleStrict_not_lexMin` — such an interior point is never lexicographically minimal (leftmost, then lowest) among the three vertices, because its coordinates are strict positive-weight averages of the vertices' coordinates;
+- `lexMin_not_inTriangleStrict` — combining with `SAWUmlaufEar.exists_lex_min_mem`, the lexicographically minimal vertex of the polygon is never in the strict interior of any triangle spanned by polygon vertices, i.e. the extreme vertex is a convex-hull vertex, which is exactly what makes Meisters' Step-1 corner convex.
+
+These are documented in the file as preparation for `exists_ear_clip`: they are imported into the chain and link the previously stand-alone interior-point machinery into a consumed sub-chain, so they are recorded partial progress rather than a dead branch. The status note in `PROOF_STATUS.md` was updated to describe this round. The only remaining `sorry` in the Umlauf files is the single `exists_ear_clip` core.
+
 # Summary of changes for run 52a8f1b7-bc8c-408f-8d02-7f136c9025cb
 Continued the SAW.tex formalization, working exclusively on the top-priority discrete Hopf Umlaufsatz and leaving every other branch untouched. The whole library still builds successfully (`lake build`, 8121 jobs, including `RequestProject/SAWFinal.lean`).
 
