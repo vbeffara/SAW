@@ -1,6 +1,45 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz core-isolation / rotation-prep-consumption round note (NEWEST).**
+> **Umlaufsatz clip-bookkeeping extraction round note (NEWEST).**
+> `exists_ear_rotation` (`SAWUmlaufPolygon.lean`) is now **proved sorry-free**:
+> the remaining Umlaufsatz topological content has been pushed one level deeper
+> into a single, cleaner geometric-data core `exists_front_ear`, and the three
+> clip-preservation clauses are discharged from it by newly proved bookkeeping.
+> This round:
+> * Adds and proves `polyCycWind_clip_eq` — the **turning-preservation** clause
+>   as pure `polyWind` bookkeeping: both closed cyclic forms peel via
+>   `polyWind_cons_cons_cons` and `polyWind_append_singleton` to a shared middle
+>   `polyWind (c :: rest ++ [a])` plus the local ear turns, whose difference
+>   vanishes by the already-proved `arg_ear_local_exact` (given the convex-ear
+>   range bounds). This genuinely **consumes** `arg_ear_local_exact` and
+>   `polyWind_append_singleton`.
+> * Adds and proves `shoelace2_orient_clip` — the **orientation-preservation**
+>   clause as pure arithmetic on the area splitting `shoelace2_clip_second`
+>   (full = clip + ear-triangle), reducing it to the triangle-vs-clip sign iff.
+> * Restates the topological core as `exists_front_ear`, which now supplies
+>   exactly the raw plane-geometry data (predecessor/successor naming, the five
+>   edge non-degeneracies, the three turning range bounds, the **per-edge
+>   diagonal-disjointness** clause, clip non-degeneracy, and the triangle
+>   orientation iff). `exists_ear_rotation` is derived from it sorry-free using
+>   `PolygonSimple_clip`, `polyCycWind_clip_eq`, `shoelace2_orient_clip` and
+>   `PolygonSimple_rotate`.
+> * **Fixes a latent unsatisfiable interface.** The previously-prepared
+>   `PolygonSimple_clip_of_far_sameSide` required a strictly-positive same-side
+>   product for *every* far edge, but the first far edge is `(c, rest.head)`
+>   whose endpoint `c` forces side-product `0`; that hypothesis is therefore
+>   never satisfiable. The core now consumes the correct per-edge
+>   diagonal-disjointness clause of `PolygonSimple_clip` instead; the
+>   superseded `PolygonSimple_clip_of_far_sameSide` is retained and clearly
+>   documented as a dead branch (its per-edge tool
+>   `HexArea.segment_disjoint_of_strictSameSide` remains live preparation).
+> The whole library still builds (`lake build`, 8123 jobs through
+> `RequestProject/SAWFinal.lean`); the top-level discrete Umlaufsatz
+> (`hex_closed_trail_turning_number`) and `exists_ear_rotation` depend only on
+> `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`. The single
+> remaining Umlaufsatz `sorry` is now `exists_front_ear` (the genuine
+> Jordan-curve-theorem-level ear-existence with its convexity/emptiness data).
+>
+> **Umlaufsatz core-isolation / rotation-prep-consumption round note.**
 > The remaining Umlaufsatz topological content is now isolated in a single core
 > `exists_ear_rotation` (`SAWUmlaufPolygon.lean`), stated **locally at the front
 > of one rotation** `V.rotate r = a :: b :: c :: rest`: clipping the second

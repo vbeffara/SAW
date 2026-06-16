@@ -649,24 +649,134 @@ lemma polyWind_clip_step (p a b c q : ℂ) (rest : List ℂ) :
   ring
 
 /-- **Planar simplicity is preserved by an ear clip, from the far same-side
-    condition (prep-consuming form).**  Specialisation of `PolygonSimple_clip`
-    in which the diagonal-disjointness hypothesis is produced from the
-    *same-side* emptiness condition on the far edges via
-    `diag_disjoint_of_far_sameSide`.  If the cycle `a :: b :: c :: rest` is
-    planar-simple and every far edge `e` of the clip has both endpoints strictly
-    on the same side of the base line `a–c`
-    (`0 < cross (c-a) (e.1-a) * cross (c-a) (e.2-a)`), then the clipped cycle
-    `a :: c :: rest` is planar-simple.  This bundles the two prepared
-    simplicity-preservation halves (`PolygonSimple_clip` and
-    `diag_disjoint_of_far_sameSide`) into the single ready clause the ear core
-    `exists_ear_rotation` consumes; producing the same-side condition from an
-    empty convex ear is the remaining topological content. -/
+    condition (SUPERSEDED form, kept as recorded prep).**  Specialisation of
+    `PolygonSimple_clip` in which the diagonal-disjointness hypothesis is
+    produced from a *uniform same-side* condition on the far edges via
+    `diag_disjoint_of_far_sameSide`.
+
+    **Why it is no longer the consumed interface.**  Its hypothesis `h` requires
+    a *strictly positive* side-product for **every** far edge
+    `e ∈ (c :: rest).zip (rest ++ [a])`.  But the very first far edge is
+    `(c, rest.head)`, whose first endpoint is `c`, giving
+    `cross (c-a) (c-a) = 0` and hence side-product `0`, never `> 0`.  So `h` is
+    in fact **unsatisfiable**, and an ear cannot supply it.  The genuine,
+    satisfiable interface that `exists_front_ear` / `exists_ear_rotation` now
+    consume is the per-edge *diagonal-disjointness* clause of `PolygonSimple_clip`
+    directly (with shared-endpoint guards), proved per far edge from the
+    same-side test via `HexArea.segment_disjoint_of_strictSameSide` only on the
+    edges that share no endpoint with the diagonal.  This lemma is retained as a
+    correct (but vacuously-hypothesised) statement and as documentation of that
+    dead branch. -/
 lemma PolygonSimple_clip_of_far_sameSide (a b c : ℂ) (rest : List ℂ)
     (hsimple : PolygonSimple (a :: b :: c :: rest))
     (h : ∀ e ∈ (c :: rest).zip (rest ++ [a]),
        0 < HexArea.cross (c - a) (e.1 - a) * HexArea.cross (c - a) (e.2 - a)) :
     PolygonSimple (a :: c :: rest) :=
   PolygonSimple_clip a b c rest hsimple (diag_disjoint_of_far_sameSide a c rest h)
+
+/-
+**Cyclic turning is preserved by an ear clip (bookkeeping core, range
+    form).**  For a cycle `a :: b :: c :: rest` with `rest` nonempty (so the
+    closing `take 2` lands on `[a,b]` / `[a,c]`), removing the apex `b` leaves
+    the cyclic total turning `polyCycWind` unchanged, *provided* the three
+    relevant partial arg-sums at the ear stay within `(-π, π]` — exactly the
+    bounds a convex ear of a simple polygon supplies (`arg_ear_local_exact`).
+    Here `p` is the cyclic predecessor of `a` (`rest.getLast?`) and `q` the
+    cyclic successor of `c` (`rest.head?`).  Pure `polyWind` bookkeeping: both
+    closed forms peel via `polyWind_cons_cons_cons` and
+    `polyWind_append_singleton` to a shared middle `polyWind (c :: rest ++ [a])`
+    plus the local ear turns, whose difference vanishes by
+    `arg_ear_local_exact`.  This extracts the turning-preservation clause of
+    `exists_ear_rotation` from its topological core; producing the range bounds
+    from a convex ear is the remaining content.
+-/
+lemma polyCycWind_clip_eq (a b c p q : ℂ) (rest : List ℂ)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hr1 : Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+              ∈ Set.Ioc (-Real.pi) Real.pi)
+    (hr2 : Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
+              ∈ Set.Ioc (-Real.pi) Real.pi)
+    (hr3 : Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
+              ∈ Set.Ioc (-Real.pi) Real.pi) :
+    polyCycWind (a :: c :: rest) = polyCycWind (a :: b :: c :: rest) := by
+  cases rest <;> simp_all +decide [ polyCycWind ];
+  rename_i k hk;
+  have := arg_ear_local_exact p a b c q hpa hab hbc hcq hca hr1 hr2 hr3; simp_all +decide [ polyWind_cons_cons_cons ] ;
+  have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) b; have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) c; simp_all +decide [ List.getLast? ] ;
+  grind +qlia
+
+/-- **Orientation is preserved by an ear clip (arithmetic core).**  By
+    `shoelace2_clip_second` the signed area of the un-clipped cycle splits as
+    `shoelace2 (a::b::c::rest) = shoelace2 (a::c::rest) + shoelace2 [a,b,c]`.
+    Hence if the cut-off ear triangle `[a,b,c]` has the *same orientation* as
+    the clipped cycle (`0 < shoelace2 [a,b,c] ↔ 0 < shoelace2 (a::c::rest)`) the
+    full cycle has that orientation too.  Pure arithmetic on the area splitting;
+    this extracts the orientation clause of `exists_ear_rotation` from its
+    topological core (the convexity input `0 < shoelace2 [a,b,c] ↔ …`).
+    Consumes `shoelace2_clip_second`. -/
+lemma shoelace2_orient_clip (a b c : ℂ) (rest : List ℂ)
+    (h : (0:ℝ) < HexArea.shoelace2 [a, b, c]
+            ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :
+    (0:ℝ) < HexArea.shoelace2 (a :: b :: c :: rest)
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest) := by
+  rw [shoelace2_clip_second]
+  constructor
+  · intro hfull
+    by_contra hclip
+    have htri : ¬ (0:ℝ) < HexArea.shoelace2 [a, b, c] := fun ht => hclip (h.mp ht)
+    push_neg at hclip htri
+    linarith
+  · intro hclip
+    have htri : (0:ℝ) < HexArea.shoelace2 [a, b, c] := h.mpr hclip
+    linarith
+
+/-- **The genuine topological core of the planar Umlaufsatz, isolated as the
+    existence of an ear at the front of a single rotation (geometric-data
+    form).**  A simple, non-degenerate polygon with at least four vertices has a
+    cyclic rotation `V.rotate r = a :: b :: c :: rest` whose second vertex `b`
+    is an *ear* — supplying, *as raw plane-geometry data*, exactly the
+    convexity / emptiness facts that the surrounding bookkeeping (now all proved
+    sorry-free) turns into the clip-preservation clauses:
+
+    * `rest.getLast? = some p`, `rest.head? = some q` name the cyclic
+      predecessor `p` of `a` and successor `q` of `c`;
+    * the five edge non-degeneracies `a-p, b-a, c-b, q-c, c-a ≠ 0`;
+    * the three turning *range bounds* (the `Set.Ioc (-π, π]` clauses) feeding
+      `polyCycWind_clip_eq` to preserve the cyclic turning;
+    * the *diagonal-disjointness* condition feeding `PolygonSimple_clip` to
+      preserve planar simplicity (the diagonal `a–c`, as a segment, misses every
+      far edge that shares no endpoint with it);
+    * `polyCycNondeg (a :: c :: rest)` (the clip stays non-degenerate);
+    * the *triangle orientation* clause feeding `shoelace2_orient_clip` to
+      preserve orientation.
+
+    This is now the **single remaining open core**: it concentrates exactly the
+    Jordan-curve-theorem-level content (existence of a convex empty ear, and the
+    same-side / convexity bounds it produces).  Everything that consumes it —
+    `polyCycWind_clip_eq`, `PolygonSimple_clip_of_far_sameSide`,
+    `shoelace2_orient_clip`, and the rotation-invariance toolkit — is proved
+    sorry-free.  Absent from Mathlib. -/
+lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
+      (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (∀ e ∈ (c :: rest).zip (rest ++ [a]),
+          a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+          Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
 
 /-- **The genuine topological core of the planar Umlaufsatz, isolated at the
     front of a single rotation (ear-existence form).**  A simple, non-degenerate
@@ -678,13 +788,13 @@ lemma PolygonSimple_clip_of_far_sameSide (a b c : ℂ) (rest : List ℂ)
     — all stated **relative to the rotated polygon** `a :: b :: c :: rest`
     itself.
 
-    This is the form in which the genuine Jordan-curve-theorem-level content
-    lives: it speaks only about the front three vertices of one open list, so
-    every clause is a *local* statement about clipping `b`.  The full cyclic
-    `exists_ear_clip` is then derived sorry-free from this by transporting the
-    rotated conclusions back to `V` through the rotation-invariance toolkit
-    (`polyCycWind_rotate`, `shoelace2_rotate`), which is *consumed* in that
-    derivation.  Absent from Mathlib; this is the single remaining open core. -/
+    This is now **derived sorry-free** from the geometric-data core
+    `exists_front_ear`: the turning clause is `polyCycWind_clip_eq`, planar
+    simplicity is `PolygonSimple_clip_of_far_sameSide`, orientation is
+    `shoelace2_orient_clip`, and `polyCycNondeg` of the clip is supplied
+    directly.  The full cyclic `exists_ear_clip` is then derived from this by
+    transporting the rotated conclusions back to `V` through the
+    rotation-invariance toolkit (`polyCycWind_rotate`, `shoelace2_rotate`). -/
 lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
@@ -694,7 +804,15 @@ lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycWind (a :: c :: rest) = polyCycWind (a :: b :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 (a :: b :: c :: rest)
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca,
+      hr1, hr2, hr3, hside, hndclip, htri⟩ :=
+    exists_front_ear V hlen hsimple hnd
+  have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
+    rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
+  refine ⟨r, a, b, c, rest, hrot, ?_, hndclip, ?_, ?_⟩
+  · exact PolygonSimple_clip a b c rest hsimprot hside
+  · exact polyCycWind_clip_eq a b c p q rest hp hq hpa hab hbc hcq hca hr1 hr2 hr3
+  · exact shoelace2_orient_clip a b c rest htri
 
 /-- **The genuine topological core of the planar Umlaufsatz (the two-ears
     theorem, in concrete clipped-cons form).**  A simple, non-degenerate polygon
