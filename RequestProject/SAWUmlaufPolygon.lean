@@ -768,24 +768,36 @@ lemma shoelace2_orient_clip (a b c : ℂ) (rest : List ℂ)
     * the five edge non-degeneracies `a-p, b-a, c-b, q-c, c-a ≠ 0`;
     * the three turning *range bounds* (the `Set.Ioc (-π, π]` clauses) feeding
       `polyCycWind_clip_eq` to preserve the cyclic turning;
-    * the *one-sidedness* condition `0 < cross (c-a) (x-a) * cross (c-a) (y-a)`
-      for **all** `x, y ∈ rest` — i.e. every far vertex lies strictly on one
-      and the same side of the line `a–c` (the defining property of a
-      *one-sided ear*).  Via `HexArea.oneSided_far_edges_sameSide` this yields
-      the far-edge same-side condition, which feeds
-      `diag_disjoint_of_far_sameSide'` and hence `PolygonSimple_clip` to
-      preserve planar simplicity.  This is strictly cleaner than the previous
-      per-edge same-side clause: a *generic* empty convex ear (e.g. at the
-      extreme vertex) need not have all far edges same-side — only a genuine
-      one-sided ear does — so this states the true geometric heart of the gap;
+    * the *diagonal-disjointness* clause: the new diagonal `a–c` is
+      `Disjoint` (as a segment) from every far edge
+      `e ∈ (c :: rest).zip (rest ++ [a])` that shares no endpoint with it.
+      This is **exactly** the `hdiag` hypothesis of `PolygonSimple_clip`, so it
+      feeds planar-simplicity preservation directly.
+
+      **Correction (this round).**  A previous round stated this clause as the
+      stronger *one-sidedness* condition
+      `∀ x y ∈ rest, 0 < cross (c-a)(x-a) * cross (c-a)(y-a)` (every far vertex
+      strictly on one and the same side of line `a–c`).  That clause is
+      **false** in general: the simple, non-degenerate pentagon
+      `[(4,0),(6,0),(6,5),(0,0),(5,1)]` has *no* cyclic triple whose far
+      vertices are all on one side of the clip diagonal, yet it does have a
+      genuine ear (rotation `4`, clipping the vertex `(4,0)`) for which the
+      diagonal `(5,1)–(6,0)` misses every far edge and all the turning /
+      orientation / non-degeneracy clauses hold.  One-sidedness is merely a
+      *sufficient* (via `HexArea.oneSided_far_edges_sameSide` /
+      `diag_disjoint_of_far_sameSide'`) but not *necessary* condition for the
+      diagonal to miss the far edges, and it is not always satisfiable by an
+      ear, so demanding it made `exists_front_ear` unprovable.  The genuine,
+      always-satisfiable requirement is the diagonal-disjointness clause stated
+      here, which `PolygonSimple_clip` consumes directly.
     * `polyCycNondeg (a :: c :: rest)` (the clip stays non-degenerate);
     * the *triangle orientation* clause feeding `shoelace2_orient_clip` to
       preserve orientation.
 
-    This is now the **single remaining open core**: it concentrates exactly the
-    Jordan-curve-theorem-level content (existence of a convex empty ear, and the
-    same-side / convexity bounds it produces).  Everything that consumes it —
-    `polyCycWind_clip_eq`, `PolygonSimple_clip_of_far_sameSide`,
+    This is the **single remaining open core**: it concentrates exactly the
+    Jordan-curve-theorem-level content (existence of a convex empty ear whose
+    diagonal is interior, and the convexity turning bounds it produces).
+    Everything that consumes it — `polyCycWind_clip_eq`, `PolygonSimple_clip`,
     `shoelace2_orient_clip`, and the rotation-invariance toolkit — is proved
     sorry-free.  Absent from Mathlib. -/
 lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
@@ -800,8 +812,9 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
           ∈ Set.Ioc (-Real.pi) Real.pi) ∧
       (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
           ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (∀ x ∈ rest, ∀ y ∈ rest,
-          0 < HexArea.cross (c - a) (x - a) * HexArea.cross (c - a) (y - a)) ∧
+      (∀ e ∈ (c :: rest).zip (rest ++ [a]),
+          a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+          Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)) ∧
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
@@ -839,9 +852,7 @@ lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
   have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   refine ⟨r, a, b, c, rest, hrot, ?_, hndclip, ?_, ?_⟩
-  · exact PolygonSimple_clip a b c rest hsimprot
-      (diag_disjoint_of_far_sameSide' a c rest
-        (HexArea.oneSided_far_edges_sameSide a c rest hside))
+  · exact PolygonSimple_clip a b c rest hsimprot hside
   · exact polyCycWind_clip_eq a b c p q rest hp hq hpa hab hbc hcq hca hr1 hr2 hr3
   · exact shoelace2_orient_clip a b c rest htri
 

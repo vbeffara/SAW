@@ -1,6 +1,39 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz one-sided-ear round note (NEWEST).**
+> **Umlaufsatz correctness-fix round note (NEWEST).**
+> The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
+> (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
+> (Jordan-curve-theorem level, absent from Mathlib).  The whole library still
+> builds and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number`
+> still reduces to exactly this one gap (axioms: `propext, sorryAx,
+> Classical.choice, Quot.sound`).
+>
+> **What changed: the gap was FALSE and is now TRUE.**  The previous
+> "one-sided-ear" round had restated the planar-simplicity output clause of
+> `exists_front_ear` as the *one-sidedness* condition
+> `∀ x y ∈ rest, 0 < cross (c-a)(x-a) * cross (c-a)(y-a)` (every far vertex on
+> one and the same side of the clip diagonal `a–c`).  That clause is **false in
+> general**: the simple, non-degenerate pentagon `[(4,0),(6,0),(6,5),(0,0),(5,1)]`
+> has *no* cyclic triple whose far vertices are all on one side of the clip
+> diagonal (verified computationally over all 5 rotations), so the existence
+> statement could never be proved — a false `sorry` sitting under the main
+> theorem.  The same pentagon *does* have a genuine ear (rotation `4`, clipping
+> the vertex `(4,0)`): the diagonal `(5,1)–(6,0)` misses every far edge and all
+> the turning-range / orientation / non-degeneracy clauses hold.
+>
+> The fix replaces the one-sidedness clause by the **genuine, always-satisfiable
+> diagonal-disjointness clause** — exactly the `hdiag` hypothesis that
+> `PolygonSimple_clip` consumes:
+> `∀ e ∈ (c :: rest).zip (rest ++ [a]), a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →`
+> `  Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)`.
+> `exists_ear_rotation` now feeds this directly into `PolygonSimple_clip`
+> (no longer routing through `oneSided_far_edges_sameSide` /
+> `diag_disjoint_of_far_sameSide'`, which remain as correct, sorry-free but now
+> unconsumed preparation in `SAWUmlaufEarOneSided.lean` /
+> `SAWUmlaufPolygon.lean`).  The library builds end-to-end and the gap is now a
+> true statement (the classical discrete two-ears theorem), still open.
+
+> **Umlaufsatz one-sided-ear round note.**
 > The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
 > (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
 > (Jordan-curve-theorem level, absent from Mathlib).  The whole library still
