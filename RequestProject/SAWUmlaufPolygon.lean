@@ -48,6 +48,7 @@ import RequestProject.SAWUmlaufEarExtreme
 import RequestProject.SAWUmlaufEarSide
 import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
+import RequestProject.SAWUmlaufCorner
 
 open Real Complex ComplexConjugate
 
@@ -779,7 +780,8 @@ lemma far_edge_disjoint_earEdges (a b c : ℂ) (rest : List ℂ)
   have := List.mem_iff_get.mp he; obtain ⟨ k, hk ⟩ := this; simp_all +decide [ closedEdges ] ;
   grind +splitImp
 
-/-- **Diagonal disjointness from an empty closed corner (pure-geometry heart of
+/-
+**Diagonal disjointness from an empty closed corner (pure-geometry heart of
     the Jordan-segment piece).**  Stated for *single points*, free of lists.  If
     the corner triangle `a, b, c` is non-degenerate, the far-edge endpoints `u`,
     `w` are *not strictly inside* the triangle and *not on the closed diagonal
@@ -796,7 +798,14 @@ lemma far_edge_disjoint_earEdges (a b c : ℂ) (rest : List ℂ)
     `hDab` / `hDbc`), at an endpoint strictly inside (contradicting
     `hu_in`/`hw_in`), or on the diagonal (contradicting `hu_diag`/`hw_diag`);
     the degenerate collinear case puts `a` or `c` on `u–w`, again contradicting
-    `hDab`/`hDbc`.  Absent from Mathlib.  Recorded partial progress. -/
+    `hDab`/`hDbc`.  Absent from Mathlib.
+
+    **Now PROVED sorry-free** (previously the Jordan-segment gap), using the
+    constructive plane-geometry toolkit in `RequestProject.SAWUmlaufCorner`:
+    `HexArea.corner_exit_point` (the explicit first-crossing argument for the
+    generic case) and `HexArea.collinear_diag_a_mem` (the degenerate collinear
+    case), together with `HexArea.mem_segment_ab_of_cross` /
+    `mem_segment_bc_of_cross` and `HexArea.exists_real_smul_of_cross_zero`. -/
 lemma seg_diagonal_disjoint_of_corner (a b c u w : ℂ)
     (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
     (hu_in : ¬ HexArea.inTriangleStrict a b c u)
@@ -805,7 +814,78 @@ lemma seg_diagonal_disjoint_of_corner (a b c u w : ℂ)
     (hDab : Disjoint (segment ℝ a b) (segment ℝ u w))
     (hDbc : Disjoint (segment ℝ b c) (segment ℝ u w)) :
     Disjoint (segment ℝ a c) (segment ℝ u w) := by
-  sorry
+  apply Set.disjoint_left.mpr;
+  intro z hz_ac hz_uw
+  have hzline : HexArea.cross (c - a) (z - a) = 0 :=
+    HexArea.cross_eq_zero_of_mem_segment a c z hz_ac
+  have hzac : HexArea.cross (a - c) (z - c) = 0 := by
+    convert HexArea.cross_eq_zero_of_mem_segment c a z ( segment_symm ℝ a c ▸ hz_ac ) using 1
+  have hzab : 0 < HexArea.cross (b - a) (z - a) * HexArea.cross (b - a) (c - b) := by
+    obtain ⟨t, ht⟩ : ∃ t ∈ Set.Icc (0 : ℝ) 1, z = (1 - t) • a + t • c := by
+      rw [ segment_eq_image ] at hz_ac; aesop;
+    by_cases ht_zero : t = 0 <;> by_cases ht_one : t = 1 <;> simp_all +decide [ HexArea.cross ];
+    · exact hDab.le_bot ⟨ left_mem_segment _ _ _, hz_uw ⟩;
+    · exact False.elim <| hDbc.le_bot ⟨ by exact right_mem_segment ℝ _ _, hz_uw ⟩;
+    · nlinarith [ mul_self_pos.mpr ht_zero, mul_self_pos.mpr ( sub_ne_zero.mpr ht_one ), mul_self_pos.mpr hndtri, mul_pos ( sub_pos.mpr ( lt_of_le_of_ne ht.1.1 ( Ne.symm ht_zero ) ) ) ( sub_pos.mpr ( lt_of_le_of_ne ht.1.2 ht_one ) ) ]
+  have hzbc : 0 < HexArea.cross (c - b) (z - b) * HexArea.cross (b - a) (c - b) := by
+    obtain ⟨t, ht⟩ : ∃ t : ℝ, z = (1 - t) • a + t • c ∧ 0 ≤ t ∧ t ≤ 1 := by
+      rw [ segment_eq_image ] at hz_ac; obtain ⟨ t, ht, rfl ⟩ := hz_ac; exact ⟨ t, rfl, ht.1, ht.2 ⟩ ;
+    by_cases ht0 : t = 0 <;> by_cases ht1 : t = 1 <;> simp_all +decide [ sub_eq_iff_eq_add ];
+    · simp_all +decide [ HexArea.cross ];
+    · exact hDbc.le_bot ⟨ right_mem_segment ℝ b c, hz_uw ⟩;
+    · norm_num [ HexArea.cross ] at *;
+      nlinarith [ mul_self_pos.mpr hndtri, mul_self_pos.mpr ( sub_ne_zero.mpr ht0 ), mul_self_pos.mpr ( sub_ne_zero.mpr ht1 ) ];
+  -- Extract `s` with `z = (1-s)•u + s•w`, `s ∈ [0,1]` (from `segment_eq_image` on `hz_uw`); `z ≠ u ⇒ s > 0` (z ∈ segment ac but u ∉ segment ac ⇒ z ≠ u, from `hu_diag`), `z ≠ w ⇒ s < 1` (from `hw_diag`).
+  obtain ⟨s, hs⟩ : ∃ s : ℝ, 0 ≤ s ∧ s ≤ 1 ∧ z = (1 - s) • u + s • w := by
+    rw [ segment_eq_image ] at hz_uw; obtain ⟨ s, hs, rfl ⟩ := hz_uw; exact ⟨ s, hs.1, hs.2, rfl ⟩ ;
+  have hs_pos : 0 < s := by
+    contrapose! hu_diag;
+    cases le_antisymm hu_diag hs.1 ; aesop
+  have hs_lt_one : s < 1 := by
+    cases lt_or_eq_of_le hs.2.1 <;> simp_all +decide [ segment_eq_image ];
+    exact hw_diag _ hz_ac.choose_spec.1.1 hz_ac.choose_spec.1.2 hz_ac.choose_spec.2
+  have hz_minus_c : z - c = (1 - s) • (u - c) + s • (w - c) := by
+    simp +decide [ hs.2.2, smul_sub ] ; ring;
+  -- Multiply by `O`: with `Pu := cross (a-c)(u-c) * O`, `Pw := cross (a-c)(w-c) * O`, get `(1-s)*Pu + s*Pw = 0`, `0 < s < 1`.
+  set Pu := HexArea.cross (a - c) (u - c) * HexArea.cross (b - a) (c - b)
+  set Pw := HexArea.cross (a - c) (w - c) * HexArea.cross (b - a) (c - b)
+  have hPuPw : (1 - s) * Pu + s * Pw = 0 := by
+    convert congr_arg ( fun x : ℝ => x * HexArea.cross ( b - a ) ( c - b ) ) hzac using 1 ; ring;
+    · simp +zetaDelta at *;
+      rw [ show -c + z = ( 1 - s ) * ( u - c ) + s * ( w - c ) by linear_combination' hz_minus_c ] ; norm_num [ HexArea.cross ] ; ring;
+    · ring;
+  by_cases hPu : 0 < Pu;
+  · have := HexArea.corner_exit_point a b c z u hndtri hzab hzbc hzac hPu hu_in;
+    rcases this with ( ⟨ y, hy₁, hy₂ ⟩ | ⟨ y, hy₁, hy₂ ⟩ ) <;> [ exact hDab.le_bot ⟨ hy₂, by exact Convex.segment_subset ( convex_segment u w ) hz_uw ( left_mem_segment ℝ u w ) hy₁ ⟩ ; exact hDbc.le_bot ⟨ hy₂, by exact Convex.segment_subset ( convex_segment u w ) hz_uw ( left_mem_segment ℝ u w ) hy₁ ⟩ ];
+  · by_cases hPw : 0 < Pw;
+    · have := HexArea.corner_exit_point a b c z w hndtri hzab hzbc hzac hPw hw_in;
+      rcases this with ( ⟨ y, hy₁, hy₂ ⟩ | ⟨ y, hy₁, hy₂ ⟩ ) <;> simp_all +decide [ Set.disjoint_left ];
+      · apply hDab hy₂;
+        rw [ segment_eq_image ] at *;
+        rcases hy₁ with ⟨ θ, hθ, rfl ⟩ ; use ( 1 - θ ) * s + θ; simp +decide [ *, mul_add, add_mul, mul_assoc, mul_comm, mul_left_comm ] ;
+        exact ⟨ ⟨ by nlinarith [ hθ.1, hθ.2 ], by nlinarith [ hθ.1, hθ.2 ] ⟩, by ring ⟩;
+      · refine' hDbc hy₂ _;
+        rw [ segment_eq_image ] at *;
+        rcases hy₁ with ⟨ θ, hθ, rfl ⟩ ; use ( 1 - θ ) * s + θ; simp_all +decide [ sub_smul, add_smul ] ; ring;
+        exact ⟨ ⟨ by nlinarith, by nlinarith ⟩, trivial ⟩;
+    · -- Since $Pu \leq 0$ and $Pw \leq 0$, we have $Pu = 0$ and $Pw = 0$.
+      have hPu_zero : Pu = 0 := by
+        nlinarith
+      have hPw_zero : Pw = 0 := by
+        grind;
+      -- Since $Pu = 0$ and $Pw = 0$, we have $cross (a-c)(u-c) = 0$ and $cross (a-c)(w-c) = 0$.
+      have hPu_zero' : HexArea.cross (c - a) (u - a) = 0 := by
+        simp +zetaDelta at *;
+        simp_all +decide [ HexArea.cross ];
+        linarith
+      have hPw_zero' : HexArea.cross (c - a) (w - a) = 0 := by
+        simp_all +decide [ HexArea.cross ];
+        grind;
+      apply HexArea.collinear_diag_a_mem a c u w z (by
+      intro h; simp_all +decide [ sub_eq_iff_eq_add ] ;) hPu_zero' hPw_zero' hz_ac (by
+      rintro rfl; simp_all +decide [ HexArea.cross ] ;) (by
+      rintro rfl; simp_all +decide [ HexArea.cross ] ;
+      grind +splitIndPred) hz_uw hu_diag hw_diag |> fun h => hDab |> fun h' => h'.le_bot ⟨left_mem_segment ℝ a b, h⟩
 
 /-- **An empty corner triangle gives a disjoint diagonal (the Jordan-segment
     piece of the ear clip).**  If the closed cycle `a :: b :: c :: rest` is

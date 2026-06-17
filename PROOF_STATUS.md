@@ -1,6 +1,45 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-decomposition round note (NEWEST).**
+> **Umlaufsatz Jordan-segment-core round note (NEWEST).**
+> This round focused exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
+> The whole library still builds end-to-end (8126 jobs) and the top-level
+> theorem still reduces only to `sorryAx` (+ `propext, Classical.choice,
+> Quot.sound`).
+>
+> **What changed: the Jordan-segment core `seg_diagonal_disjoint_of_corner`
+> (one of the two previously-open cores) is now PROVED sorry-free**, so the
+> Umlaufsatz now rests on a *single* remaining open core,
+> `exists_front_ear_core` (the Meisters two-ears / ear-existence content with
+> its turning-range bounds and orientation).
+>
+> New fully-proved file `RequestProject/SAWUmlaufCorner.lean` (imported from
+> `SAWUmlaufPolygon`, hence in the `SAWFinal` build chain), containing six
+> sorry-free, reusable plane-geometry lemmas:
+> * `exists_real_smul_of_cross_zero` — vanishing 2-D cross product ⇒ real
+>   linear dependence (affine parameter on a carrier line).
+> * `mem_segment_ab_of_cross` / `mem_segment_bc_of_cross` — a point on an
+>   edge's carrier line with correct (orientation-agnostic, product-form) side
+>   signs lies on the closed edge.
+> * `corner_exit_point` — the **constructive crossing core**: a point moving
+>   from the relative interior of edge `a–c` towards an apex-side endpoint that
+>   is not strictly inside the triangle must hit closed edge `a–b` or `b–c`
+>   (explicit first-crossing parameter `τ⋆`; no analysis needed since every
+>   side test is affine).
+> * `collinear_diag_a_mem` — the degenerate collinear case: if both chord
+>   endpoints are on the carrier line of `a–c` but off the closed segment, and
+>   an interior point of `a–c` is on the chord, then `a` lies on the chord.
+>
+> Using these, `seg_diagonal_disjoint_of_corner` (in `SAWUmlaufPolygon.lean`)
+> is proved sorry-free: the chord/diagonal intersection point is strictly
+> interior to `a–c`, the crossing forces an apex-side endpoint, and
+> `corner_exit_point` (generic case) or `collinear_diag_a_mem` (collinear case)
+> produces a chord point on a polygon edge, contradicting edge-disjointness.
+>
+> So the Umlaufsatz now rests on exactly **one** open, true,
+> Jordan-curve-level core, `exists_front_ear_core`.
+
+> **Umlaufsatz ear-decomposition round note.**
 > This round focused exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
 > The whole library still builds end-to-end (8125 jobs) and the top-level

@@ -1,3 +1,18 @@
+# Summary of changes for run bf62f749-f1df-4489-b30a-ddd35ac51a28
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `RequestProject/SAWFinal.lean`), and the top-level theorem still reduces only to `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
+
+Main result this round: the Jordan-segment core `seg_diagonal_disjoint_of_corner` (in `RequestProject/SAWUmlaufPolygon.lean`) — one of the two previously-open cores of the Umlaufsatz — is now **proved sorry-free**. As a result the Umlaufsatz now rests on a *single* remaining open core, `exists_front_ear_core` (the Meisters two-ears / ear-existence content together with its turning-range bounds and orientation), instead of two.
+
+To get there I added a new, fully sorry-free, reusable plane-geometry file `RequestProject/SAWUmlaufCorner.lean` (imported from `SAWUmlaufPolygon`, hence transitively from `SAWFinal`, so it is in the build chain — not a dead branch), containing six proved lemmas:
+- `exists_real_smul_of_cross_zero` — a vanishing 2-D cross product gives real linear dependence (affine parameter on a carrier line).
+- `mem_segment_ab_of_cross` / `mem_segment_bc_of_cross` — a point on an edge's carrier line whose adjacent side tests have the correct (orientation-agnostic, product-form) signs lies on the closed edge.
+- `corner_exit_point` — the constructive crossing core: a point moving from the relative interior of edge `a–c` towards an apex-side endpoint that is not strictly inside the triangle must hit closed edge `a–b` or `b–c`. The proof is fully constructive (explicit first-crossing parameter), since every side test is affine, so no real analysis is needed.
+- `collinear_diag_a_mem` — the degenerate collinear case: if both chord endpoints lie on the carrier line of `a–c` but off the closed segment while an interior point of `a–c` lies on the chord, then `a` lies on the chord.
+
+These are then assembled into a sorry-free proof of `seg_diagonal_disjoint_of_corner`: the chord/diagonal intersection point is forced strictly interior to `a–c`, the crossing forces an apex-side endpoint, and `corner_exit_point` (generic case) or `collinear_diag_a_mem` (collinear case) produces a chord point on a polygon edge — contradicting the edge-disjointness hypotheses. I verified all new lemmas and `seg_diagonal_disjoint_of_corner` depend only on `propext, Classical.choice, Quot.sound`, and cleaned up the few leftover `exact?` calls into explicit terms.
+
+Status documentation (`PROOF_STATUS.md`) was updated with a round note, and the `seg_diagonal_disjoint_of_corner` docstring now records that it is proved. All partial progress is preserved as building Lean files; the single remaining Umlaufsatz `sorry` is the isolated, true, Jordan-curve-theorem-level core `exists_front_ear_core`, which is documented for future rounds.
+
 # Summary of changes for run 0151a863-6994-4840-a4f8-046b747875d0
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`), leaving every other branch untouched. The whole library still builds end-to-end (8125 jobs) and the top-level theorem still reduces only to the allowed axioms plus `sorryAx`.
 
