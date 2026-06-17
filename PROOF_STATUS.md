@@ -1,6 +1,32 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz false-bound fix round note (NEWEST).**
+> **Umlaufsatz middle-vertex-split round note (NEWEST).**
+> Focused exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
+> The whole library still builds end-to-end (8126 jobs) and the top theorem
+> still reduces only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`).
+>
+> **What changed.** The open local-turning core `ear_local_turning_identity`
+> (in `RequestProject/SAWUmlaufPolygon.lean`) is now **proved sorry-free from a
+> cleaner core `ear_turn_concat`**: the middle-vertex `arg`-split is discharged
+> exactly via the already-proved `arg_split_one_add` (with `w = (c-b)/(b-a)`,
+> using `(b-a)+(c-b) = c-a`, so `1+w = (c-a)/(b-a)` and `w/(1+w) = (c-b)/(c-a)`),
+> rewriting `arg((c-b)/(b-a)) = arg((c-a)/(b-a)) + arg((c-b)/(c-a))`. The
+> remaining gap is now the two-corner turning-concatenation identity
+> `ear_turn_concat` (the four-step chain `a-p → b-a → c-a → c-b → q-c` equals
+> the merged `a-p → c-a → q-c` as REAL turning, not just mod 2π).
+>
+> **Remaining open Umlaufsatz cores (both TRUE, Jordan-curve level).**
+> 1. `ear_turn_concat` — the irreducible no-2π-wrap content. Its docstring
+>    records the WARNING that it must NOT be split into the two per-corner
+>    facts (`rngA`/`rngC` fail ~38% of empty-ear cases; the wraps cancel only
+>    globally). High-effort automated attempts stall exactly at placing the
+>    cyclic neighbours `p, q` from emptiness/simplicity.
+> 2. `exists_empty_convex_ear` — the Meisters two-ears existence content
+>    (extreme convex vertex + farthest-vertex pivot; full `SAWUmlaufEar*`
+>    toolkit available but the rotation/induction assembly is not yet closed).
+>
+> **Umlaufsatz false-bound fix round note.**
 > Focused exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
 > The whole library still builds end-to-end (8126 jobs) and the top theorem

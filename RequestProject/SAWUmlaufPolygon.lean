@@ -1137,6 +1137,38 @@ lemma arg_split_one_add (w : ℂ) (hw : w ≠ 0) (hw1 : 1 + w ≠ 0) :
       rw [ Real.Angle.angle_eq_iff_two_pi_dvd_sub ] at h_arg_eq;
       obtain ⟨ k, hk ⟩ := h_arg_eq; rcases k with ⟨ _ | k ⟩ <;> norm_num at hk <;> nlinarith [ Real.pi_pos, h_arg_neg.1.1, h_arg_neg.1.2, h_arg_neg.2.1.1, h_arg_neg.2.1.2, h_arg_neg.2.2.1, h_arg_neg.2.2.2 ] ;
 
+/-- **The two-corner turning-concatenation core of an empty ear (the genuine,
+    irreducible no-wrap content).**  This is the form of `ear_local_turning_identity`
+    *after* the (fully proved) middle-vertex `arg`-split has been carried out:
+    the middle turn `arg((c-b)/(b-a))` has been split exactly into
+    `arg((c-a)/(b-a)) + arg((c-b)/(c-a))` (via `arg_split_one_add`, since
+    `(b-a)+(c-b) = c-a`), so the only remaining content is that the resulting
+    four-step direction chain `a-p → b-a → c-a → c-b → q-c` and the two-step
+    merged chain `a-p → c-a → q-c` have the *same* total real-valued turning
+    (not merely mod `2π`).
+
+    Both sides telescope to `arg((q-c)/(a-p))` mod `2π` (the same fact as
+    `ear_turning_identity_mod`); the genuine, Jordan-curve-theorem-level content
+    is that there is no `2π` wrap.  **WARNING (do not repeat the earlier false
+    decomposition):** this does NOT split into the two per-corner facts
+    `arg((b-a)/(a-p)) + arg((c-a)/(b-a)) = arg((c-a)/(a-p))` and
+    `arg((c-b)/(c-a)) + arg((q-c)/(c-b)) = arg((q-c)/(c-a))` — those analogues
+    (`rngA`/`rngC`) FAIL on roughly 38% of empty-ear cases; the `2π` wraps of
+    the two corners cancel only *globally*.  Absent from Mathlib. -/
+lemma ear_turn_concat (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - a) / (b - a))
+        + Complex.arg ((c - b) / (c - a)) + Complex.arg ((q - c) / (c - b))
+      = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) := by
+  sorry
+
 /-- **The local turning identity of an empty ear (the genuine, TRUE core).**
     Given a planar-simple, cyclically non-degenerate rotated cycle
     `a :: b :: c :: rest` whose middle vertex `b` is an empty ear (corner
@@ -1167,7 +1199,22 @@ lemma ear_local_turning_identity (a b c p q : ℂ) (rest : List ℂ)
     Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
         + Complex.arg ((q - c) / (c - b))
       = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) := by
-  sorry
+  -- The middle turn splits exactly via `arg_split_one_add` with `w = (c-b)/(b-a)`,
+  -- using `(b-a)+(c-b) = c-a`, hence `1 + w = (c-a)/(b-a)` and `w/(1+w) = (c-b)/(c-a)`.
+  have he1 : (1 : ℂ) + (c - b) / (b - a) = (c - a) / (b - a) := by
+    field_simp; ring
+  have hsplit : Complex.arg ((c - b) / (b - a))
+      = Complex.arg ((c - a) / (b - a)) + Complex.arg ((c - b) / (c - a)) := by
+    have hw : (c - b) / (b - a) ≠ 0 := div_ne_zero hbc hab
+    have hw1 : (1 : ℂ) + (c - b) / (b - a) ≠ 0 := by rw [he1]; exact div_ne_zero hca hab
+    have h := arg_split_one_add ((c - b) / (b - a)) hw hw1
+    rw [he1, show (c - b) / (b - a) / ((c - a) / (b - a)) = (c - b) / (c - a) by
+      field_simp] at h
+    exact h
+  rw [hsplit]
+  have hcat := ear_turn_concat a b c p q rest hsimple hnd hp hq hpa hab hbc hcq hca
+    hndtri hempty hdiag
+  linarith [hcat]
 
 /-- **The ear-existence core of the planar Umlaufsatz (geometric-data form,
     emptiness variant).**  Identical to `exists_front_ear` below, except that the

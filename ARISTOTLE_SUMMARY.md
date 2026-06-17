@@ -1,3 +1,16 @@
+# Summary of changes for run 5ada531e-12d4-4569-8afb-8914aeba6ada
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`) and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
+
+What changed (in `RequestProject/SAWUmlaufPolygon.lean`):
+- The local-turning core `ear_local_turning_identity` is now **proved sorry-free** from a cleaner, more faithful core `ear_turn_concat`. The reduction discharges the middle-vertex `arg`-split *exactly* using the already-proved `arg_split_one_add`: with `w = (c-b)/(b-a)` and the structural identity `(b-a)+(c-b) = c-a`, one has `1+w = (c-a)/(b-a)` and `w/(1+w) = (c-b)/(c-a)`, hence `arg((c-b)/(b-a)) = arg((c-a)/(b-a)) + arg((c-b)/(c-a))`. This moves genuine content (the middle vertex) out of the gap.
+- The new `ear_turn_concat` isolates exactly the irreducible no-`2π`-wrap content (the four-step direction chain `a-p → b-a → c-a → c-b → q-c` having the same real-valued turning as the merged `a-p → c-a → q-c`). Its docstring records the WARNING that it must NOT be split into the two per-corner facts (`rngA`/`rngC`), which fail on ~38% of empty-ear cases since the wraps cancel only globally — preventing repetition of an earlier false decomposition.
+
+Remaining open Umlaufsatz cores (both TRUE, Jordan-curve-theorem level, kept as compiling `sorry`s and both in the `SAWFinal` build chain):
+1. `ear_turn_concat` — the no-`2π`-wrap turning concatenation. High-effort automated attempts stall precisely at placing the cyclic neighbours `p, q` from emptiness/simplicity.
+2. `exists_empty_convex_ear` — the Meisters two-ears existence (extreme convex vertex + farthest-vertex pivot); the full `SAWUmlaufEar*` toolkit is available but the rotation/induction assembly is not yet closed.
+
+The dead `ear_turning_bounds` branch remains commented out with its recorded counterexample, and the proof status note (`PROOF_STATUS.md`) was updated to describe this round. No files were lost; partial progress is preserved as compiling Lean with the two remaining cores cleanly stated and documented.
+
 # Summary of changes for run 1b9d9078-2358-4b5c-9092-954455c017bd
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`) and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
 
