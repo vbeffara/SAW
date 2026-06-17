@@ -925,6 +925,68 @@ lemma diag_disjoint_of_empty_corner (a b c : ℂ) (rest : List ℂ)
     (hempty _ hu_rest) (hempty _ hw_rest)
     (hdiagempty _ hu_rest) (hdiagempty _ hw_rest) hDab hDbc
 
+/-- **The empty-convex-ear existence core (the genuine Meisters two-ears
+    content), without the local turning-range bounds.**  A simple,
+    non-degenerate polygon with at least four vertices has a cyclic rotation
+    `V.rotate r = a :: b :: c :: rest` whose middle vertex `b` is a convex ear:
+    the corner triangle `a b c` is non-degenerate, contains no far vertex
+    strictly inside (`hempty`) and none on the closed diagonal `a–c`
+    (`hdiag`), the five cyclic edge non-degeneracies hold, the clipped cycle
+    `a :: c :: rest` is still cyclically non-degenerate, and the cut-off ear
+    triangle has the *same orientation* as the clip (`0 < shoelace2 [a,b,c] ↔
+    0 < shoelace2 (a :: c :: rest)`).
+
+    This is the irreducible Jordan-curve-theorem-level core (absent from
+    Mathlib): choose the extreme (leftmost-lowest) convex vertex via
+    `HexArea.exists_lex_min_mem` / `lexMin_not_inTriangleStrict`, and if its
+    corner triangle is non-empty pivot to the vertex farthest from the base
+    diagonal (`HexArea.exists_max_cross`, `farthest_region_empty`,
+    `inTriangleStrict_pos_nest`, `subTri_axc_orient_pos`,
+    `inTriangleStrict_apex_sameSide`), splitting along an interior diagonal and
+    recursing on the strictly shorter sub-polygon.  Recorded partial progress:
+    consumed by `exists_front_ear_core` below. -/
+lemma exists_empty_convex_ear (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
+/-- **The convexity turning-range bounds of an empty convex ear.**  Given a
+    planar-simple, cyclically non-degenerate rotated cycle `a :: b :: c :: rest`
+    whose middle vertex `b` is an empty convex ear (corner triangle
+    non-degenerate, empty of far vertices and with empty diagonal `a–c`), the
+    three merged-turn partial arg-sums at the ear stay within `(-π, π]`.  These
+    are exactly the `(-π, π]` range hypotheses consumed by
+    `arg_ear_local_exact` / `polyCycWind_clip_eq` to make the ear-clip preserve
+    the cyclic turning *exactly* (no `2π` wrap), and they hold precisely because
+    a convex ear of a simple polygon does not wind around over the two clipped
+    steps.  Recorded partial progress: consumed by `exists_front_ear_core`
+    below. -/
+lemma ear_turning_bounds (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+        ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+    (Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
+        ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+    (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
+        ∈ Set.Ioc (-Real.pi) Real.pi) := by
+  sorry
+
 /-- **The ear-existence core of the planar Umlaufsatz (geometric-data form,
     emptiness variant).**  Identical to `exists_front_ear` below, except that the
     diagonal-disjointness clause is replaced by the more primitive *emptiness*
@@ -960,7 +1022,18 @@ lemma exists_front_ear_core (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
+      hempty, hdiag, hndclip, htri⟩ :=
+    exists_empty_convex_ear V hlen hsimple hnd
+  have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
+    rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
+  have hndrot : polyCycNondeg (a :: b :: c :: rest) := by
+    rw [← hrot]; exact (polyCycNondeg_rotate V r (by omega)).mpr hnd
+  obtain ⟨hr1, hr2, hr3⟩ :=
+    ear_turning_bounds a b c p q rest hsimprot hndrot hp hq hpa hab hbc hcq hca
+      hndtri hempty hdiag
+  exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
+    hr1, hr2, hr3, hempty, hdiag, hndclip, htri⟩
 
 /-- **The genuine topological core of the planar Umlaufsatz, isolated as the
     existence of an ear at the front of a single rotation (geometric-data

@@ -1,3 +1,15 @@
+# Summary of changes for run 8576c87f-32ae-479e-a744-97dfa5b95755
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end and the top-level theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
+
+Main progress this round: the previously single open core of the Umlaufsatz, `exists_front_ear_core` (in `RequestProject/SAWUmlaufPolygon.lean`), is now **proved as a sorry-free assembly** of two cleaner, faithful, focused sub-cores. The genuinely hard, irreducible Jordan-curve-level content is thereby isolated into two true, well-stated lemmas, each in the `SAWFinal` build chain:
+
+- `exists_empty_convex_ear` — the genuine Meisters two-ears / ear-existence content: a simple non-degenerate polygon with ≥4 vertices has a cyclic rotation `a :: b :: c :: rest` whose middle vertex `b` is an empty convex ear (non-degenerate corner triangle, empty of far vertices, empty diagonal `a–c`), with the five edge non-degeneracies, `polyCycNondeg` of the clip, and the orientation equivalence.
+- `ear_turning_bounds` — the three convexity turning-range `(-π, π]` bounds consumed by `arg_ear_local_exact` / `polyCycWind_clip_eq`.
+
+All of `exists_front_ear_core`'s bundling, rotation-transport, and edge-non-degeneracy wiring is now proved sorry-free; only these two true geometric cores remain open. Partial progress is preserved as compiling Lean code with sorries (not lost), and the two remaining sorries are documented in their docstrings with their intended proof routes (lex-min convex vertex + farthest-vertex pivot + diagonal split + strong induction for the existence core; arg-telescoping via `Complex.arg_mul` with neighbour-based cross-product sign facts for the turning bounds). A round note was added to `PROOF_STATUS.md`.
+
+I attempted both remaining sub-cores with the automated prover at high effort; neither closed yet (they are research-level), but the decomposition makes them sharply focused targets for future rounds and keeps the Umlaufsatz resting on exactly two clean, true lemmas instead of one monolithic gap.
+
 # Summary of changes for run bf62f749-f1df-4489-b30a-ddd35ac51a28
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `RequestProject/SAWFinal.lean`), and the top-level theorem still reduces only to `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
 

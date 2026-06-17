@@ -1,5 +1,33 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz ear-core split round note (NEWEST).**
+> Focused exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
+> The whole library still builds end-to-end and the top-level theorem still
+> reduces only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`).
+>
+> **What changed.** The previously single open core `exists_front_ear_core`
+> (`RequestProject/SAWUmlaufPolygon.lean`) is now **proved as an assembly** of
+> two cleaner, faithful, focused sorried cores, both true and both in the
+> `SAWFinal` build chain:
+> * `exists_empty_convex_ear` — the genuine Meisters two-ears / ear-existence
+>   content: a simple non-degenerate polygon with ≥4 vertices has a cyclic
+>   rotation `a :: b :: c :: rest` whose middle vertex `b` is an *empty convex
+>   ear* (corner triangle non-degenerate, empty of far vertices and with empty
+>   diagonal `a–c`), plus the five edge non-degeneracies, `polyCycNondeg` of
+>   the clip, and the orientation equivalence. Intended proof: lex-min convex
+>   vertex + farthest-vertex pivot + diagonal split + strong induction on
+>   length, using the `SAWUmlaufEar*` toolkit.
+> * `ear_turning_bounds` — the three convexity turning-range `(-π, π]` bounds
+>   consumed by `arg_ear_local_exact` / `polyCycWind_clip_eq`. Intended proof:
+>   telescope each arg-sum to `arg(product)` via `Complex.arg_mul`, with the
+>   `arg`-additivity side conditions supplied by cross-product sign facts about
+>   the neighbours `p, q` (NOT all far vertices) derived from emptiness +
+>   planar simplicity.
+>
+> The bundling/rotation-transport/edge-nondeg wiring of `exists_front_ear_core`
+> is now proved sorry-free; only these two true geometric cores remain open.
+
 > **Umlaufsatz Jordan-segment-core round note (NEWEST).**
 > This round focused exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
