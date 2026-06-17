@@ -1,3 +1,18 @@
+# Summary of changes for run 0151a863-6994-4840-a4f8-046b747875d0
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`), leaving every other branch untouched. The whole library still builds end-to-end (8125 jobs) and the top-level theorem still reduces only to the allowed axioms plus `sorryAx`.
+
+What I did this round (all in `RequestProject/SAWUmlaufPolygon.lean`): decomposed the single monolithic ear gap `exists_front_ear` into finer, individually-attackable, true pieces, turning `exists_front_ear` itself into a sorry-free assembly:
+
+- `far_edge_disjoint_earEdges` — **newly PROVED, sorry-free**: a guarded far edge of the ear clip is segment-disjoint from the two ear edges `a–b`, `b–c` (pure `PolygonSimple`/`closedEdges` bookkeeping). Axioms: `propext, Classical.choice, Quot.sound` only.
+- `seg_diagonal_disjoint_of_corner` — *(open, `sorry`)* the pure-geometry, list-free Jordan-segment heart (the genuine "crossing"/intermediate-value content): a non-degenerate corner whose far-edge endpoints are neither strictly inside the triangle nor on the closed diagonal, with the far edge disjoint from `a–b`, `b–c`, has its diagonal `a–c` disjoint from that far edge.
+- `diag_disjoint_of_empty_corner` — **sorry-free assembly**: derives the diagonal-disjointness clause from closed-corner emptiness plus planar simplicity, via the two lemmas above.
+- `exists_front_ear_core` — *(open, `sorry`)* the genuine Meisters two-ears / ear-existence content (extreme convex vertex + farthest-vertex pivot), in geometric-data form with an emptiness clause replacing the disjointness clause.
+- `exists_front_ear` — now a **sorry-free assembly** of `exists_front_ear_core` and `diag_disjoint_of_empty_corner`.
+
+I also folded in a correctness fix: the intermediate emptiness condition must additionally exclude a far vertex lying on the open diagonal `a–c` (`hdiagempty`), since plain strict-interior emptiness is too weak to guarantee diagonal-disjointness; both `exists_front_ear_core` and `diag_disjoint_of_empty_corner` now carry this clause.
+
+Net effect: the Umlaufsatz now rests on exactly two open, true, Jordan-curve-level cores (`seg_diagonal_disjoint_of_corner` and `exists_front_ear_core`) instead of one monolithic gap, with one new lemma proved sorry-free and several sorry-free assemblies wiring them to the main theorem. High-effort automated attempts on both remaining cores timed out, consistent with their being absent from Mathlib; they are kept as documented partial progress. All `SAWUmlaufEar*` preparation files remain imported (via `SAWUmlaufPolygon`) and documented as feeding these cores — none is a dead branch. Status notes were updated in `PROOF_STATUS.md`.
+
 # Summary of changes for run 13af5d3f-53ce-494c-ad18-b49e423dd7c8
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving every other branch untouched. The whole library still builds end-to-end (8125 jobs) and the top-level discrete Umlaufsatz `hex_closed_trail_turning_number` (`RequestProject/SAWUmlaufGaussBonnet.lean`) still reduces to exactly one remaining gap, depending only on `sorryAx` plus the allowed axioms `propext, Classical.choice, Quot.sound`.
 

@@ -755,6 +755,133 @@ lemma shoelace2_orient_clip (a b c : ℂ) (rest : List ℂ)
     have htri : (0:ℝ) < HexArea.shoelace2 [a, b, c] := h.mpr hclip
     linarith
 
+/-
+**A guarded far edge is disjoint from the two ear edges `a–b`, `b–c`
+    (simplicity bookkeeping).**  In a planar-simple closed cycle
+    `a :: b :: c :: rest`, any far edge `e ∈ (c :: rest).zip (rest ++ [a])`
+    sharing no endpoint with the diagonal vertices `a`, `c` also shares no
+    endpoint with the apex `b` (by `Nodup`), hence — being a *non-adjacent*
+    closed edge — is disjoint as a segment from both ear edges `a–b` and `b–c`.
+    Pure `closedEdges` / `PolygonSimple` bookkeeping (`closedEdges_clip`,
+    `List.of_mem_zip`).  This is the simplicity input consumed by
+    `diag_disjoint_of_empty_corner`: a far edge cannot cross the corner triangle
+    boundary along its `a–b` / `b–c` sides.
+-/
+lemma far_edge_disjoint_earEdges (a b c : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (e : ℂ × ℂ) (he : e ∈ (c :: rest).zip (rest ++ [a]))
+    (ha1 : a ≠ e.1) (ha2 : a ≠ e.2) (hc1 : c ≠ e.1) (hc2 : c ≠ e.2) :
+    Disjoint (segment ℝ a b) (segment ℝ e.1 e.2) ∧
+    Disjoint (segment ℝ b c) (segment ℝ e.1 e.2) := by
+  have hnd : b ∉ c :: rest ∧ b ∉ rest ++ [a] := by
+    cases hsimple ; aesop;
+  have := hsimple.2;
+  have := List.mem_iff_get.mp he; obtain ⟨ k, hk ⟩ := this; simp_all +decide [ closedEdges ] ;
+  grind +splitImp
+
+/-- **Diagonal disjointness from an empty closed corner (pure-geometry heart of
+    the Jordan-segment piece).**  Stated for *single points*, free of lists.  If
+    the corner triangle `a, b, c` is non-degenerate, the far-edge endpoints `u`,
+    `w` are *not strictly inside* the triangle and *not on the closed diagonal
+    segment* `a–c`, and the edge `u–w` is disjoint from both polygon edges
+    `a–b`, `b–c`, then the diagonal `a–c` is disjoint from `u–w`.
+
+    Proof (the genuine Jordan-curve-segment argument): suppose `z` lies on both
+    `a–c` and `u–w`.  If `u, w` are strictly on the same side of line `a–c`, the
+    whole edge is, contradicting `z ∈ a–c` (use
+    `HexArea.segment_disjoint_of_strictSameSide`).  Otherwise `u–w` crosses line
+    `a–c`; the portion of `u–w` on the apex (`b`) side of `a–c` near `z` lies in
+    the interior of triangle `a,b,c`, so following it to its apex-side endpoint
+    it must leave the triangle either through edge `a–b` or `b–c` (contradicting
+    `hDab` / `hDbc`), at an endpoint strictly inside (contradicting
+    `hu_in`/`hw_in`), or on the diagonal (contradicting `hu_diag`/`hw_diag`);
+    the degenerate collinear case puts `a` or `c` on `u–w`, again contradicting
+    `hDab`/`hDbc`.  Absent from Mathlib.  Recorded partial progress. -/
+lemma seg_diagonal_disjoint_of_corner (a b c u w : ℂ)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hu_in : ¬ HexArea.inTriangleStrict a b c u)
+    (hw_in : ¬ HexArea.inTriangleStrict a b c w)
+    (hu_diag : u ∉ segment ℝ a c) (hw_diag : w ∉ segment ℝ a c)
+    (hDab : Disjoint (segment ℝ a b) (segment ℝ u w))
+    (hDbc : Disjoint (segment ℝ b c) (segment ℝ u w)) :
+    Disjoint (segment ℝ a c) (segment ℝ u w) := by
+  sorry
+
+/-- **An empty corner triangle gives a disjoint diagonal (the Jordan-segment
+    piece of the ear clip).**  If the closed cycle `a :: b :: c :: rest` is
+    planar-simple, its corner triangle `a, b, c` is non-degenerate
+    (`cross (b-a) (c-b) ≠ 0`) with `c ≠ a`, and is *empty* — no far vertex
+    `x ∈ rest` lies strictly inside it (`hempty`) nor on the closed diagonal
+    `a–c` (`hdiagempty`) — then the diagonal `a–c` is disjoint, as a segment,
+    from every far edge `e ∈ (c :: rest).zip (rest ++ [a])` sharing no endpoint
+    with it — exactly the `hdiag` hypothesis of `PolygonSimple_clip`.
+
+    Sorry-free assembly: the far-edge endpoints lie in `rest` (guards), so
+    `hempty`/`hdiagempty` apply to them; `far_edge_disjoint_earEdges` supplies
+    edge disjointness from `a–b`, `b–c`; the pure-geometry heart
+    `seg_diagonal_disjoint_of_corner` concludes.  Recorded partial progress:
+    consumed by `exists_front_ear` below. -/
+lemma diag_disjoint_of_empty_corner (a b c : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0) (hca : c - a ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiagempty : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    ∀ e ∈ (c :: rest).zip (rest ++ [a]),
+       a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
+       Disjoint (segment ℝ a c) (segment ℝ e.1 e.2) := by
+  intro e he ha1 ha2 hc1 hc2
+  obtain ⟨he1, he2⟩ := List.of_mem_zip he
+  have hu_rest : e.1 ∈ rest := by
+    rcases List.mem_cons.mp he1 with h | h
+    · exact absurd h.symm hc1
+    · exact h
+  have hw_rest : e.2 ∈ rest := by
+    rcases List.mem_append.mp he2 with h | h
+    · exact h
+    · simp only [List.mem_singleton] at h; exact absurd h.symm ha2
+  obtain ⟨hDab, hDbc⟩ :=
+    far_edge_disjoint_earEdges a b c rest hsimple e he ha1 ha2 hc1 hc2
+  exact seg_diagonal_disjoint_of_corner a b c e.1 e.2 hndtri
+    (hempty _ hu_rest) (hempty _ hw_rest)
+    (hdiagempty _ hu_rest) (hdiagempty _ hw_rest) hDab hDbc
+
+/-- **The ear-existence core of the planar Umlaufsatz (geometric-data form,
+    emptiness variant).**  Identical to `exists_front_ear` below, except that the
+    diagonal-disjointness clause is replaced by the more primitive *emptiness*
+    clause `∀ x ∈ rest, ¬ inTriangleStrict a b c x` (no far vertex lies strictly
+    inside the corner triangle), and the apex non-degeneracy
+    `cross (b-a) (c-b) ≠ 0` is recorded explicitly.  `exists_front_ear` is then
+    derived from this by `diag_disjoint_of_empty_corner`, which turns emptiness
+    (plus planar simplicity) into the disjointness clause.
+
+    This concentrates the genuine Meisters two-ears / ear-existence content
+    (Jordan-curve-theorem level, absent from Mathlib): choose the extreme
+    (leftmost-lowest) convex vertex, and if its corner triangle is non-empty
+    pivot to the vertex farthest from the base diagonal, using the plane-geometry
+    backbone already proved sorry-free in the `SAWUmlaufEar*` files
+    (`exists_lex_min_mem`, `lexMin_not_inTriangleStrict`, `exists_max_cross`,
+    `farthest_region_empty`, `inTriangleStrict_pos_nest`, `subTri_axc_orient_pos`,
+    `inTriangleStrict_apex_sameSide`).  Recorded partial progress. -/
+lemma exists_front_ear_core (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
+          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
 /-- **The genuine topological core of the planar Umlaufsatz, isolated as the
     existence of an ear at the front of a single rotation (geometric-data
     form).**  A simple, non-degenerate polygon with at least four vertices has a
@@ -818,7 +945,14 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
+      hr1, hr2, hr3, hempty, hdiagempty, hndclip, htri⟩ :=
+    exists_front_ear_core V hlen hsimple hnd
+  have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
+    rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
+  have hside := diag_disjoint_of_empty_corner a b c rest hsimprot hndtri hca hempty hdiagempty
+  exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca,
+    hr1, hr2, hr3, hside, hndclip, htri⟩
 
 /-- **The genuine topological core of the planar Umlaufsatz, isolated at the
     front of a single rotation (ear-existence form).**  A simple, non-degenerate

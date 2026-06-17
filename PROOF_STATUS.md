@@ -1,6 +1,48 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz correctness-fix round note (NEWEST).**
+> **Umlaufsatz ear-decomposition round note (NEWEST).**
+> This round focused exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).
+> The whole library still builds end-to-end (8125 jobs) and the top-level
+> theorem still reduces only to `sorryAx` (+ `propext, Classical.choice,
+> Quot.sound`).
+>
+> **What changed: the single monolithic ear gap `exists_front_ear` is now
+> decomposed into finer, individually-attackable, true pieces** (all in
+> `RequestProject/SAWUmlaufPolygon.lean`):
+> * `far_edge_disjoint_earEdges` — **PROVED sorry-free** this round: a guarded
+>   far edge of the clip is segment-disjoint from the two ear edges `a–b`,
+>   `b–c` (pure `PolygonSimple`/`closedEdges` bookkeeping).
+> * `seg_diagonal_disjoint_of_corner` — *(open, `sorry`)* the pure-geometry,
+>   list-free Jordan-segment heart: a non-degenerate corner whose far-edge
+>   endpoints are neither strictly inside the triangle nor on the closed
+>   diagonal, with the far edge disjoint from `a–b`, `b–c`, has its diagonal
+>   `a–c` disjoint from that far edge.  This is the genuine
+>   intermediate-value/“crossing” content.
+> * `diag_disjoint_of_empty_corner` — **sorry-free assembly**: turns
+>   closed-corner emptiness (`hempty` strict-interior + `hdiagempty`
+>   no-vertex-on-diagonal) plus planar simplicity into the diagonal-disjointness
+>   clause, via `far_edge_disjoint_earEdges` + `seg_diagonal_disjoint_of_corner`.
+> * `exists_front_ear_core` — *(open, `sorry`)* the genuine Meisters two-ears /
+>   ear-existence content (extreme convex vertex + farthest-vertex pivot), in
+>   geometric-data form with the **emptiness** clause (strict-interior +
+>   no-vertex-on-diagonal) in place of the disjointness clause.
+> * `exists_front_ear` — now a **sorry-free assembly** of `exists_front_ear_core`
+>   and `diag_disjoint_of_empty_corner`.
+>
+> **Correctness fix folded in:** the intermediate emptiness clause must also
+> exclude a far vertex lying on the *open diagonal* `a–c` (`hdiagempty`); plain
+> strict-interior emptiness is too weak (a far vertex on the open diagonal would
+> break disjointness), so both `exists_front_ear_core` and
+> `diag_disjoint_of_empty_corner` carry the `hdiagempty` clause.
+>
+> So the Umlaufsatz now rests on exactly **two** open, true, Jordan-curve-level
+> cores (`seg_diagonal_disjoint_of_corner`, `exists_front_ear_core`); high-effort
+> attempts on both timed out (consistent with their being absent from Mathlib).
+> All `SAWUmlaufEar*` preparation files remain imported via
+> `SAWUmlaufPolygon` and documented as feeding these cores.
+
+> **Umlaufsatz correctness-fix round note.**
 > The single remaining Umlaufsatz `sorry` is still `exists_front_ear`
 > (`SAWUmlaufPolygon.lean`), the genuine Meisters two-ears / ear-existence core
 > (Jordan-curve-theorem level, absent from Mathlib).  The whole library still
