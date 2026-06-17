@@ -731,6 +731,38 @@ lemma polyCycWind_clip_eq (a b c p q : ℂ) (rest : List ℂ)
   have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) b; have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) c; simp_all +decide [ List.getLast? ] ;
   grind +qlia
 
+/-- **Cyclic turning is preserved by an ear clip — identity form (the genuine,
+    TRUE interface).**  Same conclusion as `polyCycWind_clip_eq`, but it takes
+    directly the *local turning identity* of the ear
+      `arg((b-a)/(a-p)) + arg((c-b)/(b-a)) + arg((q-c)/(c-b))`
+         `= arg((c-a)/(a-p)) + arg((q-c)/(c-a))`
+    instead of the three `(-π, π]` partial-sum range bounds.
+
+    **Why this replaces the range-bounds interface.**  The three
+    `Set.Ioc (-π) π` bounds (`ear_turning_bounds`) are *false* in general — the
+    third bound `arg((c-a)/(a-p)) + arg((q-c)/(c-a)) ∈ (-π, π]` is the sum of two
+    of the three exterior turns of the clipped triangle, which for any genuine
+    triangle sum to `2π − (third turn) ∈ (π, 2π)`, hence exceed `π`.  The bounds
+    were only ever a *sufficient* route to the local identity; the identity
+    itself is the true, weaker fact that the ear clip actually needs, and it
+    holds for an empty ear of a simple polygon (the two clipped steps do not
+    wind).  Pure `polyWind` bookkeeping, identical to `polyCycWind_clip_eq`
+    except the local identity is supplied as `hident`. -/
+lemma polyCycWind_clip_eq_of_identity (a b c p q : ℂ) (rest : List ℂ)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hident :
+        Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+            + Complex.arg ((q - c) / (c - b))
+          = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))) :
+    polyCycWind (a :: c :: rest) = polyCycWind (a :: b :: c :: rest) := by
+  cases rest <;> simp_all +decide [ polyCycWind ];
+  rename_i k hk;
+  have := hident; simp_all +decide [ polyWind_cons_cons_cons ] ;
+  have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) b; have := polyWind_append_singleton ( c :: q :: ( hk ++ [ a ] ) ) ( by simp +decide [ List.length ] ) c; simp_all +decide [ List.getLast? ] ;
+  grind +qlia
+
 /-- **Orientation is preserved by an ear clip (arithmetic core).**  By
     `shoelace2_clip_second` the signed area of the un-clipped cycle splits as
     `shoelace2 (a::b::c::rest) = shoelace2 (a::c::rest) + shoelace2 [a,b,c]`.
@@ -959,17 +991,27 @@ lemma exists_empty_convex_ear (V : List ℂ) (hlen : 4 ≤ V.length)
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   sorry
 
-/-- **The convexity turning-range bounds of an empty convex ear.**  Given a
-    planar-simple, cyclically non-degenerate rotated cycle `a :: b :: c :: rest`
-    whose middle vertex `b` is an empty convex ear (corner triangle
-    non-degenerate, empty of far vertices and with empty diagonal `a–c`), the
-    three merged-turn partial arg-sums at the ear stay within `(-π, π]`.  These
-    are exactly the `(-π, π]` range hypotheses consumed by
-    `arg_ear_local_exact` / `polyCycWind_clip_eq` to make the ear-clip preserve
-    the cyclic turning *exactly* (no `2π` wrap), and they hold precisely because
-    a convex ear of a simple polygon does not wind around over the two clipped
-    steps.  Recorded partial progress: consumed by `exists_front_ear_core`
-    below. -/
+/-
+**The convexity turning-range bounds of an empty convex ear — FALSE, kept
+    only as documentation of a dead branch.**
+
+    A previous round stated the ear-clip turning-preservation interface as the
+    three `Set.Ioc (-π) π` partial-sum bounds below.  **This statement is
+    false.**  Counterexample (a genuine empty convex ear of a simple polygon):
+    the convex CCW quadrilateral `a = 0, b = 20 + I, c = 19 + 2I, d = -1 + I`
+    (cycle `a :: b :: c :: [d]`, so `p = q = d`) has `b` an empty convex ear,
+    yet its third bound
+      `arg((c-a)/(a-p)) + arg((q-c)/(c-a)) ≈ 3.977 > π`.
+    Indeed that third sum is the sum of two of the three exterior turns of the
+    clipped triangle `a, c, d`, and the three exterior turns of any genuine
+    triangle sum to `2π`, so any two of them sum to `2π − (third) ∈ (π, 2π)`,
+    always exceeding `π`.  Hence the range-bounds interface can never be
+    satisfied by a real ear; it was a wrong *sufficient* packaging.  The genuine
+    fact the ear clip needs is the strictly weaker *local turning identity*
+    `ear_local_turning_identity` below (verified to hold for empty ears of
+    simple polygons, failing only for self-intersecting configurations), which
+    is consumed via `polyCycWind_clip_eq_of_identity`.
+
 lemma ear_turning_bounds (a b c p q : ℂ) (rest : List ℂ)
     (hsimple : PolygonSimple (a :: b :: c :: rest))
     (hnd : polyCycNondeg (a :: b :: c :: rest))
@@ -985,6 +1027,146 @@ lemma ear_turning_bounds (a b c p q : ℂ) (rest : List ℂ)
         ∈ Set.Ioc (-Real.pi) Real.pi) ∧
     (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
         ∈ Set.Ioc (-Real.pi) Real.pi) := by
+  sorry
+-/
+
+/-- **The local turning identity, mod `2π` (the fully-proved algebraic
+    backbone).**  Cast into `Real.Angle = ℝ / 2πℤ`, the ear-clip local turning
+    identity holds *unconditionally* (no geometry needed): both sides telescope
+    to `↑arg((q-c)/(a-p))`.  This isolates the genuine remaining content of
+    `ear_local_turning_identity` to the single integer fact that the real-valued
+    difference has *no `2π` wrap*.  Pure `Complex.arg_div_coe_angle` telescoping. -/
+lemma ear_turning_identity_mod (a b c p q : ℂ)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0) :
+    ((Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+        + Complex.arg ((q - c) / (c - b)) : ℝ) : Real.Angle)
+      = ((Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) : ℝ)
+          : Real.Angle) := by
+  simp only [Real.Angle.coe_add]
+  rw [Complex.arg_div_coe_angle hab hpa, Complex.arg_div_coe_angle hbc hab,
+      Complex.arg_div_coe_angle hcq hbc, Complex.arg_div_coe_angle hca hpa,
+      Complex.arg_div_coe_angle hcq hca]
+  abel
+
+/-
+**Single-vertex arg split `arg w = arg(1+w) + arg(w/(1+w))`.**  Holds
+    unconditionally for every `w ≠ 0` with `1 + w ≠ 0` (no range/sign
+    hypothesis).  Reason: `w = (1+w) * (w/(1+w))`, so the two summands are
+    congruent to `arg w` mod `2π`; moreover `Im (1+w) = Im w` and
+    `Im (w/(1+w)) = Im w / ‖1+w‖²` have the *same sign* as `Im w`, so both
+    summands lie on the same side of the real axis as `w`, which pins the
+    representative with no `2π` wrap.  This is the local, geometry-free building
+    block of the ear turning identity: with `w = (c-b)/(b-a)` it splits the ear
+    turn at `b` as `arg((c-b)/(b-a)) = arg((c-a)/(b-a)) + arg((c-b)/(c-a))`
+    (using `(b-a)+(c-b) = c-a`).  Absent from Mathlib.
+-/
+lemma arg_split_one_add (w : ℂ) (hw : w ≠ 0) (hw1 : 1 + w ≠ 0) :
+    Complex.arg w = Complex.arg (1 + w) + Complex.arg (w / (1 + w)) := by
+  by_cases h_im : w.im = 0;
+  · rw [ Complex.arg, Complex.arg, Complex.arg ] ; norm_num [ Complex.div_im, Complex.div_re, h_im ];
+    split_ifs <;> simp_all +decide [ Complex.ext_iff, Complex.normSq_apply ];
+    · exact False.elim <| absurd ‹_› <| not_lt_of_ge <| div_nonneg ( mul_nonneg ‹_› <| by linarith ) <| mul_self_nonneg _;
+    · lia;
+    · linarith;
+    · rw [ le_div_iff₀ ] at * <;> nlinarith [ mul_self_pos.2 hw, mul_self_pos.2 hw1 ];
+    · rw [ div_lt_iff₀ ] at * <;> nlinarith;
+  · by_cases h_im_pos : 0 < w.im;
+    · have h_arg_pos : Complex.arg (1 + w) ∈ Set.Ioo 0 Real.pi ∧ Complex.arg (w / (1 + w)) ∈ Set.Ioo 0 Real.pi := by
+        constructor <;> constructor <;> norm_num [ Complex.arg ];
+        · split_ifs <;> norm_num [ neg_div ];
+          · exact div_pos h_im_pos ( norm_pos_iff.mpr hw1 );
+          · linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( w.im / ‖1 + w‖ ) ];
+          · linarith;
+        · split_ifs <;> norm_num [ neg_div ];
+          · linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( w.im / ‖1 + w‖ ) ];
+          · exact div_pos h_im_pos ( norm_pos_iff.mpr hw1 );
+          · linarith;
+        · split_ifs <;> simp_all +decide [ Complex.div_re, Complex.div_im ];
+          · rw [ div_lt_div_iff_of_pos_right ] <;> nlinarith [ Complex.normSq_pos.mpr hw1 ];
+          · linarith [ Real.neg_pi_div_two_le_arcsin ( ( w.re * w.im / normSq ( 1 + w ) - w.im * ( 1 + w.re ) / normSq ( 1 + w ) ) / ( ‖w‖ / ‖1 + w‖ ) ), Real.arcsin_le_pi_div_two ( ( w.re * w.im / normSq ( 1 + w ) - w.im * ( 1 + w.re ) / normSq ( 1 + w ) ) / ( ‖w‖ / ‖1 + w‖ ) ), Real.pi_pos ];
+          · ring_nf at *;
+            nlinarith [ inv_pos.mpr ( normSq_pos.mpr hw1 ) ];
+        · split_ifs <;> norm_num [ Complex.div_re, Complex.div_im ] at *;
+          · linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( ( w.im * ( 1 + w.re ) / normSq ( 1 + w ) - w.re * w.im / normSq ( 1 + w ) ) / ( ‖w‖ / ‖1 + w‖ ) ) ];
+          · ring_nf at *;
+            exact neg_neg_of_pos ( mul_pos ( mul_pos ( mul_pos h_im_pos ( inv_pos.mpr ( normSq_pos.mpr hw1 ) ) ) ( inv_pos.mpr ( norm_pos_iff.mpr hw ) ) ) ( inv_pos.mpr ( norm_pos_iff.mpr hw1 ) |> inv_pos.mpr ) );
+          · linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( ( w.re * w.im / normSq ( 1 + w ) - w.im * ( 1 + w.re ) / normSq ( 1 + w ) ) / ( ‖w‖ / ‖1 + w‖ ) ) ];
+      have h_arg_sum : ∃ k : ℤ, Complex.arg w = Complex.arg (1 + w) + Complex.arg (w / (1 + w)) + 2 * Real.pi * k := by
+        have h_arg_sum : Complex.exp (Complex.I * Complex.arg w) = Complex.exp (Complex.I * (Complex.arg (1 + w) + Complex.arg (w / (1 + w)))) := by
+          have h_arg_sum : Complex.exp (Complex.I * Complex.arg w) = w / ‖w‖ ∧ Complex.exp (Complex.I * Complex.arg (1 + w)) = (1 + w) / ‖1 + w‖ ∧ Complex.exp (Complex.I * Complex.arg (w / (1 + w))) = (w / (1 + w)) / ‖w / (1 + w)‖ := by
+            have h_arg_sum : ∀ z : ℂ, z ≠ 0 → Complex.exp (Complex.I * Complex.arg z) = z / ‖z‖ := by
+              intro z hz; rw [ mul_comm ] ; rw [ Complex.exp_mul_I ] ; simp +decide [ hz, Complex.ext_iff ] ;
+              norm_cast; simp +decide [ Complex.cos_arg, Complex.sin_arg, hz ] ;
+            exact ⟨ h_arg_sum w hw, h_arg_sum ( 1 + w ) hw1, h_arg_sum ( w / ( 1 + w ) ) ( div_ne_zero hw hw1 ) ⟩;
+          simp_all +decide [ mul_add, Complex.exp_add ];
+          field_simp [mul_comm, mul_assoc, mul_left_comm];
+          rw [ div_eq_div_iff ] <;> norm_cast <;> ring <;> norm_num [ hw, hw1 ];
+        rw [ Complex.exp_eq_exp_iff_exists_int ] at h_arg_sum; obtain ⟨ k, hk ⟩ := h_arg_sum; exact ⟨ k, by norm_num [ Complex.ext_iff ] at hk; linarith ⟩ ;
+      obtain ⟨ k, hk ⟩ := h_arg_sum;
+      have h_arg_range : Complex.arg w ∈ Set.Ioo 0 Real.pi := by
+        rw [ Complex.arg ];
+        split_ifs <;> norm_num [ Complex.normSq, Complex.norm_def ] at *;
+        · exact ⟨ div_pos h_im_pos ( Real.sqrt_pos.mpr ( by nlinarith ) ), lt_of_le_of_lt ( Real.arcsin_le_pi_div_two _ ) ( by linarith [ Real.pi_pos ] ) ⟩;
+        · exact ⟨ by linarith [ Real.neg_pi_div_two_le_arcsin ( -w.im / Real.sqrt ( w.re * w.re + w.im * w.im ) ), Real.arcsin_le_pi_div_two ( -w.im / Real.sqrt ( w.re * w.re + w.im * w.im ) ), Real.pi_pos ], div_neg_of_neg_of_pos ( neg_neg_of_pos h_im_pos ) ( Real.sqrt_pos.mpr ( by nlinarith ) ) ⟩;
+        · linarith;
+      rcases k with ⟨ _ | k ⟩ <;> norm_num at * <;> nlinarith [ Real.pi_pos, h_arg_pos.1.1, h_arg_pos.1.2, h_arg_pos.2.1, h_arg_pos.2.2, h_arg_range.1, h_arg_range.2 ];
+    · -- Since $w.im < 0$, we have $Im(1 + w) < 0$ and $Im(w/(1 + w)) < 0$.
+      have h_im_neg : (1 + w).im < 0 ∧ (w / (1 + w)).im < 0 := by
+        simp_all +decide [ Complex.div_im ];
+        exact ⟨ lt_of_le_of_ne h_im_pos h_im, by rw [ div_lt_div_iff_of_pos_right ( normSq_pos.mpr hw1 ) ] ; nlinarith [ mul_self_pos.mpr h_im, Complex.normSq_apply ( 1 + w ) ] ⟩;
+      -- Since $w.im < 0$, we have $arg w \in (-\pi, 0)$, $arg (1 + w) \in (-\pi, 0)$, and $arg (w / (1 + w)) \in (-\pi, 0)$.
+      have h_arg_neg : w.arg ∈ Set.Ioo (-Real.pi) 0 ∧ (1 + w).arg ∈ Set.Ioo (-Real.pi) 0 ∧ (w / (1 + w)).arg ∈ Set.Ioo (-Real.pi) 0 := by
+        have h_arg_neg : ∀ z : ℂ, z.im < 0 → z.arg ∈ Set.Ioo (-Real.pi) 0 := by
+          intros z hz_neg
+          have h_arg_neg : z.arg ∈ Set.Ioo (-Real.pi) 0 := by
+            have h_arg_neg : z.arg < 0 := by
+              rw [ Complex.arg ];
+              split_ifs <;> norm_num [ Complex.normSq, Complex.norm_def ] at *;
+              · exact div_neg_of_neg_of_pos hz_neg ( Real.sqrt_pos.mpr ( by nlinarith ) );
+              · linarith;
+              · linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( -z.im / Real.sqrt ( z.re * z.re + z.im * z.im ) ) ]
+            have h_arg_pos : -Real.pi < z.arg := by
+              linarith [ Real.pi_pos, Complex.neg_pi_lt_arg z ]
+            exact ⟨h_arg_pos, h_arg_neg⟩;
+          exact h_arg_neg;
+        exact ⟨ h_arg_neg w ( lt_of_le_of_ne ( le_of_not_gt h_im_pos ) h_im ), h_arg_neg ( 1 + w ) h_im_neg.1, h_arg_neg ( w / ( 1 + w ) ) h_im_neg.2 ⟩;
+      have h_arg_eq : (w.arg : Real.Angle) = ((1 + w).arg + (w / (1 + w)).arg : ℝ) := by
+        convert Complex.arg_mul_coe_angle hw1 ( div_ne_zero hw hw1 ) using 1;
+        rw [ mul_div_cancel₀ _ hw1 ];
+      rw [ Real.Angle.angle_eq_iff_two_pi_dvd_sub ] at h_arg_eq;
+      obtain ⟨ k, hk ⟩ := h_arg_eq; rcases k with ⟨ _ | k ⟩ <;> norm_num at hk <;> nlinarith [ Real.pi_pos, h_arg_neg.1.1, h_arg_neg.1.2, h_arg_neg.2.1.1, h_arg_neg.2.1.2, h_arg_neg.2.2.1, h_arg_neg.2.2.2 ] ;
+
+/-- **The local turning identity of an empty ear (the genuine, TRUE core).**
+    Given a planar-simple, cyclically non-degenerate rotated cycle
+    `a :: b :: c :: rest` whose middle vertex `b` is an empty ear (corner
+    triangle non-degenerate, empty of far vertices and with empty diagonal
+    `a–c`), removing `b` preserves the local exterior-angle turning *exactly*:
+    the three local turns at `a, b, c` sum to the two merged turns at `a, c`,
+      `arg((b-a)/(a-p)) + arg((c-b)/(b-a)) + arg((q-c)/(c-b))`
+         `= arg((c-a)/(a-p)) + arg((q-c)/(c-a))`.
+    Here `p = rest.getLast?` is the cyclic predecessor of `a` and
+    `q = rest.head?` the cyclic successor of `c`.
+
+    Both sides are congruent mod `2π` (pure `Complex.arg` telescoping: both
+    equal `arg((q-c)/(a-p))` mod `2π`); the genuine, Jordan-curve-theorem-level
+    content is that there is **no `2π` wrap**, i.e. the two clipped steps do not
+    wind around — which holds because the ear is empty and the polygon simple.
+    This replaces the *false* range-bounds interface `ear_turning_bounds`
+    (commented out above) and is consumed via
+    `polyCycWind_clip_eq_of_identity`.  Absent from Mathlib. -/
+lemma ear_local_turning_identity (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
+        + Complex.arg ((q - c) / (c - b))
+      = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) := by
   sorry
 
 /-- **The ear-existence core of the planar Umlaufsatz (geometric-data form,
@@ -1012,11 +1194,8 @@ lemma exists_front_ear_core (V : List ℂ) (hlen : 4 ≤ V.length)
       a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
       HexArea.cross (b - a) (c - b) ≠ 0 ∧
       (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+          + Complex.arg ((q - c) / (c - b))
+        = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))) ∧
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       polyCycNondeg (a :: c :: rest) ∧
@@ -1029,11 +1208,11 @@ lemma exists_front_ear_core (V : List ℂ) (hlen : 4 ≤ V.length)
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   have hndrot : polyCycNondeg (a :: b :: c :: rest) := by
     rw [← hrot]; exact (polyCycNondeg_rotate V r (by omega)).mpr hnd
-  obtain ⟨hr1, hr2, hr3⟩ :=
-    ear_turning_bounds a b c p q rest hsimprot hndrot hp hq hpa hab hbc hcq hca
-      hndtri hempty hdiag
+  have hident :=
+    ear_local_turning_identity a b c p q rest hsimprot hndrot hp hq hpa hab hbc
+      hcq hca hndtri hempty hdiag
   exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
-    hr1, hr2, hr3, hempty, hdiag, hndclip, htri⟩
+    hident, hempty, hdiag, hndclip, htri⟩
 
 /-- **The genuine topological core of the planar Umlaufsatz, isolated as the
     existence of an ear at the front of a single rotation (geometric-data
@@ -1087,11 +1266,8 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
       rest.getLast? = some p ∧ rest.head? = some q ∧
       a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
       (Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - b) / (b - a))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (Complex.arg ((c - b) / (a - p)) + Complex.arg ((q - c) / (c - b))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
-      (Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))
-          ∈ Set.Ioc (-Real.pi) Real.pi) ∧
+          + Complex.arg ((q - c) / (c - b))
+        = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a))) ∧
       (∀ e ∈ (c :: rest).zip (rest ++ [a]),
           a ≠ e.1 → a ≠ e.2 → c ≠ e.1 → c ≠ e.2 →
           Disjoint (segment ℝ a c) (segment ℝ e.1 e.2)) ∧
@@ -1099,13 +1275,13 @@ lemma exists_front_ear (V : List ℂ) (hlen : 4 ≤ V.length)
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   obtain ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
-      hr1, hr2, hr3, hempty, hdiagempty, hndclip, htri⟩ :=
+      hident, hempty, hdiagempty, hndclip, htri⟩ :=
     exists_front_ear_core V hlen hsimple hnd
   have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   have hside := diag_disjoint_of_empty_corner a b c rest hsimprot hndtri hca hempty hdiagempty
   exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca,
-    hr1, hr2, hr3, hside, hndclip, htri⟩
+    hident, hside, hndclip, htri⟩
 
 /-- **The genuine topological core of the planar Umlaufsatz, isolated at the
     front of a single rotation (ear-existence form).**  A simple, non-degenerate
@@ -1134,13 +1310,13 @@ lemma exists_ear_rotation (V : List ℂ) (hlen : 4 ≤ V.length)
       ((0:ℝ) < HexArea.shoelace2 (a :: b :: c :: rest)
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   obtain ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca,
-      hr1, hr2, hr3, hside, hndclip, htri⟩ :=
+      hident, hside, hndclip, htri⟩ :=
     exists_front_ear V hlen hsimple hnd
   have hsimprot : PolygonSimple (a :: b :: c :: rest) := by
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   refine ⟨r, a, b, c, rest, hrot, ?_, hndclip, ?_, ?_⟩
   · exact PolygonSimple_clip a b c rest hsimprot hside
-  · exact polyCycWind_clip_eq a b c p q rest hp hq hpa hab hbc hcq hca hr1 hr2 hr3
+  · exact polyCycWind_clip_eq_of_identity a b c p q rest hp hq hpa hab hbc hcq hca hident
   · exact shoelace2_orient_clip a b c rest htri
 
 /-- **The genuine topological core of the planar Umlaufsatz (the two-ears

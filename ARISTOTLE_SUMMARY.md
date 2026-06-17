@@ -1,3 +1,16 @@
+# Summary of changes for run 1b9d9078-2358-4b5c-9092-954455c017bd
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`) and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
+
+CRITICAL SOUNDNESS FIX. I discovered that the previous decomposition's open core `ear_turning_bounds` (in `RequestProject/SAWUmlaufPolygon.lean`) — the three `Set.Ioc (-π) π` partial-sum "turning bounds" — is FALSE. Its third bound is the sum of two of the three exterior turns of the clipped triangle, which for any genuine triangle sum to `2π − (third turn) ∈ (π, 2π)`, hence always exceed π (explicit counterexample: the convex CCW quadrilateral `a=0, b=20+i, c=19+2i, d=-1+i`, where the bound ≈ 3.977 > π). The entire Umlaufsatz skeleton was therefore resting on an unprovable lemma — it could never have been completed as stated.
+
+WHAT I CHANGED (all verified to build):
+- Commented out the false `ear_turning_bounds`, keeping it as documentation of the dead branch with the counterexample recorded.
+- Isolated the genuine, TRUE fact the ear clip actually needs — the local turning identity `arg((b-a)/(a-p)) + arg((c-b)/(b-a)) + arg((q-c)/(c-b)) = arg((c-a)/(a-p)) + arg((q-c)/(c-a))` — as `ear_local_turning_identity` (left as `sorry`; checked numerically to hold for empty ears of simple polygons, failing only for self-intersecting configurations).
+- Added `polyCycWind_clip_eq_of_identity`, which consumes that identity directly (proved sorry-free), and rewired `exists_front_ear_core`, `exists_front_ear`, and `exists_ear_rotation` to thread the identity instead of the false bounds.
+- Proved two reusable backbone lemmas sorry-free: `ear_turning_identity_mod` (the identity holds in `Real.Angle = ℝ/2πℤ`, by pure `arg_div_coe_angle` telescoping) and `arg_split_one_add` (`arg w = arg(1+w) + arg(w/(1+w))` unconditionally — the local, geometry-free building block, applied with `w=(c-b)/(b-a)` since `(b-a)+(c-b)=c-a`).
+
+The Umlaufsatz now rests on exactly two open lemmas, BOTH TRUE: `ear_local_turning_identity` (whose only remaining content, given `ear_turning_identity_mod`, is the integer fact that the real-valued difference in `2πℤ` is `0` — no `2π` wrap) and `exists_empty_convex_ear` (the Meisters two-ears existence content). I also verified and recorded for future work that this identity does NOT split into two per-corner `(-π,π]` range facts (the analogous splits fail ~38% of empty-ear cases because the wraps cancel only globally), so the false-bound mistake is not repeated. The remaining cores are genuine Jordan-curve-theorem-level content; partial progress is preserved as compiling Lean with sorries, and a detailed round note was added to `PROOF_STATUS.md`.
+
 # Summary of changes for run 8576c87f-32ae-479e-a744-97dfa5b95755
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end and the top-level theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
 
