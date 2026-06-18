@@ -1,3 +1,18 @@
+# Summary of changes for run 4260020a-736e-465f-b75d-a7619ac1e065
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced. All partial progress and the full `SAWUmlaufEar*` toolkit remain in place and imported.
+
+What changed (all in `RequestProject/SAWUmlaufPolygon.lean`): I reformulated the single remaining open core into the inductively-correct shape and made the one-ear consumer sorry-free.
+
+- Diagnosis: the previous open core `exists_empty_convex_ear` (Meisters ear-existence, one-ear form) is NOT directly amenable to the standard split-and-recurse induction. Splitting a simple polygon along an interior diagonal yields two strictly shorter simple sub-polygons, but the single ear handed back by a one-ear induction hypothesis can have its tip at an endpoint of the cutting diagonal, where it fails to be an ear of the original polygon. The sound route is the genuine two-ears theorem.
+
+- New core in the correct form: added `exists_empty_convex_ear_avoiding`, the same empty-convex-ear existence statement strengthened with an arbitrary forbidden vertex `z` and the extra conclusion `b ≠ z` (the clean packaging of "≥ 2 ears"). With `z` set to the far diagonal endpoint, the recursion returns an ear that survives splitting. Its docstring records the precise obstruction and the intended strong-induction route (extreme lex-min convex vertex via `exists_lex_min_mem`/`lexMin_not_inTriangleStrict`; empty-corner base case; otherwise pivot to the farthest vertex via `exists_max_cross`/`farthest_region_empty`/`inTriangleStrict_pos_nest`/`subTri_axc_orient_pos` and split). This is the single remaining live `sorry`.
+
+- `exists_empty_convex_ear` is now PROVED sorry-free as a trivial one-line corollary (instantiate `z := 0` and drop the `b ≠ z` clause). Everything downstream of it (`exists_front_ear_core`, `exists_front_ear`, `exists_ear_clip`, `polygon_ear_reduction`, `polygon_umlaufsatz`, `hex_signed_turn_eq_six_sign_shoelace`) is unchanged and sorry-free.
+
+Net effect: the discrete Umlaufsatz still reduces to exactly one open lemma, but that lemma is now stated in the form that the genuine Meisters two-ears induction actually needs, with the obstruction documented, so future rounds can attempt the split-and-recurse construction directly. The other `sorry` token in the file (line ~1081) is inside a `/- ... -/` block documenting a known-false dead branch, not live code.
+
+I made two high-effort automated attempts at the full split-and-recurse construction (both the original one-ear form and the new forbidden-vertex form); both timed out, confirming that the remaining content — constructing the two sub-polygons as lists, proving their planar simplicity, cyclic non-degeneracy and strict length decrease, and transporting the recursively-found ear back to the full polygon — is a substantial multi-lemma development rather than a single proof. It is kept as one clearly-documented, compiling `sorry` so no progress is lost.
+
 # Summary of changes for run a86c077c-6237-44fd-a7a7-4bbbacb4bc1d
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
 

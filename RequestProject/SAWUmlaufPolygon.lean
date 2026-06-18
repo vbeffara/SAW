@@ -967,26 +967,63 @@ lemma diag_disjoint_of_empty_corner (a b c : ℂ) (rest : List ℂ)
     (hempty _ hu_rest) (hempty _ hw_rest)
     (hdiagempty _ hu_rest) (hdiagempty _ hw_rest) hDab hDbc
 
-/-- **The empty-convex-ear existence core (the genuine Meisters two-ears
-    content), without the local turning-range bounds.**  A simple,
-    non-degenerate polygon with at least four vertices has a cyclic rotation
-    `V.rotate r = a :: b :: c :: rest` whose middle vertex `b` is a convex ear:
-    the corner triangle `a b c` is non-degenerate, contains no far vertex
-    strictly inside (`hempty`) and none on the closed diagonal `a–c`
-    (`hdiag`), the five cyclic edge non-degeneracies hold, the clipped cycle
-    `a :: c :: rest` is still cyclically non-degenerate, and the cut-off ear
-    triangle has the *same orientation* as the clip (`0 < shoelace2 [a,b,c] ↔
+/-- **The empty-convex-ear existence core, in the inductively-correct
+    "forbidden-vertex" form (the genuine Meisters TWO-ears content).**  A
+    simple, non-degenerate polygon with at least four vertices, together with
+    *any* single forbidden vertex `z`, has a cyclic rotation
+    `V.rotate r = a :: b :: c :: rest` whose middle vertex `b` is an empty
+    convex ear **with tip `b ≠ z`**: the corner triangle `a b c` is
+    non-degenerate, contains no far vertex strictly inside (`hempty`) and none
+    on the closed diagonal `a–c` (`hdiag`), the five cyclic edge
+    non-degeneracies hold, the clipped cycle `a :: c :: rest` is still
+    cyclically non-degenerate, and the cut-off ear triangle has the *same
+    orientation* as the clip (`0 < shoelace2 [a,b,c] ↔
     0 < shoelace2 (a :: c :: rest)`).
 
+    **Why the forbidden vertex `z`.**  The bare one-ear statement
+    `exists_empty_convex_ear` (derived below) is *not* directly amenable to the
+    split-and-recurse induction: splitting a simple polygon along an interior
+    diagonal `d` yields two strictly shorter simple sub-polygons, but the
+    *single* ear handed back by a one-ear induction hypothesis on a sub-polygon
+    may have its tip at an endpoint of `d`, in which case it is **not** an ear
+    of the original polygon.  The standard Meisters fix is the genuine TWO-ears
+    theorem; the cleanest inductive packaging of "≥ 2 ears" is exactly this
+    forbidden-vertex form: with `z` set to the far diagonal endpoint, the
+    recursion returns an ear of the sub-polygon avoiding `z`, which therefore
+    survives as an ear of the whole polygon.  Deriving the one-ear corollary is
+    then trivial (instantiate `z` arbitrarily).
+
     This is the irreducible Jordan-curve-theorem-level core (absent from
-    Mathlib): choose the extreme (leftmost-lowest) convex vertex via
-    `HexArea.exists_lex_min_mem` / `lexMin_not_inTriangleStrict`, and if its
-    corner triangle is non-empty pivot to the vertex farthest from the base
-    diagonal (`HexArea.exists_max_cross`, `farthest_region_empty`,
-    `inTriangleStrict_pos_nest`, `subTri_axc_orient_pos`,
-    `inTriangleStrict_apex_sameSide`), splitting along an interior diagonal and
-    recursing on the strictly shorter sub-polygon.  Recorded partial progress:
-    consumed by `exists_front_ear_core` below. -/
+    Mathlib).  Intended route: strong induction on `V.length`.  Choose the
+    extreme (leftmost-lowest) convex vertex via `HexArea.exists_lex_min_mem` /
+    `lexMin_not_inTriangleStrict`; if its corner triangle is empty it is the
+    ear (use it, or its cyclic neighbour, to avoid `z`); otherwise pivot to the
+    vertex farthest from the base diagonal (`HexArea.exists_max_cross`,
+    `farthest_region_empty`, `inTriangleStrict_pos_nest`,
+    `subTri_axc_orient_pos`, `inTriangleStrict_apex_sameSide`), split along the
+    resulting interior diagonal and recurse on the strictly shorter
+    sub-polygons.  Recorded partial progress: consumed by
+    `exists_empty_convex_ear` immediately below. -/
+lemma exists_empty_convex_ear_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
+/-- **The empty-convex-ear existence core (one-ear corollary).**  A simple,
+    non-degenerate polygon with at least four vertices has a cyclic rotation
+    `V.rotate r = a :: b :: c :: rest` whose middle vertex `b` is an empty
+    convex ear.  Derived trivially from the forbidden-vertex form
+    `exists_empty_convex_ear_avoiding` (instantiate `z := 0` and drop the
+    `b ≠ z` clause).  Consumed by `exists_front_ear_core` below. -/
 lemma exists_empty_convex_ear (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
@@ -999,7 +1036,11 @@ lemma exists_empty_convex_ear (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  obtain ⟨r, a, b, c, p, q, rest, hrot, _hbz, hp, hq, hpa, hab, hbc, hcq, hca,
+      hndtri, hempty, hdiag, hndclip, htri⟩ :=
+    exists_empty_convex_ear_avoiding V hlen hsimple hnd 0
+  exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
+    hempty, hdiag, hndclip, htri⟩
 
 /-
 **The convexity turning-range bounds of an empty convex ear — FALSE, kept
