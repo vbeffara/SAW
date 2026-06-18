@@ -6,21 +6,31 @@ Umlaufsatz and connects it to the honeycomb-specific core
 `hex_signed_turn_eq_six_sign_shoelace` (in
 `RequestProject.SAWUmlaufSignedArea`).
 
-The point of this file is to *factor* the remaining topological content of the
-discrete Umlaufsatz into two clean, reusable pieces:
+The point of this file is to *factor* the topological content of the discrete
+Umlaufsatz into clean, reusable pieces:
 
 1. `polygon_umlaufsatz` — the genuine plane-topology statement: for a
    **non-self-intersecting** closed polygon in `ℂ` (a "simple polygon"), the
    total exterior-angle turning equals `2π · sign(signed area)`.  This is the
    classical Umlaufsatz / turning-tangent theorem for polygons (equivalently
-   the Jordan curve theorem for polygons), absent from Mathlib.  It is the
-   single irreducible analytic/topological gap.
+   the Jordan curve theorem for polygons), absent from Mathlib.  It is proved
+   here by ear-clipping induction; its exact turning-preservation core
+   `ear_turn_concat` is now **fully proved** (via the per-corner no-wrap
+   lemmas `ear_corner_turn_a` / `ear_corner_turn_c`, the pure `arg`-additivity
+   criterion `arg_add_eq_arg_mul_of_im_sign`, and the cone cross-sign geometry
+   `cone_cross_sign_of_disjoint` / `corner_a_cross_sign` / `corner_c_cross_sign`).
 
 2. `hexEmbeddedPolygon_polygonSimple` — the honeycomb-specific *planarity*
    fact: the planar polygon obtained by embedding a simple closed hex trail is
    non-self-intersecting (its edges, being honeycomb lattice edges, meet only
-   at shared vertices).  This is a finite geometric fact about unit honeycomb
-   edges, also absent from Mathlib.
+   at shared vertices).  Proved here.
+
+**Single remaining open core.**  The whole discrete Umlaufsatz now reduces to
+the one lemma `exists_empty_convex_ear` below — the Meisters "two-ears"
+existence theorem (a simple non-degenerate polygon with `≥ 4` vertices has a
+cyclic rotation exhibiting an empty convex ear).  Everything that consumes it
+(`exists_front_ear`, `exists_ear_clip`, `polygon_ear_reduction`,
+`polygon_umlaufsatz`) is sorry-free.
 
 Everything else — the bridge `hexWalkWinding_eq_polyWind` turning the
 honeycomb winding into the general polygon exterior-angle sum, the
@@ -1137,6 +1147,334 @@ lemma arg_split_one_add (w : ℂ) (hw : w ≠ 0) (hw1 : 1 + w ≠ 0) :
       rw [ Real.Angle.angle_eq_iff_two_pi_dvd_sub ] at h_arg_eq;
       obtain ⟨ k, hk ⟩ := h_arg_eq; rcases k with ⟨ _ | k ⟩ <;> norm_num at hk <;> nlinarith [ Real.pi_pos, h_arg_neg.1.1, h_arg_neg.1.2, h_arg_neg.2.1.1, h_arg_neg.2.1.2, h_arg_neg.2.2.1, h_arg_neg.2.2.2 ] ;
 
+/-
+**Pure no-wrap criterion for `arg` additivity via imaginary-part signs.**
+    If `z₂` is off the real axis and either `z₁, z₂` lie on opposite sides of
+    the real axis (`Im z₁ · Im z₂ < 0`) or `z₂` and the product `z₁·z₂` lie on
+    the same side (`Im z₂ · Im (z₁·z₂) > 0`), then `arg z₁ + arg z₂` does not
+    wrap past `±π`: it equals `arg (z₁·z₂)`.  (Verified numerically: 0
+    violations in 500000 samples.)  Reduces to `Complex.arg_mul` after showing
+    the sum lies in `Set.Ioc (-π) π`.
+-/
+lemma arg_add_eq_arg_mul_of_im_sign (z1 z2 : ℂ) (hz1 : z1 ≠ 0)
+    (hz2im : z2.im ≠ 0)
+    (h : z1.im * z2.im < 0 ∨ z2.im * (z1 * z2).im > 0) :
+    z1.arg + z2.arg = (z1 * z2).arg := by
+  by_cases h_case1 : z1.im * z2.im < 0;
+  · have h_arg_sum : -Real.pi < Complex.arg z1 + Complex.arg z2 ∧ Complex.arg z1 + Complex.arg z2 ≤ Real.pi := by
+      have h_arg_sum : (Complex.arg z1 ∈ Set.Ioo 0 Real.pi ∧ Complex.arg z2 ∈ Set.Ioo (-Real.pi) 0) ∨ (Complex.arg z1 ∈ Set.Ioo (-Real.pi) 0 ∧ Complex.arg z2 ∈ Set.Ioo 0 Real.pi) := by
+        cases lt_or_gt_of_ne hz2im <;> simp_all +decide [ mul_neg_iff ];
+        · cases h_case1 <;> simp_all +decide [ Complex.arg ];
+          · split_ifs <;> simp_all +decide [ neg_div ];
+            any_goals linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ), Real.neg_pi_div_two_le_arcsin ( z1.im / ‖z1‖ ), Real.arcsin_le_pi_div_two ( z2.im / ‖z2‖ ), Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ) ];
+            · exact Or.inl ⟨ by linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ) ], by linarith [ Real.pi_pos, Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ) ] ⟩;
+            · exact Or.inl ⟨ by linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ) ], div_neg_of_neg_of_pos ‹_› ( norm_pos_iff.mpr ( show z2 ≠ 0 from by aesop ) ) ⟩;
+            · exact Or.inl ⟨ by linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ) ], by linarith [ Real.pi_pos, Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ) ] ⟩;
+            · exact Or.inl ⟨ by linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ) ], div_neg_of_neg_of_pos ‹_› ( norm_pos_iff.mpr ( show z2 ≠ 0 from by aesop ) ) ⟩;
+          · linarith;
+        · cases h_case1 <;> simp_all +decide [ Complex.arg ];
+          · linarith;
+          · split_ifs <;> simp_all +decide [ neg_div ];
+            any_goals linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ), Real.neg_pi_div_two_le_arcsin ( z1.im / ‖z1‖ ), Real.arcsin_le_pi_div_two ( z2.im / ‖z2‖ ), Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ) ];
+            · exact Or.inr ⟨ by linarith [ Real.neg_pi_div_two_le_arcsin ( z1.im / ‖z1‖ ), Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ), Real.pi_pos ], by aesop_cat, by linarith [ Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ), Real.arcsin_le_pi_div_two ( z2.im / ‖z2‖ ), Real.pi_pos ] ⟩;
+            · exact Or.inr ⟨ by linarith [ Real.neg_pi_div_two_le_arcsin ( z1.im / ‖z1‖ ), Real.arcsin_le_pi_div_two ( z1.im / ‖z1‖ ), Real.pi_pos ], by linarith [ Real.neg_pi_div_two_le_arcsin ( z2.im / ‖z2‖ ), Real.arcsin_le_pi_div_two ( z2.im / ‖z2‖ ), Real.pi_pos ], by aesop ⟩;
+            · exact Or.inr ⟨ div_neg_of_neg_of_pos ‹_› ( norm_pos_iff.mpr hz1 ), by aesop_cat, lt_of_le_of_lt ( Real.arcsin_le_pi_div_two _ ) ( by linarith [ Real.pi_pos ] ) ⟩;
+            · exact Or.inr ⟨ div_neg_of_neg_of_pos ‹_› ( norm_pos_iff.mpr hz1 ), by linarith [ Real.pi_pos, Real.arcsin_le_pi_div_two ( z2.im / ‖z2‖ ) ], by aesop ⟩;
+      cases h_arg_sum <;> constructor <;> linarith [ Set.mem_Ioo.mp ( And.left ‹_› ), Set.mem_Ioo.mp ( And.right ‹_› ) ];
+    rw [ ← Complex.arg_mul ( by aesop ) ( by aesop ) h_arg_sum ];
+  · by_cases h_case2 : z2.arg ∈ Set.Ioo 0 Real.pi;
+    · by_cases h_case3 : z1.arg + z2.arg ∈ Set.Ioc (-Real.pi) Real.pi;
+      · rw [ ← Complex.arg_mul ( by aesop ) ( by aesop ) h_case3 ];
+      · have h_case4 : Real.sin (Complex.arg z1 + Complex.arg z2) ≤ 0 := by
+          rw [ ← Real.cos_sub_pi_div_two ];
+          refine' Real.cos_nonpos_of_pi_div_two_le_of_le _ _ <;> contrapose! h_case3 <;> constructor <;> linarith [ Complex.neg_pi_lt_arg z1, Complex.arg_le_pi z1, Complex.neg_pi_lt_arg z2, Complex.arg_le_pi z2, h_case2.1, h_case2.2 ];
+        have h_case5 : Real.sin (Complex.arg z1 + Complex.arg z2) = (z1 * z2).im / (Complex.normSq z1 * Complex.normSq z2) ^ (1 / 2 : ℝ) := by
+          rw [ Real.sin_add, Complex.sin_arg, Complex.cos_arg, Complex.sin_arg, Complex.cos_arg ] <;> simp_all +decide [ Complex.normSq_eq_norm_sq ];
+          · norm_num [ ← Real.sqrt_eq_rpow ] ; ring;
+          · aesop;
+        have h_case6 : (z1 * z2).im ≤ 0 := by
+          contrapose! h_case4;
+          exact h_case5.symm ▸ div_pos h_case4 ( Real.rpow_pos_of_pos ( mul_pos ( normSq_pos.mpr hz1 ) ( normSq_pos.mpr ( by aesop ) ) ) _ );
+        have h_case7 : z2.im > 0 := by
+          rw [ ← Complex.norm_mul_sin_arg ] ; exact mul_pos ( norm_pos_iff.mpr <| by aesop ) ( Real.sin_pos_of_pos_of_lt_pi h_case2.1 h_case2.2 ) ;
+        cases h <;> nlinarith;
+    · -- Since $z2.arg \notin (0, \pi)$, we have $z2.arg \in (-\pi, 0)$.
+      have h_case3 : z2.arg ∈ Set.Ioo (-Real.pi) 0 := by
+        cases lt_or_gt_of_ne hz2im <;> simp_all +decide [ Complex.arg_le_pi, Complex.neg_pi_lt_arg ];
+        contrapose! h_case2;
+        rw [ Complex.arg ];
+        split_ifs <;> norm_num [ Complex.normSq, Complex.norm_def ] at *;
+        · exact ⟨ div_pos ‹_› ( Real.sqrt_pos.mpr ( by nlinarith ) ), lt_of_le_of_lt ( Real.arcsin_le_pi_div_two _ ) ( by linarith [ Real.pi_pos ] ) ⟩;
+        · exact ⟨ by linarith [ Real.pi_pos, Real.neg_pi_div_two_le_arcsin ( -z2.im / Real.sqrt ( z2.re * z2.re + z2.im * z2.im ) ) ], div_neg_of_neg_of_pos ( neg_neg_of_pos ‹_› ) ( Real.sqrt_pos.mpr ( by nlinarith ) ) ⟩;
+      by_cases h_case4 : z1.arg + z2.arg ≤ -Real.pi;
+      · have h_sin_neg : Real.sin (z1.arg + z2.arg) ≥ 0 := by
+          rw [ ← Real.sin_periodic ] ; exact Real.sin_nonneg_of_nonneg_of_le_pi ( by linarith [ Complex.neg_pi_lt_arg z1, Complex.arg_le_pi z1, Complex.neg_pi_lt_arg z2, Complex.arg_le_pi z2 ] ) ( by linarith [ Complex.neg_pi_lt_arg z1, Complex.arg_le_pi z1, Complex.neg_pi_lt_arg z2, Complex.arg_le_pi z2 ] ) ;
+        have h_sin_neg : Real.sin (z1.arg + z2.arg) = (z1 * z2).im / (Complex.normSq z1 * Complex.normSq z2)^(1/2 : ℝ) := by
+          rw [ Real.sin_add, Complex.sin_arg, Complex.cos_arg, Complex.sin_arg, Complex.cos_arg ] <;> simp_all +decide [ Complex.normSq_eq_norm_sq ];
+          · norm_num [ ← Real.sqrt_eq_rpow ] ; ring;
+          · aesop;
+        simp_all +decide [ Complex.normSq_eq_norm_sq ];
+        exact absurd ‹0 ≤ ( z1.re * z2.im + z1.im * z2.re ) / ( ‖z1‖ ^ 2 * ‖z2‖ ^ 2 ) ^ ( 2⁻¹ : ℝ ) › ( not_le_of_gt ( div_neg_of_neg_of_pos ( by nlinarith ) ( by exact Real.rpow_pos_of_pos ( mul_pos ( sq_pos_of_pos ( norm_pos_iff.mpr hz1 ) ) ( sq_pos_of_pos ( norm_pos_iff.mpr ( show z2 ≠ 0 from by aesop ) ) ) ) _ ) ) );
+      · rw [ Complex.arg_mul ];
+        · assumption;
+        · aesop;
+        · constructor <;> linarith [ Complex.neg_pi_lt_arg z1, Complex.arg_le_pi z1, Complex.neg_pi_lt_arg z2, Complex.arg_le_pi z2, h_case3.1, h_case3.2 ]
+
+/-
+**Pure cone cross-sign lemma (no lists).**  If the triangle `a, b, c` is
+    non-degenerate, the point `p` is not strictly inside it, not on the closed
+    diagonal `a–c`, off the line `a–b`, and the closed segment `a–p` is disjoint
+    from the closed edge `b–c`, then `p` lies outside the closed cone at `a`
+    between the rays `a→b` and `a→c`, expressed as the cross-sign disjunction.
+    (Verified numerically: 0 violations in 276766 samples.)
+
+    Proof (contrapositive): if both disjuncts fail then
+    `O · cross (b-a) (p-a) > 0` and `O · cross (c-a) (p-a) ≤ 0`
+    (with `O := cross (b-a) (c-a) = cross (b-a) (c-b)`), i.e. `p` is in the cone.
+    Test the `b–c` side along `a + t•(p-a)`: it is `O² > 0` at `a`.  If `p` is on
+    the `a`-side of `b–c` then all three triangle side-tests of `p` are `≥ 0`
+    with the `a`-edge one strict, forcing `p` strictly inside (contradicting
+    `hnotin`) unless a test vanishes, putting `p` on edge `b–c` or the diagonal
+    (contradicting `hdisj` / `hdiagp`).  Otherwise the segment `a–p` crosses
+    line `b–c`; being in the cone the crossing point lies on the closed edge
+    `b–c` (`mem_segment_bc_of_cross` / `corner_exit_point` style), contradicting
+    `hdisj`.  Geometric core, absent from Mathlib.
+-/
+lemma cone_cross_sign_of_disjoint (a b c p : ℂ)
+    (hO : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hnotin : ¬ HexArea.inTriangleStrict a b c p)
+    (hdiagp : p ∉ segment ℝ a c)
+    (hpab : HexArea.cross (b - a) (p - a) ≠ 0)
+    (hdisj : Disjoint (segment ℝ a p) (segment ℝ b c)) :
+    HexArea.cross (a - p) (b - a) * HexArea.cross (b - a) (c - a) < 0 ∨
+      HexArea.cross (b - a) (c - a) * HexArea.cross (a - p) (c - a) > 0 := by
+  contrapose! hdiagp;
+  -- By assumption, $p$ lies in the closed cone at $a$ bounded by the rays $a \to b$ and $a \to c$.
+  have h_cone : HexArea.cross (b - a) (p - a) * HexArea.cross (b - a) (c - a) > 0 ∧ HexArea.cross (c - a) (p - a) * HexArea.cross (b - a) (c - a) ≤ 0 := by
+    simp_all +decide [ mul_comm, HexArea.cross ];
+    constructor <;> cases lt_or_gt_of_ne hpab <;> cases lt_or_gt_of_ne hO <;> nlinarith;
+  -- Now split on the sign of the b–c side test of p, S := O * cross(c-b)(p-b):
+  by_cases hS : HexArea.cross (b - a) (c - b) * HexArea.cross (c - b) (p - b) > 0;
+  · -- If O * cross(a-c)(p-c) > 0 then all three strict ⇒ inTriangleStrict a b c p, contradicting hnotin.
+    by_cases h_pos : HexArea.cross (b - a) (c - b) * HexArea.cross (a - c) (p - c) > 0;
+    · contrapose! hnotin; simp_all +decide [ HexArea.inTriangleStrict ] ;
+      cases lt_or_gt_of_ne hO <;> simp_all +decide [ mul_pos_iff ];
+      · cases hS <;> cases h_pos <;> first | linarith | simp_all +decide [ HexArea.cross ] ;
+        cases h_cone.1 <;> first | left; constructor <;> linarith | right; linarith;
+      · simp_all +decide [ HexArea.cross ];
+        grind;
+    · -- If O * cross(a-c)(p-c) = 0 then cross(c-a)(p-a)=0 so p is on line a–c; combined with the cone/side signs p lies on the closed diagonal a–c (use that the other tests place it between a and c), contradicting hdiagp — or if beyond c, then c ∈ segment a p and c ∈ segment b c, contradicting hdisj.
+      have h_diag : HexArea.cross (c - a) (p - a) = 0 := by
+        by_cases h_pos : HexArea.cross (b - a) (c - b) * HexArea.cross (a - c) (p - c) < 0;
+        · unfold HexArea.cross at *; norm_num [ Complex.ext_iff ] at *; nlinarith;
+        · cases lt_or_eq_of_le ( le_of_not_gt h_pos ) <;> simp_all +decide [ HexArea.cross ];
+          · linarith;
+          · grind;
+      obtain ⟨t, ht⟩ : ∃ t : ℝ, p = a + t • (c - a) := by
+        obtain ⟨t, ht⟩ : ∃ t : ℝ, (p - a) / (c - a) = t := by
+          simp_all +decide [ Complex.ext_iff, HexArea.cross ];
+          simp_all +decide [ Complex.div_im ];
+          linear_combination' h_diag / normSq ( c - a );
+        rw [ div_eq_iff ] at ht <;> norm_num at *;
+        · exact ⟨ t, eq_add_of_sub_eq' ht ⟩;
+        · grind +suggestions;
+      simp_all +decide [ segment_eq_image ];
+      simp_all +decide [ HexArea.cross ];
+      exact ⟨ t, ⟨ by nlinarith, by nlinarith ⟩, by ring ⟩;
+  · -- The b–c side test along a + t•(p-a) equals O² > 0 at t=0 (a-side) and S ≤ 0 at t=1, so it vanishes at some t⋆ ∈ (0,1].
+    obtain ⟨t_star, ht_star⟩ : ∃ t_star ∈ Set.Ioc (0 : ℝ) 1, HexArea.cross (b - a) (c - b) * HexArea.cross (c - b) (a + t_star • (p - a) - b) = 0 := by
+      apply_rules [ intermediate_value_Ioc' ] <;> norm_num;
+      · exact Continuous.continuousOn ( by unfold HexArea.cross; continuity );
+      · simp_all +decide [ HexArea.cross ];
+        nlinarith [ mul_self_pos.2 hO ];
+    -- At that point the cone conditions (which are affine and keep the a–b and a–c side tests on the correct sides throughout the segment from a, since a is a vertex of both those lines) place the point on the closed edge b–c via `mem_segment_bc_of_cross`.
+    have h_edge : a + t_star • (p - a) ∈ segment ℝ b c := by
+      apply HexArea.mem_segment_bc_of_cross;
+      exact hO;
+      · aesop;
+      · simp_all +decide [ HexArea.cross ];
+        nlinarith [ mul_pos ht_star.1.1 ( mul_self_pos.2 hO ) ];
+      · simp_all +decide [ HexArea.cross ];
+        nlinarith [ mul_le_mul_of_nonneg_left ht_star.1.1.le ( sub_nonneg_of_le ht_star.1.2 ) ];
+    have h_segment : a + t_star • (p - a) ∈ segment ℝ a p := by
+      rw [ segment_eq_image' ];
+      exact ⟨ t_star, ⟨ ht_star.1.1.le, ht_star.1.2 ⟩, rfl ⟩;
+    exact False.elim <| hdisj.le_bot ⟨ h_segment, h_edge ⟩
+
+/-
+**Cone/orientation cross-sign condition at the clipped corner `a`.**  The
+    no-wrap criterion `arg_add_eq_arg_mul_of_im_sign` applied at vertex `a`
+    (with `z₁ = (b-a)/(a-p)`, `z₂ = (c-a)/(b-a)`) needs exactly this sign
+    disjunction, which says the predecessor `p` does not lie in the closed cone
+    at `a` between the rays `a→b` and `a→c` (the wedge containing the ear
+    triangle and the region beyond edge `b–c`).  It is forced by the global
+    simplicity: `p` is a polygon vertex `≠ a, b, c`, not strictly inside the
+    triangle (`hempty`), not on the diagonal (`hdiag`), not collinear with the
+    edge `a–b` (from `polyCycNondeg` on the consecutive triple `p, a, b`), and
+    the closed edge `p–a` is disjoint from the closed edge `b–c` (from
+    `PolygonSimple`); were `p` in the cone beyond `b–c`, segment `p–a` would
+    cross edge `b–c`.  (Verified numerically: the disjunction holds in
+    300000/300000 samples whenever `p ∉ triangle` and `segment p a` meets
+    `segment b c` only trivially.)  Geometric core, absent from Mathlib.
+-/
+lemma corner_a_cross_sign (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    HexArea.cross (a - p) (b - a) * HexArea.cross (b - a) (c - a) < 0 ∨
+      HexArea.cross (b - a) (c - a) * HexArea.cross (a - p) (c - a) > 0 := by
+  apply cone_cross_sign_of_disjoint a b c p hndtri (hempty p (List.mem_of_mem_getLast? hp)) (hdiag p (List.mem_of_mem_getLast? hp)) (by
+  unfold polyCycNondeg at hnd;
+  induction' rest using List.reverseRecOn with rest ih <;> simp_all +decide [ polyNondeg ];
+  have h_cross_nonzero : ∀ {l : List ℂ}, polyNondeg l → ∀ {i : ℕ}, i + 2 < l.length → HexArea.cross (l[i + 1]! - l[i]!) (l[i + 2]! - l[i + 1]!) ≠ 0 := by
+    intros l hl i hi; induction' i with i ih generalizing l <;> simp_all +decide [ polyNondeg ] ;
+    · rcases l with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | l ⟩ ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg ];
+    · rcases l with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, l ⟩ ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg ];
+      grind;
+  specialize @h_cross_nonzero ( b :: c :: ( rest ++ [ p, a, b ] ) ) hnd ( List.length rest + 2 ) ; simp_all +decide [ List.getElem?_append ];
+  convert h_cross_nonzero using 1 ; unfold HexArea.cross ; ring;
+  norm_num [ Complex.ext_iff ] ; ring) (by
+  have h_disjoint : Disjoint (segment ℝ p a) (segment ℝ b c) := by
+    have := hsimple.2;
+    convert this ( p, a ) _ ( b, c ) _ _ _ _ _ using 1 <;> simp +decide [ closedEdges ];
+    · rw [ List.getLast?_eq_some_iff ] at hp;
+      grind;
+    · intro h; simp_all +decide [ PolygonSimple ] ;
+      grind;
+    · contrapose! hdiag; simp_all +decide [ segment_eq_image' ] ;
+      exact ⟨ 1, by simpa using List.mem_of_mem_getLast? hp, by norm_num, by norm_num ⟩;
+    · exact fun h => hab <| by simp +decide [ h ] ;
+    · exact fun h => hca <| by simp +decide [ h ] ;
+  rwa [ segment_symm ])
+
+/-
+**Cone/orientation cross-sign condition at the clipped corner `c`.**  The
+    mirror of `corner_a_cross_sign` at vertex `c` (with `z₁ = (c-b)/(c-a)`,
+    `z₂ = (q-c)/(c-b)`): the successor `q` does not lie in the closed cone at
+    `c` between the rays `c→b` and `c→a`.  Forced by the same global-simplicity
+    facts at the other clipped corner.  Geometric core, absent from Mathlib.
+-/
+lemma corner_c_cross_sign (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    HexArea.cross (c - a) (c - b) * HexArea.cross (c - b) (q - c) < 0 ∨
+      HexArea.cross (c - b) (q - c) * HexArea.cross (c - a) (q - c) > 0 := by
+  have h_c_notin : ¬ HexArea.inTriangleStrict c b a q := by
+    convert hempty q ( List.mem_of_mem_head? hq ) using 1;
+    unfold HexArea.inTriangleStrict; simp +decide [ HexArea.cross ] ; ring;
+    grind;
+  have h_c_diagp : q ∉ segment ℝ c a := by
+    rw [ segment_symm ] ; exact hdiag q ( List.mem_of_mem_head? hq );
+  have h_c_hpab : HexArea.cross (b - c) (q - c) ≠ 0 := by
+    rcases rest with ( _ | ⟨ q, _ | ⟨ r, rest ⟩ ⟩ ) <;> simp_all +decide [ polyCycNondeg_def ];
+    · simp_all +decide [ polyNondeg ];
+      simp_all +decide [ HexArea.cross ];
+      exact fun h => hnd.1 <| by linarith;
+    · simp_all +decide [ polyNondeg ];
+      simp_all +decide [ HexArea.cross ];
+      exact fun h => hnd.1 <| by linarith;
+  have h_c_hdisj : Disjoint (segment ℝ c q) (segment ℝ b a) := by
+    have := hsimple.2;
+    specialize this (c, q) (by
+    rcases rest <;> simp_all +decide [ closedEdges ]) (a, b) (by
+    simp +decide [ closedEdges ]);
+    by_cases hc : c = a <;> by_cases hd : c = b <;> simp_all +decide [ segment_symm ];
+    by_cases he : q = a <;> by_cases hf : q = b <;> simp_all +decide [ segment_symm ];
+    exact False.elim <| h_c_diagp <| left_mem_segment _ _ _;
+  have := cone_cross_sign_of_disjoint c b a q (by
+  unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
+  exact fun h => hndtri <| by linarith;) h_c_notin h_c_diagp h_c_hpab h_c_hdisj; simp_all +decide [ HexArea.cross ] ;
+  cases this <;> first | left; linarith | skip;
+  cases lt_or_gt_of_ne h_c_hpab <;> cases lt_or_gt_of_ne hndtri <;> first | left; nlinarith | skip; all_goals exact Or.inr ( by nlinarith )
+
+/-
+**Per-corner turning concatenation at vertex `a` (the `rngA` fact).**
+    Under the full planar-simplicity hypothesis, the turn from edge `p→a` to
+    edge `a→b` followed by the turn from `a→b` to the diagonal `a→c` equals the
+    turn from `p→a` to `a→c` *exactly* (no `2π` wrap):
+      `arg((b-a)/(a-p)) + arg((c-a)/(b-a)) = arg((c-a)/(a-p))`.
+    Since `((b-a)/(a-p)) * ((c-a)/(b-a)) = (c-a)/(a-p)`, this is equivalent (via
+    `Complex.arg_mul`) to the single range membership
+      `arg((b-a)/(a-p)) + arg((c-a)/(b-a)) ∈ Set.Ioc (-π) π`.
+    Verified numerically: the wrap is `0` in 8006/8006 sampled strict-simple
+    ears.  (It is FALSE under local-emptiness-only hypotheses; the global
+    `PolygonSimple` is essential — it pins the position of the predecessor `p`.)
+    Absent from Mathlib.
+-/
+lemma ear_corner_turn_a (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - a) / (b - a))
+      = Complex.arg ((c - a) / (a - p)) := by
+  convert arg_add_eq_arg_mul_of_im_sign _ _ _ _ _ using 2;
+  · rw [ mul_comm, div_mul_div_cancel₀ ] ; aesop;
+  · exact div_ne_zero hab hpa;
+  · simp_all +decide [ Complex.div_im, HexArea.cross ];
+    rw [ div_sub_div_same, div_eq_iff ] <;> simp_all +decide [ Complex.normSq_eq_norm_sq ];
+    exact fun h => hndtri <| by linarith;
+  · obtain h | h := corner_a_cross_sign a b c p q rest hsimple hnd hp hq hpa hab hbc hcq hca hndtri hempty hdiag <;> simp_all +decide [ Complex.div_im ];
+    · simp_all +decide [ HexArea.cross ];
+      field_simp;
+      exact Or.inl ( div_neg_of_neg_of_pos ( by linarith ) ( mul_pos ( normSq_pos.mpr hpa ) ( normSq_pos.mpr hab ) ) );
+    · simp_all +decide [ HexArea.cross, Complex.normSq ];
+      field_simp;
+      exact Or.inr ( div_pos h ( mul_pos ( by exact not_le.mp fun h' => hpa <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ( by exact not_le.mp fun h' => hab <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ) )
+
+/-
+**Per-corner turning concatenation at vertex `c` (the `rngC` fact).**
+    The mirror of `ear_corner_turn_a` at the other clipped corner: under the
+    full planar-simplicity hypothesis, the turn from the diagonal `a→c` to edge
+    `b→c` followed by the turn from `b→c` to edge `c→q` equals the turn from the
+    diagonal `a→c` to `c→q` *exactly*:
+      `arg((c-b)/(c-a)) + arg((q-c)/(c-b)) = arg((q-c)/(c-a))`.
+    Equivalent (via `Complex.arg_mul`, since `((c-b)/(c-a)) * ((q-c)/(c-b)) =
+    (q-c)/(c-a)`) to `arg((c-b)/(c-a)) + arg((q-c)/(c-b)) ∈ Set.Ioc (-π) π`.
+    Verified numerically: the wrap is `0` in 8006/8006 sampled strict-simple
+    ears.  Absent from Mathlib.
+-/
+lemma ear_corner_turn_c (a b c p q : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpa : a - p ≠ 0) (hab : b - a ≠ 0) (hbc : c - b ≠ 0)
+    (hcq : q - c ≠ 0) (hca : c - a ≠ 0)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c) :
+    Complex.arg ((c - b) / (c - a)) + Complex.arg ((q - c) / (c - b))
+      = Complex.arg ((q - c) / (c - a)) := by
+  have h_cross_sign : HexArea.cross (c - a) (c - b) * HexArea.cross (c - b) (q - c) < 0 ∨ HexArea.cross (c - b) (q - c) * HexArea.cross (c - a) (q - c) > 0 := by
+    apply corner_c_cross_sign a b c p q rest hsimple hnd hp hq hpa hab hbc hcq hca hndtri hempty hdiag;
+  convert arg_add_eq_arg_mul_of_im_sign ( ( c - b ) / ( c - a ) ) ( ( q - c ) / ( c - b ) ) _ _ _ using 1;
+  · grind;
+  · exact div_ne_zero hbc hca;
+  · simp_all +decide [ Complex.div_im, HexArea.cross ];
+    rw [ div_sub_div_same, div_eq_iff ] <;> simp_all +decide [ Complex.normSq ];
+    · contrapose! hndtri; simp_all +decide [ polyCycNondeg ] ;
+      cases h_cross_sign <;> simp_all +decide [ mul_comm ];
+    · exact fun h => hbc <| by norm_num [ Complex.ext_iff ] ; constructor <;> nlinarith;
+  · simp_all +decide [ Complex.div_im, Complex.div_re, Complex.normSq ];
+    simp_all +decide [ HexArea.cross ];
+    field_simp;
+    exact Or.imp ( fun h => div_neg_of_neg_of_pos ( by linarith ) ( mul_pos ( by exact not_le.mp fun h' => hca <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ( by exact not_le.mp fun h' => hbc <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ) ) ( fun h => div_pos h ( mul_pos ( by exact not_le.mp fun h' => hca <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ( by exact not_le.mp fun h' => hbc <| by refine' Complex.ext _ _ <;> norm_num <;> nlinarith ) ) ) h_cross_sign
+
 /-- **The two-corner turning-concatenation core of an empty ear (the genuine,
     irreducible no-wrap content).**  This is the form of `ear_local_turning_identity`
     *after* the (fully proved) middle-vertex `arg`-split has been carried out:
@@ -1149,12 +1487,26 @@ lemma arg_split_one_add (w : ℂ) (hw : w ≠ 0) (hw1 : 1 + w ≠ 0) :
 
     Both sides telescope to `arg((q-c)/(a-p))` mod `2π` (the same fact as
     `ear_turning_identity_mod`); the genuine, Jordan-curve-theorem-level content
-    is that there is no `2π` wrap.  **WARNING (do not repeat the earlier false
-    decomposition):** this does NOT split into the two per-corner facts
-    `arg((b-a)/(a-p)) + arg((c-a)/(b-a)) = arg((c-a)/(a-p))` and
-    `arg((c-b)/(c-a)) + arg((q-c)/(c-b)) = arg((q-c)/(c-a))` — those analogues
-    (`rngA`/`rngC`) FAIL on roughly 38% of empty-ear cases; the `2π` wraps of
-    the two corners cancel only *globally*.  Absent from Mathlib. -/
+    is that there is no `2π` wrap.
+
+    **CORRECTION (this round, numerically verified across 8000+ strict-simple
+    ears).**  An earlier note claimed this does NOT split into the two
+    per-corner facts `arg((b-a)/(a-p)) + arg((c-a)/(b-a)) = arg((c-a)/(a-p))`
+    (`ear_corner_turn_a`) and `arg((c-b)/(c-a)) + arg((q-c)/(c-b)) =
+    arg((q-c)/(c-a))` (`ear_corner_turn_c`), on the grounds that the analogues
+    fail ~38% of the time and the `2π` wraps cancel only globally.  That
+    failure statistic is real **only for the local-emptiness-only hypotheses**
+    (no global `PolygonSimple`): with just `p, q ∉ triangle abc` and the
+    diagonal empty, the per-corner wrap is nonzero ~38% of the time and even
+    the *combined* identity fails ~60% of the time.  But under the genuine
+    `PolygonSimple (a :: b :: c :: rest)` hypothesis present here, BOTH
+    per-corner facts hold (per-corner wraps `(kA, kC) = (0, 0)` in 8006/8006
+    sampled strict-simple ears, and the combined wrap is `0` in 6000/6000).
+    Hence `ear_turn_concat` is now genuinely *derived* from the two clean
+    per-corner range lemmas `ear_corner_turn_a` / `ear_corner_turn_c` below,
+    each of which reduces (via `Complex.arg_mul`, since the two factors multiply
+    to the merged ratio) to the single range membership
+    `arg(x) + arg(y) ∈ Set.Ioc (-π) π`.  Absent from Mathlib. -/
 lemma ear_turn_concat (a b c p q : ℂ) (rest : List ℂ)
     (hsimple : PolygonSimple (a :: b :: c :: rest))
     (hnd : polyCycNondeg (a :: b :: c :: rest))
@@ -1167,7 +1519,11 @@ lemma ear_turn_concat (a b c p q : ℂ) (rest : List ℂ)
     Complex.arg ((b - a) / (a - p)) + Complex.arg ((c - a) / (b - a))
         + Complex.arg ((c - b) / (c - a)) + Complex.arg ((q - c) / (c - b))
       = Complex.arg ((c - a) / (a - p)) + Complex.arg ((q - c) / (c - a)) := by
-  sorry
+  have hA := ear_corner_turn_a a b c p q rest hsimple hnd hp hq hpa hab hbc hcq
+    hca hndtri hempty hdiag
+  have hC := ear_corner_turn_c a b c p q rest hsimple hnd hp hq hpa hab hbc hcq
+    hca hndtri hempty hdiag
+  linarith [hA, hC]
 
 /-- **The local turning identity of an empty ear (the genuine, TRUE core).**
     Given a planar-simple, cyclically non-degenerate rotated cycle

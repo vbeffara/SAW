@@ -1,3 +1,19 @@
+# Summary of changes for run a86c077c-6237-44fd-a7a7-4bbbacb4bc1d
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
+
+Main achievement: the exact turning-preservation core `ear_turn_concat` — previously one of the two open Jordan-curve-theorem-level cores of the Umlaufsatz — is now **fully proved sorry-free**. As a result, the entire discrete Umlaufsatz now reduces to a **single** remaining open core.
+
+How (all in `RequestProject/SAWUmlaufPolygon.lean`):
+- Corrected a documented falsehood. An earlier note claimed `ear_turn_concat` cannot be split into two per-corner facts (because they "fail ~38% of the time"). I verified numerically that this failure is real only under local-emptiness-only hypotheses; under the genuine global `PolygonSimple` hypothesis the lemma actually carries, **both** per-corner facts hold (per-corner wraps `(0,0)` in 8006/8006 strict-simple ears; the local-only combined identity fails ~60%). The docstrings were updated accordingly.
+- Added and proved six new sorry-free lemmas implementing this decomposition:
+  - `arg_add_eq_arg_mul_of_im_sign` — a pure no-wrap criterion for `arg` additivity from imaginary-part signs;
+  - `cone_cross_sign_of_disjoint` — the pure plane-geometry fact that a point off the cone at a vertex satisfies a cross-sign disjunction (segment-crossing argument);
+  - `corner_a_cross_sign` / `corner_c_cross_sign` — extracting that cone condition from `PolygonSimple` + `polyCycNondeg`;
+  - `ear_corner_turn_a` / `ear_corner_turn_c` — the two per-corner turning identities;
+  - and `ear_turn_concat` itself, now a one-line combination of the two per-corner facts.
+
+Single remaining core: `exists_empty_convex_ear` (the Meisters "two-ears" existence theorem — a simple non-degenerate polygon with ≥4 vertices has a cyclic rotation exhibiting an empty convex ear). It requires a split-and-recurse induction; the supporting `SAWUmlaufEar*` toolkit is present and the lemma is kept as a single, clearly documented, compiling `sorry`. Everything downstream of it (`exists_front_ear`, `exists_ear_clip`, `polygon_ear_reduction`, `polygon_umlaufsatz`, `hex_signed_turn_eq_six_sign_shoelace`) is sorry-free. Headers of `SAWUmlaufPolygon.lean` and `SAWUmlaufSignedArea.lean`, and `PROOF_STATUS.md`, were updated to reflect the new state. No files were lost; all partial progress is preserved as compiling Lean.
+
 # Summary of changes for run 5ada531e-12d4-4569-8afb-8914aeba6ada
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `SAWFinal`) and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`).
 

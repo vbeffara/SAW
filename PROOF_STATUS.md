@@ -1,5 +1,39 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz `ear_turn_concat` fully closed — single core remaining (NEWEST).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole
+> library still builds end-to-end (8126 jobs) and the top theorem
+> `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`).
+>
+> **What changed (all in `RequestProject/SAWUmlaufPolygon.lean`).** The exact
+> turning-preservation core `ear_turn_concat` (one of the two previously-open
+> Jordan-curve-level cores) is now **proved sorry-free**. Key correction: the
+> earlier docstring WARNING that `ear_turn_concat` does NOT split into the two
+> per-corner facts was found to be true only under *local-emptiness-only*
+> hypotheses; under the genuine global `PolygonSimple` hypothesis present in the
+> lemma BOTH per-corner facts hold (verified numerically: per-corner wraps
+> `(kA,kC)=(0,0)` in 8006/8006 strict-simple ears; the local-only version fails
+> ~60%). New sorry-free lemmas added and proved:
+> - `arg_add_eq_arg_mul_of_im_sign` — pure no-wrap criterion for `arg`
+>   additivity from imaginary-part signs (reduces to `Complex.arg_mul`).
+> - `cone_cross_sign_of_disjoint` — pure plane geometry: a point off the cone
+>   at a vertex, expressed as a cross-sign disjunction (segment-crossing /
+>   `corner_exit_point` argument).
+> - `corner_a_cross_sign` / `corner_c_cross_sign` — extract the cone condition
+>   from `PolygonSimple` + `polyCycNondeg` (closed-edge disjointness, etc.).
+> - `ear_corner_turn_a` / `ear_corner_turn_c` — the per-corner turning facts,
+>   from the two above via the im↔cross translation.
+> - `ear_turn_concat` — now `linarith` of the two per-corner facts.
+>
+> **Single remaining open core.** The entire discrete Umlaufsatz now reduces to
+> the one lemma `exists_empty_convex_ear` (Meisters two-ears existence; a simple
+> non-degenerate polygon with `≥ 4` vertices has a cyclic rotation exhibiting an
+> empty convex ear). It needs the split-and-recurse Meisters induction; the
+> full `SAWUmlaufEar*` toolkit is available. Everything downstream of it
+> (`exists_front_ear`, `exists_ear_clip`, `polygon_ear_reduction`,
+> `polygon_umlaufsatz`, `hex_signed_turn_eq_six_sign_shoelace`) is sorry-free.
+
 > **Umlaufsatz middle-vertex-split round note (NEWEST).**
 > Focused exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`, `RequestProject/SAWUmlaufGaussBonnet.lean`).

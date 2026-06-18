@@ -39,13 +39,22 @@ here by *deriving* it from the general planar-polygon Umlaufsatz
 (`polygon_umlaufsatz`) applied to the embedded polygon, via the bridge
 `polyWind_hexEmbedded_cyclic` (cyclic turning = `hexWalkWinding L + closure`)
 and the already-proved combinatorial reductions
-(`hexWalkWinding_eq_signedTurnCount`, `hex_closure_arg_eq_sign`).  The remaining
-Umlaufsatz gaps are the two clean, reusable topological facts in
-`RequestProject.SAWUmlaufPolygon`:
-* `polygon_umlaufsatz` — the classical turning-tangent theorem for a
-  non-self-intersecting polygon in `ℂ`; and
-* `hexEmbeddedPolygon_edges_disjoint` — honeycomb planarity (the embedded
-  polygon's edges meet only at shared vertices).
+(`hexWalkWinding_eq_signedTurnCount`, `hex_closure_arg_eq_sign`).  Both clean
+topological ingredients it used to rest on — `polygon_umlaufsatz` (the classical
+turning-tangent theorem for a non-self-intersecting polygon in `ℂ`) and
+`hexEmbeddedPolygon_edges_disjoint` (honeycomb planarity) — are now **proved**
+in `RequestProject.SAWUmlaufPolygon`, as is the entire ear-clipping induction
+and the exact turning-preservation core `ear_turn_concat`.
+
+The **single remaining open core** of the whole discrete Umlaufsatz is now
+`exists_empty_convex_ear` in `RequestProject.SAWUmlaufPolygon`: the Meisters
+"two-ears" existence theorem (a simple non-degenerate polygon with `≥ 4`
+vertices has a cyclic rotation exhibiting an empty convex ear).  Everything
+downstream of it — `exists_front_ear`, `exists_ear_clip`,
+`polygon_ear_reduction`, `polygon_umlaufsatz`, and this file's
+`hex_signed_turn_eq_six_sign_shoelace` — is sorry-free, so the top theorem
+`hex_closed_trail_turning_number` reduces (only) to `exists_empty_convex_ear`
+(plus the allowed `propext, Classical.choice, Quot.sound`).
 -/
 
 import Mathlib
