@@ -1,3 +1,17 @@
+# Summary of changes for run 828f1deb-6155-457e-a2ee-c7ce72e245ed
+Continued the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), working exclusively on it and touching only `RequestProject/SAWUmlaufPolygon.lean`.
+
+Status confirmed at start: the whole library builds end-to-end (8126 jobs) and the top theorem reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`). The entire Umlaufsatz chain is already reduced to a single live open core — `exists_empty_convex_ear_avoiding`, the Meisters ear-existence theorem (Jordan-curve-theorem level), backed by a complete, sorry-free geometric toolkit in the `SAWUmlaufEar*` files.
+
+I first attempted the monolithic core directly; it is genuinely Jordan-curve-level and not closable in one shot — the missing ingredient is the combinatorial polygon-split recursion. I therefore added two new, sorry-free, definitely-true combinatorial bricks that the ear-existence proof needs, both proved and integrated:
+
+- `polyCycNondeg_clip`: clipping the ear `b` from `a :: b :: c :: rest` preserves cyclic non-degeneracy of the clipped cycle `a :: c :: rest`, given the two new diagonal corners are non-flat. This is the combinatorial glue that turns the existing geometric facts `clip_turn_at_a_ne_zero` / `clip_turn_at_c_ne_zero` into the `polyCycNondeg` clause required by the open core.
+- `exists_rotate_mid`: any vertex of a length-≥3 cycle can be rotated to the middle (second) position, letting the ear search normalise the extreme (lex-min) vertex to the ear-tip position.
+
+Both new lemmas verify sorry-free (axioms: only `propext, Classical.choice, Quot.sound`), and the whole project still builds (8126 jobs) with the main theorem unchanged (still only `sorryAx` + allowed axioms). Dead branches were left commented out, as before, with explanations; the new lemmas are recorded as preparation and live in a file that is transitively imported by the final-result chain. I recorded this round's progress at the top of `PROOF_STATUS.md`.
+
+Remaining open: the geometric heart of `exists_empty_convex_ear_avoiding` — the diagonal-split recursion, the convex-ear orientation equivalence, and the off-the-diagonal non-flatness of the cyclic neighbours. The single sorry is preserved with its documented intended route, so no progress is lost across rounds.
+
 # Summary of changes for run 4260020a-736e-465f-b75d-a7619ac1e065
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), touching no other branch. The whole library still builds end-to-end (8126 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced. All partial progress and the full `SAWUmlaufEar*` toolkit remain in place and imported.
 

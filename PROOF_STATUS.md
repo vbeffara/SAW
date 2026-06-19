@@ -1,6 +1,30 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz `ear_turn_concat` fully closed — single core remaining (NEWEST).**
+> **Umlaufsatz ear-clip combinatorial bricks added (NEWEST).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz; touched only
+> `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds
+> end-to-end (8126 jobs) and the top theorem `hex_closed_trail_turning_number`
+> still reduces only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`);
+> no new axioms. The single remaining live core is still
+> `exists_empty_convex_ear_avoiding` (Meisters ear existence; needs the
+> diagonal-split recursion). Two new **sorry-free** combinatorial bricks were
+> proved as preparation toward it:
+> - `polyCycNondeg_clip` — clipping the ear `b` from `a :: b :: c :: rest`
+>   preserves cyclic non-degeneracy `polyCycNondeg (a :: c :: rest)`, given the
+>   two new diagonal corners are non-flat (`cross (a-p)(c-a) ≠ 0`,
+>   `cross (c-a)(q-c) ≠ 0`). This is the combinatorial glue that converts the
+>   geometric facts `HexArea.clip_turn_at_a_ne_zero` /
+>   `HexArea.clip_turn_at_c_ne_zero` into the `polyCycNondeg` clause of the open
+>   core.
+> - `exists_rotate_mid` — any vertex `v ∈ V` of a length-`≥ 3` cycle can be
+>   rotated to the middle (second) position: `V.rotate r = a :: v :: c :: rest`.
+>   Lets the ear search normalise the extreme (lex-min) vertex to the ear-tip
+>   position.
+> The remaining geometric content of `exists_empty_convex_ear_avoiding` (the
+> diagonal-split recursion, the convex-ear orientation `iff`, and the
+> off-the-diagonal non-flatness of the cyclic neighbours) is still open.
+
+> **Umlaufsatz `ear_turn_concat` fully closed — single core remaining.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole
 > library still builds end-to-end (8126 jobs) and the top theorem
 > `hex_closed_trail_turning_number` still reduces only to `sorryAx`

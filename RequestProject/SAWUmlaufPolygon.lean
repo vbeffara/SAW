@@ -967,6 +967,69 @@ lemma diag_disjoint_of_empty_corner (a b c : ℂ) (rest : List ℂ)
     (hempty _ hu_rest) (hempty _ hw_rest)
     (hdiagempty _ hu_rest) (hdiagempty _ hw_rest) hDab hDbc
 
+/-
+**Cyclic non-degeneracy is preserved by an ear clip (combinatorial glue).**
+    Removing the ear `b` from the cyclic polygon `a :: b :: c :: rest` replaces
+    the three corners at `a` (`p,a,b`), `b` (`a,b,c`) and `c` (`b,c,q`) by the
+    two new diagonal corners at `a` (`p,a,c`) and `c` (`a,c,q`), where `p` is
+    the cyclic predecessor of `a` (the last vertex of `rest`) and `q` is the
+    cyclic successor of `c` (the head of `rest`); every other cyclic corner is
+    untouched.  Hence if the original cycle is cyclically non-degenerate
+    (`hnd`) and the two new diagonal corners are non-flat
+    (`hpa : cross (a-p) (c-a) ≠ 0`, `hcq : cross (c-a) (q-c) ≠ 0`), the clipped
+    cycle `a :: c :: rest` is cyclically non-degenerate too.
+
+    Pure list/`polyNondeg` bookkeeping (the two closing forms `… ++ [a,b]` and
+    `… ++ [a,c]` share every triple except the two diagonal ones).  This is the
+    combinatorial brick that turns the geometric non-flatness facts
+    `HexArea.clip_turn_at_a_ne_zero` / `HexArea.clip_turn_at_c_ne_zero` into the
+    `polyCycNondeg (a :: c :: rest)` clause required by
+    `exists_empty_convex_ear_avoiding`.  Recorded preparation.
+-/
+lemma polyCycNondeg_clip (a b c p q : ℂ) (rest : List ℂ)
+    (hq : rest.head? = some q) (hp : rest.getLast? = some p)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hpa : HexArea.cross (a - p) (c - a) ≠ 0)
+    (hcq : HexArea.cross (c - a) (q - c) ≠ 0) :
+    polyCycNondeg (a :: c :: rest) := by
+  rcases rest with ( _ | ⟨ q, _ | ⟨ p, rest ⟩ ⟩ ) <;> simp_all +decide [ polyCycNondeg_def ];
+  · simp_all +decide [ polyNondeg_cons_cons_cons ];
+  · have h_polyNondeg : ∀ (L : List ℂ) (x y : ℂ), polyNondeg (L ++ [a, y]) → HexArea.cross (a - L.getLast!) (x - a) ≠ 0 → polyNondeg (L ++ [a, x]) := by
+      intros L x y hL hxy
+      induction' L with L ih generalizing x y;
+      · trivial;
+      · rcases ih with ( _ | ⟨ a, _ | ⟨ b, ih ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg_cons_cons_cons ];
+        grind;
+    grind +locals
+
+/-
+**A chosen vertex can be rotated to the middle (second) cyclic position.**
+    If `v` is a vertex of the cycle `V` and `3 ≤ V.length`, some cyclic rotation
+    of `V` has the form `a :: v :: c :: rest`, i.e. it places `v` at index `1`
+    with its cyclic predecessor `a` at the front and cyclic successor `c` next.
+    Pure `List.rotate` index bookkeeping (`List.head?_rotate`,
+    `List.getElem?`).  This is the combinatorial brick that lets the ear search
+    normalise the extreme (lex-min) vertex to the ear-tip position required by
+    `exists_empty_convex_ear_avoiding`.  Recorded preparation.
+-/
+lemma exists_rotate_mid (V : List ℂ) (v : ℂ) (hv : v ∈ V) (h3 : 3 ≤ V.length) :
+    ∃ (r : ℕ) (a c : ℂ) (rest : List ℂ), V.rotate r = a :: v :: c :: rest := by
+  obtain ⟨ i, hi ⟩ := List.mem_iff_getElem.mp hv;
+  -- Choose the rotation amount r := (i + V.length - 1) % V.length.
+  set r := (i + V.length - 1) % V.length;
+  -- By definition of rotation, we have that (V.rotate r)[1]? = some v.
+  have h_rotate : (V.rotate r)[1]? = some v := by
+    rw [ List.getElem?_rotate ];
+    · convert hi.2 ▸ List.getElem?_eq_getElem ( show i < V.length from hi.1 ) using 1;
+      rw [ show ( 1 + r ) % V.length = i % V.length from ?_ ];
+      · rw [ Nat.mod_eq_of_lt hi.1 ];
+      · simp +zetaDelta at *;
+        rw [ add_tsub_cancel_of_le ( by linarith [ hi.1 ] ) ] ; norm_num [ Nat.add_mod, Nat.mod_eq_of_lt hi.1 ];
+    · linarith;
+  rcases n : V.rotate r with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, rest ⟩ ⟩ ⟩ ) <;> simp_all +decide;
+  · replace n := congr_arg List.length n ; simp_all +decide;
+  · exact ⟨ r, a, c, rest, n ⟩
+
 /-- **The empty-convex-ear existence core, in the inductively-correct
     "forbidden-vertex" form (the genuine Meisters TWO-ears content).**  A
     simple, non-degenerate polygon with at least four vertices, together with
