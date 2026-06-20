@@ -1030,6 +1030,88 @@ lemma exists_rotate_mid (V : List ℂ) (v : ℂ) (hv : v ∈ V) (h3 : 3 ≤ V.le
   · replace n := congr_arg List.length n ; simp_all +decide;
   · exact ⟨ r, a, c, rest, n ⟩
 
+/-
+**Empty-corner ⟹ full ear data (the assembler / bookkeeping step).**
+    Given a corner `a, b, c` of the cyclic polygon `a :: b :: c :: rest` that is
+    *empty* (no far vertex strictly inside the triangle (`hempty`) nor on the
+    closed diagonal `a–c` (`hdiag`)), whose two **clip corners** are non-flat
+    (`hclipa : cross (a-p) (c-a) ≠ 0`, `hclipc : cross (c-a) (q-c) ≠ 0`, with
+    `p` the cyclic predecessor of `a` and `q` the cyclic successor of `c`), and
+    whose ear triangle shares the clip orientation (`horient`), this assembles
+    the full post-rotation ear-data conjunction required by
+    `exists_empty_convex_ear_avoiding`.
+
+    All twelve clauses are pure bookkeeping over the already-proved bricks: the
+    five cyclic edge non-degeneracies and `cross (b-a) (c-b) ≠ 0` are read off
+    `polyCycNondeg (a :: b :: c :: rest)`; `c - a ≠ 0` is forced by `hclipa`
+    (a zero second factor makes the cross vanish); and the clipped cycle's
+    non-degeneracy `polyCycNondeg (a :: c :: rest)` is exactly `polyCycNondeg_clip`.
+    This factors the genuine remaining content of the Umlaufsatz core down to
+    the *search* for such an empty non-flat corner.  Consumed by
+    `exists_empty_convex_ear_avoiding` below.
+-/
+lemma ear_data_of_empty_corner (a b c p q : ℂ) (rest : List ℂ)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hclipa : HexArea.cross (a - p) (c - a) ≠ 0)
+    (hclipc : HexArea.cross (c - a) (q - c) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))) :
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      a - p ≠ 0 ∧ b - a ≠ 0 ∧ c - b ≠ 0 ∧ q - c ≠ 0 ∧ c - a ≠ 0 ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      polyCycNondeg (a :: c :: rest) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  refine' ⟨ hp, hq, _, _, _, _, _, _, hempty, hdiag, _, horient ⟩;
+  all_goals contrapose! hclipa; simp_all +decide [ HexArea.cross ];
+  · contrapose! hnd; simp_all +decide [ sub_eq_iff_eq_add, polyCycNondeg_def, polyNondeg_cons_cons_cons ] ;
+    unfold HexArea.cross; aesop;
+  · simp_all +decide [ polyCycNondeg_def, polyNondeg_cons_cons_cons ];
+    simp_all +decide [ HexArea.cross ];
+  · contrapose! hnd; simp_all +decide [ polyCycNondeg_def, polyNondeg_cons_cons_cons ] ;
+    unfold HexArea.cross; aesop;
+  · contrapose! hclipa;
+    exact polyCycNondeg_clip a b c p q rest hq hp hnd hclipa hclipc
+
+/-- **The Meisters empty-corner search (the single remaining open core).**
+    A simple, non-degenerate polygon with `≥ 4` vertices and any forbidden
+    vertex `z` has a cyclic rotation `V.rotate r = a :: b :: c :: rest` whose
+    middle vertex `b ≠ z` spans an *empty* corner triangle `a b c` (no far
+    vertex strictly inside (`hempty`) and none on the closed diagonal `a–c`
+    (`hdiag`)), whose two clip corners `(p,a,c)`, `(a,c,q)` are non-flat
+    (`cross (a-p) (c-a) ≠ 0`, `cross (c-a) (q-c) ≠ 0`), and whose ear triangle
+    shares the clip orientation.
+
+    This is the *geometric heart* of the discrete Umlaufsatz — the Meisters
+    "two-ears" theorem in its inductive forbidden-vertex packaging — and is the
+    only remaining `sorry` in the whole Umlaufsatz chain.  Intended route:
+    strong induction on `V.length`; choose the lex-minimal (hence convex)
+    vertex via `HexArea.exists_lex_min_mem` / `lexMin_not_inTriangleStrict` and
+    rotate it to the middle via `exists_rotate_mid`; if its corner is empty use
+    it (or a cyclic neighbour, to dodge `z`); otherwise pivot to the vertex
+    farthest from the base diagonal (`HexArea.exists_max_cross`,
+    `farthest_region_empty`, `inTriangleStrict_pos_nest`,
+    `subTri_axc_orient_pos`, `inTriangleStrict_apex_sameSide`), split along the
+    resulting interior diagonal and recurse on the strictly shorter
+    sub-polygons.  This is Jordan-curve-theorem-level content absent from
+    Mathlib.  Consumed by `exists_empty_convex_ear_avoiding`. -/
+lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  sorry
+
 /-- **The empty-convex-ear existence core, in the inductively-correct
     "forbidden-vertex" form (the genuine Meisters TWO-ears content).**  A
     simple, non-degenerate polygon with at least four vertices, together with
@@ -1079,7 +1161,21 @@ lemma exists_empty_convex_ear_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
       polyCycNondeg (a :: c :: rest) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+  -- **The genuine Meisters search (the single remaining open core).**  Find a
+  -- cyclic rotation exhibiting an *empty* corner `a,b,c` (tip `b ≠ z`) whose two
+  -- clip corners `(p,a,c)` and `(a,c,q)` are non-flat and whose ear orientation
+  -- matches the clip.  All the remaining ear-data bookkeeping is then discharged
+  -- by `ear_data_of_empty_corner` below.
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hclipa, hclipc, hempty, hdiag,
+      horient⟩ := exists_empty_corner_avoiding V hlen hsimple hnd z
+  -- Transport cyclic non-degeneracy across the rotation and assemble the data.
+  have hndrot : polyCycNondeg (a :: b :: c :: rest) :=
+    hrot ▸ (polyCycNondeg_rotate V r (by omega)).mpr hnd
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ :=
+    ear_data_of_empty_corner a b c p q rest hp hq hndrot hclipa hclipc hempty hdiag
+      horient
+  exact ⟨r, a, b, c, p, q, rest, hrot, hbz, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10,
+    h11, h12⟩
 
 /-- **The empty-convex-ear existence core (one-ear corollary).**  A simple,
     non-degenerate polygon with at least four vertices has a cyclic rotation

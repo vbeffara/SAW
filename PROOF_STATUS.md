@@ -1,6 +1,33 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz ear-clip combinatorial bricks added (NEWEST).**
+> **Umlaufsatz core factored: assembler proved, single search sorry isolated (NEWEST).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz; touched only
+> `RequestProject/SAWUmlaufPolygon.lean`.  The whole library still builds
+> end-to-end (8126 jobs) and the top theorem `hex_closed_trail_turning_number`
+> still reduces only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`);
+> no new axioms.  This round **factored** the previously-monolithic open core
+> `exists_empty_convex_ear_avoiding` into two pieces:
+> - `ear_data_of_empty_corner` — **proved sorry-free** (axioms: only
+>   `propext, Classical.choice, Quot.sound`).  The assembler/bookkeeping step:
+>   from an *empty* corner `a,b,c` of `a :: b :: c :: rest` whose two clip
+>   corners are non-flat (`cross (a-p)(c-a) ≠ 0`, `cross (c-a)(q-c) ≠ 0`) and
+>   whose ear triangle shares the clip orientation, it assembles the full
+>   12-clause ear-data conjunction (edge non-degeneracies read off
+>   `polyCycNondeg`, `polyCycNondeg (a::c::rest)` via `polyCycNondeg_clip`).
+> - `exists_empty_corner_avoiding` — the **single remaining live sorry** in the
+>   whole Umlaufsatz chain.  This is now the *clean, isolated* statement of the
+>   genuine Meisters two-ears geometric search (find an empty non-flat
+>   orientation-matching corner with tip `≠ z`).  `exists_empty_convex_ear_avoiding`
+>   is now **fully derived** from it plus `ear_data_of_empty_corner` and
+>   `polyCycNondeg_rotate` (rotation-transport of cyclic non-degeneracy).
+> Net effect: the remaining open content is unchanged mathematically but now
+> sits behind one clean named lemma, with all the surrounding bookkeeping
+> discharged sorry-free.  The remaining gap is the polygon-split recursion
+> (strong induction on `V.length`, split along an interior diagonal into two
+> strictly-shorter simple sub-polygons), which is Jordan-curve-theorem-level
+> and absent from Mathlib.
+
+> **Umlaufsatz ear-clip combinatorial bricks added.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz; touched only
 > `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds
 > end-to-end (8126 jobs) and the top theorem `hex_closed_trail_turning_number`

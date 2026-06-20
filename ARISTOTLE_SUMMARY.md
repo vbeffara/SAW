@@ -1,3 +1,18 @@
+# Summary of changes for run 39a5c420-b845-400a-8b2b-9f5b90e01245
+Continued the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), working exclusively on it and touching only `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8126 jobs), and the top theorem still reduces to only `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
+
+What changed this round (all in `RequestProject/SAWUmlaufPolygon.lean`):
+
+1. Proved a new, sorry-free assembler lemma `ear_data_of_empty_corner` (verified axioms: only `propext, Classical.choice, Quot.sound`). Given an *empty* corner `a,b,c` of a cyclic polygon `a :: b :: c :: rest` whose two clip corners are non-flat (`cross (a-p)(c-a) ≠ 0`, `cross (c-a)(q-c) ≠ 0`) and whose ear triangle shares the clip orientation, it assembles the full 12-clause ear-data conjunction required by the core: it reads the five cyclic edge non-degeneracies and `cross (b-a)(c-b) ≠ 0` off `polyCycNondeg`, forces `c-a ≠ 0` from the clip-corner non-flatness, and obtains `polyCycNondeg (a :: c :: rest)` via the existing `polyCycNondeg_clip`.
+
+2. Factored the previously-monolithic open core `exists_empty_convex_ear_avoiding`. It is now fully derived (sorry-free derivation) from the proved assembler plus `polyCycNondeg_rotate` (rotation-transport of cyclic non-degeneracy) and one clean named lemma.
+
+3. Isolated the genuine remaining content as a single, clean, named open lemma `exists_empty_corner_avoiding` — the Meisters two-ears geometric search (find an empty, non-flat, orientation-matching corner whose tip avoids the forbidden vertex `z`). This is now the only live `sorry` in the entire Umlaufsatz chain; its intended proof route (strong induction on length, lex-min convex vertex, diagonal split into two strictly-shorter simple sub-polygons) is documented in its docstring.
+
+Net effect: the remaining open mathematical content is unchanged, but all the surrounding ear-data bookkeeping is now discharged sorry-free, and the hard part sits behind one clearly-stated lemma. A direct high-effort attempt at that lemma did not succeed — it requires the polygon-split recursion (Jordan-curve-theorem-level, absent from Mathlib), which remains the open gap. Partial progress is preserved as Lean files with sorries; dead branches (e.g. the false `ear_turning_bounds`) remain commented out with explanations, and the new declarations are documented as preparation and are consumed within the final-result chain. This round's progress is recorded at the top of `PROOF_STATUS.md`.
+
+Other parts of the paper formalization contain pre-existing sorries in unrelated branches; per the instruction to work only on the Umlaufsatz, those were left untouched.
+
 # Summary of changes for run 828f1deb-6155-457e-a2ee-c7ce72e245ed
 Continued the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), working exclusively on it and touching only `RequestProject/SAWUmlaufPolygon.lean`.
 
