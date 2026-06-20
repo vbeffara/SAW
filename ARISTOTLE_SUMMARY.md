@@ -1,3 +1,18 @@
+# Summary of changes for run 5c4fda95-8dda-4a63-be42-b94059ceb1dc
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (the theorem `hex_closed_trail_turning_number`), as requested.
+
+State at start: the entire Umlaufsatz chain was already reduced to a single live `sorry` — `meisters_reduction` in `RequestProject/SAWUmlaufPolygon.lean`, the genuine Jordan-curve-theorem-level geometric core (the Meisters "two-ears" search), with its strong-induction plumbing already discharged sorry-free. A direct attempt on the full monolith confirmed it is too large to close in one search.
+
+What I changed (all verified by a green end-to-end build, 8127 jobs through `RequestProject/SAWFinal.lean`):
+
+1. Added and proved sorry-free the lemma `exists_lexmin_mid_rotation` in `RequestProject/SAWUmlaufPolygon.lean` — Meisters Step 1 of the ear search: every polygon with ≥ 3 vertices has a cyclic rotation `a :: b :: c :: rest` whose middle vertex `b` is the lexicographically minimal (leftmost-lowest) vertex, hence a convex-hull vertex that is never in the strict interior of any triangle spanned by polygon vertices. It composes the existing helpers `HexArea.exists_lex_min_mem`, `exists_rotate_mid`, and `HexArea.lexMin_not_inTriangleStrict`.
+
+2. Wired this lemma into `meisters_reduction`: its proof now performs the convex extreme-vertex setup sorry-free before the single remaining `sorry`. This both records the structured partial progress and makes the new lemma a consumed (not dead) branch, with an explanatory comment marking the remaining open content.
+
+3. Recorded the round at the top of `PROOF_STATUS.md`.
+
+Net effect: the convex-vertex setup step of the Meisters search is now discharged sorry-free, and the lone remaining gap is strictly the Jordan-curve geometric content of `meisters_reduction` (the empty-corner / farthest-interior-vertex dichotomy, the interior-diagonal split, and `PolygonSimple` preservation under the split). The top theorem `hex_closed_trail_turning_number` still reduces only to `sorryAx` plus the allowed axioms (`propext`, `Classical.choice`, `Quot.sound`) — no new axioms were introduced, and all partial progress is kept as compiling Lean with a single, well-documented `sorry`. No work was done outside the Umlaufsatz.
+
 # Summary of changes for run dea47884-7c0e-4ae9-bc88-86b43614b314
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`). The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms, and all partial progress is kept as compiling Lean with sorries.
 

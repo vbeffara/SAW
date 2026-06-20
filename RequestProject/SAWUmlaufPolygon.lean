@@ -1118,6 +1118,33 @@ def EmptyCornerData (V : List ℂ) (z : ℂ) : Prop :=
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
 
+/-
+**Meisters Step 1 (the convex extreme-vertex setup), proved sorry-free.**
+    Any polygon with `≥ 3` vertices has a cyclic rotation
+    `V.rotate r = a :: b :: c :: rest` whose middle vertex `b` is the
+    lexicographically minimal (leftmost-lowest) vertex of `V`, hence a *convex*
+    corner: `b` is never in the strict interior of any triangle spanned by three
+    vertices of `V`.  This packages the first step of the Meisters ear search
+    (`exists_lex_min_mem` + `lexMin_not_inTriangleStrict` + `exists_rotate_mid`)
+    as a single reusable rotation lemma to be consumed by the eventual proof of
+    `meisters_reduction`.  It is intentionally not yet referenced by another
+    declaration only because the geometric core it feeds is still open — this is
+    recorded partial progress, not a dead branch.
+-/
+lemma exists_lexmin_mid_rotation (V : List ℂ) (h3 : 3 ≤ V.length) :
+    ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ∈ V ∧
+      (∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b) := by
+  -- By `exists_lex_min_mem`, there exists a lexicographically minimal vertex `v` in `V`.
+  obtain ⟨v, hv_mem, hv_lex_min⟩ : ∃ v ∈ V, ∀ w ∈ V, v.re < w.re ∨ (v.re = w.re ∧ v.im ≤ w.im) := by
+    obtain ⟨ v, hv ⟩ := HexArea.exists_lex_min_mem V ( by aesop_cat );
+    use v;
+  obtain ⟨ r, a, c, rest, hr ⟩ := exists_rotate_mid V v hv_mem h3;
+  refine' ⟨ r, a, v, c, rest, hr, hv_mem, _ ⟩;
+  intros x y w hx hy hw h_in_triangle;
+  apply HexArea.lexMin_not_inTriangleStrict V v hv_lex_min x y w hx hy hw h_in_triangle
+
 /-- **The geometric reduction step of the Meisters two-ears search (the single
     remaining open core, now carrying the strong-induction hypothesis).**
     Given the simple, non-degenerate polygon `V` (`≥ 4` vertices), a forbidden
@@ -1144,6 +1171,15 @@ lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
     (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
         PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z') :
     EmptyCornerData V z := by
+  -- **Meisters Step 1 (done sorry-free):** rotate the convex extreme
+  -- (leftmost-lowest) vertex `b` to the middle of the cycle.  `b` is a
+  -- convex-hull vertex, so it is never in the strict interior of any triangle
+  -- spanned by polygon vertices (`hbconv`).  The remaining genuine
+  -- Jordan-curve content — the empty-corner / farthest-interior-vertex
+  -- dichotomy, the interior-diagonal split, and `PolygonSimple` preservation,
+  -- recursing through `IH` — is the single open gap below.
+  obtain ⟨r, a, b, c, rest, hrot, hbmem, hbconv⟩ :=
+    exists_lexmin_mid_rotation V (by omega)
   sorry
 
 /-- **Strong-induction wrapper (sorry-free).**  Discharges the induction

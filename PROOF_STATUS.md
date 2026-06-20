@@ -1,7 +1,27 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz core refactored: strong-induction plumbing split off sorry-free
-> (NEWEST).**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz.
+> **Umlaufsatz: Meisters Step 1 (convex extreme-vertex setup) proved
+> sorry-free and wired into the open core (NEWEST).**  Worked exclusively on
+> the top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`) and the top
+> theorem `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`); no new axioms.  This round added
+> the **sorry-free** lemma `exists_lexmin_mid_rotation` in
+> `RequestProject/SAWUmlaufPolygon.lean` — the first step of the Meisters ear
+> search: every polygon with `≥ 3` vertices has a cyclic rotation
+> `a :: b :: c :: rest` whose middle vertex `b` is the lexicographically minimal
+> (leftmost-lowest) vertex, hence a convex-hull vertex never in the strict
+> interior of any triangle spanned by polygon vertices (composing
+> `exists_lex_min_mem`, `exists_rotate_mid`, `lexMin_not_inTriangleStrict`).
+> It is now **consumed** by `meisters_reduction`, whose proof performs this
+> convex-vertex setup sorry-free before the single remaining `sorry`.  Net
+> effect: the lone open gap is now strictly the Jordan-curve geometric content
+> of `meisters_reduction` (empty-corner / farthest-interior-vertex dichotomy,
+> interior-diagonal split, and `PolygonSimple` preservation under the split),
+> with Step 1 of the search discharged.
+
+> **Umlaufsatz core refactored: strong-induction plumbing split off sorry-free.**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz.
 > The whole library still builds end-to-end (8127 jobs) and the top theorem
 > `hex_closed_trail_turning_number` still reduces only to `sorryAx`
 > (+ `propext, Classical.choice, Quot.sound`); no new axioms.  This round
