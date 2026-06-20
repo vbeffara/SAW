@@ -1,3 +1,22 @@
+# Summary of changes for run dea47884-7c0e-4ae9-bc88-86b43614b314
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`). The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms, and all partial progress is kept as compiling Lean with sorries.
+
+State at start: the entire Umlaufsatz chain was already reduced to one open core, `exists_empty_corner_avoiding` in `RequestProject/SAWUmlaufPolygon.lean` (the Meisters "two-ears" geometric search, a Jordan-curve-theorem-level fact absent from Mathlib). A direct monolithic attempt on it timed out (leaving the file untouched), confirming the difficulty.
+
+What I changed (all verified by a green build):
+
+1. Refactored the monolithic core in `RequestProject/SAWUmlaufPolygon.lean` so the genuine mathematical content is cleanly isolated and the recursion plumbing is discharged sorry-free:
+   - `EmptyCornerData V z` — the existential conclusion packaged as a named predicate (unfolds definitionally to the original existential, so all downstream consumers are unchanged).
+   - `meisters_reduction` — the genuine Jordan-curve-level geometric reduction step, now carrying the strong-induction hypothesis `IH` (an empty corner for every strictly shorter simple non-degenerate polygon). This now holds the single remaining math `sorry`.
+   - `exists_empty_corner_avoiding_aux` — the sorry-free strong-induction wrapper (`Nat.strong_induction_on`) that discharges `IH`.
+   - `exists_empty_corner_avoiding` — now itself sorry-free, delegating to the wrapper.
+
+2. Added two sorry-free `Nodup`-preservation lemmas for the diagonal split in `RequestProject/SAWUmlaufEarSplit.lean`: `chordLeft_nodup` and `chordRight_nodup` — the combinatorial half of `PolygonSimple` preservation under the chord split.
+
+3. Recorded the round at the top of `PROOF_STATUS.md`.
+
+Net effect: the previously single monolithic `sorry` is replaced by a structured proof whose recursion plumbing is now sorry-free, concentrating the remaining gap into one lemma (`meisters_reduction`) that comes with the induction hypothesis already wired in. The only Jordan-curve content left for future rounds is the convex/farthest-interior-vertex dichotomy, the interior-diagonal split, and the edge-disjointness half of `PolygonSimple` preservation. Both new split files/lemmas are imported into the build chain (via `SAWUmlaufPolygon` → `SAWFinal`), so nothing is a dead branch. Other (non-Umlaufsatz) sorries were left untouched per the instruction to focus only on the main theorem.
+
 # Summary of changes for run 5cffb68b-9397-48e4-a9fc-9e3542417424
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`). The whole library still builds end-to-end (now 8127 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
 

@@ -1079,7 +1079,7 @@ lemma ear_data_of_empty_corner (a b c p q : ℂ) (rest : List ℂ)
   · contrapose! hclipa;
     exact polyCycNondeg_clip a b c p q rest hq hp hnd hclipa hclipc
 
-/-- **The Meisters empty-corner search (the single remaining open core).**
+/- **The Meisters empty-corner search (the single remaining open core).**
     A simple, non-degenerate polygon with `≥ 4` vertices and any forbidden
     vertex `z` has a cyclic rotation `V.rotate r = a :: b :: c :: rest` whose
     middle vertex `b ≠ z` spans an *empty* corner triangle `a b c` (no far
@@ -1101,6 +1101,66 @@ lemma ear_data_of_empty_corner (a b c p q : ℂ) (rest : List ℂ)
     resulting interior diagonal and recurse on the strictly shorter
     sub-polygons.  This is Jordan-curve-theorem-level content absent from
     Mathlib.  Consumed by `exists_empty_convex_ear_avoiding`. -/
+/-- **The conclusion predicate of the Meisters empty-corner search.**  This is
+    the existential conclusion of `exists_empty_corner_avoiding` packaged as a
+    named predicate so the strong-induction wrapper and the geometric reduction
+    step can both refer to it (and to the induction hypothesis quantified over
+    it).  It unfolds *definitionally* to the original existential, so all
+    downstream consumers that `obtain` against `exists_empty_corner_avoiding`
+    are unaffected. -/
+def EmptyCornerData (V : List ℂ) (z : ℂ) : Prop :=
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
+
+/-- **The geometric reduction step of the Meisters two-ears search (the single
+    remaining open core, now carrying the strong-induction hypothesis).**
+    Given the simple, non-degenerate polygon `V` (`≥ 4` vertices), a forbidden
+    vertex `z`, and the induction hypothesis `IH` providing an empty corner
+    (avoiding any forbidden vertex) for every *strictly shorter* simple
+    non-degenerate polygon, `V` itself has an empty corner avoiding `z`.
+
+    This isolates the genuine Jordan-curve-theorem-level geometric content of
+    the Umlaufsatz: the convex-vertex / farthest-interior-vertex dichotomy, the
+    interior-diagonal split, and the `PolygonSimple` preservation under the
+    split.  The (purely combinatorial) strong-induction plumbing that discharges
+    `IH` is handled sorry-free by `exists_empty_corner_avoiding_aux` below.
+    Intended route: as documented on `exists_empty_corner_avoiding` —
+    lex-minimal convex vertex (`HexArea.exists_lex_min_mem`,
+    `lexMin_not_inTriangleStrict`, `exists_rotate_mid`); if its corner is empty
+    use it (or a cyclic neighbour, to dodge `z`); otherwise pivot to the
+    farthest interior vertex (`HexArea.exists_max_cross`, `farthest_region_empty`,
+    `inTriangleStrict_pos_nest`, `subTri_axc_orient_pos`,
+    `inTriangleStrict_apex_sameSide`), split along the resulting interior
+    diagonal via `chordLeft`/`chordRight` and recurse through `IH` on the
+    strictly shorter sub-polygon avoiding the shared diagonal endpoint. -/
+lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
+    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z') :
+    EmptyCornerData V z := by
+  sorry
+
+/-- **Strong-induction wrapper (sorry-free).**  Discharges the induction
+    hypothesis of `meisters_reduction` by strong induction on the polygon
+    length, leaving the genuine geometric content concentrated in
+    `meisters_reduction`. -/
+lemma exists_empty_corner_avoiding_aux :
+    ∀ (n : ℕ) (V : List ℂ), V.length = n → 4 ≤ V.length →
+      PolygonSimple V → polyCycNondeg V → ∀ z : ℂ, EmptyCornerData V z := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n IH =>
+    intro V hn hlen hsimple hnd z
+    refine meisters_reduction V hlen hsimple hnd z ?_
+    intro V' hlt h4 hs' hnd' z'
+    exact IH V'.length (by omega) V' rfl h4 hs' hnd' z'
+
 lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
@@ -1110,8 +1170,8 @@ lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :=
+  exists_empty_corner_avoiding_aux V.length V rfl hlen hsimple hnd z
 
 /-- **The empty-convex-ear existence core, in the inductively-correct
     "forbidden-vertex" form (the genuine Meisters TWO-ears content).**  A

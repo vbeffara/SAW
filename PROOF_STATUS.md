@@ -1,6 +1,33 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz diagonal-split combinatorial infrastructure added (NEWEST).**
+> **Umlaufsatz core refactored: strong-induction plumbing split off sorry-free
+> (NEWEST).**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz.
+> The whole library still builds end-to-end (8127 jobs) and the top theorem
+> `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`); no new axioms.  This round
+> restructured the single remaining open core in
+> `RequestProject/SAWUmlaufPolygon.lean`: the previously-monolithic
+> `exists_empty_corner_avoiding` sorry is now factored into
+> (a) a named conclusion predicate `EmptyCornerData V z`;
+> (b) `meisters_reduction` — the genuine Jordan-curve-level geometric reduction
+> step, now **carrying the strong-induction hypothesis** `IH` (an empty corner
+> for every strictly shorter simple non-degenerate polygon); this holds the
+> single remaining math `sorry`;
+> (c) `exists_empty_corner_avoiding_aux` — the **sorry-free** strong-induction
+> wrapper that discharges `IH` by `Nat.strong_induction_on`; and
+> (d) `exists_empty_corner_avoiding` itself, now **sorry-free**, delegating to
+> the wrapper (downstream consumers unchanged — `EmptyCornerData` unfolds
+> definitionally to the original existential).  Additionally added two
+> **sorry-free** `Nodup`-preservation lemmas for the diagonal split in
+> `RequestProject/SAWUmlaufEarSplit.lean` — `chordLeft_nodup`,
+> `chordRight_nodup` — the combinatorial half of `PolygonSimple` preservation
+> under the chord split.  Net effect: the genuine remaining gap is now
+> concentrated in the single lemma `meisters_reduction`, with the recursion
+> plumbing proved sorry-free; the lone Jordan-curve content left is the
+> convex/farthest-vertex dichotomy, the interior-diagonal split, and the
+> edge-disjointness half of `PolygonSimple` preservation.
+
+> **Umlaufsatz diagonal-split combinatorial infrastructure added.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz; the whole
 > library still builds end-to-end (now 8127 jobs) and the top theorem
 > `hex_closed_trail_turning_number` still reduces only to `sorryAx`

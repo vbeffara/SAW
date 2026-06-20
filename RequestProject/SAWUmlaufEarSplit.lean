@@ -119,6 +119,30 @@ lemma mem_chord_split (V : List ℂ) (k : ℕ) (hk : k < V.length) (x : ℂ)
       rw [List.drop_drop]; convert h using 2
     exact List.mem_of_mem_drop h2
 
+/-- The left split piece `V₀,…,V_k` inherits `Nodup` from the whole cycle: it is
+    a prefix of `V`, hence a sublist.  This is the `Nodup` half of
+    `PolygonSimple` preservation under the diagonal split. -/
+lemma chordLeft_nodup (V : List ℂ) (k : ℕ) (hV : V.Nodup) :
+    (chordLeft V k).Nodup :=
+  hV.sublist (List.take_sublist _ _)
+
+/-
+The right split piece `V_k,…,V_{n-1},V₀` inherits `Nodup` from the whole
+    cycle (for a chord with `1 ≤ k`): the suffix `V.drop k` is a sublist of `V`
+    (hence `Nodup`), the singleton `V.take 1 = [V₀]` is trivially `Nodup`, and
+    they are disjoint because `V₀` occurs in the `Nodup` cycle only at index `0`,
+    which is dropped when `1 ≤ k`.  This is the `Nodup` half of `PolygonSimple`
+    preservation under the diagonal split.
+-/
+lemma chordRight_nodup (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < V.length)
+    (hV : V.Nodup) : (chordRight V k).Nodup := by
+  convert List.Nodup.append ?_ ?_ ?_ using 1;
+  · exact hV.sublist ( List.drop_sublist _ _ );
+  · exact hV.sublist ( List.take_sublist _ _ );
+  · cases V <;> simp_all +decide [ List.disjoint_left ];
+    rw [ List.mem_iff_getElem ];
+    grind
+
 end HexArea
 
 end
