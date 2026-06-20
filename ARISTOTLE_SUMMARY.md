@@ -1,3 +1,14 @@
+# Summary of changes for run 5cffb68b-9397-48e4-a9fc-9e3542417424
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`). The whole library still builds end-to-end (now 8127 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
+
+State at start (confirmed): the entire Umlaufsatz chain was already reduced to a single live `sorry`, `exists_empty_corner_avoiding` in `RequestProject/SAWUmlaufPolygon.lean` — the Meisters "two-ears" geometric search, which requires the Jordan-curve-theorem-level diagonal-split recursion (absent from Mathlib). A monolithic attempt at this core failed in prior rounds, so this round I made safe, verified forward progress toward the recursion rather than risk the green build.
+
+What changed:
+- Added a new, fully sorry-free preparation file `RequestProject/SAWUmlaufEarSplit.lean`, imported by `SAWUmlaufPolygon` (hence in the `SAWFinal` build chain, so it is explicitly linked, not a dead branch). It supplies the purely combinatorial list-surgery the diagonal-split recursion needs. For a cycle `V` and a chord `V[0]–V[k]` it defines the two sub-polygons `chordLeft V k = V.take (k+1)` (vertices V₀…V_k) and `chordRight V k = V.drop k ++ V.take 1` (vertices V_k…V_{n-1},V₀), and proves sorry-free: their exact lengths; that both have ≥ 3 vertices yet are strictly shorter than `V` (the strong-induction measure decrease); that they meet the shared diagonal correctly at their `head?`/`getLast?` endpoints; and that together they cover every vertex (`mem_chord_split`). All twelve lemmas verify with only the allowed axioms.
+- Recorded this round at the top of `PROOF_STATUS.md`.
+
+Net effect: the single remaining open core is unchanged mathematically, but the elementary bookkeeping for the diagonal-split recursion is now discharged sorry-free and preserved, isolating the genuine remaining gap to the two Jordan-curve-level facts (existence of an interior diagonal, and `PolygonSimple` preservation under the split). All partial progress is kept as compiling Lean with sorries; nothing was lost, and per the instruction only the Umlaufsatz was touched. Pre-existing sorries in unrelated branches were left untouched.
+
 # Summary of changes for run 39a5c420-b845-400a-8b2b-9f5b90e01245
 Continued the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), working exclusively on it and touching only `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8126 jobs), and the top theorem still reduces to only `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms introduced.
 

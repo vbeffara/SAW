@@ -1,6 +1,31 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz core factored: assembler proved, single search sorry isolated (NEWEST).**
+> **Umlaufsatz diagonal-split combinatorial infrastructure added (NEWEST).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz; the whole
+> library still builds end-to-end (now 8127 jobs) and the top theorem
+> `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`); no new axioms.  The single
+> remaining live core is still `exists_empty_corner_avoiding` (Meisters
+> two-ears search; needs the Jordan-curve-level diagonal-split recursion).
+> This round added a new **sorry-free** preparation file
+> `RequestProject/SAWUmlaufEarSplit.lean` (imported by `SAWUmlaufPolygon`,
+> hence in the `SAWFinal` build chain) holding the *purely combinatorial*
+> list-surgery the diagonal-split recursion needs.  For a cycle `V` and a
+> chord `V[0]–V[k]` it defines the two sub-polygons
+> `chordLeft V k = V.take (k+1)` (vertices `V₀…V_k`) and
+> `chordRight V k = V.drop k ++ V.take 1` (vertices `V_k…V_{n-1},V₀`), and
+> proves, sorry-free: their exact lengths (`chordLeft_length`,
+> `chordRight_length`); that both are `≥ 3` yet strictly shorter than `V`
+> (`chordLeft_length_ge/_lt`, `chordRight_length_ge/_lt`) — the strong-induction
+> measure decrease; that they meet the shared diagonal correctly at their
+> endpoints (`chordLeft_head/_getLast`, `chordRight_head/_getLast`); and that
+> together they cover every vertex (`mem_chord_split`).  These are documented
+> as preparation toward `exists_empty_corner_avoiding` and isolate the genuine
+> remaining gap to the two Jordan-curve-level facts (existence of an interior
+> diagonal, and `PolygonSimple` preservation under the split), which remain
+> open.
+
+> **Umlaufsatz core factored: assembler proved, single search sorry isolated.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz; touched only
 > `RequestProject/SAWUmlaufPolygon.lean`.  The whole library still builds
 > end-to-end (8126 jobs) and the top theorem `hex_closed_trail_turning_number`

@@ -59,6 +59,7 @@ import RequestProject.SAWUmlaufEarSide
 import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
 import RequestProject.SAWUmlaufCorner
+import RequestProject.SAWUmlaufEarSplit
 
 open Real Complex ComplexConjugate
 
