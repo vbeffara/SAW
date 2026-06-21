@@ -1,3 +1,18 @@
+# Summary of changes for run 109ee34b-fda7-47ab-8dc5-3c301486f36b
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), as requested, making no changes outside that chain.
+
+State at start: the entire Umlaufsatz reduced to a single geometric `sorry`, `meisters_reduction` in `RequestProject/SAWUmlaufPolygon.lean` (the Meisters "two-ears" search core). The whole library built end-to-end and the top theorem reduced only to `sorryAx` plus the allowed axioms.
+
+What I added this round (all in `RequestProject/SAWUmlaufPolygon.lean`, all verified by a green end-to-end build of 8127 jobs, and all `#print axioms`-confirmed sorry-free — only `propext, Classical.choice, Quot.sound`):
+
+- `segments_cross` — the standard planar segment-crossing criterion: if `c,d` lie strictly on opposite sides of line `a–b`, and `a,b` strictly on opposite sides of line `c–d`, the closed segments `[a,b]` and `[c,d]` meet. Reusable; absent from Mathlib.
+- `quad_diagonal_interior` — the genuine n=4 Jordan content: a non-degenerate simple quadrilateral always has an interior diagonal. Derived from `segments_cross` via the four-point orientation sign calculus (the edge-disjointness hypotheses are essential).
+- `meisters_reduction_quad` — the strong-induction base case, now fully proved: a simple non-degenerate quadrilateral has an empty corner avoiding any forbidden vertex `z`. It reduces entirely to `quad_diagonal_interior` plus clean orientation algebra.
+- `exists_farthest_interior` and `not_mem_segment_of_cross_ne` — the pivot-vertex selection and a diagonal-clearness helper.
+- Restructured `meisters_reduction` into the base case (length 4, discharged by `meisters_reduction_quad`) plus the explicit Meisters dichotomy for length ≥ 5: an interior branch (non-empty corner → farthest-interior-vertex diagonal split, recursing through the induction hypothesis) and an empty/diagonal branch (empty corner → direct ear or one-step recursion to dodge `z`). Both remain as well-documented `sorry`s carrying the genuine inductive Jordan content.
+
+Net effect: the discrete Umlaufsatz base case is now fully formalized, and every new lemma is consumed (no dead branches; the only branch that looks unreferenced, `exists_farthest_interior`, is now wired into the interior branch). The remaining open content is exactly the two inductive branches of `meisters_reduction` for polygons with ≥ 5 vertices. The top theorem still reduces only to `sorryAx` plus the allowed axioms; no new axioms were introduced, and all partial progress is kept as compiling Lean. Progress is recorded at the top of `PROOF_STATUS.md`. No work was done outside the Umlaufsatz.
+
 # Summary of changes for run 5c4fda95-8dda-4a63-be42-b94059ceb1dc
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (the theorem `hex_closed_trail_turning_number`), as requested.
 

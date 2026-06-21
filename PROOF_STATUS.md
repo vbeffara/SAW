@@ -1,7 +1,46 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: quadrilateral base case of the Meisters search proved
+> sorry-free; open core now split into the two length-≥5 branches (NEWEST).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole
+> library still builds end-to-end (8127 jobs through
+> `RequestProject/SAWFinal.lean`) and the top theorem
+> `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`); no new axioms.  This round, in
+> `RequestProject/SAWUmlaufPolygon.lean`:
+>
+> * Proved **`segments_cross`** (sorry-free): the standard planar
+>   segment-crossing criterion — if `c,d` are strictly on opposite sides of
+>   line `a–b` and `a,b` strictly on opposite sides of line `c–d`, then the
+>   closed segments `[a,b]` and `[c,d]` meet.  (Reusable, absent from Mathlib.)
+> * Proved **`quad_diagonal_interior`** (sorry-free): the genuine `n = 4`
+>   Jordan content — a non-degenerate simple quadrilateral has an interior
+>   diagonal (one of the two diagonals has the opposite pair of vertices on
+>   strictly opposite sides).  Derived from `segments_cross` by the four-point
+>   orientation sign calculus; the edge-disjointness hypotheses are essential.
+> * Proved **`meisters_reduction_quad`** (sorry-free): the strong-induction
+>   **base case** — a simple non-degenerate quadrilateral has an empty corner
+>   avoiding any forbidden vertex `z`.  Reduces entirely to
+>   `quad_diagonal_interior` plus the clean orientation algebra (using
+>   `inTriangleStrict_apex_sameSide`, `not_mem_segment_of_cross_ne`,
+>   `cross_edges_eq_shoelace2_triple`, `shoelace2_rotate`).
+> * Proved **`exists_farthest_interior`** and **`not_mem_segment_of_cross_ne`**
+>   (sorry-free): the pivot-vertex selection and the diagonal-clearness helper.
+> * Restructured **`meisters_reduction`** into the base case (length 4, now
+>   discharged by `meisters_reduction_quad`) plus the explicit Meisters
+>   dichotomy for length ≥ 5: an **interior branch** (non-empty corner →
+>   farthest-interior-vertex diagonal split, recursing through `IH`) and an
+>   **empty/diagonal branch** (empty corner → direct ear or one-step `IH`
+>   recursion to dodge `z`).  Both are well-documented `sorry`s carrying the
+>   genuine remaining inductive Jordan content; all five new lemmas above are
+>   consumed (no dead branches).
+>
+> Net effect: the discrete Umlaufsatz base case is fully formalized and the
+> remaining open content is exactly the two inductive branches of
+> `meisters_reduction` for polygons with ≥ 5 vertices.
+
 > **Umlaufsatz: Meisters Step 1 (convex extreme-vertex setup) proved
-> sorry-free and wired into the open core (NEWEST).**  Worked exclusively on
+> sorry-free and wired into the open core.**  Worked exclusively on
 > the top-priority discrete Hopf Umlaufsatz.  The whole library still builds
 > end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`) and the top
 > theorem `hex_closed_trail_turning_number` still reduces only to `sorryAx`

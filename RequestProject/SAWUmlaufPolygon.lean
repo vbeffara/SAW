@@ -1145,6 +1145,216 @@ lemma exists_lexmin_mid_rotation (V : List ℂ) (h3 : 3 ≤ V.length) :
   intros x y w hx hy hw h_in_triangle;
   apply HexArea.lexMin_not_inTriangleStrict V v hv_lex_min x y w hx hy hw h_in_triangle
 
+/-- **Farthest interior vertex (a true, reusable building block).**  If the
+    corner triangle `a, b, c` contains at least one vertex of `rest` in its
+    strict interior, then among those interior vertices there is one, `w`, that
+    is *farthest from the base diagonal* `a–c` (maximising `cross (c-a) (·-a)`).
+    This is exactly the pivot vertex of Meisters' diagonal split.  Proved
+    sorry-free from `HexArea.exists_max_cross` applied to the sublist of
+    interior vertices.  Consumed by `meisters_reduction` (interior branch). -/
+lemma exists_farthest_interior (a b c : ℂ) (rest : List ℂ)
+    (hne : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x) :
+    ∃ w ∈ rest, HexArea.inTriangleStrict a b c w ∧
+      ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) ≤ HexArea.cross (c - a) (w - a) := by
+  classical
+  set S : List ℂ := rest.filter (fun x => decide (HexArea.inTriangleStrict a b c x)) with hS
+  have hSne : S ≠ [] := by
+    obtain ⟨x, hx, hxin⟩ := hne
+    intro hSempty
+    have : x ∈ S := by
+      rw [hS, List.mem_filter]; exact ⟨hx, by simpa using hxin⟩
+    rw [hSempty] at this; simpa using this
+  obtain ⟨w, hwS, hwmax⟩ := HexArea.exists_max_cross (c - a) a S hSne
+  have hwrest : w ∈ rest := by
+    have := (List.mem_filter.mp (hS ▸ hwS)).1; exact this
+  have hwin : HexArea.inTriangleStrict a b c w := by
+    have := (List.mem_filter.mp (hS ▸ hwS)).2; simpa using this
+  refine ⟨w, hwrest, hwin, ?_⟩
+  intro y hy hyin
+  apply hwmax
+  rw [hS, List.mem_filter]; exact ⟨hy, by simpa using hyin⟩
+
+/-- **A point off the supporting line of a segment is not on the segment.**  If
+    `cross (c - a) (x - a) ≠ 0` (i.e. `x` is not collinear with `a` and `c`)
+    then `x ∉ segment ℝ a c`.  Reusable building block for the diagonal-clearness
+    clause of `EmptyCornerData`. -/
+lemma not_mem_segment_of_cross_ne (a c x : ℂ)
+    (h : HexArea.cross (c - a) (x - a) ≠ 0) : x ∉ segment ℝ a c := by
+  intro hx
+  rw [segment_eq_image] at hx
+  obtain ⟨t, _, rfl⟩ := hx
+  apply h
+  simp only [HexArea.cross, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+    Complex.real_smul, Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im]
+  ring
+
+/-
+**The standard segment-crossing criterion.**  If `c` and `d` are on
+    strictly opposite sides of the line `a–b` (`cross (b-a)(c-a)` and
+    `cross (b-a)(d-a)` have opposite signs, i.e. their product is negative) and
+    `a` and `b` are on strictly opposite sides of the line `c–d`, then the closed
+    segments `[a,b]` and `[c,d]` meet (they are not disjoint).  The common point
+    is the unique intersection of the two (non-parallel) supporting lines, given
+    by Cramer's rule; the opposite-side hypotheses force its two parameters into
+    `(0,1)`.  Reusable; consumed by `quad_diagonal_interior`.
+-/
+lemma segments_cross (a b c d : ℂ)
+    (h1 : HexArea.cross (b - a) (c - a) * HexArea.cross (b - a) (d - a) < 0)
+    (h2 : HexArea.cross (d - c) (a - c) * HexArea.cross (d - c) (b - c) < 0) :
+    ¬ Disjoint (segment ℝ a b) (segment ℝ c d) := by
+  -- Let $u = \text{cross}(b-a, c-a)$ and $v = \text{cross}(b-a, d-a)$.
+  set u := HexArea.cross (b - a) (c - a)
+  set v := HexArea.cross (b - a) (d - a);
+  -- By definition of $u$ and $v$, we know that $u \neq 0$ and $v \neq 0$, and $u \neq v$.
+  have hu_ne_zero : u ≠ 0 := by
+    aesop_cat
+  have hv_ne_zero : v ≠ 0 := by
+    aesop
+  have hu_ne_v : u ≠ v := by
+    nlinarith [ mul_self_pos.2 hu_ne_zero, mul_self_pos.2 hv_ne_zero ];
+  -- Let $s = \frac{u}{u - v}$ and $t = \frac{u'}{u' - v'}$, where $u' = \text{cross}(d-c, a-c)$ and $v' = \text{cross}(d-c, b-c)$.
+  set u' := HexArea.cross (d - c) (a - c)
+  set v' := HexArea.cross (d - c) (b - c)
+  set s := u / (u - v)
+  set t := u' / (u' - v');
+  -- By definition of $s$ and $t$, we know that $0 < s < 1$ and $0 < t < 1$.
+  have hs_bounds : 0 < s ∧ s < 1 := by
+    cases lt_or_gt_of_ne hu_ne_zero <;> cases lt_or_gt_of_ne hv_ne_zero <;> constructor <;> nlinarith [ div_mul_cancel₀ u ( sub_ne_zero_of_ne hu_ne_v ) ]
+  have ht_bounds : 0 < t ∧ t < 1 := by
+    by_cases hu'_pos : 0 < u';
+    · exact ⟨ div_pos hu'_pos ( by nlinarith ), by rw [ div_lt_iff₀ ] <;> nlinarith ⟩;
+    · exact ⟨ div_pos_of_neg_of_neg ( lt_of_le_of_ne ( le_of_not_gt hu'_pos ) ( by aesop_cat ) ) ( by nlinarith ), by rw [ div_lt_iff_of_neg ] <;> nlinarith ⟩;
+  -- By definition of $s$ and $t$, we know that $P = c + s • (d - c)$ and $P = a + t • (b - a)$.
+  have hP_eq : c + s • (d - c) = a + t • (b - a) := by
+    simp +zetaDelta at *;
+    rw [ div_mul_eq_mul_div, div_mul_eq_mul_div, add_div', add_div' ];
+    · rw [ div_eq_div_iff ] <;> norm_cast;
+      · norm_num [ Complex.ext_iff, HexArea.cross ] at *;
+        constructor <;> ring;
+      · exact sub_ne_zero_of_ne hu_ne_v;
+      · exact sub_ne_zero_of_ne <| by aesop_cat;
+    · exact_mod_cast sub_ne_zero_of_ne <| by aesop;
+    · exact_mod_cast sub_ne_zero_of_ne hu_ne_v;
+  rw [ Set.not_disjoint_iff ];
+  use c + s • (d - c);
+  rw [ segment_eq_image', segment_eq_image' ];
+  exact ⟨ ⟨ t, ⟨ by linarith, by linarith ⟩, hP_eq.symm ⟩, ⟨ s, ⟨ by linarith, by linarith ⟩, rfl ⟩ ⟩
+
+/-
+**The interior-diagonal dichotomy for a simple quadrilateral (the genuine
+    `n = 4` Jordan content).**  For a non-degenerate simple quadrilateral
+    `a, b, c, d` (the four consecutive triples non-collinear, and the two pairs
+    of opposite edges `a–b`/`c–d` and `b–c`/`d–a` disjoint), at least one of the
+    two diagonals is *interior*: either `b, d` are on strictly opposite sides of
+    the line `a–c`, or `a, c` are on strictly opposite sides of the line `b–d`.
+    The edge-disjointness hypotheses are essential (a self-intersecting
+    quadrilateral has neither diagonal interior).  Consumed by
+    `meisters_reduction_quad`.
+-/
+lemma quad_diagonal_interior (a b c d : ℂ)
+    (hab : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hbc : HexArea.cross (c - b) (d - c) ≠ 0)
+    (hcd : HexArea.cross (d - c) (a - d) ≠ 0)
+    (hda : HexArea.cross (a - d) (b - a) ≠ 0)
+    (hdisj1 : Disjoint (segment ℝ a b) (segment ℝ c d))
+    (hdisj2 : Disjoint (segment ℝ b c) (segment ℝ d a)) :
+    HexArea.cross (c - a) (b - a) * HexArea.cross (c - a) (d - a) < 0 ∨
+      HexArea.cross (d - b) (a - b) * HexArea.cross (d - b) (c - b) < 0 := by
+  by_contra h;
+  obtain ⟨z, x, y, w, hz, hx, hy, hw⟩ : ∃ z x y w : ℝ, z = HexArea.cross (b - a) (c - a) ∧ x = HexArea.cross (c - a) (d - a) ∧ y = HexArea.cross (d - b) (a - b) ∧ w = HexArea.cross (c - b) (d - b) ∧ z ≠ 0 ∧ x ≠ 0 ∧ y ≠ 0 ∧ w ≠ 0 := by
+    simp_all +decide [ HexArea.cross ];
+    grind;
+  have h_signs : x * z < 0 ∧ y * w < 0 := by
+    simp_all +decide [ mul_comm, HexArea.cross ];
+    exact ⟨ lt_of_le_of_ne ( by linarith ) ( by aesop ), lt_of_le_of_ne ( by linarith ) ( by aesop ) ⟩;
+  have h_cases : (z * y < 0 ∧ x * w < 0) ∨ (w * z < 0 ∧ y * x < 0) := by
+    cases lt_or_gt_of_ne hw.2.1 <;> cases lt_or_gt_of_ne hw.2.2.1 <;> cases lt_or_gt_of_ne hw.2.2.2.1 <;> cases lt_or_gt_of_ne hw.2.2.2.2 <;> first | left; constructor <;> nlinarith | right; constructor <;> nlinarith;
+  cases' h_cases with h_case1 h_case2;
+  · apply segments_cross a b c d;
+    · simp_all +decide [ HexArea.cross ];
+      nlinarith;
+    · convert h_case1.2 using 1 ; ring;
+      rw [ hx, hw.1 ] ; unfold HexArea.cross; norm_num [ Complex.ext_iff ] ; ring;
+    · exact hdisj1;
+  · apply segments_cross b c d a;
+    · simp_all +decide [ HexArea.cross ];
+      nlinarith;
+    · unfold HexArea.cross at *; norm_num [ Complex.ext_iff ] at *;
+      grind;
+    · exact hdisj2
+
+/-
+**The quadrilateral base case of the Meisters search.**  A simple,
+    non-degenerate polygon with exactly four vertices, together with any
+    forbidden vertex `z`, has an empty corner avoiding `z`.  This is the genuine
+    base case of the strong induction in `exists_empty_corner_avoiding_aux`: a
+    split of a quadrilateral produces length-3 sub-polygons, to which the
+    induction hypothesis (which requires `≥ 4` vertices) does not apply, so the
+    quadrilateral must be handled directly by the (finite) two-ears fact for
+    quadrilaterals.  Consumed by `meisters_reduction`.
+-/
+lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
+    EmptyCornerData V z := by
+  rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | ⟨ d, _ | V ⟩ ⟩ ⟩ ⟩ ) <;> simp_all +decide;
+  -- Extract the four consecutive-triple non-degeneracies from `hnd`.
+  obtain ⟨hab, hbc, hcd, hda⟩ : HexArea.cross (b - a) (c - b) ≠ 0 ∧ HexArea.cross (c - b) (d - c) ≠ 0 ∧ HexArea.cross (d - c) (a - d) ≠ 0 ∧ HexArea.cross (a - d) (b - a) ≠ 0 := by
+    unfold polyCycNondeg at hnd; simp_all +decide [ polyNondeg ] ;
+  obtain ⟨hdisj1, hdisj2⟩ : Disjoint (segment ℝ a b) (segment ℝ c d) ∧ Disjoint (segment ℝ b c) (segment ℝ d a) := by
+    have := hsimple.2; simp_all +decide [ closedEdges ] ;
+    grind +locals;
+  obtain H | H := quad_diagonal_interior a b c d hab hbc hcd hda hdisj1 hdisj2;
+  · by_cases hbz : b = z;
+    · use 2, c, d, a, b, b, [b];
+      simp_all +decide [ HexArea.inTriangleStrict ];
+      refine' ⟨ _, _, _, _, _, _ ⟩;
+      all_goals norm_num [ HexArea.cross, HexArea.shoelace2 ] at *;
+      any_goals contrapose! hab; linarith;
+      · grind;
+      · constructor <;> intros <;> nlinarith;
+      · exact fun h => hab <| by rw [ segment_eq_image ] at h; obtain ⟨ t, ht, rfl ⟩ := h; norm_num; ring;
+      · constructor <;> intro <;> nlinarith;
+    · refine' ⟨ 0, a, b, c, d, d, [ d ], _, _, _, _ ⟩ <;> simp_all +decide [ List.rotate ];
+      refine' ⟨ _, _, _, _, _ ⟩;
+      · grind +suggestions;
+      · unfold HexArea.cross at * ; simp_all +decide [ Complex.ext_iff ];
+        grind;
+      · exact fun h => H.not_ge <| by nlinarith [ HexArea.inTriangleStrict_apex_sameSide a b c d h ] ;
+      · exact not_mem_segment_of_cross_ne a c d ( by aesop );
+      · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
+        unfold HexArea.cross at H; simp_all +decide [ Complex.ext_iff ] ;
+        constructor <;> intro <;> nlinarith;
+  · by_cases hcz : c = z;
+    · use 3, d, a, b, c, c, [c];
+      simp_all +decide [ HexArea.inTriangleStrict ];
+      refine' ⟨ _, _, _, _, _ ⟩;
+      · rintro rfl; simp_all +decide [ HexArea.cross ];
+        grind;
+      · simp_all +decide [ HexArea.cross ];
+        grind;
+      · simp_all +decide [ HexArea.cross ];
+        grind +qlia;
+      · unfold HexArea.cross at *; norm_num [ Complex.ext_iff ] at *;
+        constructor <;> intros <;> nlinarith;
+      · constructor;
+        · intro h;
+          obtain ⟨ u, v, hu, hv, huv, rfl ⟩ := h;
+          simp_all +decide [ HexArea.cross ];
+          grind;
+        · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
+          unfold HexArea.cross at *; norm_num [ Complex.ext_iff ] at *;
+          constructor <;> intro <;> nlinarith;
+    · use 1, b, c, d, a, a, [a];
+      unfold HexArea.inTriangleStrict; simp_all +decide [ HexArea.cross ] ;
+      refine' ⟨ _, _, _, _, _ ⟩;
+      · grind +qlia;
+      · grind;
+      · constructor <;> intros <;> nlinarith;
+      · exact fun h => hda <| by rw [ segment_eq_image ] at h; obtain ⟨ t, ht, rfl ⟩ := h; norm_num [ Complex.ext_iff ] at *; nlinarith;
+      · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
+        constructor <;> intro <;> nlinarith
+
 /-- **The geometric reduction step of the Meisters two-ears search (the single
     remaining open core, now carrying the strong-induction hypothesis).**
     Given the simple, non-degenerate polygon `V` (`≥ 4` vertices), a forbidden
@@ -1178,9 +1388,36 @@ lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
   -- Jordan-curve content — the empty-corner / farthest-interior-vertex
   -- dichotomy, the interior-diagonal split, and `PolygonSimple` preservation,
   -- recursing through `IH` — is the single open gap below.
+  -- **Base case (length 4): the quadrilateral two-ears fact.**  `IH` cannot be
+  -- used on a quadrilateral (its diagonal split produces length-3 triangles),
+  -- so it is discharged directly by `meisters_reduction_quad`.
+  by_cases h4 : V.length = 4
+  · exact meisters_reduction_quad V h4 hsimple hnd z
+  -- From here `V.length ≥ 5`.
   obtain ⟨r, a, b, c, rest, hrot, hbmem, hbconv⟩ :=
     exists_lexmin_mid_rotation V (by omega)
-  sorry
+  by_cases hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x
+  · -- **Interior branch (Meisters' diagonal split).**  The convex corner
+    -- `a, b, c` is *not* empty.  Pivot to the vertex `w ∈ rest` farthest from
+    -- the base diagonal `a–c` (`exists_farthest_interior`, proved sorry-free).
+    -- By `inTriangleStrict_apex_sameSide`, `w` is strictly on the apex side of
+    -- `a–c`; by `farthest_region_empty`/`subTri_axc_orient_pos`/
+    -- `inTriangleStrict_pos_nest` the region beyond `w` is empty, so `b–w` is
+    -- an interior diagonal.  Splitting along `b–w` (`chordLeft`/`chordRight`)
+    -- yields two strictly shorter simple non-degenerate sub-polygons; recurse
+    -- through `IH` (forbidding the shared diagonal endpoint) to obtain an empty
+    -- corner of `V` avoiding `z`.  This is the genuine Jordan-curve content and
+    -- the single remaining open gap of the interior branch.
+    obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior a b c rest hcase
+    sorry
+  · -- **Empty/diagonal branch.**  No vertex of `rest` lies in the strict
+    -- interior of `a, b, c`.  Either `b` is itself an empty ear (produce the
+    -- `EmptyCornerData` data directly, dodging `z` via a cyclic neighbour or a
+    -- one-step `IH` recursion on the clip `a :: c :: rest` when `b = z`), or a
+    -- vertex lies on the closed diagonal `a–c`, handled as a degenerate split.
+    -- This is the remaining open gap of the empty branch.
+    push_neg at hcase
+    sorry
 
 /-- **Strong-induction wrapper (sorry-free).**  Discharges the induction
     hypothesis of `meisters_reduction` by strong induction on the polygon
