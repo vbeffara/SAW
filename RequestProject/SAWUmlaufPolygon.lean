@@ -1355,7 +1355,7 @@ lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
       · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
         constructor <;> intro <;> nlinarith
 
-/-- **The geometric reduction step of the Meisters two-ears search (the single
+/- **The geometric reduction step of the Meisters two-ears search (the single
     remaining open core, now carrying the strong-induction hypothesis).**
     Given the simple, non-degenerate polygon `V` (`≥ 4` vertices), a forbidden
     vertex `z`, and the induction hypothesis `IH` providing an empty corner
@@ -1376,6 +1376,54 @@ lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
     `inTriangleStrict_apex_sameSide`), split along the resulting interior
     diagonal via `chordLeft`/`chordRight` and recurse through `IH` on the
     strictly shorter sub-polygon avoiding the shared diagonal endpoint. -/
+/-- **Meisters interior branch (open Jordan-curve core).**  The convex corner
+    `a, b, c` (with `b` the lex-minimal, hence convex, middle vertex of the
+    rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not* empty: `w ∈ rest`
+    is the interior vertex farthest from the base diagonal `a–c`.  The chord
+    `b–w` is then an interior diagonal of `V`; splitting `V` along it
+    (`chordLeft`/`chordRight` in `SAWUmlaufEarSplit`) yields two strictly
+    shorter simple non-degenerate sub-polygons, and recursing through `IH`
+    (forbidding the shared diagonal endpoint) returns an empty corner of `V`
+    avoiding `z`.  Extracted from `meisters_reduction` so the interior branch
+    can be discharged independently.  Consumed by `meisters_reduction`. -/
+lemma meisters_reduction_interior (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
+    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z')
+    (h4 : ¬ V.length = 4)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x)
+    (w : ℂ) (hwrest : w ∈ rest) (hwin : HexArea.inTriangleStrict a b c w)
+    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) ≤ HexArea.cross (c - a) (w - a)) :
+    EmptyCornerData V z := by
+  sorry
+
+/-- **Meisters empty/diagonal branch (open Jordan-curve core).**  No vertex of
+    `rest` lies in the strict interior of the convex corner `a, b, c` (with `b`
+    the lex-minimal, hence convex, middle vertex of `V.rotate r =
+    a :: b :: c :: rest`).  Either `b` is itself an empty ear (produce the
+    `EmptyCornerData` directly, dodging `z` via a cyclic neighbour or a one-step
+    `IH` recursion on the clip `a :: c :: rest` when `b = z`), or a vertex lies
+    on the closed diagonal `a–c`, handled as a degenerate split.  Extracted from
+    `meisters_reduction` so the empty branch can be discharged independently.
+    Consumed by `meisters_reduction`. -/
+lemma meisters_reduction_empty (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
+    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z')
+    (h4 : ¬ V.length = 4)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) :
+    EmptyCornerData V z := by
+  sorry
+
 lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
     (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
@@ -1384,10 +1432,7 @@ lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
   -- **Meisters Step 1 (done sorry-free):** rotate the convex extreme
   -- (leftmost-lowest) vertex `b` to the middle of the cycle.  `b` is a
   -- convex-hull vertex, so it is never in the strict interior of any triangle
-  -- spanned by polygon vertices (`hbconv`).  The remaining genuine
-  -- Jordan-curve content — the empty-corner / farthest-interior-vertex
-  -- dichotomy, the interior-diagonal split, and `PolygonSimple` preservation,
-  -- recursing through `IH` — is the single open gap below.
+  -- spanned by polygon vertices (`hbconv`).
   -- **Base case (length 4): the quadrilateral two-ears fact.**  `IH` cannot be
   -- used on a quadrilateral (its diagonal split produces length-3 triangles),
   -- so it is discharged directly by `meisters_reduction_quad`.
@@ -1397,27 +1442,14 @@ lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
   obtain ⟨r, a, b, c, rest, hrot, hbmem, hbconv⟩ :=
     exists_lexmin_mid_rotation V (by omega)
   by_cases hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x
-  · -- **Interior branch (Meisters' diagonal split).**  The convex corner
-    -- `a, b, c` is *not* empty.  Pivot to the vertex `w ∈ rest` farthest from
-    -- the base diagonal `a–c` (`exists_farthest_interior`, proved sorry-free).
-    -- By `inTriangleStrict_apex_sameSide`, `w` is strictly on the apex side of
-    -- `a–c`; by `farthest_region_empty`/`subTri_axc_orient_pos`/
-    -- `inTriangleStrict_pos_nest` the region beyond `w` is empty, so `b–w` is
-    -- an interior diagonal.  Splitting along `b–w` (`chordLeft`/`chordRight`)
-    -- yields two strictly shorter simple non-degenerate sub-polygons; recurse
-    -- through `IH` (forbidding the shared diagonal endpoint) to obtain an empty
-    -- corner of `V` avoiding `z`.  This is the genuine Jordan-curve content and
-    -- the single remaining open gap of the interior branch.
+  · -- **Interior branch (Meisters' diagonal split).**
     obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior a b c rest hcase
-    sorry
-  · -- **Empty/diagonal branch.**  No vertex of `rest` lies in the strict
-    -- interior of `a, b, c`.  Either `b` is itself an empty ear (produce the
-    -- `EmptyCornerData` data directly, dodging `z` via a cyclic neighbour or a
-    -- one-step `IH` recursion on the clip `a :: c :: rest` when `b = z`), or a
-    -- vertex lies on the closed diagonal `a–c`, handled as a degenerate split.
-    -- This is the remaining open gap of the empty branch.
+    exact meisters_reduction_interior V hlen hsimple hnd z IH h4 r a b c rest hrot
+      hbmem hbconv hcase w hwrest hwin hwmax
+  · -- **Empty/diagonal branch.**
     push_neg at hcase
-    sorry
+    exact meisters_reduction_empty V hlen hsimple hnd z IH h4 r a b c rest hrot
+      hbmem hbconv hcase
 
 /-- **Strong-induction wrapper (sorry-free).**  Discharges the induction
     hypothesis of `meisters_reduction` by strong induction on the polygon

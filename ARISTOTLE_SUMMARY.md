@@ -1,3 +1,21 @@
+# Summary of changes for run c2d4af97-a104-4254-bdb7-24a5a11f7fa3
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that chain.
+
+State at start: the whole Umlaufsatz built end-to-end and reduced to a single monolithic open core, `meisters_reduction` in `RequestProject/SAWUmlaufPolygon.lean`, whose proof body contained the two open length-≥5 Meisters branches as inline `sorry`s.
+
+What I did this round (all in `RequestProject/SAWUmlaufPolygon.lean`):
+
+- Refactored the monolithic `meisters_reduction` into two independently-targetable, fully-documented branch lemmas, each carrying exactly the hypotheses of its branch (the rotated cycle `V.rotate r = a :: b :: c :: rest`, the convexity hypothesis `hbconv`, the strong-induction hypothesis `IH`, and the branch discriminant):
+  * `meisters_reduction_interior` — the interior-diagonal split branch (a far vertex `w` lies strictly inside the convex corner; split along the chord `b–w` and recurse via `IH`).
+  * `meisters_reduction_empty` — the empty/diagonal branch (no far vertex strictly inside the corner; `b` is an empty ear, dodging `z` via a cyclic neighbour or a one-step `IH` recursion).
+- Rewrote `meisters_reduction` to dispatch to these two lemmas, so it is now itself `sorry`-free apart from delegating to the two branch lemmas. The previous doc-comment for `meisters_reduction` was converted to a plain block comment so it no longer dangles.
+
+Net effect: the genuine remaining open content of the entire Umlaufsatz is now exactly the two Meisters branches, each a separate, clearly-scoped lemma rather than two inline `sorry`s buried in one proof. This preserves all partial progress as building Lean files with sorries.
+
+Verification: the full library builds green (8127 jobs through `RequestProject/SAWFinal.lean`), and `#print axioms hex_closed_trail_turning_number` confirms it still depends only on `propext, sorryAx, Classical.choice, Quot.sound` (no new axioms). The only two genuine `sorry`s in the Umlaufsatz chain are the bodies of `meisters_reduction_interior` and `meisters_reduction_empty`; the remaining textual `sorry` in the file sits inside a `/- … -/` comment documenting a previously-identified false dead branch.
+
+Honest status: I attempted both branches with the theorem prover at high effort with detailed sketches and the relevant brick lemmas; neither closed in a single search. These two branches are the Jordan-curve-theorem-level heart of the discrete Umlaufsatz (interior diagonal split with chord-split simplicity preservation, and the two-ears forbidden-vertex recursion), which still require substantial additional machinery to discharge. All chain files remain imported (no orphaned preparation files in the Umlaufsatz chain).
+
 # Summary of changes for run 109ee34b-fda7-47ab-8dc5-3c301486f36b
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), as requested, making no changes outside that chain.
 
