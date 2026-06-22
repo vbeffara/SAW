@@ -145,6 +145,33 @@ lemma lexMin_not_inTriangleStrict (L : List ℂ) (v : ℂ)
   convert inTriangleStrict_not_lexMin a b c v h _;
   aesop
 
+/-
+**The extreme (lex-minimal) vertex never lies on a segment between two other
+    distinct vertices.**  If `v` is lexicographically minimal (leftmost, then
+    lowest) among all points of `L`, and `u, w ∈ L` are both distinct from `v`,
+    then `v ∉ segment ℝ u w`.  This is the segment analogue of
+    `lexMin_not_inTriangleStrict` (the extreme vertex being a *strict* convex-hull
+    vertex, so it is not on the relative interior of any chord of the hull).
+
+    Proof: if `v = α•u + β•w` with `α, β ≥ 0`, `α + β = 1`, then `v ≠ u`, `v ≠ w`
+    force `α, β > 0`; lex-minimality gives `u.re, w.re ≥ v.re`, so the strict
+    convex average `v.re = α u.re + β w.re` forces `u.re = w.re = v.re`, whence
+    `u.im, w.im ≥ v.im` and the same averaging forces `u.im = w.im = v.im`, i.e.
+    `u = v`, contradicting `v ≠ u`.  Reusable building block for the Meisters
+    empty-branch lift (the convex apex `b` is never on the clip diagonal).
+-/
+lemma lexMin_not_mem_segment (L : List ℂ) (v : ℂ)
+    (hv : ∀ w ∈ L, v.re < w.re ∨ (v.re = w.re ∧ v.im ≤ w.im))
+    (u w : ℂ) (hu : u ∈ L) (hw : w ∈ L) (hvu : v ≠ u) (hvw : v ≠ w) :
+    v ∉ segment ℝ u w := by
+  contrapose! hvu;
+  rw [ segment_eq_image ] at hvu;
+  obtain ⟨ θ, hθ, rfl ⟩ := hvu; norm_num [ Complex.ext_iff ] at *;
+  cases hv u hu <;> cases hv w hw <;> cases lt_or_eq_of_le hθ.1 <;> cases lt_or_eq_of_le hθ.2 <;> first | nlinarith | simp_all +decide ;
+  · subst_vars; linarith;
+  · nlinarith;
+  · subst_vars; linarith;
+
 end HexArea
 
 end

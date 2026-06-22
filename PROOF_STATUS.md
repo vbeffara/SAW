@@ -1,5 +1,31 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: added the convex-apex segment-exclusion brick for the empty
+> branch lift (NEWEST).**  Worked exclusively on the top-priority discrete Hopf
+> Umlaufsatz.  The whole library still builds end-to-end (8127 jobs through
+> `RequestProject/SAWFinal.lean`) and `hex_closed_trail_turning_number` still
+> reduces only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`); no new
+> axioms, no regressions.  This round:
+>
+> * Proved **`HexArea.lexMin_not_mem_segment`** (sorry-free) in
+>   `RequestProject/SAWUmlaufEarExtreme.lean`: the strict lex-minimal
+>   (leftmost-lowest) vertex of a polygon never lies on the segment between two
+>   other *distinct* vertices.  This is the segment analogue of the existing
+>   `lexMin_not_inTriangleStrict` (the extreme vertex is a *strict* convex-hull
+>   vertex, off the relative interior of every hull chord).  It is the missing
+>   geometric input for the empty-branch *lift* step (the convex apex `b` is
+>   never on the clip diagonal `a'–c'`, so it can be re-inserted without
+>   violating the `x ∉ segment ℝ a' c'` clause of `EmptyCornerData`).
+> * Analysis recorded: the two open cores `meisters_reduction_interior` /
+>   `meisters_reduction_empty` remain the genuine Jordan content.  Concrete
+>   enumeration confirms that, when recursing on the clip `a :: c :: rest` and
+>   lifting the returned ear back to `V`, the "clean" lift (ear strictly inside
+>   the `rest` arc) transports all `EmptyCornerData` clauses unchanged, while
+>   the "boundary" lifts (the clip ear adjacent to the diagonal endpoints,
+>   i.e. `b' = rest.head` or `b' = rest.getLast`) make the convex apex `b` a new
+>   clip-neighbour and so need their own non-degeneracy treatment — the genuine
+>   remaining gap.
+
 > **Umlaufsatz: quadrilateral base case of the Meisters search proved
 > sorry-free; open core now split into the two length-≥5 branches (NEWEST).**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole
