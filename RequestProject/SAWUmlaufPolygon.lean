@@ -1376,6 +1376,35 @@ lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
     `inTriangleStrict_apex_sameSide`), split along the resulting interior
     diagonal via `chordLeft`/`chordRight` and recurse through `IH` on the
     strictly shorter sub-polygon avoiding the shared diagonal endpoint. -/
+
+/-- **Clean direct empty-ear assembly (sorry-free, reusable).**  When the convex
+    apex `b` of the rotated cycle `V.rotate r = a :: b :: c :: rest` is already a
+    *bona-fide* empty ear avoiding `z` — i.e. `b ≠ z`, the corner is empty
+    (`hempty`), no far vertex sits on the closed diagonal `a–c` (`hdiag`), the
+    two diagonal-endpoint neighbours `p` (last of `rest`) and `q` (head of
+    `rest`) lie strictly off the *line* `a–c` (`hpline`, `hqline`), and the ear
+    triangle shares the clip orientation (`horient`) — the `EmptyCornerData`
+    package is assembled directly.  The two clip-turn non-degeneracies are
+    produced from `hpline`/`hqline` by `HexArea.clip_turn_at_a_ne_zero` and
+    `HexArea.clip_turn_at_c_ne_zero`.  This isolates the purely combinatorial
+    assembly of the empty branch from its genuine Jordan content (establishing
+    `hpline`, `hqline`, `hdiag`, `horient`, and the `b ≠ z` dodge), and is
+    consumed by `meisters_reduction_empty` to discharge its clean case. -/
+lemma empty_ear_direct (V : List ℂ) (z : ℂ) (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (p q : ℂ) (hrot : V.rotate r = a :: b :: c :: rest) (hbz : b ≠ z)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpline : HexArea.cross (c - a) (p - a) ≠ 0)
+    (hqline : HexArea.cross (c - a) (q - a) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))) :
+    EmptyCornerData V z :=
+  ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq,
+    HexArea.clip_turn_at_a_ne_zero a c p hpline,
+    HexArea.clip_turn_at_c_ne_zero a c q hqline,
+    hempty, hdiag, horient⟩
+
 /-- **Meisters interior branch (open Jordan-curve core).**  The convex corner
     `a, b, c` (with `b` the lex-minimal, hence convex, middle vertex of the
     rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not* empty: `w ∈ rest`
@@ -1422,7 +1451,41 @@ lemma meisters_reduction_empty (V : List ℂ) (hlen : 4 ≤ V.length)
         ¬ HexArea.inTriangleStrict x y w b)
     (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) :
     EmptyCornerData V z := by
-  sorry
+  -- `rest` is nonempty: `V.length ≥ 5`, so `rest.length = V.length - 3 ≥ 2`.
+  have hrest_len : 2 ≤ rest.length := by
+    have hl := congrArg List.length hrot
+    simp only [List.length_rotate, List.length_cons] at hl
+    omega
+  obtain ⟨p, hp⟩ : ∃ p, rest.getLast? = some p := by
+    cases hr : rest.getLast? with
+    | none => exfalso; rw [List.getLast?_eq_none_iff] at hr; subst hr; simp at hrest_len
+    | some p => exact ⟨p, rfl⟩
+  obtain ⟨q, hq⟩ : ∃ q, rest.head? = some q := by
+    cases hr : rest.head? with
+    | none => exfalso; rw [List.head?_eq_none_iff] at hr; subst hr; simp at hrest_len
+    | some q => exact ⟨q, rfl⟩
+  by_cases hclean : b ≠ z ∧ HexArea.cross (c - a) (p - a) ≠ 0 ∧
+      HexArea.cross (c - a) (q - a) ≠ 0 ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
+  · -- **Clean case (proved).**  `b ≠ z`, both clip endpoints `p, q` lie off the
+    -- line `a–c`, no far vertex sits on the closed diagonal, and the ear
+    -- orientation matches the clip: assemble the `EmptyCornerData` directly via
+    -- `empty_ear_direct`.
+    obtain ⟨hbz, hpl, hql, hdiag, horient⟩ := hclean
+    exact empty_ear_direct V z r a b c rest p q hrot hbz hp hq hpl hql hcase
+      hdiag horient
+  · -- **Non-clean case (open Jordan content).**  Either `b = z` (the forbidden
+    -- vertex coincides with the candidate ear tip), or a clip endpoint `p`/`q`
+    -- is collinear with `a, c`, or a far vertex lies on the closed diagonal
+    -- `a–c`, or the ear orientation is reversed.  In every sub-case `b` is not a
+    -- directly usable ear: recurse via `IH` on the clipped cycle
+    -- `a :: c :: rest` (strictly shorter, still simple and non-degenerate since
+    -- `b` is an empty ear) and lift the returned ear back to `V`, re-inserting
+    -- the lex-minimal convex apex `b` (never on the clip diagonal, by
+    -- `lexMin_not_mem_segment`).  This is the genuine remaining gap.
+    sorry
 
 lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)

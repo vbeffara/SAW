@@ -1,5 +1,39 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: proved the clean-case assembly brick `empty_ear_direct` and
+> discharged the clean case of the empty branch (NEWEST).**  Worked exclusively
+> on the top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`) and
+> `hex_closed_trail_turning_number` still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`); no new axioms, no regressions.
+> This round, in `RequestProject/SAWUmlaufPolygon.lean`:
+>
+> * Added and proved **`empty_ear_direct`** (sorry-free, reusable): from a
+>   rotation `V.rotate r = a :: b :: c :: rest` with `b ≠ z`, both clip
+>   endpoints `p = rest.getLast`, `q = rest.head` off the *line* `a–c`
+>   (`cross (c-a) (p-a) ≠ 0`, `cross (c-a) (q-a) ≠ 0`), an empty corner, a clear
+>   closed diagonal `a–c`, and matching ear/clip orientation, it assembles
+>   `EmptyCornerData V z` directly (the two clip-turn non-degeneracies coming
+>   from `HexArea.clip_turn_at_a_ne_zero`/`…c_ne_zero`).  This cleanly separates
+>   the purely-combinatorial assembly of the empty branch from its genuine
+>   Jordan content.
+> * Restructured **`meisters_reduction_empty`** to extract `p, q` (sorry-free)
+>   and `by_cases` on the clean predicate, *discharging the clean case* via
+>   `empty_ear_direct` and leaving a single, sharper `sorry` for the non-clean
+>   case (`b = z`, or a clip endpoint collinear with `a, c`, or a far vertex on
+>   the closed diagonal, or reversed orientation), which is handled by the
+>   clip/recurse-and-lift route.  Net: same number of open cores (the two
+>   `meisters_reduction_{interior,empty}` branches) but the empty branch's
+>   clean case is now proved, and `empty_ear_direct` is a consumed (not dead)
+>   brick.
+>
+> Analysis recorded for future rounds: the genuine empty-branch gap is the
+> planar-topology fact that an *empty* corner forces the clip `a :: c :: rest`
+> to be simple — an edge crossing the diagonal `a–c` would, by simplicity of the
+> two ear edges `a–b`, `b–c`, have to terminate at a vertex strictly inside the
+> corner triangle, contradicting emptiness.  The degenerate clip-collinearity
+> and `b = z` sub-cases additionally need the forbidden-vertex recursion.
+
 > **Umlaufsatz: added the convex-apex segment-exclusion brick for the empty
 > branch lift (NEWEST).**  Worked exclusively on the top-priority discrete Hopf
 > Umlaufsatz.  The whole library still builds end-to-end (8127 jobs through
