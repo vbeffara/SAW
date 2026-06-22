@@ -1480,6 +1480,52 @@ lemma clip_simple_nondeg_of_empty (a b c p q : ℂ) (rest : List ℂ)
       (diag_disjoint_of_empty_corner a b c rest hsrot hndtri hca hempty hdiag),
    polyCycNondeg_clip a b c p q rest hq hp hndrot hpa hcq⟩
 
+/-- **Empty-branch lift — the "good diagonal" subcase (self-contained, TRUE).**
+    This is the half of `meisters_reduction_empty2`'s non-clean case in which the
+    clip diagonal `a–c` is *clean*: both clip neighbours `p, q` lie off the line
+    `a–c` (`hpl`, `hql`), no far vertex sits on the closed diagonal (`hdiag`),
+    and the ear orientation matches the clip (`horient`).  Since the overall
+    branch is non-clean while the diagonal is clean, the only obstruction is that
+    the convex apex `b` coincides with a forbidden vertex (`hbf : b = z1 ∨
+    b = z2`).  We recurse via `IH2` on the strictly-shorter clip `a :: c :: rest`
+    (simple and non-degenerate by `clip_simple_nondeg_of_empty`) forbidding the
+    clip diagonal `{a, c}` (a genuine cyclic edge of the clip), and lift the
+    returned ear — whose tip lies in `rest`, hence avoids `a`, `c`, and (by
+    Nodup) `b` — back to `V`.  Because `b`'s only cyclic neighbours in `V` are
+    `a` and `c`, the lifted tip avoids both forbidden vertices `z1, z2` (one is
+    `b`, the other a neighbour of `b`, i.e. in `{a, c}`).  The orientation /
+    diagonal data transfer using `horient` and `hbconv`.
+
+    **Status: `sorry`.**  Genuine but self-contained list-surgery lift
+    (re-inserting the apex `b` between `a` and `c` in the returned ear's
+    complement, via the rotation / `List.insertIdx` combinatorics).  Crucially
+    the diagonal is CLEAN here, so — unlike the bad-diagonal subcase — NO polygon
+    splitting is needed: this is purely the list-surgery lift plus the
+    orientation-sign transfer (`HexArea.shoelace2_ear`).  It is **consumed** by
+    `meisters_reduction_empty2` (good-diagonal subcase) and is the same lift
+    reusable by `meisters_reduction_interior2`.  Recorded, isolated partial
+    progress — NOT a dead branch. -/
+lemma empty_branch_good_lift (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ) (p q : ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hpl : HexArea.cross (c - a) (p - a) ≠ 0)
+    (hql : HexArea.cross (c - a) (q - a) ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
+    (hbf : b = z1 ∨ b = z2) :
+    EmptyCornerData2 V z1 z2 := by
+  sorry
+
 /-- **Edge-forbidden selection (pure finite logic).**  If `x ≠ y` and the
     *ordered* pair `(x, y)` and its reverse `(y, x)` are both absent from the
     cyclic edges of `V` (i.e. `{x, y}` is a diagonal, not an edge), then any
@@ -1779,15 +1825,33 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
       HexArea.clip_turn_at_a_ne_zero a c p hpl,
       HexArea.clip_turn_at_c_ne_zero a c q hql,
       hcase, hdiag, horient⟩
-  · -- **Non-clean case (open Jordan content).**  `b` is not a directly usable
-    -- ear avoiding `{z1, z2}`: recurse via `IH2` on the clip `a :: c :: rest`
-    -- (strictly shorter, still simple and non-degenerate when `b` is an empty
-    -- ear — `clip_simple_nondeg_of_empty`) forbidding the clip diagonal
-    -- `{a, c}`, then lift the returned ear (tip in `rest`, off the clip
-    -- diagonal) back to `V`, re-inserting the lex-minimal convex apex `b`
-    -- (outside the lifted ear triangle by `hbconv`).  This is the genuine
-    -- remaining gap.
-    sorry
+  · -- **Non-clean case.**  Split on whether the clip diagonal `a–c` is itself
+    -- *clean* (neighbours `p, q` off the line, no far vertex on the closed
+    -- diagonal, ear orientation matching).
+    by_cases hgood : HexArea.cross (c - a) (p - a) ≠ 0 ∧
+        HexArea.cross (c - a) (q - a) ≠ 0 ∧
+        (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+        ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
+    · -- **Good-diagonal subcase (consumed by `empty_branch_good_lift`).**  The
+      -- diagonal is clean, so the only reason the corner failed the clean test
+      -- is that the apex `b` is a forbidden vertex.  Recurse on the clip and
+      -- lift; no polygon splitting needed.
+      obtain ⟨hpl, hql, hdiag, horient⟩ := hgood
+      have hbf : b = z1 ∨ b = z2 := by
+        by_contra h
+        push_neg at h
+        exact hclean ⟨h, hpl, hql, hdiag, horient⟩
+      exact empty_branch_good_lift V hlen hsimple hnd z1 z2 hadj IH2 r a b c rest
+        p q hrot hbmem hbconv hp hq hpl hql hcase hdiag horient hbf
+    · -- **Bad-diagonal subcase (remaining Jordan gap).**  A clip neighbour is
+      -- collinear with `a–c`, or a far vertex sits on the *closed* diagonal, or
+      -- the ear orientation is reversed.  The clip is then no longer a clean
+      -- simple sub-polygon, so this case genuinely needs the polygon-split
+      -- machinery (as in `meisters_reduction_interior2`): a blocking vertex on
+      -- the diagonal yields a strictly-shorter interior diagonal to split
+      -- along.  This is the isolated remaining gap of the empty branch.
+      sorry
 
 /-- **The geometric reduction step of the Meisters two-ears search (two-forbidden
     form), now carrying the strong-induction hypothesis.**  Dispatches the
