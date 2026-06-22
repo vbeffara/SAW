@@ -1,7 +1,48 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: made the Meisters ear-search induction SOUND (two-forbidden
+> form) and discharged the quadrilateral base case (NEWEST).**  Worked
+> exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole library
+> still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no
+> new axioms, no regressions; `hex_closed_trail_turning_number` still reduces
+> only to `sorryAx` (+ `propext, Classical.choice, Quot.sound`).
+>
+> **Root-cause fix.**  The previous single-forbidden induction invariant
+> `EmptyCornerData V z` ("an empty ear with tip ≠ z") was *too weak to drive the
+> split-and-recurse induction*: a sub-polygon ear returned by the IH may sit at
+> *either* endpoint of the cut diagonal, and a single forbidden vertex can only
+> exclude one of them.  Both `meisters_reduction_interior` and the non-clean
+> case of `meisters_reduction_empty` were therefore unprovable *from the IH they
+> were given* (their conclusions are true, but the hypotheses did not suffice).
+> This is exactly the genuine Meisters "two-ears" subtlety flagged in earlier
+> rounds.
+>
+> This round, in `RequestProject/SAWUmlaufPolygon.lean`:
+> * Added `IsCycEdge` and the two-forbidden predicate `EmptyCornerData2 V z1 z2`,
+>   plus `EmptyCornerData_of_two` (the single-forbidden form is the diagonal
+>   case `z1 = z2`).
+> * Rebuilt the induction in the sound two-forbidden form: `meisters_reduction2`,
+>   `exists_empty_corner_avoiding_aux2`, and rewired `exists_empty_corner_avoiding_aux`
+>   to derive the single-forbidden consumer interface unchanged.  The recursion
+>   now always forbids the *cut edge* (the clip diagonal `{a,c}` or the split
+>   diagonal `{b,w}` — a genuine cyclic edge of the strictly-shorter
+>   sub-polygon), which is the invariant the induction preserves.
+> * **Proved sorry-free the entire quadrilateral base case** `meisters_reduction_quad2`,
+>   via the pure-logic selector `forbidden_avoids_one` (an edge can never cover
+>   the two *opposite* ears of a quad) and four geometric ear packages
+>   `quad_ear_at_a/b/c/d` (modelled on the four finite branches of the retained
+>   reference lemma `meisters_reduction_quad`).
+>
+> The Umlaufsatz now reduces to exactly two clearly-scoped, **sound** (provable
+> from their now-sufficient IH) Jordan-curve-level `sorry`s in
+> `SAWUmlaufPolygon.lean`: `meisters_reduction_interior2` (interior diagonal
+> split preserving simplicity/non-degeneracy + ear lift) and the non-clean case
+> of `meisters_reduction_empty2` (clip recursion + ear lift, incl. the
+> collinear-far-vertex degenerate sub-cases).  The clean case of the empty
+> branch is proved directly.
+
 > **Umlaufsatz: added the reusable clip-preservation brick
-> `clip_simple_nondeg_of_empty` (NEWEST).**  Worked exclusively on the
+> `clip_simple_nondeg_of_empty` (PREVIOUS).**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The whole library still builds
 > end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms,
 > no regressions.  This round, in `RequestProject/SAWUmlaufPolygon.lean`:

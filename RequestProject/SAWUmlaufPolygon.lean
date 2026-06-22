@@ -1118,6 +1118,48 @@ def EmptyCornerData (V : List ℂ) (z : ℂ) : Prop :=
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
 
+/-- **Cyclic edge predicate.**  `x` and `y` are endpoints of a cyclic edge of
+    the closed polygon with vertex cycle `V` (in either order).  This is the
+    "forbidden adjacent pair" carried by the genuine Meisters TWO-ears induction
+    `meisters_reduction2`: the single-forbidden form `EmptyCornerData` is *not*
+    strong enough to drive the split-and-recurse induction (a returned
+    sub-polygon ear may sit at *either* endpoint of the cut diagonal, and a
+    single forbidden vertex can exclude only one of them).  The correct
+    inductive invariant forbids the *whole cut edge* — which is always a genuine
+    cyclic edge of the strictly-shorter sub-polygon, so the recursion stays
+    within this predicate. -/
+def IsCycEdge (V : List ℂ) (x y : ℂ) : Prop :=
+    (x, y) ∈ closedEdges V ∨ (y, x) ∈ closedEdges V
+
+/-- **The TWO-forbidden-vertex empty-corner predicate (the sound inductive
+    invariant).**  Identical to `EmptyCornerData` but the empty-ear tip `b`
+    avoids *both* forbidden vertices `z1, z2`.  Together with the side condition
+    `z1 = z2 ∨ IsCycEdge V z1 z2` this is exactly the inductive packaging of
+    Meisters' two-ears theorem that the split-and-recurse induction preserves:
+    the interior branch recurses on a sub-polygon forbidding the cut diagonal
+    `{b, w}` (a cyclic edge of that sub-polygon), and the empty branch recurses
+    on the clip forbidding the clip diagonal `{a, c}` (a cyclic edge of the
+    clip).  The single-forbidden `EmptyCornerData` is recovered by taking
+    `z1 = z2 = z` (see `EmptyCornerData_of_two`). -/
+def EmptyCornerData2 (V : List ℂ) (z1 z2 : ℂ) : Prop :=
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z1 ∧ b ≠ z2 ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
+
+/-- The single-forbidden `EmptyCornerData` is the diagonal case `z1 = z2` of the
+    two-forbidden predicate. -/
+lemma EmptyCornerData_of_two (V : List ℂ) (z : ℂ) (h : EmptyCornerData2 V z z) :
+    EmptyCornerData V z := by
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, _, hp, hq, hpa, hqc, hempty, hdiag,
+      horient⟩ := h
+  exact ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hpa, hqc, hempty, hdiag,
+    horient⟩
+
 /-
 **Meisters Step 1 (the convex extreme-vertex setup), proved sorry-free.**
     Any polygon with `≥ 3` vertices has a cyclic rotation
@@ -1292,7 +1334,15 @@ lemma quad_diagonal_interior (a b c d : ℂ)
     split of a quadrilateral produces length-3 sub-polygons, to which the
     induction hypothesis (which requires `≥ 4` vertices) does not apply, so the
     quadrilateral must be handled directly by the (finite) two-ears fact for
-    quadrilaterals.  Consumed by `meisters_reduction`.
+    quadrilaterals.
+
+    **Retained as reference (not on the critical path).**  The single-forbidden
+    base case is now *superseded* by the two-forbidden `meisters_reduction_quad2`
+    (which the sound induction `meisters_reduction2` actually consumes).  This
+    proof is kept because the four ear-package proofs `quad_ear_at_a/b/c/d` (and
+    hence `meisters_reduction_quad2`) are modelled directly on its four
+    finite branches; it documents the geometry and is preparation for future
+    reuse.
 -/
 lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
@@ -1430,20 +1480,236 @@ lemma clip_simple_nondeg_of_empty (a b c p q : ℂ) (rest : List ℂ)
       (diag_disjoint_of_empty_corner a b c rest hsrot hndtri hca hempty hdiag),
    polyCycNondeg_clip a b c p q rest hq hp hndrot hpa hcq⟩
 
-/-- **Meisters interior branch (open Jordan-curve core).**  The convex corner
-    `a, b, c` (with `b` the lex-minimal, hence convex, middle vertex of the
-    rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not* empty: `w ∈ rest`
-    is the interior vertex farthest from the base diagonal `a–c`.  The chord
-    `b–w` is then an interior diagonal of `V`; splitting `V` along it
-    (`chordLeft`/`chordRight` in `SAWUmlaufEarSplit`) yields two strictly
-    shorter simple non-degenerate sub-polygons, and recursing through `IH`
-    (forbidding the shared diagonal endpoint) returns an empty corner of `V`
-    avoiding `z`.  Extracted from `meisters_reduction` so the interior branch
-    can be discharged independently.  Consumed by `meisters_reduction`. -/
-lemma meisters_reduction_interior (V : List ℂ) (hlen : 4 ≤ V.length)
-    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
-    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
-        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z')
+/-- **Edge-forbidden selection (pure finite logic).**  If `x ≠ y` and the
+    *ordered* pair `(x, y)` and its reverse `(y, x)` are both absent from the
+    cyclic edges of `V` (i.e. `{x, y}` is a diagonal, not an edge), then any
+    forbidden pair `z1, z2` that is equal or a cyclic edge must miss at least
+    one of `x, y`.  This is the combinatorial heart of the quadrilateral
+    two-ears base case: the two ears sit at the *diagonal* pair, which no edge
+    can cover.  Consumed by `meisters_reduction_quad2`. -/
+lemma forbidden_avoids_one (V : List ℂ) (x y z1 z2 : ℂ) (hxy : x ≠ y)
+    (hxy1 : (x, y) ∉ closedEdges V) (hxy2 : (y, x) ∉ closedEdges V)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2) :
+    (x ≠ z1 ∧ x ≠ z2) ∨ (y ≠ z1 ∧ y ≠ z2) := by
+  rcases hadj with rfl | hedge
+  · by_cases hx : x = z1
+    · exact Or.inr ⟨fun h => hxy ((h.trans hx.symm).symm),
+        fun h => hxy ((h.trans hx.symm).symm)⟩
+    · exact Or.inl ⟨hx, hx⟩
+  · by_contra hcon
+    push_neg at hcon
+    obtain ⟨h1, h2⟩ := hcon
+    -- after push_neg: `h1 : x ≠ z1 → x = z2`, `h2 : y ≠ z1 → y = z2`.
+    have hx : x = z1 ∨ x = z2 := by
+      by_contra hh; push_neg at hh; exact hh.2 (h1 hh.1)
+    have hy : y = z1 ∨ y = z2 := by
+      by_contra hh; push_neg at hh; exact hh.2 (h2 hh.1)
+    rcases hedge with he | he
+    · rcases hx with hx | hx <;> rcases hy with hy | hy <;>
+        first
+        | (exfalso; exact hxy (hx.trans hy.symm))
+        | (subst hx; subst hy; exact hxy1 he)
+        | (subst hx; subst hy; exact hxy2 he)
+    · rcases hx with hx | hx <;> rcases hy with hy | hy <;>
+        first
+        | (exfalso; exact hxy (hx.trans hy.symm))
+        | (subst hx; subst hy; exact hxy2 he)
+        | (subst hx; subst hy; exact hxy1 he)
+
+/-
+**Ear at `b` of a quadrilateral (rotation 0).**  When `a–c` is an interior
+    diagonal (`H`), the vertex `b` is an empty ear; if it avoids `z1, z2` the
+    `EmptyCornerData2` is the rotation-0 package.  Mirrors the `H`-left,
+    `b ≠ z` branch of `meisters_reduction_quad`.
+-/
+lemma quad_ear_at_b (a b c d z1 z2 : ℂ)
+    (hab : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hbc : HexArea.cross (c - b) (d - c) ≠ 0)
+    (hcd : HexArea.cross (d - c) (a - d) ≠ 0)
+    (hda : HexArea.cross (a - d) (b - a) ≠ 0)
+    (H : HexArea.cross (c - a) (b - a) * HexArea.cross (c - a) (d - a) < 0)
+    (hbz1 : b ≠ z1) (hbz2 : b ≠ z2) :
+    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+  refine' ⟨ 0, a, b, c, d, d, [ d ], _, _, _, _, _ ⟩ <;> norm_num;
+  · assumption;
+  · assumption;
+  · refine' ⟨ _, _, _, _, _ ⟩;
+    · unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
+      grind;
+    · unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
+      grind;
+    · contrapose! H;
+      have := HexArea.inTriangleStrict_apex_sameSide a b c d H;
+      linarith;
+    · exact not_mem_segment_of_cross_ne a c d ( by aesop );
+    · unfold HexArea.shoelace2 at *; simp_all +decide [ HexArea.cross ] ;
+      constructor <;> intro <;> nlinarith
+
+/-
+**Ear at `d` of a quadrilateral (rotation 2).**  The opposite ear of the
+    `a–c` interior-diagonal case.  Mirrors the `H`-left, `b = z` branch of
+    `meisters_reduction_quad` (which produces the opposite ear `d`).
+-/
+lemma quad_ear_at_d (a b c d z1 z2 : ℂ)
+    (hab : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hbc : HexArea.cross (c - b) (d - c) ≠ 0)
+    (hcd : HexArea.cross (d - c) (a - d) ≠ 0)
+    (hda : HexArea.cross (a - d) (b - a) ≠ 0)
+    (H : HexArea.cross (c - a) (b - a) * HexArea.cross (c - a) (d - a) < 0)
+    (hdz1 : d ≠ z1) (hdz2 : d ≠ z2) :
+    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+  refine' ⟨ 2, c, d, a, b, b, [ b ], _, _, _, _, _ ⟩ <;> norm_num at *;
+  · assumption;
+  · assumption;
+  · refine' ⟨ _, _, _, _, _ ⟩;
+    · contrapose! hbc; simp_all +decide [ HexArea.cross ] ;
+      grind;
+    · contrapose! H; simp_all +decide [ HexArea.cross ] ;
+      grind +qlia;
+    · unfold HexArea.inTriangleStrict; norm_num [ Complex.ext_iff ] ;
+      unfold HexArea.cross at * ; norm_num [ Complex.ext_iff ] at * ; constructor <;> intros <;> nlinarith;
+    · contrapose! H; simp_all +decide [ HexArea.cross ] ;
+      rw [ segment_eq_image ] at H ; obtain ⟨ θ, hθ, rfl ⟩ := H ; norm_num [ Complex.ext_iff ] at * ; ring_nf at * ; norm_num at *;
+    · unfold HexArea.shoelace2 HexArea.cross at * ; norm_num [ Complex.ext_iff ] at *;
+      unfold HexArea.cross ;
+      constructor <;> intro <;> nlinarith
+
+/-
+**Ear at `c` of a quadrilateral (rotation 1).**  When `b–d` is an interior
+    diagonal (`H`), `c` is an empty ear.  Mirrors the `H`-right, `c ≠ z` branch
+    of `meisters_reduction_quad`.
+-/
+lemma quad_ear_at_c (a b c d z1 z2 : ℂ)
+    (hab : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hbc : HexArea.cross (c - b) (d - c) ≠ 0)
+    (hcd : HexArea.cross (d - c) (a - d) ≠ 0)
+    (hda : HexArea.cross (a - d) (b - a) ≠ 0)
+    (H : HexArea.cross (d - b) (a - b) * HexArea.cross (d - b) (c - b) < 0)
+    (hcz1 : c ≠ z1) (hcz2 : c ≠ z2) :
+    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+  refine' ⟨ 1, b, c, d, a, a, [ a ], _, _, _, _, _ ⟩ <;> simp_all +decide [ EmptyCornerData2 ];
+  refine' ⟨ _, _, _, _, _ ⟩;
+  · unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
+    grind +qlia;
+  · unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
+    grind;
+  · unfold HexArea.inTriangleStrict;
+    unfold HexArea.cross at * ; norm_num [ Complex.ext_iff ] at * ;
+    constructor <;> intros <;> nlinarith;
+  · rw [ segment_eq_image ] ; contrapose! H ; simp_all +decide [ HexArea.cross ];
+    obtain ⟨ x, hx, rfl ⟩ := H; norm_num [ Complex.ext_iff ] ; ring_nf;
+    norm_num;
+  · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
+    unfold HexArea.cross at * ; norm_num [ Complex.ext_iff ] at * ; constructor <;> intro <;> nlinarith
+
+/-
+**Ear at `a` of a quadrilateral (rotation 3).**  The opposite ear of the
+    `b–d` interior-diagonal case.  Mirrors the `H`-right, `c = z` branch of
+    `meisters_reduction_quad` (which produces the opposite ear `a`).
+-/
+lemma quad_ear_at_a (a b c d z1 z2 : ℂ)
+    (hab : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hbc : HexArea.cross (c - b) (d - c) ≠ 0)
+    (hcd : HexArea.cross (d - c) (a - d) ≠ 0)
+    (hda : HexArea.cross (a - d) (b - a) ≠ 0)
+    (H : HexArea.cross (d - b) (a - b) * HexArea.cross (d - b) (c - b) < 0)
+    (haz1 : a ≠ z1) (haz2 : a ≠ z2) :
+    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+  use 3, d, a, b, c, c, [c];
+  simp_all +decide [ HexArea.cross, HexArea.shoelace2, HexArea.inTriangleStrict ];
+  refine' ⟨ _, _, _, _, _ ⟩;
+  · grind;
+  · grind;
+  · constructor <;> intros <;> nlinarith;
+  · contrapose! H;
+    obtain ⟨ u, v, hu, hv, huv, rfl ⟩ := H;
+    norm_num [ show u = 1 - v by linarith ] at *;
+    nlinarith [ mul_nonneg hv ( sq_nonneg ( d.re - b.re ) ), mul_nonneg hv ( sq_nonneg ( d.im - b.im ) ) ];
+  · constructor <;> intro <;> nlinarith
+
+/-- **The quadrilateral base case in the two-forbidden form.**  A simple,
+    non-degenerate quadrilateral, together with a forbidden pair `z1, z2` that
+    is either equal or a genuine cyclic edge, has an empty corner whose tip
+    avoids both.  The two ears of a quadrilateral are at *opposite* corners
+    (non-adjacent), so an edge — whose endpoints are adjacent — can never
+    contain both ear tips; hence at least one ear survives.  Genuine finite
+    two-ears content; consumed by `meisters_reduction2`.
+
+    **Status: `sorry`.**  True statement (the quadrilateral two-ears fact); the
+    finite case analysis mirrors `meisters_reduction_quad` (which already dodges
+    a single forbidden vertex to the opposite ear) but must dodge an entire
+    edge.  Recorded partial progress toward the Umlaufsatz. -/
+lemma meisters_reduction_quad2 (V : List ℂ) (h4 : V.length = 4)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2) :
+    EmptyCornerData2 V z1 z2 := by
+  obtain ⟨a, b, c, d, rfl⟩ : ∃ a b c d, V = [a, b, c, d] := by
+    rcases V with _ | ⟨a, _ | ⟨b, _ | ⟨c, _ | ⟨d, _ | t⟩⟩⟩⟩ <;> simp_all
+  -- The four consecutive-triple non-degeneracies.
+  obtain ⟨hab, hbc, hcd, hda⟩ : HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      HexArea.cross (c - b) (d - c) ≠ 0 ∧ HexArea.cross (d - c) (a - d) ≠ 0 ∧
+      HexArea.cross (a - d) (b - a) ≠ 0 := by
+    unfold polyCycNondeg at hnd; simp_all +decide [polyNondeg]
+  -- The two opposite-edge disjointnesses.
+  obtain ⟨hdisj1, hdisj2⟩ : Disjoint (segment ℝ a b) (segment ℝ c d) ∧
+      Disjoint (segment ℝ b c) (segment ℝ d a) := by
+    have := hsimple.2; simp_all +decide [closedEdges]; grind +locals
+  -- Vertex distinctness from `Nodup`.
+  have hnd4 := hsimple.1
+  simp only [List.nodup_cons, List.mem_cons, List.not_mem_nil] at hnd4
+  have hbd : b ≠ d := by tauto
+  have hac : a ≠ c := by tauto
+  -- The two diagonals are not cyclic edges.
+  have hCE : closedEdges [a, b, c, d] = [(a, b), (b, c), (c, d), (d, a)] := by
+    simp [closedEdges, List.rotate]
+  have hbd1 : (b, d) ∉ closedEdges [a, b, c, d] := by
+    rw [hCE]; simp only [List.mem_cons, List.not_mem_nil, Prod.mk.injEq, or_false]
+    push_neg; tauto
+  have hbd2 : (d, b) ∉ closedEdges [a, b, c, d] := by
+    rw [hCE]; simp only [List.mem_cons, List.not_mem_nil, Prod.mk.injEq, or_false]
+    push_neg; tauto
+  have hac1 : (a, c) ∉ closedEdges [a, b, c, d] := by
+    rw [hCE]; simp only [List.mem_cons, List.not_mem_nil, Prod.mk.injEq, or_false]
+    push_neg; tauto
+  have hac2 : (c, a) ∉ closedEdges [a, b, c, d] := by
+    rw [hCE]; simp only [List.mem_cons, List.not_mem_nil, Prod.mk.injEq, or_false]
+    push_neg; tauto
+  -- One diagonal is interior; its two endpoints are the two opposite ears.
+  rcases quad_diagonal_interior a b c d hab hbc hcd hda hdisj1 hdisj2 with H | H
+  · -- `a–c` interior: ears at `b` and `d`.
+    rcases forbidden_avoids_one [a, b, c, d] b d z1 z2 hbd hbd1 hbd2 hadj with
+      ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · exact quad_ear_at_b a b c d z1 z2 hab hbc hcd hda H h1 h2
+    · exact quad_ear_at_d a b c d z1 z2 hab hbc hcd hda H h1 h2
+  · -- `b–d` interior: ears at `a` and `c`.
+    rcases forbidden_avoids_one [a, b, c, d] a c z1 z2 hac hac1 hac2 hadj with
+      ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · exact quad_ear_at_a a b c d z1 z2 hab hbc hcd hda H h1 h2
+    · exact quad_ear_at_c a b c d z1 z2 hab hbc hcd hda H h1 h2
+
+/-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
+    The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
+    vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*
+    empty: `w ∈ rest` is the interior vertex farthest from the base diagonal
+    `a–c`.  The chord `b–w` is then an interior diagonal of `V`; splitting `V`
+    along it (`chordLeft`/`chordRight` in `SAWUmlaufEarSplit`) yields two
+    strictly shorter simple non-degenerate sub-polygons.  The forbidden edge
+    `{z1, z2}` lies entirely in one of the two pieces, so recursing through
+    `IH2` on the *other* piece — forbidding the cut diagonal `{b, w}` (a cyclic
+    edge of that piece) — returns an ear whose tip is interior to that piece,
+    hence avoids `{b, w}` and therefore lifts to an ear of `V` avoiding
+    `{z1, z2}`.  This is the crux that the single-forbidden form could not
+    express.  Consumed by `meisters_reduction2`.
+
+    **Status: `sorry`.**  Genuine Jordan-curve-theorem-level content (interior
+    diagonal split preserving `PolygonSimple`/`polyCycNondeg`, plus the ear
+    lift); absent from Mathlib.  Recorded partial progress. -/
+lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
     (h4 : ¬ V.length = 4)
     (r : ℕ) (a b c : ℂ) (rest : List ℂ)
     (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
@@ -1453,29 +1719,39 @@ lemma meisters_reduction_interior (V : List ℂ) (hlen : 4 ≤ V.length)
     (w : ℂ) (hwrest : w ∈ rest) (hwin : HexArea.inTriangleStrict a b c w)
     (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
         HexArea.cross (c - a) (y - a) ≤ HexArea.cross (c - a) (w - a)) :
-    EmptyCornerData V z := by
+    EmptyCornerData2 V z1 z2 := by
   sorry
 
-/-- **Meisters empty/diagonal branch (open Jordan-curve core).**  No vertex of
-    `rest` lies in the strict interior of the convex corner `a, b, c` (with `b`
-    the lex-minimal, hence convex, middle vertex of `V.rotate r =
-    a :: b :: c :: rest`).  Either `b` is itself an empty ear (produce the
-    `EmptyCornerData` directly, dodging `z` via a cyclic neighbour or a one-step
-    `IH` recursion on the clip `a :: c :: rest` when `b = z`), or a vertex lies
-    on the closed diagonal `a–c`, handled as a degenerate split.  Extracted from
-    `meisters_reduction` so the empty branch can be discharged independently.
-    Consumed by `meisters_reduction`. -/
-lemma meisters_reduction_empty (V : List ℂ) (hlen : 4 ≤ V.length)
-    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
-    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
-        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z')
+/-- **Meisters empty/diagonal branch, two-forbidden form.**  No vertex of
+    `rest` lies in the strict interior of the convex corner `a, b, c`.  If `b`
+    is a *bona-fide* empty ear avoiding both `z1` and `z2` (the clean case,
+    proved here directly via the `EmptyCornerData2` packaging), use it.
+    Otherwise — `b` coincides with a forbidden vertex, or a clip endpoint is
+    collinear, or a far vertex sits on the closed diagonal, or the orientation
+    is reversed — recurse via `IH2` on the clip `a :: c :: rest` forbidding the
+    clip diagonal `{a, c}` (a cyclic edge of the clip), and lift the returned
+    ear (whose tip lies in `rest`, hence avoids `a`, `c`, and `b`) back to `V`.
+    Consumed by `meisters_reduction2`.
+
+    **Status: clean case proved; non-clean case `sorry`.**  The non-clean lift
+    re-inserts the convex apex `b` between `a` and `c`; the returned ear's tip
+    in `rest` keeps its cyclic neighbours, and `b` stays outside the lifted ear
+    triangle by `hbconv`.  The clip preservation is already available as
+    `clip_simple_nondeg_of_empty`; the residual content is the list-surgery
+    lift.  Recorded partial progress. -/
+lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
     (h4 : ¬ V.length = 4)
     (r : ℕ) (a b c : ℂ) (rest : List ℂ)
     (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
     (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
         ¬ HexArea.inTriangleStrict x y w b)
     (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) :
-    EmptyCornerData V z := by
+    EmptyCornerData2 V z1 z2 := by
   -- `rest` is nonempty: `V.length ≥ 5`, so `rest.length = V.length - 3 ≥ 2`.
   have hrest_len : 2 ≤ rest.length := by
     have hl := congrArg List.length hrot
@@ -1489,70 +1765,81 @@ lemma meisters_reduction_empty (V : List ℂ) (hlen : 4 ≤ V.length)
     cases hr : rest.head? with
     | none => exfalso; rw [List.head?_eq_none_iff] at hr; subst hr; simp at hrest_len
     | some q => exact ⟨q, rfl⟩
-  by_cases hclean : b ≠ z ∧ HexArea.cross (c - a) (p - a) ≠ 0 ∧
+  by_cases hclean : (b ≠ z1 ∧ b ≠ z2) ∧ HexArea.cross (c - a) (p - a) ≠ 0 ∧
       HexArea.cross (c - a) (q - a) ≠ 0 ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
         ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
-  · -- **Clean case (proved).**  `b ≠ z`, both clip endpoints `p, q` lie off the
-    -- line `a–c`, no far vertex sits on the closed diagonal, and the ear
-    -- orientation matches the clip: assemble the `EmptyCornerData` directly via
-    -- `empty_ear_direct`.
-    obtain ⟨hbz, hpl, hql, hdiag, horient⟩ := hclean
-    exact empty_ear_direct V z r a b c rest p q hrot hbz hp hq hpl hql hcase
-      hdiag horient
-  · -- **Non-clean case (open Jordan content).**  Either `b = z` (the forbidden
-    -- vertex coincides with the candidate ear tip), or a clip endpoint `p`/`q`
-    -- is collinear with `a, c`, or a far vertex lies on the closed diagonal
-    -- `a–c`, or the ear orientation is reversed.  In every sub-case `b` is not a
-    -- directly usable ear: recurse via `IH` on the clipped cycle
-    -- `a :: c :: rest` (strictly shorter, still simple and non-degenerate since
-    -- `b` is an empty ear) and lift the returned ear back to `V`, re-inserting
-    -- the lex-minimal convex apex `b` (never on the clip diagonal, by
-    -- `lexMin_not_mem_segment`).  This is the genuine remaining gap.
+  · -- **Clean case (proved).**  `b` avoids both forbidden vertices, both clip
+    -- endpoints `p, q` lie off the line `a–c`, no far vertex sits on the closed
+    -- diagonal, and the ear orientation matches the clip: assemble
+    -- `EmptyCornerData2` directly.
+    obtain ⟨⟨hbz1, hbz2⟩, hpl, hql, hdiag, horient⟩ := hclean
+    exact ⟨r, a, b, c, p, q, rest, hrot, hbz1, hbz2, hp, hq,
+      HexArea.clip_turn_at_a_ne_zero a c p hpl,
+      HexArea.clip_turn_at_c_ne_zero a c q hql,
+      hcase, hdiag, horient⟩
+  · -- **Non-clean case (open Jordan content).**  `b` is not a directly usable
+    -- ear avoiding `{z1, z2}`: recurse via `IH2` on the clip `a :: c :: rest`
+    -- (strictly shorter, still simple and non-degenerate when `b` is an empty
+    -- ear — `clip_simple_nondeg_of_empty`) forbidding the clip diagonal
+    -- `{a, c}`, then lift the returned ear (tip in `rest`, off the clip
+    -- diagonal) back to `V`, re-inserting the lex-minimal convex apex `b`
+    -- (outside the lifted ear triangle by `hbconv`).  This is the genuine
+    -- remaining gap.
     sorry
 
-lemma meisters_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
-    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ)
-    (IH : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
-        PolygonSimple V' → polyCycNondeg V' → ∀ z' : ℂ, EmptyCornerData V' z') :
-    EmptyCornerData V z := by
-  -- **Meisters Step 1 (done sorry-free):** rotate the convex extreme
-  -- (leftmost-lowest) vertex `b` to the middle of the cycle.  `b` is a
-  -- convex-hull vertex, so it is never in the strict interior of any triangle
-  -- spanned by polygon vertices (`hbconv`).
-  -- **Base case (length 4): the quadrilateral two-ears fact.**  `IH` cannot be
-  -- used on a quadrilateral (its diagonal split produces length-3 triangles),
-  -- so it is discharged directly by `meisters_reduction_quad`.
+/-- **The geometric reduction step of the Meisters two-ears search (two-forbidden
+    form), now carrying the strong-induction hypothesis.**  Dispatches the
+    quadrilateral base case, the lex-minimal convex-vertex setup, and the
+    interior / empty dichotomy to the three branch lemmas above. -/
+lemma meisters_reduction2 (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2) :
+    EmptyCornerData2 V z1 z2 := by
   by_cases h4 : V.length = 4
-  · exact meisters_reduction_quad V h4 hsimple hnd z
+  · exact meisters_reduction_quad2 V h4 hsimple hnd z1 z2 hadj
   -- From here `V.length ≥ 5`.
   obtain ⟨r, a, b, c, rest, hrot, hbmem, hbconv⟩ :=
     exists_lexmin_mid_rotation V (by omega)
   by_cases hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x
   · -- **Interior branch (Meisters' diagonal split).**
     obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior a b c rest hcase
-    exact meisters_reduction_interior V hlen hsimple hnd z IH h4 r a b c rest hrot
-      hbmem hbconv hcase w hwrest hwin hwmax
+    exact meisters_reduction_interior2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
+      rest hrot hbmem hbconv hcase w hwrest hwin hwmax
   · -- **Empty/diagonal branch.**
     push_neg at hcase
-    exact meisters_reduction_empty V hlen hsimple hnd z IH h4 r a b c rest hrot
-      hbmem hbconv hcase
+    exact meisters_reduction_empty2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
+      rest hrot hbmem hbconv hcase
 
-/-- **Strong-induction wrapper (sorry-free).**  Discharges the induction
-    hypothesis of `meisters_reduction` by strong induction on the polygon
-    length, leaving the genuine geometric content concentrated in
-    `meisters_reduction`. -/
-lemma exists_empty_corner_avoiding_aux :
+/-- **Strong-induction wrapper (sorry-free), two-forbidden form.**  Discharges
+    the induction hypothesis of `meisters_reduction2` by strong induction on the
+    polygon length, leaving the genuine geometric content concentrated in the
+    branch lemmas. -/
+lemma exists_empty_corner_avoiding_aux2 :
     ∀ (n : ℕ) (V : List ℂ), V.length = n → 4 ≤ V.length →
-      PolygonSimple V → polyCycNondeg V → ∀ z : ℂ, EmptyCornerData V z := by
+      PolygonSimple V → polyCycNondeg V →
+      ∀ z1 z2 : ℂ, (z1 = z2 ∨ IsCycEdge V z1 z2) → EmptyCornerData2 V z1 z2 := by
   intro n
   induction n using Nat.strong_induction_on with
   | _ n IH =>
-    intro V hn hlen hsimple hnd z
-    refine meisters_reduction V hlen hsimple hnd z ?_
-    intro V' hlt h4 hs' hnd' z'
-    exact IH V'.length (by omega) V' rfl h4 hs' hnd' z'
+    intro V hn hlen hsimple hnd z1 z2 hadj
+    refine meisters_reduction2 V hlen hsimple hnd z1 z2 hadj ?_
+    intro V' hlt h4 hs' hnd' w1 w2 hadj'
+    exact IH V'.length (by omega) V' rfl h4 hs' hnd' w1 w2 hadj'
+
+/-- **Strong-induction wrapper (sorry-free).**  The single-forbidden
+    `EmptyCornerData` is the diagonal case of the two-forbidden
+    `exists_empty_corner_avoiding_aux2`. -/
+lemma exists_empty_corner_avoiding_aux :
+    ∀ (n : ℕ) (V : List ℂ), V.length = n → 4 ≤ V.length →
+      PolygonSimple V → polyCycNondeg V → ∀ z : ℂ, EmptyCornerData V z := by
+  intro n V hn hlen hsimple hnd z
+  exact EmptyCornerData_of_two V z
+    (exists_empty_corner_avoiding_aux2 n V hn hlen hsimple hnd z z (Or.inl rfl))
 
 lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
