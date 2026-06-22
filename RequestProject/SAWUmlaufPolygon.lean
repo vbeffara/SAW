@@ -1405,6 +1405,31 @@ lemma empty_ear_direct (V : List ℂ) (z : ℂ) (r : ℕ) (a b c : ℂ) (rest : 
     HexArea.clip_turn_at_c_ne_zero a c q hqline,
     hempty, hdiag, horient⟩
 
+/-- **Clip preservation of simplicity and non-degeneracy (reusable brick).**
+    When the convex corner `a, b, c` of a simple, cyclically non-degenerate
+    cycle `a :: b :: c :: rest` is *empty* — no far vertex strictly inside
+    (`hempty`) nor on the closed diagonal `a–c` (`hdiag`) — and the two diagonal
+    clip-turns are non-flat (`hpa`, `hcq`), the clipped cycle `a :: c :: rest`
+    is again `PolygonSimple` and `polyCycNondeg`.  Pure assembly of the existing
+    bricks `diag_disjoint_of_empty_corner` + `PolygonSimple_clip` and
+    `polyCycNondeg_clip`.  This is the combinatorial half of the empty-branch
+    recurse-and-lift step (it produces exactly the two `IH` hypotheses needed to
+    recurse on the strictly-shorter clip); the genuine remaining Jordan content
+    is the *lift* of the returned sub-polygon ear back to `V`. -/
+lemma clip_simple_nondeg_of_empty (a b c p q : ℂ) (rest : List ℂ)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hsrot : PolygonSimple (a :: b :: c :: rest))
+    (hndrot : polyCycNondeg (a :: b :: c :: rest))
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0) (hca : c - a ≠ 0)
+    (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (hpa : HexArea.cross (a - p) (c - a) ≠ 0)
+    (hcq : HexArea.cross (c - a) (q - c) ≠ 0) :
+    PolygonSimple (a :: c :: rest) ∧ polyCycNondeg (a :: c :: rest) :=
+  ⟨PolygonSimple_clip a b c rest hsrot
+      (diag_disjoint_of_empty_corner a b c rest hsrot hndtri hca hempty hdiag),
+   polyCycNondeg_clip a b c p q rest hq hp hndrot hpa hcq⟩
+
 /-- **Meisters interior branch (open Jordan-curve core).**  The convex corner
     `a, b, c` (with `b` the lex-minimal, hence convex, middle vertex of the
     rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not* empty: `w ∈ rest`

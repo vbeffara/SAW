@@ -1,3 +1,14 @@
+# Summary of changes for run ad5767ae-9341-44bf-af11-9c8e12035f3b
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that chain. The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions, and the new work is verified to use only the allowed axioms (`propext, Classical.choice, Quot.sound`).
+
+This round, in `RequestProject/SAWUmlaufPolygon.lean`:
+- Added and proved (sorry-free, term-mode) the reusable brick `clip_simple_nondeg_of_empty`: from a simple, cyclically non-degenerate cycle `a :: b :: c :: rest` with an empty convex corner `a b c` (no far vertex strictly inside, none on the closed diagonal `a–c`) and the two diagonal clip-turns non-flat, the clipped cycle `a :: c :: rest` is again both `PolygonSimple` and `polyCycNondeg`. This is the combinatorial half of the empty-branch "recurse-and-lift" step — it produces exactly the two induction hypotheses needed to recurse on the strictly-shorter clip — assembled from the existing bricks `diag_disjoint_of_empty_corner`, `PolygonSimple_clip`, and `polyCycNondeg_clip`. It is documented as preparation toward the open empty branch.
+- Recorded the round's analysis at the top of `PROOF_STATUS.md`.
+
+Status of the Umlaufsatz: it still reduces to exactly two clearly-scoped Jordan-curve-theorem-level branch lemmas, kept as documented `sorry`s so nothing is lost: `meisters_reduction_interior` (interior-diagonal split via the farthest interior vertex) and the non-clean case of `meisters_reduction_empty`. I attempted both branches with the prover at high effort using detailed Meisters sketches and the relevant bricks (including the new one); neither closed, consistent with their being the genuine plane-topology heart of the result (absent from Mathlib). The precise residual obstruction I identified and recorded: the empty branch needs to *lift* a sub-polygon ear back to `V` — a clip ear whose tip lies in `rest` lifts directly, but a clip ear with tip exactly `a` or `c` does not, which is the genuine two-ears subtlety (it would require a two-forbidden-vertex form of `EmptyCornerData` to force the recursion's tip into `rest`).
+
+All files that are part of the proof remain imported via `RequestProject/SAWFinal.lean`, and the dead/preparation branches stay explicitly documented there.
+
 # Summary of changes for run ef8422df-6074-4690-8bc5-b6423c11d4fd
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that chain. The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`), and the top theorem still reduces only to `sorryAx` plus the allowed axioms (`propext, Classical.choice, Quot.sound`) — no new axioms, no regressions, and all partial progress kept as compiling Lean.
 

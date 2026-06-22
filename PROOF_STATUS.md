@@ -1,5 +1,31 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: added the reusable clip-preservation brick
+> `clip_simple_nondeg_of_empty` (NEWEST).**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms,
+> no regressions.  This round, in `RequestProject/SAWUmlaufPolygon.lean`:
+>
+> * Added and proved (sorry-free, term-mode) `clip_simple_nondeg_of_empty`:
+>   from a simple, cyclically non-degenerate cycle `a :: b :: c :: rest` with an
+>   *empty* convex corner `a b c` (no far vertex strictly inside, none on the
+>   closed diagonal `a–c`) and the two diagonal clip-turns non-flat, the clip
+>   `a :: c :: rest` is again `PolygonSimple` *and* `polyCycNondeg`.  This is the
+>   combinatorial half of the empty-branch recurse-and-lift step — it produces
+>   exactly the two `IH` hypotheses needed to recurse on the strictly-shorter
+>   clip — assembled from the existing bricks `diag_disjoint_of_empty_corner` +
+>   `PolygonSimple_clip` and `polyCycNondeg_clip`.
+>
+> The Umlaufsatz still reduces to exactly the two clearly-scoped
+> Jordan-curve-theorem-level branch lemmas `meisters_reduction_interior` and the
+> non-clean case of `meisters_reduction_empty`, kept as documented `sorry`s.
+> Analysis recorded for the empty branch: the residual obstruction is the *lift*
+> of a sub-polygon ear back to `V` — a clip ear whose tip lies in `rest` lifts
+> directly (its cyclic neighbours are unchanged by re-inserting the convex apex
+> `b`), but a clip ear with tip exactly `a` or `c` does not, which is precisely
+> the genuine two-ears subtlety (it would need a two-forbidden-vertex
+> `EmptyCornerData` to force the recursion's tip into `rest`).
+
 > **Umlaufsatz: proved the clean-case assembly brick `empty_ear_direct` and
 > discharged the clean case of the empty branch (NEWEST).**  Worked exclusively
 > on the top-priority discrete Hopf Umlaufsatz.  The whole library still builds
