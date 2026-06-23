@@ -1480,6 +1480,70 @@ lemma clip_simple_nondeg_of_empty (a b c p q : ℂ) (rest : List ℂ)
       (diag_disjoint_of_empty_corner a b c rest hsrot hndtri hca hempty hdiag),
    polyCycNondeg_clip a b c p q rest hq hp hndrot hpa hcq⟩
 
+/-
+**Interior-ear rotation/insertion lift (pure list combinatorics, reusable).**
+    The combinatorial heart of the empty-branch (and interior-branch) ear lift.
+    Suppose the clip cycle `a :: c :: rest` has a cyclic rotation whose tail
+    `rest'` contains the `a–c` junction in its *interior*, i.e. `rest'` decomposes
+    as `s ++ a :: c :: t`, exhibiting a clip ear `a' b' c'` that is *not* adjacent
+    to the junction.  Re-inserting the convex apex `b` between `a` and `c`
+    recovers a genuine rotation of the full cycle `a :: b :: c :: rest` with the
+    *same* ear `a' b' c'` and tail `s ++ a :: b :: c :: t`.  The uniqueness
+    hypotheses `hac : a ≠ c` and `hanr : a ∉ rest` guarantee that the `a :: c`
+    appearing in `rest'` is genuinely the junction (so inserting `b` there is the
+    inverse of the clip operation).  This is the clean *interior* case of the
+    lift; the boundary case (ear adjacent to the junction, so `a'` or `c'` is
+    `a`/`c`) is handled separately.  **Preparation toward** the open lifts
+    `empty_branch_good_lift` and `meisters_reduction_interior2`: it supplies the
+    rotation witness `V.rotate r'' = a' :: b' :: c' :: (s ++ a :: b :: c :: t)`
+    needed there, so it is NOT a dead branch.
+-/
+lemma clip_ear_lift_interior (a b c a' b' c' : ℂ) (rest s t : List ℂ) (r' : ℕ)
+    (hac : a ≠ c) (hanr : a ∉ rest)
+    (hrot' : (a :: c :: rest).rotate r'
+        = a' :: b' :: c' :: (s ++ a :: c :: t)) :
+    ∃ r'', (a :: b :: c :: rest).rotate r''
+        = a' :: b' :: c' :: (s ++ a :: b :: c :: t) := by
+  -- Rotate both sides of `hrot'` by an extra `3 + s.length` to bring the junction `a :: c` of `M` to the front.
+  set m := r' + 3 + s.length
+  have hrotm : (a :: c :: rest).rotate m = a :: c :: (t ++ a' :: b' :: c' :: s) := by
+    convert congr_arg ( fun l => l.rotate ( 3 + s.length ) ) hrot' using 1;
+    · rw [ List.rotate_rotate ];
+      rw [ ← add_assoc ];
+    · simp +decide [ add_comm, List.rotate ];
+      rw [ Nat.mod_eq_of_lt ] <;> simp +arith +decide;
+  -- Since `a ≠ c` and `a ∉ rest`, the element `a` occurs in `a :: c :: rest` only at index 0; as `a` is also `m % n`-th element, we get `m % n = 0`. Hence `L.rotate m = L.rotate (m % n) = L.rotate 0 = L = a :: c :: rest`. Comparing with `a :: c :: (t ++ a' :: b' :: c' :: s)` and stripping the common `a :: c ::` prefix gives `rest = t ++ a' :: b' :: c' :: s`.
+  have hrest : rest = t ++ a' :: b' :: c' :: s := by
+    have hrotm_eq : (a :: c :: rest)[m % (a :: c :: rest).length]'(by
+    exact Nat.mod_lt _ ( by simp +decide )) = a := by
+      convert congr_arg ( fun x : List ℂ => x[0]! ) hrotm using 1;
+      simp +decide [ List.getElem_rotate ]
+    generalize_proofs at *;
+    rcases n : m % ( a :: c :: rest ).length with ( _ | _ | n ) <;> simp_all +decide [ List.get ];
+    · simp_all +decide [ List.rotate ];
+    · exact False.elim <| hanr <| hrotm_eq ▸ List.getElem_mem _;
+  use 3 + t.length; simp_all +decide [ List.rotate ] ;
+  rw [ Nat.mod_eq_of_lt ] <;> simp +arith +decide [ List.drop_append, List.take_append ]
+
+/-
+**Signed-area additivity for a mid-list apex insertion (pure, reusable).**
+    Inserting the apex `b` between consecutive vertices `a, c` anywhere in a
+    cycle changes the signed area by exactly the triangle term
+    `shoelace2 [a, b, c]`.  This is the mid-list generalisation of
+    `shoelace2_clip_second` (the front case), obtained by rotation-invariance
+    (`shoelace2_rotate`) bringing the `a :: b :: c` block to the front and then
+    applying `shoelace2_clip_second`.  **Preparation toward** the orientation
+    transfer of `clip_ear_lift_interior`'s output: it lets the ear-orientation
+    `iff` for the lifted `V`-clip be derived from the clip's, so it is NOT a
+    dead branch.
+-/
+lemma shoelace2_insert_mid (pre suf : List ℂ) (a b c : ℂ) :
+    HexArea.shoelace2 (pre ++ a :: b :: c :: suf)
+      = HexArea.shoelace2 (pre ++ a :: c :: suf) + HexArea.shoelace2 [a, b, c] := by
+  induction pre <;> simp_all +decide [ HexArea.shoelace2 ];
+  · unfold HexArea.cross; ring;
+  · cases ‹List ℂ› <;> simp_all +decide [ HexArea.shoelaceOpen ]; all_goals grind
+
 /-- **Empty-branch lift — the "good diagonal" subcase (self-contained, TRUE).**
     This is the half of `meisters_reduction_empty2`'s non-clean case in which the
     clip diagonal `a–c` is *clean*: both clip neighbours `p, q` lie off the line

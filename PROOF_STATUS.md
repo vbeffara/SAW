@@ -1,5 +1,48 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: banked the interior-ear LIFT machinery (NEWEST).**  Worked
+> exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`).  The whole library still builds
+> end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms,
+> no regressions; the main theorem still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`).
+>
+> The empty-branch / interior-branch ear *lift* was the recurring bottleneck.
+> This round I isolated and **proved sorry-free** the two reusable bricks that
+> constitute the *interior-ear* half of that lift, in
+> `RequestProject/SAWUmlaufPolygon.lean` (both verified to use only
+> `propext, Classical.choice, Quot.sound`):
+>
+> * `clip_ear_lift_interior` — the rotation/insertion combinatorics: from a clip
+>   rotation `(a :: c :: rest).rotate r' = a' :: b' :: c' :: (s ++ a :: c :: t)`
+>   whose `a–c` junction sits in the *interior* of the tail, re-inserting the
+>   apex `b` yields a genuine rotation
+>   `(a :: b :: c :: rest).rotate r'' = a' :: b' :: c' :: (s ++ a :: b :: c :: t)`
+>   with the *same* ear `a' b' c'`.  Key idea: uniqueness of `a` (`a ≠ c`,
+>   `a ∉ rest`) forces `rest = t ++ a' :: b' :: c' :: s`, after which
+>   `r'' = 3 + t.length` works by `(p ++ q).rotate p.length = q ++ p`.
+> * `shoelace2_insert_mid` — signed-area additivity for a *mid-list* apex
+>   insertion (`shoelace2 (pre ++ a::b::c::suf) = shoelace2 (pre ++ a::c::suf)
+>   + shoelace2 [a,b,c]`), the mid-list generalisation of `shoelace2_clip_second`
+>   needed to transfer the ear-orientation `iff` to the lifted `V`-clip.
+>
+> Together these supply the rotation witness and the orientation-transfer
+> identity for the *interior* ear case of both lifts; they are documented as
+> preparation explicitly linked to the open lemmas (NOT dead branches).
+>
+> The Umlaufsatz still reduces to exactly the same three precisely-scoped
+> Jordan-content `sorry`s — `empty_branch_good_lift`,
+> `meisters_reduction_interior2`, and the bad-diagonal subcase of
+> `meisters_reduction_empty2`.  The genuine residual obstruction in the empty
+> branch is the *boundary* ear case (the IH-returned clip ear adjacent to the
+> `a–c` junction, so `a'` or `c'` is `a`/`c`): re-inserting `b` then changes a
+> *second* clip-neighbour to `b`, and the resulting `V`-clip-turn
+> `cross (c - b) (c' - c)` need not be non-zero (`b, c, c'` can be collinear),
+> so such an ear may genuinely fail the `EmptyCornerData2` clip-turn clause.
+> This is the same two-ears subtlety flagged earlier and is the recommended next
+> target (a finer induction invariant that forces the returned ear into the
+> interior, or a dedicated boundary-lift treatment).
+
 > **Umlaufsatz: made the Meisters ear-search induction SOUND (two-forbidden
 > form) and discharged the quadrilateral base case (NEWEST).**  Worked
 > exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole library
