@@ -1,8 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (NEWEST round): built the sorry-free combinatorial half of the
+> interior-diagonal split.**  New file `RequestProject/SAWUmlaufChordSplit.lean`
+> (imported into `SAWFinal`, so linked into the build) proves, sorry-free:
+> * `closedEdges_eq_pathEdges` — the cyclic edges of a vertex list are its path
+>   edges plus the single closing chord `(last, head)`;
+> * `mem_closedEdges_of_mem_pathEdges` — every path edge is a cyclic edge;
+> * `PolygonSimple_of_simplePath` — a vertex list is `PolygonSimple` once its
+>   path edges are pairwise disjoint and its closing chord is clear of every
+>   non-incident path edge;
+> * `polyCycNondeg_of_path` — `polyCycNondeg` from path non-degeneracy plus the
+>   two seam corners at the chord's endpoints.
+>
+> These are the reusable packaging that the two still-open Meisters two-ears
+> branches in `SAWUmlaufPolygon.lean` need for their interior-diagonal split
+> (`meisters_reduction_interior2`, and the bad-diagonal subcase of
+> `meisters_reduction_empty2`): each split piece is a sub-path of the parent
+> polygon (so its path edges/triples are inherited verbatim from the parent's
+> `PolygonSimple`/`polyCycNondeg`) closed by the single cut diagonal.  The
+> remaining gap for those branches is now exactly the *geometric* diagonal
+> clearance (the cut chord crosses no edge — supplied in spirit by
+> `seg_diagonal_disjoint_of_corner`) plus the ear lift; the combinatorial
+> simplicity/non-degeneracy preservation is done.  The main theorem's axiom
+> profile is unchanged (`sorryAx` + `propext, Classical.choice, Quot.sound`);
+> the three documented Jordan-content `sorry`s remain isolated in
+> `SAWUmlaufPolygon.lean`.
+
 > **Umlaufsatz: PROVED the empty-branch good-diagonal lift (interior subcase
-> fully closed); isolated the genuine remaining gap to the boundary ear
-> (NEWEST).**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz
+> fully closed); isolated the genuine remaining gap to the boundary ear.**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`).  The whole library still builds
 > end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms,
 > no regressions; the main theorem still reduces only to `sorryAx`

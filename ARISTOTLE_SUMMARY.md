@@ -1,3 +1,20 @@
+# Summary of changes for run 014d011b-7225-4218-aff7-851fcf98e338
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain.
+
+**What was the state.** The Umlaufsatz is reduced to exactly three isolated, documented Jordan-content `sorry`s, all in `RequestProject/SAWUmlaufPolygon.lean` (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, and the bad-diagonal subcase of `meisters_reduction_empty2`). All three need the same missing brick: that splitting a simple polygon along an interior diagonal yields two simple, non-degenerate sub-polygons. Only the *clip* diagonal (dropping one vertex) had this preservation; the *general* interior diagonal did not.
+
+**What I added (new file `RequestProject/SAWUmlaufChordSplit.lean`, fully sorry-free).** The reusable combinatorial half of the interior-diagonal split:
+- `closedEdges_eq_pathEdges` — a polygon's cyclic edges are its path edges plus the single closing chord `(last, head)`;
+- `mem_closedEdges_of_mem_pathEdges` — every path edge is a cyclic edge;
+- `PolygonSimple_of_simplePath` — a vertex list is `PolygonSimple` once its path edges are pairwise disjoint and its closing chord is clear of every non-incident path edge;
+- `polyCycNondeg_of_path` — cyclic non-degeneracy from path non-degeneracy plus the two seam corners at the chord's endpoints.
+
+Each split piece of an interior diagonal is a sub-path of the parent polygon (so its path edges/triples are inherited verbatim from the parent's simplicity/non-degeneracy) closed by the single cut diagonal. These lemmas package exactly that, so they directly feed the two open Meisters two-ears branches. Their remaining gap is now narrowed to the purely *geometric* diagonal-clearance fact (the cut chord crosses no edge — for which `seg_diagonal_disjoint_of_corner` already exists in spirit) plus the ear lift.
+
+**Linkage and hygiene.** The new file is imported into `SAWFinal.lean` with a comment explaining it is preparation for the interior-split branches, so it is part of the build and logically linked (not a dead branch). I verified each new lemma depends only on `propext, Classical.choice, Quot.sound` (no `sorryAx`). I recorded the round's progress at the top of `PROOF_STATUS.md`.
+
+**Verification.** The whole library still builds end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions. The main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`, and the three documented Jordan-content `sorry`s remain isolated and preserved as compiling Lean for future rounds.
+
 # Summary of changes for run 6e162a03-a192-41dd-86a0-f686981cabb6
 Continued working exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain. The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions — the main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`. All work this round is in `RequestProject/SAWUmlaufPolygon.lean`.
 
