@@ -1,3 +1,18 @@
+# Summary of changes for run 8e92ad5f-ff23-4713-ab98-1835bb5db1e3
+Continued working exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions. The main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`, and its three genuine Jordan-content `sorry`s are unchanged (`meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift`). The only other textual `sorry` remains inside an explicitly commented-out dead branch.
+
+This round's contributions (all sorry-free, verified to use only the allowed axioms):
+
+1. Structural fix that unblocks the interior-diagonal split. The combinatorial split bricks built in a previous round (`pathEdges`, `closedEdges_eq_pathEdges`, `mem_closedEdges_of_mem_pathEdges`, `PolygonSimple_of_simplePath`, `polyCycNondeg_of_path`) were stranded in `RequestProject/SAWUmlaufChordSplit.lean`, which *imports* `RequestProject/SAWUmlaufPolygon.lean` — so the open Meisters two-ears branches (which live upstream in `SAWUmlaufPolygon`) could not use them at all. I relocated them into `SAWUmlaufPolygon.lean`, placed just before the open branches, making them usable. `SAWUmlaufChordSplit.lean` is kept as a thin documented stub (still imported by `SAWFinal`) and the import comment in `SAWFinal.lean` was updated accordingly.
+
+2. Banked the full combinatorial split-preservation layer for the interior-diagonal split — both pieces, both invariants — given the geometric cut-diagonal clearance and seam-corner non-flatness as hypotheses. New, proven lemmas in `SAWUmlaufPolygon.lean` (namespace `HexArea`):
+   - edge inheritance: `mem_pathEdges_take`, `pathEdges_chordLeft_mem_closedEdges`, `pathEdges_chordRight_mem_closedEdges`;
+   - triple inheritance: `polyNondeg_take`, `polyNondeg_drop`;
+   - simplicity preservation: `chordLeft_PolygonSimple`, `chordRight_PolygonSimple` (via `PolygonSimple_of_simplePath`);
+   - non-degeneracy preservation: `chordLeft_polyCycNondeg`, `chordRight_polyCycNondeg` (via `polyCycNondeg_of_path`).
+
+Net effect: the interior split's purely combinatorial obstacle — that each split piece is again a simple, non-degenerate, strictly-shorter sub-polygon — is now fully dischargeable from these bricks together with the existing `chordLeft`/`chordRight` chord lemmas. The residual content of `meisters_reduction_interior2` is now exactly the geometric cut-diagonal clearance (the `hclear`/seam hypotheses, coming from the farthest-interior-vertex maximality) plus the interior ear lift and final assembly. All new lemmas are documented as preparation explicitly linked to `meisters_reduction_interior2`, so they are recorded partial progress rather than dead branches, and every file remains imported via the `SAWFinal.lean` chain. The round is recorded at the top of `PROOF_STATUS.md`. (A pre-existing `sorry` in `SAWWindingDiff.lean`, outside the Umlaufsatz chain, was left untouched.)
+
 # Summary of changes for run 014d011b-7225-4218-aff7-851fcf98e338
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain.
 

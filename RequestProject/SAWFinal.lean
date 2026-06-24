@@ -136,12 +136,10 @@ import RequestProject.SAWUmlaufEmbed
 -- core `hex_total_signed_turn_pm_six` has the signed-area toolkit in scope),
 -- plus the Gauss–Bonnet base case `hexHexagon_signed_turn`.
 import RequestProject.SAWUmlaufGaussBonnet
--- Interior-diagonal-split simplicity brick (`PolygonSimple_of_simplePath`):
--- sorry-free combinatorial preparation for the open Meisters two-ears branches
--- `meisters_reduction_interior2` / `meisters_reduction_empty2` (bad-diagonal
--- subcase) in SAWUmlaufPolygon.  Not yet consumed by those branches, but it is
--- the reusable packaging their interior-diagonal split needs, so it is linked
--- into the build here.
+-- Interior-diagonal-split simplicity bricks have been RELOCATED into
+-- SAWUmlaufPolygon (so the open Meisters two-ears branches there can consume
+-- them).  SAWUmlaufChordSplit is now a thin documented stub recording the
+-- relocation; kept imported here to preserve the build chain.
 import RequestProject.SAWUmlaufChordSplit
 
 -- Discrete Stokes infrastructure (preparation for strip identity)

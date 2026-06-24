@@ -1669,6 +1669,250 @@ lemma empty_branch_interior_lift (V : List ℂ) (z1 z2 : ℂ)
       convert shoelace2_insert_mid ( a' :: c' :: s ) t a b c using 1;
     grind
 
+/-! ### Interior-diagonal split: reusable simplicity/non-degeneracy bricks
+
+These were previously stranded in `SAWUmlaufChordSplit` (which imports this
+file), so they were unusable by the open Meisters branches below.  They are
+moved here, before the branches, so the interior-diagonal split can consume
+them.  They are purely combinatorial packaging: a split piece is a sub-path of
+the parent polygon closed by the single cut diagonal. -/
+
+namespace HexArea
+
+/-- The **non-cyclic** (path) edges of a vertex list `P`: the consecutive pairs
+    `(P₀,P₁), …, (P_{n-1},P_n)`, omitting the wrap-around edge.  The cyclic edges
+    are `pathEdges P ++ [(last, head)]` (`closedEdges_eq_pathEdges`). -/
+def pathEdges (P : List ℂ) : List (ℂ × ℂ) := P.zip P.tail
+
+@[simp] lemma pathEdges_nil : pathEdges ([] : List ℂ) = [] := rfl
+@[simp] lemma pathEdges_singleton (a : ℂ) : pathEdges [a] = [] := rfl
+
+lemma pathEdges_cons_cons (a b : ℂ) (rest : List ℂ) :
+    pathEdges (a :: b :: rest) = (a, b) :: pathEdges (b :: rest) := by
+  simp [pathEdges]
+
+/-- `(p :: rest).rotate 1 = rest ++ [p]`. -/
+lemma rotate_one_cons (p : ℂ) (rest : List ℂ) :
+    (p :: rest).rotate 1 = rest ++ [p] := by
+  rw [List.rotate_cons_succ]; simp
+
+/-- **Cyclic edges = path edges plus the closing chord.** -/
+lemma closedEdges_eq_pathEdges (P : List ℂ) (u v : ℂ)
+    (hhead : P.head? = some u) (hlast : P.getLast? = some v) :
+    closedEdges P = pathEdges P ++ [(v, u)] := by
+  rcases P with ( _ | ⟨ x, _ | ⟨ y, l ⟩ ⟩ ) <;> simp_all +decide [ pathEdges ];
+  · unfold closedEdges; aesop;
+  · induction l generalizing u y <;> simp_all +decide [ closedEdges ]
+
+/-- **Membership in path edges implies membership in cyclic edges.** -/
+lemma mem_closedEdges_of_mem_pathEdges (P : List ℂ) (e : ℂ × ℂ)
+    (he : e ∈ pathEdges P) : e ∈ closedEdges P := by
+  rcases P with ( _ | ⟨ a, _ | ⟨ b, P ⟩ ⟩ ) <;> simp_all +decide [ pathEdges, closedEdges ];
+  have h_zip_append : ∀ (l r1 r2 : List ℂ), List.zip l (r1 ++ r2) = List.zip l r1 ++ List.zip (List.drop r1.length l) r2 := by
+    intros l r1 r2; induction' l with hd tl hl generalizing r1 r2 <;> cases r1 <;> cases r2 <;> simp +decide [ * ] ;
+  grind
+
+/-- **Simplicity from a simple path plus a clear closing chord.** -/
+lemma PolygonSimple_of_simplePath (P : List ℂ) (u v : ℂ)
+    (hhead : P.head? = some u) (hlast : P.getLast? = some v)
+    (hnodup : P.Nodup)
+    (hpath : ∀ e₁ ∈ pathEdges P, ∀ e₂ ∈ pathEdges P,
+        e₁.1 ≠ e₂.1 → e₁.1 ≠ e₂.2 → e₁.2 ≠ e₂.1 → e₁.2 ≠ e₂.2 →
+        Disjoint (segment ℝ e₁.1 e₁.2) (segment ℝ e₂.1 e₂.2))
+    (hdiag : ∀ e ∈ pathEdges P,
+        v ≠ e.1 → v ≠ e.2 → u ≠ e.1 → u ≠ e.2 →
+        Disjoint (segment ℝ v u) (segment ℝ e.1 e.2)) :
+    PolygonSimple P := by
+  refine' ⟨ hnodup, _ ⟩;
+  rw [ closedEdges_eq_pathEdges P u v hhead hlast ];
+  grind
+
+/-- **Cyclic non-degeneracy from path non-degeneracy plus two seam corners.** -/
+lemma polyCycNondeg_of_path (P : List ℂ) (u u2 v vp : ℂ)
+    (h3 : 3 ≤ P.length)
+    (hu : P.head? = some u) (hu2 : P[1]? = some u2)
+    (hv : P.getLast? = some v) (hvp : P.dropLast.getLast? = some vp)
+    (hpath : polyNondeg P)
+    (hseam1 : HexArea.cross (v - vp) (u - v) ≠ 0)
+    (hseam2 : HexArea.cross (u - v) (u2 - u) ≠ 0) :
+    polyCycNondeg P := by
+  obtain ⟨a, b, c, rest, hP⟩ : ∃ a b c : ℂ, ∃ rest : List ℂ, P = a :: b :: c :: rest := by
+    rcases P with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | P ⟩ ⟩ ⟩ ) <;> simp_all +decide;
+  simp_all +decide [ polyCycNondeg ];
+  have h_polyNondeg : ∀ (L : List ℂ), polyNondeg L → ∀ (x y : ℂ), HexArea.cross (L.getLast! - L.dropLast.getLast!) (x - L.getLast!) ≠ 0 → HexArea.cross (x - L.getLast!) (y - x) ≠ 0 → polyNondeg (L ++ [x, y]) := by
+    intros L hL x y hx hy; induction' L with a L ih generalizing x y <;> simp_all +decide [ polyNondeg_cons_cons_cons ] ;
+    rcases L with ( _ | ⟨ b, _ | ⟨ c, L ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg_cons_cons_cons ];
+  convert h_polyNondeg ( u :: u2 :: c :: rest ) hpath u u2 _ _ using 1 <;> simp_all +decide [ List.getLast? ]
+
+/-! #### Edge inheritance for the chord-split pieces (preparation for
+`meisters_reduction_interior2`).  Each split piece's path edges are cyclic edges
+of the parent polygon, so the piece inherits `PolygonSimple`'s edge-disjointness
+verbatim.  These bricks plus the geometric diagonal clearance feed
+`PolygonSimple_of_simplePath`. -/
+
+/-
+A path edge of a prefix `V.take m` is a path edge of `V`.
+-/
+lemma mem_pathEdges_take (V : List ℂ) (m : ℕ) (e : ℂ × ℂ)
+    (he : e ∈ pathEdges (V.take m)) : e ∈ pathEdges V := by
+  induction' m with m ih generalizing V;
+  · cases he;
+  · rcases V with ( _ | ⟨ a, _ | ⟨ b, V ⟩ ⟩ ) <;> simp_all +decide [ pathEdges_cons_cons ];
+    cases m <;> simp_all +decide [ pathEdges_cons_cons ];
+    cases he <;> simp_all +decide [ pathEdges_cons_cons ]
+
+/-
+Every path edge of the left split piece `chordLeft V k` is a cyclic edge of
+    the whole polygon `V`.
+-/
+lemma pathEdges_chordLeft_mem_closedEdges (V : List ℂ) (k : ℕ) (e : ℂ × ℂ)
+    (he : e ∈ pathEdges (chordLeft V k)) : e ∈ closedEdges V := by
+  apply mem_closedEdges_of_mem_pathEdges;
+  apply mem_pathEdges_take;
+  convert he using 1
+
+/-
+Every path edge of the right split piece `chordRight V k` is a cyclic edge of
+    the whole polygon `V`.
+-/
+lemma pathEdges_chordRight_mem_closedEdges (V : List ℂ) (k : ℕ) (hk : k < V.length)
+    (e : ℂ × ℂ) (he : e ∈ pathEdges (chordRight V k)) : e ∈ closedEdges V := by
+  induction' k with k ih generalizing V;
+  · rcases V with ( _ | ⟨ a, _ | ⟨ b, V ⟩ ⟩ ) <;> simp_all +decide [ chordRight ];
+    · cases he;
+      · simp +decide [ closedEdges ];
+      · contradiction;
+    · induction' V with V ih generalizing a b;
+      · unfold pathEdges closedEdges at * ; aesop;
+      · cases ih <;> simp_all +decide [ pathEdges, closedEdges ];
+        grind;
+  · rcases V with ( _ | ⟨ a, _ | ⟨ b, V ⟩ ⟩ ) <;> simp_all +decide [ chordRight ];
+    grind +suggestions
+
+/-
+**Left split piece is simple** given the cut-diagonal clearance.  Preparation
+    for `meisters_reduction_interior2`: combined with the geometric clearance of
+    the cut diagonal `V[k]–V[0]`, the left piece `V₀,…,V_k` is a `PolygonSimple`
+    sub-polygon.
+-/
+lemma chordLeft_PolygonSimple (V : List ℂ) (k : ℕ) (v0 vk : ℂ)
+    (hk2 : 2 ≤ k) (hk : k + 1 ≤ V.length)
+    (hsimple : PolygonSimple V)
+    (hv0 : V.head? = some v0) (hvk : V[k]? = some vk)
+    (hclear : ∀ e ∈ pathEdges (chordLeft V k),
+        vk ≠ e.1 → vk ≠ e.2 → v0 ≠ e.1 → v0 ≠ e.2 →
+        Disjoint (segment ℝ vk v0) (segment ℝ e.1 e.2)) :
+    PolygonSimple (chordLeft V k) := by
+  apply PolygonSimple_of_simplePath (chordLeft V k) v0 vk;
+  · convert hv0 using 1;
+    convert chordLeft_head V k;
+  · grind +suggestions;
+  · exact List.Nodup.sublist ( List.take_sublist _ _ ) hsimple.1;
+  · exact fun e₁ he₁ e₂ he₂ h₁ h₂ h₃ h₄ => hsimple.2 e₁ ( pathEdges_chordLeft_mem_closedEdges V k e₁ he₁ ) e₂ ( pathEdges_chordLeft_mem_closedEdges V k e₂ he₂ ) h₁ h₂ h₃ h₄;
+  · assumption
+
+/-
+**Right split piece is simple** given the cut-diagonal clearance.  Preparation
+    for `meisters_reduction_interior2`.
+-/
+lemma chordRight_PolygonSimple (V : List ℂ) (k : ℕ) (v0 vk : ℂ)
+    (hk1 : 1 ≤ k) (hk : k < V.length)
+    (hsimple : PolygonSimple V)
+    (hv0 : V.head? = some v0) (hvk : V[k]? = some vk)
+    (hclear : ∀ e ∈ pathEdges (chordRight V k),
+        v0 ≠ e.1 → v0 ≠ e.2 → vk ≠ e.1 → vk ≠ e.2 →
+        Disjoint (segment ℝ v0 vk) (segment ℝ e.1 e.2)) :
+    PolygonSimple (chordRight V k) := by
+  apply PolygonSimple_of_simplePath;
+  rotate_left;
+  rotate_left;
+  exact chordRight_nodup V k hk1 hk hsimple.1;
+  rotate_left;
+  convert hclear using 1;
+  · unfold chordRight; aesop;
+  · grind +suggestions;
+  · intros e₁ he₁ e₂ he₂ hne₁ hne₂ hne₃ hne₄;
+    apply hsimple.2 e₁ (pathEdges_chordRight_mem_closedEdges V k hk e₁ he₁) e₂ (pathEdges_chordRight_mem_closedEdges V k hk e₂ he₂) hne₁ hne₂ hne₃ hne₄
+
+/-! #### Non-degeneracy inheritance for the chord-split pieces (companion to the
+simplicity bricks; preparation for `meisters_reduction_interior2`).  A contiguous
+infix of a path keeps all its consecutive-triple non-flatness, so each split
+piece's path triples are inherited; the only new corners are the two seams at the
+cut diagonal's endpoints. -/
+
+/-
+`polyNondeg` is inherited by any prefix.
+-/
+lemma polyNondeg_take (V : List ℂ) (m : ℕ) (h : polyNondeg V) :
+    polyNondeg (V.take m) := by
+  induction' n : V.length with n ih generalizing V m;
+  · cases V <;> aesop;
+  · rcases m with ( _ | _ | _ | m ) <;> rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, V ⟩ ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg_cons_cons_cons ];
+    convert ih ( b :: c :: V ) ( m + 2 ) h.2 ( by simp +arith +decide [ n.symm ] ) using 1
+
+/-
+`polyNondeg` is inherited by any suffix.
+-/
+lemma polyNondeg_drop (V : List ℂ) (k : ℕ) (h : polyNondeg V) :
+    polyNondeg (V.drop k) := by
+  induction' k with k ih generalizing V;
+  · simpa;
+  · rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, V ⟩ ⟩ ⟩ ) <;> simp_all +decide [ polyNondeg_cons_cons_cons ]
+
+/-
+**Left split piece is cyclically non-degenerate** given the two seam corners
+    at the cut-diagonal endpoints.  Preparation for
+    `meisters_reduction_interior2`.
+-/
+lemma chordLeft_polyCycNondeg (V : List ℂ) (k : ℕ) (v0 v1 vk vkm1 : ℂ)
+    (hk2 : 2 ≤ k) (hk : k + 1 ≤ V.length)
+    (hnd : polyCycNondeg V)
+    (hv0 : V.head? = some v0) (hv1 : V[1]? = some v1)
+    (hvk : V[k]? = some vk) (hvkm1 : V[k-1]? = some vkm1)
+    (hseam1 : HexArea.cross (vk - vkm1) (v0 - vk) ≠ 0)
+    (hseam2 : HexArea.cross (v0 - vk) (v1 - v0) ≠ 0) :
+    polyCycNondeg (chordLeft V k) := by
+  convert polyCycNondeg_of_path ( chordLeft V k ) v0 v1 vk vkm1 _ _ _ _ _ _ using 1;
+  grind +splitIndPred;
+  all_goals norm_num [ chordLeft ];
+  grind;
+  · cases V <;> aesop;
+  · grind;
+  · grind;
+  · grind +splitImp;
+  · convert polyNondeg_take _ _ hnd using 1;
+    rw [ List.take_append_of_le_length ] ; omega
+
+/-
+**Right split piece is cyclically non-degenerate** given the two seam corners
+    at the cut-diagonal endpoints.  Preparation for
+    `meisters_reduction_interior2`.
+-/
+lemma chordRight_polyCycNondeg (V : List ℂ) (k : ℕ) (v0 vk vk1 vlast : ℂ)
+    (hk1 : 1 ≤ k) (hk : k + 2 ≤ V.length)
+    (hnd : polyCycNondeg V)
+    (hv0 : V.head? = some v0) (hvk : V[k]? = some vk)
+    (hvk1 : V[k+1]? = some vk1) (hvlast : V[V.length-1]? = some vlast)
+    (hseam1 : HexArea.cross (v0 - vlast) (vk - v0) ≠ 0)
+    (hseam2 : HexArea.cross (vk - v0) (vk1 - vk) ≠ 0) :
+    polyCycNondeg (chordRight V k) := by
+  convert polyCycNondeg_of_path ( chordRight V k ) vk vk1 v0 vlast _ _ _ _ _ _ _ using 1;
+  all_goals norm_num [ chordRight, List.drop_append, List.take_append, hk1, hk ];
+  any_goals omega;
+  exact Or.inl hseam2;
+  · exact Or.inl hvk;
+  · grind;
+  · cases V <;> aesop;
+  · grind;
+  · convert polyNondeg_take ( V.drop k ++ V.take 2 ) ( V.length - k + 1 ) _ using 1;
+    · rcases V with ( _ | ⟨ x, _ | ⟨ y, V ⟩ ⟩ ) <;> simp_all +decide [ List.take_append ];
+    · convert polyNondeg_drop ( V ++ V.take 2 ) k _ using 1;
+      · simp +arith +decide [ List.drop_append, List.take_append ];
+        rw [ Nat.sub_eq_zero_of_le ( by linarith ) ] ; norm_num;
+      · exact hnd
+
+end HexArea
+
 /-- **Empty-branch lift — the BOUNDARY subcase (genuine remaining gap).**  Same
     hypotheses as `empty_branch_good_lift`, used to discharge the residual case
     where the ear returned by the induction hypothesis on the clip `a :: c ::

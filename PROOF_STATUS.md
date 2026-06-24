@@ -1,6 +1,53 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (NEWEST round): built the sorry-free combinatorial half of the
+> **Umlaufsatz (NEWEST round): made the interior-diagonal split bricks USABLE
+> and banked the full combinatorial split-preservation layer (sorry-free).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`).  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions;
+> the main theorem still reduces only to `sorryAx` (+ `propext, Classical.choice,
+> Quot.sound`).  The three genuine Jordan-content `sorry`s are unchanged
+> (`meisters_reduction_interior2`, the bad-diagonal subcase of
+> `meisters_reduction_empty2`, and `empty_branch_boundary_lift`); the only other
+> textual `sorry` remains inside the commented-out dead branch.
+>
+> Structural fix.  The combinatorial split bricks built last round
+> (`pathEdges`, `closedEdges_eq_pathEdges`, `mem_closedEdges_of_mem_pathEdges`,
+> `PolygonSimple_of_simplePath`, `polyCycNondeg_of_path`) were stranded in
+> `SAWUmlaufChordSplit.lean`, which *imports* `SAWUmlaufPolygon.lean` — so the
+> open Meisters branches (upstream, in `SAWUmlaufPolygon`) could not consume
+> them.  I relocated all of them into `SAWUmlaufPolygon.lean`, placed just
+> before the open branches, so they are now usable.  `SAWUmlaufChordSplit.lean`
+> is kept (still imported by `SAWFinal`) as a thin documented stub recording the
+> relocation.
+>
+> New sorry-free layer (all in `SAWUmlaufPolygon.lean`, namespace `HexArea`,
+> verified to use only `propext, Classical.choice, Quot.sound`).  The complete
+> *combinatorial* preservation of the interior-diagonal split — both pieces,
+> both invariants — given the (geometric) cut-diagonal clearance and seam-corner
+> non-flatness as hypotheses:
+> * `mem_pathEdges_take`, `pathEdges_chordLeft_mem_closedEdges`,
+>   `pathEdges_chordRight_mem_closedEdges` — every path edge of a split piece is
+>   a cyclic edge of the parent polygon (edge inheritance);
+> * `polyNondeg_take`, `polyNondeg_drop` — `polyNondeg` is inherited by prefixes
+>   and suffixes (triple inheritance);
+> * `chordLeft_PolygonSimple`, `chordRight_PolygonSimple` — each split piece is
+>   `PolygonSimple` given the cut-diagonal clearance (via
+>   `PolygonSimple_of_simplePath`);
+> * `chordLeft_polyCycNondeg`, `chordRight_polyCycNondeg` — each split piece is
+>   `polyCycNondeg` given the two seam corners (via `polyCycNondeg_of_path`).
+>
+> Net effect: the interior split's *combinatorial* obstacle (each piece is again
+> a simple, non-degenerate, strictly-shorter sub-polygon) is now fully
+> dischargeable from the chord lemmas already in `SAWUmlaufEarSplit`
+> (`chordLeft`/`chordRight` lengths, heads, lasts, nodup, `mem_chord_split`).
+> The residual content of `meisters_reduction_interior2` is now exactly the
+> *geometric* cut-diagonal clearance (the `hclear`/seam hypotheses, from the
+> farthest-interior-vertex maximality) plus the interior ear lift and final
+> assembly.  All new lemmas are documented as preparation explicitly linked to
+> `meisters_reduction_interior2` (not dead branches).
+
+> **Umlaufsatz (earlier round): built the sorry-free combinatorial half of the
 > interior-diagonal split.**  New file `RequestProject/SAWUmlaufChordSplit.lean`
 > (imported into `SAWFinal`, so linked into the build) proves, sorry-free:
 > * `closedEdges_eq_pathEdges` — the cyclic edges of a vertex list are its path
