@@ -1,3 +1,15 @@
+# Summary of changes for run 6e162a03-a192-41dd-86a0-f686981cabb6
+Continued working exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain. The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions — the main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`. All work this round is in `RequestProject/SAWUmlaufPolygon.lean`.
+
+This round I closed the empty branch's good-diagonal *interior* ear-lift and isolated the genuine remaining Jordan-content gap:
+
+- Strengthened the convex-apex setup `exists_lexmin_mid_rotation` to also expose the segment-avoidance clause (`b` is never on the open segment between two other vertices), proved sorry-free from the lex-min property via `lexMin_not_mem_segment`, and threaded it (`hbseg`) through `meisters_reduction2`, `meisters_reduction_interior2`, `meisters_reduction_empty2`, and `empty_branch_good_lift`. This supplies the diagonal-clearance data the lift needs.
+- Proved sorry-free the reusable transfer brick `empty_branch_interior_lift` (the interior ear-lift: re-inserting the apex `b` between `a` and `c` when the clip ear's junction is interior to its tail), including the full orientation-sign transfer.
+- Proved sorry-free three reusable combinatorial bricks: `rotate_cons3_mem`, `polyCycNondeg_rotate_head`, and `forbidden_subset_corner`.
+- Proved `empty_branch_good_lift` itself (previously a single `sorry`): it now recurses on the clip, case-splits on whether the returned ear is interior to the junction, dispatches the interior subcase to the proved `empty_branch_interior_lift`, and the boundary subcase to a new, clearly-scoped lemma `empty_branch_boundary_lift`.
+
+Net effect: the empty branch's good-diagonal lift is no longer a monolithic gap — its interior subcase is fully proved, and the single genuine remaining empty-branch `sorry` is now isolated in `empty_branch_boundary_lift` (the classical two-ears boundary subtlety, where an induction-returned clip ear adjacent to the junction can make the lifted clip-turn vanish). The Umlaufsatz now reduces to exactly three precisely-scoped, documented `sorry`s — `empty_branch_boundary_lift`, `meisters_reduction_interior2`, and the bad-diagonal subcase of `meisters_reduction_empty2` — all kept as compiling Lean so partial progress is preserved. Every Umlauf file remains imported via the `SAWFinal.lean` chain; the only other textual `sorry` sits inside an explicitly commented-out dead branch (`ear_turning_bounds`). The round is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run 2c736d27-efa2-49cc-8ee1-5d36fbd3aad9
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that chain. The whole library still builds end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and the main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`.
 

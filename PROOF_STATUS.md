@@ -1,5 +1,51 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz: PROVED the empty-branch good-diagonal lift (interior subcase
+> fully closed); isolated the genuine remaining gap to the boundary ear
+> (NEWEST).**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz
+> (`hex_closed_trail_turning_number`).  The whole library still builds
+> end-to-end (8127 jobs through `RequestProject/SAWFinal.lean`); no new axioms,
+> no regressions; the main theorem still reduces only to `sorryAx`
+> (+ `propext, Classical.choice, Quot.sound`).
+>
+> This round, in `RequestProject/SAWUmlaufPolygon.lean`:
+> * Strengthened the convex-apex setup `exists_lexmin_mid_rotation` to also
+>   expose the segment-avoidance clause `∀ u w ∈ V, b ≠ u → b ≠ w →
+>   b ∉ segment ℝ u w` (proved sorry-free from the lex-min property via
+>   `HexArea.lexMin_not_mem_segment`), and threaded it (`hbseg`) through
+>   `meisters_reduction2`, `meisters_reduction_interior2`,
+>   `meisters_reduction_empty2`, and `empty_branch_good_lift`.  This is the
+>   data that the diagonal-clearance transfer in the lift needs.
+> * Proved sorry-free the reusable transfer brick `empty_branch_interior_lift`:
+>   the *interior* ear lift (re-inserting the apex `b` between `a` and `c` when
+>   the clip ear's `a–c` junction is interior to its tail), with the full
+>   orientation-sign transfer via `shoelace2_insert_mid` / `shoelace2_rotate` /
+>   `shoelace2_clip_second`.
+> * Proved sorry-free three reusable combinatorial bricks: `rotate_cons3_mem`
+>   (membership through a 3-prefix rotation), `polyCycNondeg_rotate_head` (ear
+>   non-degeneracy from cyclic non-degeneracy), and `forbidden_subset_corner`
+>   (the forbidden pair `{z1,z2}` lies in `{a,b,c}` because `b`'s only cyclic
+>   neighbours are `a` and `c`).
+> * **Proved `empty_branch_good_lift`** (now sorry-free in itself): it recurses
+>   on the clip via `IH2`, `by_cases` on whether the returned ear is interior to
+>   the junction, dispatches the interior subcase to the proved
+>   `empty_branch_interior_lift`, and the boundary subcase to the new isolated
+>   lemma `empty_branch_boundary_lift`.
+>
+> Net effect on the open content: the empty branch's good-diagonal lift is no
+> longer a monolithic `sorry` — its interior subcase is fully proved, and the
+> single genuine remaining Jordan-content `sorry` is now isolated in
+> `empty_branch_boundary_lift` (the two-ears boundary case: an IH-returned clip
+> ear adjacent to the `a–c` junction, where re-inserting `b` changes a clip
+> neighbour's successor from `c` to `b`, so the lifted clip-turn
+> `cross (c - a') (b - c)` / `cross (a - a') (b - a)` can vanish — a finer
+> induction invariant or a dedicated boundary-lift treatment is needed).  The
+> Umlaufsatz now reduces to exactly three precisely-scoped `sorry`s:
+> `empty_branch_boundary_lift`, `meisters_reduction_interior2`, and the
+> bad-diagonal subcase of `meisters_reduction_empty2`.  Every Umlauf file
+> remains imported via the `SAWFinal.lean` chain; the only other textual `sorry`
+> sits inside an explicitly commented-out dead branch (`ear_turning_bounds`).
+
 > **Umlaufsatz: banked the interior-ear LIFT machinery (NEWEST).**  Worked
 > exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`).  The whole library still builds
