@@ -1,3 +1,17 @@
+# Summary of changes for run 054b9d79-3aba-455b-89ee-47fdcc3f291d
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean.
+
+Concrete verified progress this round:
+
+1. Two new sorry-free lemmas (verified to use only `propext, Classical.choice, Quot.sound`), placed just above their consumer `meisters_reduction_interior2` and documented as preparation (not dead branches):
+   - `chordLeft_cut_isCycEdge` — the cut diagonal `{V[0], V[k]}` is a genuine cyclic edge (the closing chord) of the left split piece `chordLeft V k`.
+   - `chordRight_cut_isCycEdge` — the same for the right piece `chordRight V k`.
+   These supply exactly the `IsCycEdge` witness the interior branch needs to hand to its induction hypothesis `IH2` when it recurses on a chord piece forbidding the cut diagonal `{b, w}`, so the recursion stays inside the two-forbidden `IsCycEdge` invariant. This was a missing brick on the critical path of the interior-diagonal split.
+
+2. Precisely characterised (and re-confirmed with an explicit numeric configuration) the genuine isolated obstruction blocking the interior branch: the seam non-degeneracy hypotheses of `interior_split_nondeg` are not unconditionally true. The U-turn subcase is excluded by the farthest-vertex maximality, but a benign *straight* collinearity (e.g. `a=(0,0), c=(4,0), b=(2,3)`, farthest interior `w=(2,2)`, successor `succ=(2,0.5)`, all on `x=2`) can still make a seam corner collinear-but-straight, which the current `polyCycNondeg` invariant (no collinear triples) rejects. Closing the interior branch therefore requires tolerating straight seam corners (relaxing the invariant to forbid only U-turns, or removing straight cut-vertices before recursing). This is now recorded in `PROOF_STATUS.md` as the sharpened next-round target.
+
+The genuine remaining gaps of the Umlaufsatz chain are unchanged in identity: `meisters_reduction_interior2`, `empty_branch_boundary_lift`, and `empty_branch_bad_lift` (plus one textual `sorry` inside an explicitly commented-out dead branch). Every Umlauf file remains imported via the `SAWFinal.lean` chain, and the round is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run c6b16d8d-6a48-4b37-b9df-212e3ff26293
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean.
 

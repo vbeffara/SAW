@@ -2828,6 +2828,39 @@ lemma interior_split_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ
       unfold HexArea.cross; ring;
       norm_num [ Complex.ext_iff ] ; ring
 
+/-- **The cut diagonal `{v0, vk}` is a cyclic edge of the LEFT chord piece.**
+    Preparation for `meisters_reduction_interior2`: when the interior branch
+    recurses via `IH2` on `chordLeft V k`, the forbidden pair it must hand to
+    `IH2` is the cut diagonal `v0 = V[0]` / `vk = V[k]`, and this pair is a
+    genuine cyclic edge of the piece (its closing chord), so the recursion stays
+    inside the `IsCycEdge` invariant.  Sorry-free; consumed by
+    `meisters_reduction_interior2`. -/
+lemma chordLeft_cut_isCycEdge (V : List ℂ) (k : ℕ) (v0 vk : ℂ)
+    (hk : k < V.length) (hhead : V.head? = some v0) (hvk : V[k]? = some vk) :
+    IsCycEdge (HexArea.chordLeft V k) vk v0 := by
+  have hh : (HexArea.chordLeft V k).head? = some v0 := by
+    rw [HexArea.chordLeft_head]; exact hhead
+  have hl : (HexArea.chordLeft V k).getLast? = some vk := by
+    rw [HexArea.chordLeft_getLast V k hk]; exact hvk
+  left
+  rw [HexArea.closedEdges_eq_pathEdges (HexArea.chordLeft V k) v0 vk hh hl]
+  simp
+
+/-- **The cut diagonal `{v0, vk}` is a cyclic edge of the RIGHT chord piece.**
+    Companion of `chordLeft_cut_isCycEdge` for `chordRight V k`.  Sorry-free;
+    consumed by `meisters_reduction_interior2`. -/
+lemma chordRight_cut_isCycEdge (V : List ℂ) (k : ℕ) (v0 vk : ℂ)
+    (hk : k < V.length) (hV : V ≠ []) (hhead : V.head? = some v0)
+    (hvk : V[k]? = some vk) :
+    IsCycEdge (HexArea.chordRight V k) vk v0 := by
+  have hh : (HexArea.chordRight V k).head? = some vk := by
+    rw [HexArea.chordRight_head V k hk]; exact hvk
+  have hl : (HexArea.chordRight V k).getLast? = some v0 := by
+    rw [HexArea.chordRight_getLast V k hV hk]; exact hhead
+  right
+  rw [HexArea.closedEdges_eq_pathEdges (HexArea.chordRight V k) vk v0 hh hl]
+  simp
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*

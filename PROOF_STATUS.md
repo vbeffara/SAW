@@ -1,6 +1,42 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the NON-DEGENERACY half of the interior
+> **Umlaufsatz (LATEST round): banked the CUT-DIAGONAL cyclic-edge bricks for
+> the interior-split recursion (sorry-free).**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions;
+> the three genuine remaining `sorry`s are unchanged in identity
+> (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`), plus the one textual `sorry` inside the
+> commented-out dead branch `ear_turning_bounds`.
+>
+> Two new sorry-free lemmas in `SAWUmlaufPolygon.lean` (verified to use only
+> `propext, Classical.choice, Quot.sound`):
+> * `chordLeft_cut_isCycEdge` — the cut diagonal `{V[0], V[k]}` is a genuine
+>   cyclic edge (the closing chord) of the left piece `chordLeft V k`.
+> * `chordRight_cut_isCycEdge` — the same for the right piece `chordRight V k`.
+>
+> These supply exactly the `IsCycEdge` witness that the interior branch must
+> hand to `IH2` when it recurses on a chord piece forbidding the cut diagonal
+> `{b, w}`, so the recursion stays inside the two-forbidden `IsCycEdge`
+> invariant.  Both are placed above their consumer
+> (`meisters_reduction_interior2`) and documented as preparation, not dead
+> branches.
+>
+> RECORDED OBSTRUCTION (re-confirmed numerically this round): the seam
+> hypotheses `hseamL`/`hseamR` of `interior_split_nondeg` are NOT unconditionally
+> true.  The U-turn subcase (a vertex strictly between `b` and `w`) is excluded
+> by `hwmax` (it would be a strictly-farther interior vertex), but a benign
+> *straight* collinearity can still occur: e.g. `a=(0,0), c=(4,0), b=(2,3)`,
+> farthest interior `w=(2,2)`, successor `succ=(2,0.5)` — all on the line `x=2`,
+> so `cross (w-b) (succ-w) = 0` while `succ` is a legitimate closer interior
+> vertex.  Hence the diagonal split can introduce a *straight* (turning-0) seam
+> corner that the current `polyCycNondeg` invariant (no collinear triples)
+> rejects.  Closing the interior branch therefore needs either to tolerate
+> straight seam corners (relax `polyCycNondeg` to forbid only U-turns / remove
+> straight cut-vertices before recursing) or a different pivot — this is the
+> genuine isolated remaining gap, now precisely characterised.
+>
+> **Umlaufsatz (previous round): banked the NON-DEGENERACY half of the interior
 > split (sorry-free) and cleanly extracted the empty bad-diagonal subcase.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole
 > library still builds end-to-end (8128 jobs through `SAWFinal.lean`); no new
