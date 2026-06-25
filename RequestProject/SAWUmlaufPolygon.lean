@@ -1951,6 +1951,53 @@ lemma chordRight_polyCycNondeg (V : List ℂ) (k : ℕ) (v0 vk vk1 vlast : ℂ)
         rw [ Nat.sub_eq_zero_of_le ( by linarith ) ] ; norm_num;
       · exact hnd
 
+/-
+**Cyclic-edge localization to a chord piece (combinatorial brick).**
+    Every cyclic edge `e` of the polygon `V` is a *path edge* of exactly one of
+    the two chord pieces `chordLeft V k` / `chordRight V k` of the diagonal
+    `V[0]–V[k]`.  Indeed the closed edges of `V` are the consecutive pairs
+    `(V[i], V[i+1])` for `i < n-1` together with the wrap edge `(V[n-1], V[0])`;
+    the left piece's path edges are the pairs with `i < k`, and the right piece's
+    path edges are the pairs with `k ≤ i < n-1` together with the wrap edge.
+    Pure list surgery; preparation for the ear-lift step of
+    `meisters_reduction_interior2` (the forbidden cyclic edge `{z1, z2}` lands
+    entirely inside one chord piece, so the recursion runs on the other piece).
+    Not yet consumed by another declaration only because the lift it feeds is
+    still open — recorded partial progress, not a dead branch.
+-/
+lemma closedEdge_mem_chord_pathEdges (V : List ℂ) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ V.length)
+    (e : ℂ × ℂ) (he : e ∈ closedEdges V) :
+    e ∈ pathEdges (HexArea.chordLeft V k)
+      ∨ e ∈ pathEdges (HexArea.chordRight V k) := by
+  -- By definition of closedEdges, e is either a pair (V[i], V[(i+1) % V.length]) for some i < V.length.
+  obtain ⟨i, hi⟩ : ∃ i < V.length, e = (V[i]!, V[(i + 1) % V.length]!) := by
+    have h_zip : e ∈ List.zip V (V.rotate 1) := by
+      exact he;
+    rw [ List.mem_iff_get ] at h_zip;
+    rcases h_zip with ⟨ n, rfl ⟩ ; use n; rcases n with ( _ | n ) <;> simp_all +decide [ List.get ] ;
+    · rcases V with ( _ | ⟨ x, _ | ⟨ y, V ⟩ ⟩ ) <;> simp_all +decide [ List.rotate ];
+    · grind +suggestions;
+  by_cases h : i < k <;> simp_all +decide [ chordLeft, chordRight ];
+  · left; simp [pathEdges, List.take] at *; (
+    rw [ List.mem_iff_getElem ] ; simp_all +decide [ List.getElem?_take ] ;
+    simp_all +decide [ Nat.mod_eq_of_lt ( by linarith : i + 1 < V.length ) ];
+    exact ⟨ i, h, rfl, by rw [ List.getElem?_eq_getElem ( by linarith ) ] ; rfl ⟩);
+  · have h_pair : (V[i], V[(i + 1) % V.length]?.getD default) ∈ pathEdges (List.drop k V ++ List.take 1 V) := by
+      have h_pair : ∃ j < (List.drop k V ++ List.take 1 V).length - 1, (V[i], V[(i + 1) % V.length]?.getD default) = ((List.drop k V ++ List.take 1 V)[j]!, (List.drop k V ++ List.take 1 V)[j + 1]!) := by
+        by_cases h : i + 1 < V.length <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+        · refine' ⟨ i - k, _, _, _ ⟩ <;> norm_num [ List.getElem?_append, List.getElem?_drop, List.getElem?_take ];
+          · omega;
+          · grind;
+          · grind;
+        · cases h.eq_or_lt <;> first | linarith | simp_all +decide [ Nat.mod_eq_of_lt ] ;
+          use i - k;
+          grind
+      obtain ⟨ j, hj₁, hj₂ ⟩ := h_pair; rw [ hj₂ ] ; simp +decide [ pathEdges ] ;
+      rw [ List.mem_iff_getElem ] ; simp +decide [ List.getElem_zip ] ;
+      grind;
+    exact Or.inr h_pair
+
 /-- **Generalised corner-exit lemma (start point need not be on the base
     line).**  This is `corner_exit_point` with its `hzac : cross (a-c)(z-c) = 0`
     weakened to `0 ≤ cross (a-c)(z-c) * O`: the start point `z` is allowed to be

@@ -1,6 +1,23 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): wired the orientation-robust pivot into the
+> **Umlaufsatz (LATEST round): banked the cyclic-edge LOCALIZATION brick of the
+> chord-split ear-lift, sorry-free.**  Worked exclusively on the top-priority
+> discrete Hopf Umlaufsatz.  The whole library still builds end-to-end (8128
+> jobs through `SAWFinal.lean`); no new axioms, no regressions; the genuine
+> remaining `sorry`s are unchanged (`meisters_reduction_interior2`, the
+> bad-diagonal subcase of `meisters_reduction_empty2`, and
+> `empty_branch_boundary_lift`).  New sorry-free lemma
+> `HexArea.closedEdge_mem_chord_pathEdges` (only `propext`, `Classical.choice`,
+> `Quot.sound`): every cyclic edge of `V` is a path edge of exactly one of the
+> two chord pieces `chordLeft V k` / `chordRight V k`.  Combined with the
+> already-banked `mem_closedEdges_of_mem_pathEdges`, the forbidden cyclic edge
+> `{z1, z2}` now localizes to a single chord piece *as a cyclic edge of that
+> piece* — the Step-3 localization that the interior-branch ear-lift consumes
+> (recurse via `IH2` on the OTHER piece).  This isolates the interior branch's
+> remaining content to the two seam-corner non-degeneracies (the genuine
+> degenerate-diagonal gap) plus the list-surgery ear-lift assembly.
+>
+> **Umlaufsatz (previous round): wired the orientation-robust pivot into the
 > interior branch and banked the SIMPLICITY HALF of the interior-diagonal split,
 > sorry-free.**  Worked exclusively on the top-priority discrete Hopf
 > Umlaufsatz.  The whole library still builds end-to-end (8128 jobs through

@@ -1,3 +1,12 @@
+# Summary of changes for run 472df1f6-06c7-498a-a137-3abf363984df
+Continued the top-priority discrete Hopf Umlaufsatz, working exclusively on the main theorem chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions.
+
+Concrete verified progress this round:
+- New sorry-free lemma `HexArea.closedEdge_mem_chord_pathEdges`: every cyclic edge of a polygon `V` is a path edge of exactly one of the two chord pieces `chordLeft V k` / `chordRight V k` of the diagonal `V[0]–V[k]`. Verified to use only `propext`, `Classical.choice`, `Quot.sound`.
+- This brick combines with the already-banked `mem_closedEdges_of_mem_pathEdges` so that the forbidden cyclic edge `{z1, z2}` now localizes to a single chord piece as a cyclic edge of that piece. This is exactly the "Step 3" localization the interior-branch ear-lift needs (recurse via the induction hypothesis on the other piece). It is placed above its eventual consumer in the imported file, so it is part of the compiled library, and is documented as preparation (not a dead branch).
+
+The genuine remaining `sorry`s of the Umlaufsatz chain are unchanged in number and identity: the interior-diagonal branch `meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift` (plus the one textual `sorry` inside the already-commented-out dead branch `ear_turning_bounds`). With this round's brick, the interior branch's remaining content is isolated to the two seam-corner non-degeneracies (the genuine degenerate-diagonal gap) plus the list-surgery ear-lift assembly. All partial progress is preserved as building, sorry-tracked Lean code, and `PROOF_STATUS.md` records the update.
+
 # Summary of changes for run d5c370ab-72f4-44bd-ae0f-c25279511697
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (in `RequestProject/SAWUmlaufPolygon.lean`), advancing the interior-diagonal branch of the Meisters two-ears reduction. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions.
 
