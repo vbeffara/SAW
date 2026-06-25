@@ -1,3 +1,17 @@
+# Summary of changes for run 0d661d38-d3ec-401a-a226-307ddea09a31
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, proving the genuine Jordan-content geometric heart of the Meisters interior-diagonal split. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and the three pre-existing genuine `sorry`s are unchanged (`meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift`), plus the one textual `sorry` that remains inside the commented-out dead branch `ear_turning_bounds`.
+
+New, fully proved lemmas (all in `RequestProject/SAWUmlaufPolygon.lean`, verified to use only `propext, Classical.choice, Quot.sound`):
+- `HexArea.corner_exit_point_ge` — generalises the existing `corner_exit_point` so the start point may be strictly inside the corner (apex side-test `≥ 0` instead of `= 0`).
+- `simple_vertex_not_on_far_edge` — a simple-polygon vertex (length `≥ 4`) lies on none of its non-incident cyclic edges.
+- `chord_disjoint_ear_ab` / `chord_disjoint_ear_bc` — a chord sub-segment lying off the supporting line of an ear edge is disjoint from that edge, correctly handling the edge-incidence/collinear case.
+- `interior_chord_is_diagonal` — the Jordan-content core: in a simple polygon, the chord from the apex `b` to the farthest interior vertex `w` of its corner triangle is disjoint from every non-incident cyclic edge (i.e. it is a genuine diagonal). This is the obstacle that had blocked `meisters_reduction_interior2`.
+- `exists_farthest_interior_oriented` — the orientation-robust pivot selector supplying the exact "farthest interior vertex" hypothesis that `interior_chord_is_diagonal` consumes.
+
+A notable correctness finding made and recorded this round: the project's existing pivot selector `exists_farthest_interior` maximises the unscaled quantity `cross (c-a) (·-a)`, which only coincides with "farthest from the base line `a–c`" for positively-oriented corner triangles; for the negative orientation it instead selects the vertex closest to `a–c` (confirmed by an explicit numeric counterexample). The geometric heart lemma is therefore stated and proved with the orientation-robust scaled condition, and the new `exists_farthest_interior_oriented` provides exactly that condition, so the next round can wire the heart into `meisters_reduction_interior2` together with the already-banked `chordLeft`/`chordRight` split-preservation bricks.
+
+The contributions are documented in-file (docstrings marking them as preparation for `meisters_reduction_interior2`) and summarised at the top of `PROOF_STATUS.md`, so the partial progress is preserved as compiling Lean with the genuine gaps clearly isolated.
+
 # Summary of changes for run 8e92ad5f-ff23-4713-ab98-1835bb5db1e3
 Continued working exclusively on the top-priority discrete Hopf Umlaufsatz (`hex_closed_trail_turning_number`), making no changes outside that proof chain. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions. The main theorem still reduces only to `sorryAx` plus the allowed `propext, Classical.choice, Quot.sound`, and its three genuine Jordan-content `sorry`s are unchanged (`meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift`). The only other textual `sorry` remains inside an explicitly commented-out dead branch.
 

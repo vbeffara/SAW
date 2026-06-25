@@ -1,6 +1,41 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (NEWEST round): made the interior-diagonal split bricks USABLE
+> **Umlaufsatz (LATEST round): proved the genuine Jordan-content GEOMETRIC HEART
+> of the interior-diagonal split, sorry-free.**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions;
+> the three genuine remaining `sorry`s are unchanged
+> (`meisters_reduction_interior2`, the bad-diagonal subcase of
+> `meisters_reduction_empty2`, and `empty_branch_boundary_lift`), plus the one
+> textual `sorry` inside the commented-out dead branch `ear_turning_bounds`.
+>
+> New sorry-free lemmas (all in `SAWUmlaufPolygon.lean`, only `propext,
+> Classical.choice, Quot.sound`), discharging the interior-split's hard geometry:
+> * `HexArea.corner_exit_point_ge` — `corner_exit_point` generalised so the
+>   start point may be strictly inside the corner (apex test `>= 0`, not `= 0`).
+> * `simple_vertex_not_on_far_edge` — a simple-polygon vertex lies on none of
+>   its non-incident cyclic edges (`4 <= length`).
+> * `chord_disjoint_ear_ab`, `chord_disjoint_ear_bc` — a chord sub-segment off
+>   line `a-b` (resp. `b-c`) is disjoint from that ear edge, handling the
+>   edge-incidence/collinear case.
+> * `interior_chord_is_diagonal` — **the Jordan-content heart**: in a simple
+>   polygon the chord from apex `b` to the farthest interior vertex `w` of its
+>   ear-triangle is disjoint from every non-incident edge (a diagonal).
+> * `exists_farthest_interior_oriented` — the orientation-robust pivot selector
+>   feeding `interior_chord_is_diagonal`'s `hwmax`.
+>
+> ORIENTATION FINDING (recorded, important for the next round): the existing
+> `exists_farthest_interior` maximises the *unscaled* `cross (c-a) (.-a)`, which
+> equals "farthest from `a-c`" only for positively-oriented corner triangles;
+> for the negative orientation it picks the vertex *closest* to `a-c` (verified
+> counterexample `a=0,c=4,b=2-3i,w=2-half i,w2=2-2i`).  Use the new
+> `exists_farthest_interior_oriented` (scaled by `cross (c-a) (b-a)`) when wiring
+> `interior_chord_is_diagonal` into `meisters_reduction_interior2`.  Remaining
+> for interior2: feed these two lemmas to the banked `chordLeft/chordRight`
+> split-preservation bricks (cut-diagonal clearance gives two shorter simple
+> sub-polygons), recurse via `IH2`, and lift the returned ear.
+
+> **Umlaufsatz (previous round): made the interior-diagonal split bricks USABLE
 > and banked the full combinatorial split-preservation layer (sorry-free).**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz
 > (`hex_closed_trail_turning_number`).  The whole library still builds

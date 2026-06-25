@@ -1220,6 +1220,46 @@ lemma exists_farthest_interior (a b c : ℂ) (rest : List ℂ)
   apply hwmax
   rw [hS, List.mem_filter]; exact ⟨hy, by simpa using hyin⟩
 
+/-- **Orientation-robust farthest interior vertex (the pivot consumed by
+    `interior_chord_is_diagonal`).**  Like `exists_farthest_interior`, but the
+    selected `w` maximises the *orientation-normalised* `b`-weight
+    `cross (c-a) (·-a) * cross (c-a) (b-a)` rather than the bare signed distance
+    `cross (c-a) (·-a)`.  This is the genuinely "farthest from `a–c`" pivot for
+    *both* triangle orientations (see the orientation note on
+    `interior_chord_is_diagonal`); `exists_farthest_interior` coincides with it
+    only when `cross (c-a) (b-a) > 0`.  Proved sorry-free by applying
+    `HexArea.exists_max_cross` in the rescaled direction
+    `d := cross (c-a) (b-a) • (c-a)`, for which
+    `cross d (·-a) = cross (c-a) (·-a) * cross (c-a) (b-a)`. -/
+lemma exists_farthest_interior_oriented (a b c : ℂ) (rest : List ℂ)
+    (hne : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x) :
+    ∃ w ∈ rest, HexArea.inTriangleStrict a b c w ∧
+      ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
+          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a) := by
+  classical
+  set S : List ℂ := rest.filter (fun x => decide (HexArea.inTriangleStrict a b c x)) with hS
+  have hSne : S ≠ [] := by
+    obtain ⟨x, hx, hxin⟩ := hne
+    intro hSempty
+    have : x ∈ S := by
+      rw [hS, List.mem_filter]; exact ⟨hx, by simpa using hxin⟩
+    rw [hSempty] at this; simpa using this
+  obtain ⟨w, hwS, hwmax⟩ :=
+    HexArea.exists_max_cross (HexArea.cross (c - a) (b - a) • (c - a)) a S hSne
+  have hconv : ∀ x : ℂ,
+      HexArea.cross (HexArea.cross (c - a) (b - a) • (c - a)) (x - a)
+        = HexArea.cross (c - a) (x - a) * HexArea.cross (c - a) (b - a) := by
+    intro x; unfold HexArea.cross; simp [Complex.ext_iff]; ring
+  have hwrest : w ∈ rest := (List.mem_filter.mp (hS ▸ hwS)).1
+  have hwin : HexArea.inTriangleStrict a b c w := by
+    have := (List.mem_filter.mp (hS ▸ hwS)).2; simpa using this
+  refine ⟨w, hwrest, hwin, ?_⟩
+  intro y hy hyin
+  have := hwmax y (by rw [hS, List.mem_filter]; exact ⟨hy, by simpa using hyin⟩)
+  rw [hconv, hconv] at this
+  exact this
+
 /-- **A point off the supporting line of a segment is not on the segment.**  If
     `cross (c - a) (x - a) ≠ 0` (i.e. `x` is not collinear with `a` and `c`)
     then `x ∉ segment ℝ a c`.  Reusable building block for the diagonal-clearness
@@ -1911,7 +1951,390 @@ lemma chordRight_polyCycNondeg (V : List ℂ) (k : ℕ) (v0 vk vk1 vlast : ℂ)
         rw [ Nat.sub_eq_zero_of_le ( by linarith ) ] ; norm_num;
       · exact hnd
 
+/-- **Generalised corner-exit lemma (start point need not be on the base
+    line).**  This is `corner_exit_point` with its `hzac : cross (a-c)(z-c) = 0`
+    weakened to `0 ≤ cross (a-c)(z-c) * O`: the start point `z` is allowed to be
+    strictly on the apex side (`PC(z) ≥ 0`) rather than exactly on the base line.
+    The same affine first-crossing argument applies: along `z → u` the apex test
+    `PC` is `(1-τ)·PC(z) + τ·PC(u) ≥ τ·PC(u) > 0` for `τ > 0`, so the moving point
+    leaves the wedge through `a–b` or `b–c`.  Reusable preparation for
+    `interior_chord_is_diagonal` (where the chord-crossing point is *strictly
+    inside* the corner triangle, never on the base line). -/
+lemma corner_exit_point_ge (a b c z u : ℂ)
+    (hO : cross (b - a) (c - b) ≠ 0)
+    (hzab : 0 < cross (b - a) (z - a) * cross (b - a) (c - b))
+    (hzbc : 0 < cross (c - b) (z - b) * cross (b - a) (c - b))
+    (hzac : 0 ≤ cross (a - c) (z - c) * cross (b - a) (c - b))
+    (huac : 0 < cross (a - c) (u - c) * cross (b - a) (c - b))
+    (hunot : ¬ inTriangleStrict a b c u) :
+    (∃ y ∈ segment ℝ z u, y ∈ segment ℝ a b) ∨
+    (∃ y ∈ segment ℝ z u, y ∈ segment ℝ b c) := by
+  set O := cross (b - a) (c - b) with hO_def
+  have hPA : ∀ τ : ℝ, cross (b - a) (z + τ • (u - z) - a) * O
+      = (1 - τ) * cross (b - a) (z - a) * O + τ * cross (b - a) (u - a) * O := by
+    unfold cross; norm_num [ Complex.ext_iff ] ; intros; ring
+  have hPB : ∀ τ : ℝ, cross (c - b) (z + τ • (u - z) - b) * O
+      = (1 - τ) * cross (c - b) (z - b) * O + τ * cross (c - b) (u - b) * O := by
+    unfold cross; norm_num [ Complex.ext_iff ] ; intros; ring
+  have hPC : ∀ τ : ℝ, cross (a - c) (z + τ • (u - z) - c) * O
+      = (1 - τ) * cross (a - c) (z - c) * O + τ * cross (a - c) (u - c) * O := by
+    unfold cross; norm_num [ Complex.ext_iff ] ; intros; ring
+  by_cases hPAu : cross (b - a) (u - a) * O ≤ 0
+  · set t := cross (b - a) (z - a) * O / (cross (b - a) (z - a) * O - cross (b - a) (u - a) * O) with ht_def
+    have ht_bounds : 0 < t ∧ t ≤ 1 :=
+      ⟨ div_pos hzab ( by linarith ), div_le_one_of_le₀ ( by linarith ) ( by linarith ) ⟩
+    have ht_PA : cross (b - a) (z + t • (u - z) - a) * O = 0 := by grind
+    have ht_PC : 0 < cross (a - c) (z + t • (u - z) - c) * O := by
+      rw [ hPC ] ; nlinarith [ mul_pos ht_bounds.1 huac,
+        mul_nonneg ( by linarith [ ht_bounds.2 ] : (0:ℝ) ≤ 1 - t ) hzac ]
+    by_cases hPBu : cross (c - b) (u - b) * O ≥ 0
+    · refine Or.inl ⟨ z + t • ( u - z ), ?_, ?_ ⟩
+      · rw [ segment_eq_image ]
+        exact ⟨ t, ⟨ by linarith, by linarith ⟩, by simpa [ sub_smul, smul_sub ] using by ring ⟩
+      · apply mem_segment_ab_of_cross a b c (z + t • (u - z)) hO
+        · exact eq_zero_of_ne_zero_of_mul_right_eq_zero hO ht_PA
+        · nlinarith [ hPB t ]
+        · exact le_of_lt ht_PC
+    · set s := cross (c - b) (z - b) * O / (cross (c - b) (z - b) * O - cross (c - b) (u - b) * O) with hs_def
+      have hs_bounds : 0 < s ∧ s ≤ 1 :=
+        ⟨ div_pos hzbc ( by linarith ), div_le_one_of_le₀ ( by linarith ) ( by linarith ) ⟩
+      have hs_PB : cross (c - b) (z + s • (u - z) - b) * O = 0 := by grind
+      have hs_PC : 0 < cross (a - c) (z + s • (u - z) - c) * O := by
+        rw [ hPC ] ; nlinarith [ mul_pos hs_bounds.1 huac,
+          mul_nonneg ( by linarith [ hs_bounds.2 ] : (0:ℝ) ≤ 1 - s ) hzac ]
+      by_cases hts : t ≤ s
+      · have ht_PB_nonneg : 0 ≤ cross (c - b) (z + t • (u - z) - b) * O := by
+          rw [ hPB ] ; rw [ le_div_iff₀ ] at hts <;> nlinarith
+        refine Or.inl ⟨ z + t • ( u - z ), ?_, ?_ ⟩
+        · rw [ segment_eq_image ]
+          exact ⟨ t, ⟨ by linarith, by linarith ⟩, by simpa [ sub_smul, smul_sub ] using by ring ⟩
+        · apply mem_segment_ab_of_cross a b c (z + t • (u - z)) hO
+          · exact eq_zero_of_ne_zero_of_mul_right_eq_zero hO ht_PA
+          · exact ht_PB_nonneg
+          · exact le_of_lt ht_PC
+      · have hs_PA : cross (b - a) (z + s • (u - z) - a) * O ≥ 0 := by
+          rw [ hPA ] ; rw [ div_le_iff₀ ] at hts <;> nlinarith
+        refine Or.inr ⟨ z + s • ( u - z ), ?_, ?_ ⟩
+        · rw [ segment_eq_image ]
+          exact ⟨ s, ⟨ by linarith, by linarith ⟩, by simpa [ sub_smul, smul_sub ] using by ring ⟩
+        · apply mem_segment_bc_of_cross a b c (z + s • (u - z)) hO
+          · exact eq_zero_of_ne_zero_of_mul_right_eq_zero hO hs_PB
+          · exact hs_PA
+          · exact le_of_lt hs_PC
+  · have hPBu : cross (c - b) (u - b) * O ≤ 0 := by
+      contrapose! hunot; simp_all +decide [ inTriangleStrict ]
+      cases lt_or_gt_of_ne hO <;>
+        first
+          | exact Or.inl ⟨ by nlinarith, by nlinarith, by nlinarith ⟩
+          | exact Or.inr ⟨ by nlinarith, by nlinarith, by nlinarith ⟩
+    set s := cross (c - b) (z - b) * O / (cross (c - b) (z - b) * O - cross (c - b) (u - b) * O) with hs_def
+    have hs_pos : 0 < s := div_pos hzbc ( by linarith )
+    have hs_le_one : s ≤ 1 := div_le_one_of_le₀ ( by linarith ) ( by linarith )
+    have hPB_s : cross (c - b) (z + s • (u - z) - b) * O = 0 := by
+      rw [ hPB, hs_def ] ; nlinarith [ mul_div_cancel₀ ( cross ( c - b ) ( z - b ) * O )
+        ( by linarith : ( cross ( c - b ) ( z - b ) * O - cross ( c - b ) ( u - b ) * O ) ≠ 0 ) ]
+    have hPC_s : 0 ≤ cross (a - c) (z + s • (u - z) - c) * O := by
+      rw [ hPC ] ; nlinarith [ mul_nonneg hs_pos.le huac.le,
+        mul_nonneg ( by linarith : (0:ℝ) ≤ 1 - s ) hzac ]
+    refine Or.inr ⟨ z + s • ( u - z ), ?_, ?_ ⟩
+    · rw [ segment_eq_image ]
+      exact ⟨ s, ⟨ hs_pos.le, hs_le_one ⟩, by simpa [ sub_smul, smul_sub ] using by ring ⟩
+    · apply mem_segment_bc_of_cross a b c (z + s • (u - z)) hO
+      · exact eq_zero_of_ne_zero_of_mul_right_eq_zero hO hPB_s
+      · nlinarith [ hPA s ]
+      · exact hPC_s
+
 end HexArea
+
+/-
+**A simple-polygon vertex lies on none of its non-incident edges.**  If
+    `V` is a simple polygon (`4 ≤ V.length`), `w` is a vertex of `V`, and `e` is
+    a cyclic edge of `V` with neither endpoint equal to `w`, then `w` does not
+    lie on the closed segment `e`.
+
+    Proof: `w = V[i]`; its two incident cyclic edges `(V[i-1], w)` and
+    `(w, V[i+1])` both contain `w`.  Since `n ≥ 4`, the two neighbours `V[i-1]`,
+    `V[i+1]` are not cyclically adjacent, so `e` (whose endpoints avoid `w`)
+    shares an endpoint with at most one of the two incident edges; the other
+    incident edge is non-adjacent to `e`, hence `Disjoint` from it by
+    `PolygonSimple` — but both contain `w` if `w ∈ e`, a contradiction.
+    Combinatorial preparation for `interior_chord_is_diagonal` (the `z = w`
+    boundary case, where the chord meets a far edge exactly at the pivot `w`).
+-/
+lemma simple_vertex_not_on_far_edge (V : List ℂ) (h4 : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (w : ℂ) (hw : w ∈ V)
+    (e : ℂ × ℂ) (he : e ∈ closedEdges V) (hne1 : w ≠ e.1) (hne2 : w ≠ e.2) :
+    w ∉ segment ℝ e.1 e.2 := by
+  obtain ⟨ i, hi ⟩ := List.mem_iff_getElem.mp hw;
+  obtain ⟨ hi, rfl ⟩ := hi;
+  -- By definition of `closedEdges`, there exists some `j` such that `e = (V[j], V[(j+1)%n])`.
+  obtain ⟨ j, hj ⟩ : ∃ j, j < V.length ∧ e = (V[j]!, V[(j + 1) % V.length]!) := by
+    have h_closedEdges : closedEdges V = List.map (fun j => (V[j]!, V[(j + 1) % V.length]!)) (List.range V.length) := by
+      refine' List.ext_get _ _ <;> simp +decide [ closedEdges ];
+      grind +suggestions;
+    grind;
+  have h_incident : V[(i + V.length - 1) % V.length]! ≠ e.1 ∧ V[(i + V.length - 1) % V.length]! ≠ e.2 ∨ V[(i + 1) % V.length]! ≠ e.1 ∧ V[(i + 1) % V.length]! ≠ e.2 := by
+    by_cases h_cases : j = (i + V.length - 1) % V.length ∨ (j + 1) % V.length = (i + V.length - 1) % V.length;
+    · rcases h_cases with ( rfl | h_cases ) <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+      · rcases i with ( _ | i ) <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+        rcases V with ( _ | ⟨ a, _ | ⟨ b, V ⟩ ⟩ ) <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+      · have h_distinct : (i + 1) % V.length ≠ j ∧ (i + 1) % V.length ≠ (i + V.length - 1) % V.length := by
+          constructor <;> intro h <;> have := Nat.mod_add_div ( i + 1 ) V.length <;> have := Nat.mod_add_div ( i + V.length - 1 ) V.length <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+          · rcases k : ( i + 1 ) / V.length with ( _ | _ | k ) <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+            · have := Nat.modEq_iff_dvd.mp h_cases.symm; simp_all +decide [ Nat.dvd_iff_mod_eq_zero ] ;
+              obtain ⟨ a, ha ⟩ := this; rw [ Nat.cast_sub ( by linarith ) ] at ha; norm_num at ha; nlinarith [ show a = 0 by nlinarith ] ;
+            · norm_num [ show i = V.length - 1 by omega ] at *;
+              norm_num [ show j = 0 by omega ] at *;
+              rcases V with ( _ | ⟨ _, _ | V ⟩ ) <;> norm_num at *;
+              norm_num [ ( by ring : ( List.length ‹_› + 1 + ( List.length ‹_› + 1 ) ) = ( List.length ‹_› + 1 + 1 ) + ( List.length ‹_› ) ) ] at *;
+              norm_num [ Nat.mod_eq_of_lt ] at *;
+              grind +qlia;
+            · nlinarith;
+          · rcases V with ( _ | ⟨ _, _ | V ⟩ ) <;> simp_all +arith +decide [ Nat.mod_eq_of_lt ];
+            nlinarith [ show ( i + 1 ) / ( List.length ‹_› + 2 ) = ( i + List.length ‹_› + 1 ) / ( List.length ‹_› + 2 ) by nlinarith ];
+        have := hsimple.1;
+        rw [ List.nodup_iff_injective_get ] at this;
+        exact ⟨ by rw [ List.getElem?_eq_getElem ( by linarith [ Nat.mod_lt ( i + 1 ) ( by linarith : 0 < V.length ) ] ) ] ; exact fun h => h_distinct.1 <| by have := @this ⟨ ( i + 1 ) % V.length, by linarith [ Nat.mod_lt ( i + 1 ) ( by linarith : 0 < V.length ) ] ⟩ ⟨ j, by linarith ⟩ ; aesop, by rw [ List.getElem?_eq_getElem ( by linarith [ Nat.mod_lt ( i + 1 ) ( by linarith : 0 < V.length ) ] ), List.getElem?_eq_getElem ( by linarith [ Nat.mod_lt ( i + V.length - 1 ) ( by linarith : 0 < V.length ) ] ) ] ; exact fun h => h_distinct.2 <| by have := @this ⟨ ( i + 1 ) % V.length, by linarith [ Nat.mod_lt ( i + 1 ) ( by linarith : 0 < V.length ) ] ⟩ ⟨ ( i + V.length - 1 ) % V.length, by linarith [ Nat.mod_lt ( i + V.length - 1 ) ( by linarith : 0 < V.length ) ] ⟩ ; aesop ⟩;
+    · have h_distinct : V.Nodup := by
+        exact hsimple.1;
+      have h_distinct : ∀ (k l : ℕ), k < V.length → l < V.length → k ≠ l → V[k]! ≠ V[l]! := by
+        intros k l hk hl hkl; have := List.nodup_iff_injective_get.mp h_distinct; simp_all +decide [ Function.Injective ] ;
+        exact fun h => hkl <| by simpa [ Fin.ext_iff ] using @this ⟨ k, hk ⟩ ⟨ l, hl ⟩ h;
+      exact Or.inl ⟨ by specialize h_distinct ( ( i + V.length - 1 ) % V.length ) j ( Nat.mod_lt _ ( by linarith ) ) hj.1; aesop, by specialize h_distinct ( ( i + V.length - 1 ) % V.length ) ( ( j + 1 ) % V.length ) ( Nat.mod_lt _ ( by linarith ) ) ( Nat.mod_lt _ ( by linarith ) ) ; aesop ⟩;
+  have h_disjoint : Disjoint (segment ℝ (V[(i + V.length - 1) % V.length]!) (V[i])) (segment ℝ e.1 e.2) ∨ Disjoint (segment ℝ (V[i]) (V[(i + 1) % V.length]!)) (segment ℝ e.1 e.2) := by
+    cases h_incident <;> simp_all +decide [ PolygonSimple ];
+    · have h_disjoint : (V[(i + V.length - 1) % V.length]!, V[i]) ∈ closedEdges V := by
+        convert List.mem_iff_getElem.mpr _ using 1;
+        use (i + V.length - 1) % V.length;
+        simp +decide [ closedEdges, List.getElem_zip ];
+        simp +decide [ List.getElem_rotate, Nat.mod_lt ];
+        simp +decide [ Nat.sub_add_cancel ( by linarith : 1 ≤ i + V.length ), Nat.mod_eq_of_lt hi ];
+        exact ⟨ Nat.mod_lt _ ( by linarith ), by rw [ List.getElem?_eq_getElem ( Nat.mod_lt _ ( by linarith ) ) ] ; rfl ⟩;
+      grind;
+    · refine Or.inr <| hsimple.2 _ _ ?_ _ _ ?_ ?_ ?_ ?_ ?_ <;> simp_all +decide [ closedEdges ];
+      rw [ List.mem_iff_getElem ];
+      use i; simp [List.getElem_zip, List.getElem_rotate];
+      exact ⟨ hi, by rw [ List.getElem?_eq_getElem ( Nat.mod_lt _ ( by linarith ) ) ] ; rfl ⟩;
+  cases h_disjoint <;> simp_all +decide [ Set.disjoint_left ];
+  · rename_i h;
+    exact fun h' => h ( right_mem_segment _ _ _ ) h';
+  · exact fun h => ‹∀ a ∈ segment ℝ V[i] ( V[(i + 1) % V.length]?.getD default ), a ∉ segment ℝ V[j] ( V[(j + 1) % V.length]?.getD default ) › _ ( left_mem_segment _ _ _ ) h
+
+/-
+**A chord sub-segment lying off the line `a–b` avoids the ear edge `a–b`.**
+    If `z, y` lie on a cyclic edge `e` of the simple polygon `a::b::c::rest`
+    (with `b` not on `e`), `a` is not on the sub-segment `z–y`, and `z` is
+    strictly off the line `a–b` (`cross (b-a)(z-a) ≠ 0`), then `segment z y` is
+    disjoint from the ear edge `segment a b`.
+
+    Proof: a common point `p` lies on `e` (convexity), is `≠ a` (`a ∉ z–y`) and
+    `≠ b` (`b ∉ e`).  If `e` shares no endpoint with `a`, `PolygonSimple` makes
+    `e` and the edge `a–b` disjoint — contradiction.  If `e` is incident to `a`,
+    then `e` and `a–b` share the endpoint `a` and the common point `p ≠ a`, so
+    both are collinear through `a`; hence `z` (on `e`) lies on the line `a–b`,
+    forcing `cross (b-a)(z-a) = 0`, contradicting the hypothesis.  Preparation
+    for `interior_chord_is_diagonal`.
+-/
+lemma chord_disjoint_ear_ab (a b c : ℂ) (rest : List ℂ) (z y : ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (e : ℂ × ℂ) (he : e ∈ closedEdges (a :: b :: c :: rest))
+    (hb1 : b ≠ e.1) (hb2 : b ≠ e.2)
+    (hz : z ∈ segment ℝ e.1 e.2) (hy : y ∈ segment ℝ e.1 e.2)
+    (hbe : b ∉ segment ℝ e.1 e.2) (hazy : a ∉ segment ℝ z y)
+    (hzab : HexArea.cross (b - a) (z - a) ≠ 0) :
+    Disjoint (segment ℝ z y) (segment ℝ a b) := by
+  simp_all +decide [ Set.disjoint_left, segment_eq_image ];
+  intro p x hx₁ hx₂ rfl y hy₁ hy₂
+  by_cases ha : a = e.1 ∨ a = e.2;
+  · rcases ha with ( rfl | rfl ) <;> simp_all +decide [ HexArea.cross ];
+    · obtain ⟨ u, hu₁, hu₂ ⟩ := hz; obtain ⟨ v, hv₁, hv₂ ⟩ := hy; simp_all +decide [ Complex.ext_iff ] ;
+      grind;
+    · obtain ⟨ u, hu₁, hu₂ ⟩ := hz; obtain ⟨ v, hv₁, hv₂ ⟩ := hy; simp_all +decide [ Complex.ext_iff ] ;
+      grind +splitImp;
+  · have := hsimple.2 ( a, b ) ( by
+      simp +decide [ closedEdges ] ) e he
+    generalize_proofs at *;
+    contrapose! this;
+    simp_all +decide [ Set.disjoint_left, segment_eq_image ];
+    obtain ⟨ u, hu₁, hu₂ ⟩ := hz; obtain ⟨ v, hv₁, hv₂ ⟩ := hy; use y; use hy₁, hy₂; use ( 1 - x ) * u + x * v; simp_all +decide [ Complex.ext_iff ] ;
+    exact ⟨ by nlinarith, by nlinarith, by rw [ ← hu₂.1, ← hv₂.1 ] ; ring, by rw [ ← hu₂.2, ← hv₂.2 ] ; ring ⟩
+
+/-
+**A chord sub-segment lying off the line `b–c` avoids the ear edge `b–c`.**
+    The `b–c` analogue of `chord_disjoint_ear_ab`.  Preparation for
+    `interior_chord_is_diagonal`.
+-/
+lemma chord_disjoint_ear_bc (a b c : ℂ) (rest : List ℂ) (z y : ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (e : ℂ × ℂ) (he : e ∈ closedEdges (a :: b :: c :: rest))
+    (hb1 : b ≠ e.1) (hb2 : b ≠ e.2)
+    (hz : z ∈ segment ℝ e.1 e.2) (hy : y ∈ segment ℝ e.1 e.2)
+    (hbe : b ∉ segment ℝ e.1 e.2) (hczy : c ∉ segment ℝ z y)
+    (hzbc : HexArea.cross (c - b) (z - b) ≠ 0) :
+    Disjoint (segment ℝ z y) (segment ℝ b c) := by
+  -- Suppose there exists a point `p` in both segments.
+  by_contra h_contra;
+  obtain ⟨p, hp⟩ : ∃ p, p ∈ segment ℝ z y ∧ p ∈ segment ℝ b c := by
+    exact Set.not_disjoint_iff.mp h_contra;
+  have h_cases : c = e.1 ∨ c = e.2 := by
+    contrapose! h_contra;
+    have h_disjoint : Disjoint (segment ℝ e.1 e.2) (segment ℝ b c) := by
+      have := hsimple.2 ( b, c ) ?_ e ?_ <;> simp_all +decide [ closedEdges ];
+      exact this.symm;
+    exact Set.disjoint_left.mpr fun x hxz hxz' => h_disjoint.le_bot ⟨ by exact convex_segment _ _ |> fun h => h.segment_subset hz hy hxz, hxz' ⟩;
+  rcases h_cases with ( rfl | rfl ) <;> simp_all +decide [ segment_eq_image ];
+  · obtain ⟨ ⟨ x, hx, rfl ⟩, ⟨ y, hy, hy' ⟩ ⟩ := hp; simp_all +decide [ Complex.ext_iff ] ;
+    obtain ⟨ u, hu, hu', hu'' ⟩ := hz; obtain ⟨ v, hv, hv', hv'' ⟩ := ‹∃ x : ℝ, ( 0 ≤ x ∧ x ≤ 1 ) ∧ ( 1 - x ) * e.1.re + x * e.2.re = _ ∧ ( 1 - x ) * e.1.im + x * e.2.im = _›; simp_all +decide [ HexArea.cross ] ;
+    grind;
+  · obtain ⟨ ⟨ x, hx, rfl ⟩, ⟨ y, hy, hy' ⟩ ⟩ := hp; simp_all +decide [ Complex.ext_iff ] ;
+    obtain ⟨ u, hu, hu' ⟩ := hz; obtain ⟨ v, hv, hv' ⟩ := ‹∃ x : ℝ, ( 0 ≤ x ∧ x ≤ 1 ) ∧ ( 1 - x ) * e.1.re + x * e.2.re = _ ∧ ( 1 - x ) * e.1.im + x * e.2.im = _›; simp_all +decide [ HexArea.cross ] ;
+    grind
+
+/-
+**The Meisters interior diagonal is clear (genuine geometric core).**
+    In a simple polygon `a :: b :: c :: rest` whose corner triangle `a, b, c`
+    is non-degenerate, let `w ∈ rest` be a vertex strictly inside the triangle
+    that is *farthest from the base line* `a–c`.  Then the chord `b–w` is
+    disjoint, as a segment, from every cyclic edge of the polygon not incident
+    to `b` or `w` — i.e. `b–w` is a diagonal.
+
+    **Orientation note (important).**  Every interior vertex `x` of the corner
+    triangle satisfies `cross (c-a) (x-a) = β · cross (c-a) (b-a)` for some
+    `β ∈ (0,1)` (barycentric `b`-weight), so all interior vertices share the
+    sign of `cross (c-a) (b-a)` and "farthest from `a–c`" means "largest `β`".
+    Maximising the *signed* quantity `cross (c-a) (·-a)` is "farthest" only for
+    positively-oriented triangles; for the negative orientation it picks the
+    vertex *closest* to `a–c` and the chord can then run through a farther
+    interior vertex (verified counterexample:
+    `a=0, c=4, b=2-3i, w=2-½i, w₂=2-2i`).  Hence the correct, orientation-robust
+    "farthest" hypothesis used here is `hwmax`, scaled by `cross (c-a) (b-a)`:
+    `cross (c-a) (y-a) * cross (c-a) (b-a) ≤ cross (c-a) (w-a) * cross (c-a) (b-a)`,
+    i.e. `w` maximises the `b`-weight `β`.
+
+    Proof idea (Meisters' farthest-vertex argument).  The chord `b–w` lies in
+    the closed corner triangle `a,b,c`, and every point of it has `b`-weight
+    `≥ β(w)` (it interpolates between the apex `b`, with `β = 1`, and `w`).  A far
+    edge meeting `b–w` at an interior point `z` cannot cross the two corner
+    edges `a–b`, `b–c` (`far_edge_disjoint_earEdges`), and a segment crosses the
+    base line `a–c` at most once; hence it has an endpoint strictly inside the
+    smaller sub-triangle cut off by the line through `w` parallel to `a–c`, i.e.
+    an interior vertex `y ∈ rest` with `β(y) > β(w)` — contradicting `hwmax`.
+
+    This is the genuine Jordan-content heart of `meisters_reduction_interior2`:
+    combined with the banked combinatorial split-preservation bricks
+    (`HexArea.chordLeft_PolygonSimple` / `chordRight_PolygonSimple` etc.) it
+    yields the two strictly-shorter simple sub-polygons of the interior split.
+    NOTE: the existing `exists_farthest_interior` supplies the *unscaled*
+    `hwmax` (correct only up to orientation); aligning that pivot selection to
+    this orientation-robust form is the remaining bridge before this lemma can
+    be consumed by `meisters_reduction_interior2`.  Recorded preparation.
+-/
+lemma interior_chord_is_diagonal (a b c w : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hwrest : w ∈ rest)
+    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
+          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    ∀ e ∈ closedEdges (a :: b :: c :: rest),
+      b ≠ e.1 → b ≠ e.2 → w ≠ e.1 → w ≠ e.2 →
+      Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
+  intro e he hb1 hb2 hw1 hw2;
+  by_contra h_contra;
+  -- Choose the endpoint `y ∈ {e.1, e.2}` of `e` maximising `g`: since `g` is affine on `segment ℝ e.1 e.2` and `z` lies on it, `g z ≤ max (g e.1) (g e.2)`; let `y` be the maximiser, so `g y ≥ g z > g w` and `g y > 0`.
+  obtain ⟨z, hz⟩ : ∃ z ∈ segment ℝ b w, z ∈ segment ℝ e.1 e.2 := by
+    grind +splitImp
+  obtain ⟨y, hy⟩ : ∃ y ∈ ({e.1, e.2} : Set ℂ), HexArea.cross (a - c) (y - c) * HexArea.cross (b - a) (c - b) ≥ HexArea.cross (a - c) (z - c) * HexArea.cross (b - a) (c - b) := by
+    have h_affine : ∀ t : ℝ, t ∈ Set.Icc 0 1 → HexArea.cross (a - c) ((1 - t) • e.1 + t • e.2 - c) * HexArea.cross (b - a) (c - b) = (1 - t) * (HexArea.cross (a - c) (e.1 - c) * HexArea.cross (b - a) (c - b)) + t * (HexArea.cross (a - c) (e.2 - c) * HexArea.cross (b - a) (c - b)) := by
+      unfold HexArea.cross; norm_num [ Complex.ext_iff ] ; intros; ring;
+    obtain ⟨t, ht⟩ : ∃ t : ℝ, t ∈ Set.Icc 0 1 ∧ z = (1 - t) • e.1 + t • e.2 := by
+      rcases hz.2 with ⟨ u, v, hu, hv, huv, rfl ⟩ ; exact ⟨ v, ⟨ by linarith, by linarith ⟩, by simp +decide [ huv.symm ] ⟩ ;
+    simp_all +decide [ segment_eq_image ];
+    cases le_total ( HexArea.cross ( a - c ) ( e.1 - c ) * HexArea.cross ( b - a ) ( c - b ) ) ( HexArea.cross ( a - c ) ( e.2 - c ) * HexArea.cross ( b - a ) ( c - b ) ) <;> first | left; nlinarith | right; nlinarith;
+  -- From `inTriangleStrict a b c w` (`cases hwin`) and `t ∈ (0,1)`, derive (each by `nlinarith` after `unfold HexArea.cross` / using the three corner tests at `w`):
+  -- - `cross (b-a)(z-a) * O > 0`  [hence `cross (b-a)(z-a) ≠ 0`],
+  -- - `cross (c-b)(z-b) * O > 0`  [hence `cross (c-b)(z-b) ≠ 0`],
+  -- - `g z > g w` and `g z > 0`  (`g z = (1-t)*(cross (c-a)(b-a))^2 + t*g w`, and `(cross (c-a)(b-a))^2 > g w` for interior `w`).
+  have hz_pos : HexArea.cross (b - a) (z - a) * HexArea.cross (b - a) (c - b) > 0 ∧ HexArea.cross (c - b) (z - b) * HexArea.cross (b - a) (c - b) > 0 ∧ HexArea.cross (a - c) (z - c) * HexArea.cross (b - a) (c - b) > HexArea.cross (a - c) (w - c) * HexArea.cross (b - a) (c - b) ∧ HexArea.cross (a - c) (z - c) * HexArea.cross (b - a) (c - b) > 0 := by
+    obtain ⟨t, ht⟩ : ∃ t ∈ Set.Ioo (0 : ℝ) 1, z = (1 - t) • b + t • w := by
+      obtain ⟨t, ht⟩ : ∃ t ∈ Set.Icc (0 : ℝ) 1, z = (1 - t) • b + t • w := by
+        rw [ segment_eq_image ] at hz ; aesop;
+      refine' ⟨ t, ⟨ lt_of_le_of_ne ht.1.1 _, lt_of_le_of_ne ht.1.2 _ ⟩, ht.2 ⟩ <;> rintro rfl <;> simp_all +decide [ segment_eq_image ];
+      · obtain ⟨ x, hx, hx' ⟩ := hz.2;
+        have := simple_vertex_not_on_far_edge ( a :: b :: c :: rest ) ( by
+          grind +splitImp ) hsimple b ( by
+          simp +decide ) e he hb1 hb2;
+        exact this ⟨ 1 - x, x, by aesop ⟩;
+      · have := simple_vertex_not_on_far_edge ( a :: b :: c :: rest ) ( by
+          grind ) hsimple w ( by
+          grind ) e he hw1 hw2; simp_all +decide [ segment_eq_image ] ;
+    rcases hwin with ( hwin | hwin ) <;> simp_all +decide [ HexArea.cross ];
+    · refine' ⟨ _, _, _, _ ⟩;
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.mpr ht.1.2 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.1 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.2.2 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.1 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.2.1 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.2.2 ) ];
+    · refine' ⟨ _, _, _, _ ⟩;
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.mpr ht.1.2 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.1 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.mpr hwin.2.2 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.1 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.2.1 ), mul_pos ( sub_pos.mpr ht.1.2 ) ( sub_pos.mpr hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.2 ) ];
+      · nlinarith [ mul_pos ht.1.1 ( sub_pos.2 ht.1.2 ), mul_pos ht.1.1 ( sub_pos.2 hwin.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.1 ), mul_pos ht.1.1 ( sub_pos.2 hwin.2.2 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.1 ), mul_pos ( sub_pos.2 ht.1.2 ) ( sub_pos.2 hwin.2.2 ) ];
+  -- From `hy`, `hz_pos`, and `hwmax`, we get `y ∈ rest` and `¬ inTriangleStrict a b c y`.
+  have hy_rest : y ∈ rest := by
+    have hy_rest : y ∈ a :: b :: c :: rest := by
+      have := List.of_mem_zip he; simp_all +decide [ List.mem_rotate ] ;
+      grind +ring;
+    by_cases hya : y = a <;> by_cases hyc : y = c <;> simp_all +decide;
+    · unfold HexArea.cross at * ; aesop;
+    · linarith;
+    · simp_all +decide [ HexArea.cross ];
+      linarith;
+    · grind
+  have hy_not_in_triangle : ¬ HexArea.inTriangleStrict a b c y := by
+    intro hy_in_triangle
+    have := hwmax y hy_rest hy_in_triangle
+    simp_all +decide [ HexArea.cross ];
+    linarith [ hwmax y hy_rest hy_in_triangle ];
+  -- From `hy`, `hz_pos`, and `hwmax`, we get `b ∉ segment ℝ e.1 e.2` and `a ∉ segment ℝ z y` and `c ∉ segment ℝ z y`.
+  have hb_not_in_segment : b ∉ segment ℝ e.1 e.2 := by
+    apply simple_vertex_not_on_far_edge (a :: b :: c :: rest) (by
+    grind) hsimple b (by
+    simp +decide) e he hb1 hb2
+  have ha_not_in_segment : a ∉ segment ℝ z y := by
+    intro ha_in_segment
+    have h_cross_zero : HexArea.cross (a - c) (a - c) * HexArea.cross (b - a) (c - b) = 0 := by
+      unfold HexArea.cross; ring;
+    have h_cross_zero : ∀ t : ℝ, t ∈ Set.Icc 0 1 → HexArea.cross (a - c) ((1 - t) • z + t • y - c) * HexArea.cross (b - a) (c - b) = (1 - t) * HexArea.cross (a - c) (z - c) * HexArea.cross (b - a) (c - b) + t * HexArea.cross (a - c) (y - c) * HexArea.cross (b - a) (c - b) := by
+      intros t ht
+      simp [HexArea.cross]
+      ring;
+    obtain ⟨t, ht⟩ : ∃ t : ℝ, t ∈ Set.Icc 0 1 ∧ a = (1 - t) • z + t • y := by
+      rw [ segment_eq_image ] at ha_in_segment;
+      rcases ha_in_segment with ⟨ t, ht, rfl ⟩ ; exact ⟨ t, ht, rfl ⟩ ;
+    norm_num [ ht.2 ] at *;
+    specialize h_cross_zero t ht.1 ht.2 ; norm_num at h_cross_zero ; nlinarith
+  have hc_not_in_segment : c ∉ segment ℝ z y := by
+    intro hc_in_segment
+    have h_cross_zero : HexArea.cross (a - c) (c - c) * HexArea.cross (b - a) (c - b) = 0 := by
+      unfold HexArea.cross; norm_num;
+    obtain ⟨t, ht⟩ : ∃ t : ℝ, t ∈ Set.Icc 0 1 ∧ c = (1 - t) • z + t • y := by
+      rw [ segment_eq_image ] at hc_in_segment; obtain ⟨ t, ht, rfl ⟩ := hc_in_segment; exact ⟨ t, ht, rfl ⟩ ;
+    have h_cross_zero : HexArea.cross (a - c) (c - c) * HexArea.cross (b - a) (c - b) = (1 - t) * HexArea.cross (a - c) (z - c) * HexArea.cross (b - a) (c - b) + t * HexArea.cross (a - c) (y - c) * HexArea.cross (b - a) (c - b) := by
+      rw [ht.right];
+      unfold HexArea.cross; norm_num; ring;
+    nlinarith [ ht.1.1, ht.1.2 ];
+  have := HexArea.corner_exit_point_ge a b c z y hndtri hz_pos.1 hz_pos.2.1 hz_pos.2.2.2.le (by
+  linarith) hy_not_in_triangle;
+  rcases this with ( ⟨ p, hp₁, hp₂ ⟩ | ⟨ p, hp₁, hp₂ ⟩ );
+  · have := chord_disjoint_ear_ab a b c rest z y hsimple e he hb1 hb2 hz.2 (by
+    rcases hy.1 with ( rfl | rfl ) <;> [ exact left_mem_segment _ _ _; exact right_mem_segment _ _ _ ]) hb_not_in_segment ha_not_in_segment (by
+    exact fun h => by simp_all +decide [ HexArea.cross ] ;);
+    exact this.le_bot ⟨ hp₁, hp₂ ⟩;
+  · have := chord_disjoint_ear_bc a b c rest z y hsimple e he hb1 hb2 hz.2 (by
+    rcases hy.1 with ( rfl | rfl ) <;> [ exact left_mem_segment _ _ _; exact right_mem_segment _ _ _ ]) hb_not_in_segment hc_not_in_segment (by
+    exact fun h => by simp_all +decide [ HexArea.cross ] ;);
+    exact this.le_bot ⟨ hp₁, hp₂ ⟩
 
 /-- **Empty-branch lift — the BOUNDARY subcase (genuine remaining gap).**  Same
     hypotheses as `empty_branch_good_lift`, used to discharge the residual case
