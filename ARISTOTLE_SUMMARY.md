@@ -1,3 +1,16 @@
+# Summary of changes for run d5c370ab-72f4-44bd-ae0f-c25279511697
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz (in `RequestProject/SAWUmlaufPolygon.lean`), advancing the interior-diagonal branch of the Meisters two-ears reduction. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions.
+
+Concrete, verified changes this round:
+
+1. Orientation wiring. Replaced `exists_farthest_interior` by `exists_farthest_interior_oriented` at the interior-branch call site in `meisters_reduction2`, and changed `meisters_reduction_interior2`'s `hwmax` hypothesis to the orientation-robust *scaled* form (`cross (c-a)(y-a) * cross (c-a)(b-a) ≤ …`). This makes the previously-banked geometric heart `interior_chord_is_diagonal` directly consumable by the interior branch (resolving the orientation mismatch recorded last round).
+
+2. New sorry-free lemma `interior_split_simple`. Proved that both pieces `chordLeft`/`chordRight` of the `b`-rooted cycle `b :: c :: rest ++ [a]`, cut along the interior diagonal `b–w`, are `PolygonSimple`; it also supplies the cut index `k` with `2 ≤ k` and `k + 2 ≤ length` (the strict-shortness fuel for the induction hypothesis). This is the simplicity half of the interior split, assembled from the geometric heart plus the banked combinatorial simplicity bricks and the rotation toolkit. Verified to use only `propext, Classical.choice, Quot.sound`.
+
+3. Recorded obstruction. Documented in `meisters_reduction_interior2`'s docstring (and in `PROOF_STATUS.md`) the genuine remaining gap: the non-degeneracy half (`polyCycNondeg` of the two pieces) is not unconditionally true — the interior diagonal `b–w` can be collinear with the edge `prev–w` at `w`, flattening the left piece's seam corner `(prev, w, b)`. The Meisters argument must avoid this degenerate diagonal (pivot perturbation) or relax the inductive invariant; this is the isolated remaining interior-branch gap.
+
+The genuine remaining `sorry`s of the Umlaufsatz chain are unchanged in number and identity (`meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift`), plus the one textual `sorry` inside the already-commented-out dead branch `ear_turning_bounds`. All partial progress is preserved as building, sorry-tracked Lean code; the new lemma lives above its consumer in the existing imported file, so it is part of the compiled library.
+
 # Summary of changes for run 0d661d38-d3ec-401a-a226-307ddea09a31
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, proving the genuine Jordan-content geometric heart of the Meisters interior-diagonal split. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and the three pre-existing genuine `sorry`s are unchanged (`meisters_reduction_interior2`, the bad-diagonal subcase of `meisters_reduction_empty2`, and `empty_branch_boundary_lift`), plus the one textual `sorry` that remains inside the commented-out dead branch `ear_turning_bounds`.
 

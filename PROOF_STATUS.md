@@ -1,6 +1,37 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): proved the genuine Jordan-content GEOMETRIC HEART
+> **Umlaufsatz (LATEST round): wired the orientation-robust pivot into the
+> interior branch and banked the SIMPLICITY HALF of the interior-diagonal split,
+> sorry-free.**  Worked exclusively on the top-priority discrete Hopf
+> Umlaufsatz.  The whole library still builds end-to-end (8128 jobs through
+> `SAWFinal.lean`); no new axioms, no regressions.  Changes this round (all in
+> `SAWUmlaufPolygon.lean`):
+> * Replaced `exists_farthest_interior` by `exists_farthest_interior_oriented`
+>   in `meisters_reduction2`, and changed `meisters_reduction_interior2`'s
+>   `hwmax` to the orientation-robust scaled form, so the geometric heart
+>   `interior_chord_is_diagonal` is now directly consumable by the interior
+>   branch.
+> * New sorry-free lemma `interior_split_simple` (only `propext`,
+>   `Classical.choice`, `Quot.sound`): both pieces `chordLeft`/`chordRight` of
+>   the `b`-rooted cycle `b :: c :: rest ++ [a]` cut along the diagonal `b–w`
+>   are `PolygonSimple`, with cut index `k` satisfying `2 ≤ k` and
+>   `k + 2 ≤ W.length` (strict-shortness fuel for `IH2`).  This is the
+>   simplicity half of the interior split, assembled from
+>   `interior_chord_is_diagonal` + the banked simplicity bricks + rotation
+>   toolkit.
+> * Recorded (in `meisters_reduction_interior2`'s docstring) the remaining
+>   obstruction: the `polyCycNondeg` half is NOT unconditionally true — the
+>   interior diagonal `b–w` can be collinear with the edge `prev–w` at `w`,
+>   making the left piece's seam corner `(prev, w, b)` flat.  The degenerate
+>   diagonal must be avoided (pivot perturbation) or the invariant relaxed; this
+>   is the isolated remaining gap of the interior branch.
+>
+> The three genuine remaining `sorry`s are unchanged
+> (`meisters_reduction_interior2`, the bad-diagonal subcase of
+> `meisters_reduction_empty2`, and `empty_branch_boundary_lift`), plus the one
+> textual `sorry` inside the commented-out dead branch `ear_turning_bounds`.
+
+> **Umlaufsatz (previous round): proved the genuine Jordan-content GEOMETRIC HEART
 > of the interior-diagonal split, sorry-free.**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The whole library still builds
 > end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions;

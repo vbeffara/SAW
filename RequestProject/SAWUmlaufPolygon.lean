@@ -2677,6 +2677,62 @@ lemma meisters_reduction_quad2 (V : List ℂ) (h4 : V.length = 4)
     · exact quad_ear_at_a a b c d z1 z2 hab hbc hcd hda H h1 h2
     · exact quad_ear_at_c a b c d z1 z2 hab hbc hcd hda H h1 h2
 
+/-
+**Interior-split simplicity brick.**  Under the interior-branch hypotheses
+    (the chord `b–w` is a genuine diagonal, supplied by
+    `interior_chord_is_diagonal`), the two pieces of the `b`-rooted cycle
+    `W := b :: c :: rest ++ [a]` cut along `b–w` are both `PolygonSimple`.  Here
+    `k` is the index of `w` in `W`, satisfying `2 ≤ k` and `k + 2 ≤ W.length`
+    (so both pieces are strictly shorter than `W`).  Pure assembly of
+    `interior_chord_is_diagonal` with the banked combinatorial simplicity bricks
+    `chordLeft_PolygonSimple` / `chordRight_PolygonSimple` and the rotation
+    toolkit (`PolygonSimple_rotate`, `mem_closedEdges_rotate`).  Preparation for
+    `meisters_reduction_interior2`.
+-/
+lemma interior_split_simple (a b c w : ℂ) (rest : List ℂ)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hwrest : w ∈ rest)
+    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
+          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    ∃ k : ℕ, 2 ≤ k ∧ k + 2 ≤ (b :: c :: rest ++ [a]).length ∧
+      (b :: c :: rest ++ [a]).head? = some b ∧
+      (b :: c :: rest ++ [a])[k]? = some w ∧
+      PolygonSimple (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∧
+      PolygonSimple (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
+  -- Write `rest` as `s ++ w :: t`, and set `k := 2 + s.length`.
+  obtain ⟨s, t, hrest⟩ : ∃ s t, rest = s ++ w :: t := by
+    exact?
+  set k := 2 + s.length with hk_def;
+  refine' ⟨ k, _, _, _, _, _ ⟩;
+  · exact Nat.le_add_right _ _;
+  · grind;
+  · rfl;
+  · simp +arith +decide [ hk_def, hrest ];
+  · have hclear : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 → w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
+      convert interior_chord_is_diagonal a b c w rest hsimple hndtri hwrest hwin hwmax using 1;
+      rw [ show b :: c :: rest ++ [ a ] = ( a :: b :: c :: rest ).rotate 1 from ?_, mem_closedEdges_rotate ];
+      simp +decide [ List.rotate ];
+    refine' ⟨ _, _ ⟩;
+    · apply HexArea.chordLeft_PolygonSimple;
+      any_goals tauto;
+      · exact Nat.le_add_right _ _;
+      · grind;
+      · convert PolygonSimple_rotate ( a :: b :: c :: rest ) 1 |>.2 hsimple using 1;
+      · simp +arith +decide [ hk_def, hrest ];
+      · intro e he hw1 hw2 hb1 hb2; specialize hclear e; simp_all +decide [ segment_symm ] ;
+        exact hclear <| HexArea.mem_closedEdges_of_mem_pathEdges _ _ <| HexArea.mem_pathEdges_take _ _ _ he;
+    · apply HexArea.chordRight_PolygonSimple;
+      any_goals tauto;
+      · grind;
+      · simp +arith +decide [ hk_def, hrest ];
+      · convert PolygonSimple_rotate _ 1 |>.2 hsimple using 1;
+      · grind;
+      · intro e he hb1 hb2 hw1 hw2; specialize hclear e; simp_all +decide [ HexArea.pathEdges_chordRight_mem_closedEdges ] ;
+        exact hclear ( HexArea.pathEdges_chordRight_mem_closedEdges _ _ ( by simp +arith +decide [ HexArea.chordRight ] ) _ he )
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*
@@ -2693,7 +2749,28 @@ lemma meisters_reduction_quad2 (V : List ℂ) (h4 : V.length = 4)
 
     **Status: `sorry`.**  Genuine Jordan-curve-theorem-level content (interior
     diagonal split preserving `PolygonSimple`/`polyCycNondeg`, plus the ear
-    lift); absent from Mathlib.  Recorded partial progress. -/
+    lift); absent from Mathlib.  Recorded partial progress.
+
+    PROGRESS / BANKED: the *simplicity* half of the split is now fully proved,
+    sorry-free, as `interior_split_simple` (just above): the two pieces
+    `chordLeft`/`chordRight` of the `b`-rooted cycle `b :: c :: rest ++ [a]` cut
+    along the diagonal `b–w` are both `PolygonSimple` (assembled from the
+    geometric heart `interior_chord_is_diagonal` and the banked combinatorial
+    simplicity bricks).  It also supplies the cut index `k` with `2 ≤ k` and
+    `k + 2 ≤ W.length`, so `chordLeft_length_lt`/`chordRight_length_lt` give both
+    pieces strictly shorter (the `IH2` recursion fuel).
+
+    REMAINING OBSTRUCTION (recorded for the next round): the *non-degeneracy*
+    half (`polyCycNondeg` of the two pieces) is NOT unconditionally true with the
+    naive seam corners.  The seam corner of the left piece at `w` is the triple
+    `(prev, w, b)` where `prev` is `w`'s cyclic predecessor; in a simple polygon
+    the interior diagonal `b–w` can be *collinear* with the edge `prev–w`
+    (`b` on the line of that edge), making the seam corner flat and the piece
+    fail `polyCycNondeg`.  The genuine Meisters argument must avoid this
+    degenerate diagonal (e.g. perturb the pivot `w`, or relax the inductive
+    `polyCycNondeg` invariant to tolerate flat seam corners introduced purely by
+    the cut).  This degenerate-diagonal case is the isolated remaining gap of the
+    interior branch. -/
 lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
@@ -2709,7 +2786,8 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x)
     (w : ℂ) (hwrest : w ∈ rest) (hwin : HexArea.inTriangleStrict a b c w)
     (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
-        HexArea.cross (c - a) (y - a) ≤ HexArea.cross (c - a) (w - a)) :
+        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
+          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
     EmptyCornerData2 V z1 z2 := by
   sorry
 
@@ -2817,7 +2895,7 @@ lemma meisters_reduction2 (V : List ℂ) (hlen : 4 ≤ V.length)
     exists_lexmin_mid_rotation V (by omega)
   by_cases hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x
   · -- **Interior branch (Meisters' diagonal split).**
-    obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior a b c rest hcase
+    obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior_oriented a b c rest hcase
     exact meisters_reduction_interior2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
       rest hrot hbmem hbconv hbseg hcase w hwrest hwin hwmax
   · -- **Empty/diagonal branch.**
