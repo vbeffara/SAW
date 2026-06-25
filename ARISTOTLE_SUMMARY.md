@@ -1,3 +1,14 @@
+# Summary of changes for run c6b16d8d-6a48-4b37-b9df-212e3ff26293
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean.
+
+Concrete, verified progress this round:
+
+1. New sorry-free lemma `interior_split_nondeg` — the non-degeneracy half of the Meisters interior-diagonal split (verified to use only `propext`, `Classical.choice`, `Quot.sound`). Given the two genuine seam clearances at the cut endpoint `w` (the diagonal `b–w` is collinear with neither edge of the polygon incident to `w`), both chord pieces `chordLeft`/`chordRight` of the `b`-rooted cycle `b :: c :: rest ++ [a]` are shown to be `polyCycNondeg`. The other two seam corners (at the apex `b`) are discharged automatically from the fact that `w` lies strictly inside the corner triangle. Combined with the previously-banked `interior_split_simple`, this means both split pieces are now `PolygonSimple` ∧ `polyCycNondeg` ∧ strictly shorter — i.e. fully ready for the induction-hypothesis recursion. The interior branch's remaining content is thereby isolated to exactly (i) the two genuine seam clearances (the degenerate-diagonal geometry) and (ii) the ear lift/assembly.
+
+2. Structural refactor: extracted the bad-diagonal subcase of `meisters_reduction_empty2` into a single targetable declaration `empty_branch_bad_lift` (carrying its `sorry`), mirroring the existing `empty_branch_good_lift`/`empty_branch_boundary_lift` decomposition, and rewired the empty-branch call site to consume it. This does not change the genuine sorry count but makes the gap a clean, isolated, directly-attackable lemma.
+
+After this round the genuine remaining gaps of the Umlaufsatz chain are the three precisely-scoped Jordan-content lemmas `meisters_reduction_interior2`, `empty_branch_boundary_lift`, and `empty_branch_bad_lift` (plus one textual `sorry` inside an explicitly commented-out dead branch). Every Umlauf file remains imported via the `SAWFinal.lean` chain, and the round is recorded at the top of `PROOF_STATUS.md` and in `ARISTOTLE_SUMMARY.md`.
+
 # Summary of changes for run 472df1f6-06c7-498a-a137-3abf363984df
 Continued the top-priority discrete Hopf Umlaufsatz, working exclusively on the main theorem chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions.
 

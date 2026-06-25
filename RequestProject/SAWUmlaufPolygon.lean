@@ -2780,6 +2780,54 @@ lemma interior_split_simple (a b c w : ℂ) (rest : List ℂ)
       · intro e he hb1 hb2 hw1 hw2; specialize hclear e; simp_all +decide [ HexArea.pathEdges_chordRight_mem_closedEdges ] ;
         exact hclear ( HexArea.pathEdges_chordRight_mem_closedEdges _ _ ( by simp +arith +decide [ HexArea.chordRight ] ) _ he )
 
+/-
+**Interior-split non-degeneracy brick.**  Companion to `interior_split_simple`:
+    given the two *genuine* seam clearances at the cut endpoint `w` — the diagonal
+    `b–w` is collinear with neither edge of `V` incident to `w` (`hseamL` for the
+    predecessor edge `prev–w`, `hseamR` for the successor edge `w–succ`) — both
+    pieces `chordLeft`/`chordRight` of the `b`-rooted cycle
+    `W := b :: c :: rest ++ [a]` cut along `b–w` are cyclically non-degenerate.
+    The other two seam corners (at the apex `b`) are automatic from `w` lying
+    strictly inside the corner triangle `a,b,c` (so `w` is off lines `b–c` and
+    `a–b`).  Together with `interior_split_simple` this shows both pieces are
+    `PolygonSimple` *and* `polyCycNondeg` *and* strictly shorter — fully ready for
+    the `IH2` recursion — leaving the interior branch's only remaining content the
+    two genuine seam clearances `hseamL`/`hseamR` plus the ear lift.  Preparation
+    for `meisters_reduction_interior2`.
+-/
+lemma interior_split_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hwin : HexArea.inTriangleStrict a b c w)
+    (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
+    (hwk : (b :: c :: rest ++ [a])[k]? = some w)
+    (hprev : (b :: c :: rest ++ [a])[k-1]? = some prev)
+    (hsucc : (b :: c :: rest ++ [a])[k+1]? = some succ)
+    (hseamL : HexArea.cross (w - prev) (b - w) ≠ 0)
+    (hseamR : HexArea.cross (w - b) (succ - w) ≠ 0) :
+    polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∧
+    polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
+  obtain ⟨hwac, hwbc⟩ : HexArea.cross (b - a) (w - a) ≠ 0 ∧ HexArea.cross (c - b) (w - b) ≠ 0 := by
+    cases hwin <;> aesop;
+  constructor;
+  · apply_rules [ HexArea.chordLeft_polyCycNondeg ];
+    · linarith;
+    · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _;
+      · simp +decide [ List.rotate ];
+        grind +suggestions;
+      · simp +arith +decide;
+    · grind +suggestions;
+  · apply HexArea.chordRight_polyCycNondeg (b :: c :: rest ++ [a]) k b w succ a;
+    any_goals omega;
+    · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _;
+      · simp +decide [ List.rotate ];
+        grind +suggestions;
+      · simp +arith +decide;
+    · simp +decide;
+    · simp +decide [ List.getElem?_append ];
+    · convert hwac using 1;
+      unfold HexArea.cross; ring;
+      norm_num [ Complex.ext_iff ] ; ring
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*
@@ -2835,6 +2883,44 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
         HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
           ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    EmptyCornerData2 V z1 z2 := by
+  sorry
+
+/-- **Empty-branch lift — the BAD-diagonal subcase (genuine remaining gap).**
+    Extracted from `meisters_reduction_empty2`'s non-clean / non-good case so it
+    is a single targetable declaration.  Here the corner `a,b,c` is empty
+    (`hcase`), but the clip diagonal `a–c` itself fails the clean test
+    (`hbad`): some clip neighbour `p`/`q` is collinear with `a–c`, or a far
+    vertex of `rest` sits on the *closed* diagonal `[a,c]`, or the ear
+    orientation is reversed relative to the clip.  In every such configuration
+    the clip `a :: c :: rest` is no longer a clean simple sub-polygon, so (as in
+    the interior branch) the proof needs the polygon-split machinery: a blocking
+    vertex on the diagonal yields a strictly-shorter interior diagonal to split
+    along, recurse via `IH2` on the piece NOT containing `{z1,z2}`, and lift.
+
+    **Status: `sorry`.**  This is the isolated remaining Jordan-content gap of
+    the empty branch.  Recorded, isolated partial progress — NOT a dead branch;
+    it is consumed directly by `meisters_reduction_empty2`. -/
+lemma empty_branch_bad_lift (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
+    (h4 : ¬ V.length = 4)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (p q : ℂ) (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hrest_len : 2 ≤ rest.length)
+    (hbad : ¬ (HexArea.cross (c - a) (p - a) ≠ 0 ∧
+        HexArea.cross (c - a) (q - a) ≠ 0 ∧
+        (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+        ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))) :
     EmptyCornerData2 V z1 z2 := by
   sorry
 
@@ -2921,8 +3007,10 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
       -- simple sub-polygon, so this case genuinely needs the polygon-split
       -- machinery (as in `meisters_reduction_interior2`): a blocking vertex on
       -- the diagonal yields a strictly-shorter interior diagonal to split
-      -- along.  This is the isolated remaining gap of the empty branch.
-      sorry
+      -- along.  This is the isolated remaining gap of the empty branch,
+      -- extracted into `empty_branch_bad_lift`.
+      exact empty_branch_bad_lift V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c rest
+        hrot hbmem hbconv hbseg hcase p q hp hq hrest_len hgood
 
 /-- **The geometric reduction step of the Meisters two-ears search (two-forbidden
     form), now carrying the strong-induction hypothesis.**  Dispatches the

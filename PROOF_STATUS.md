@@ -1,6 +1,38 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the cyclic-edge LOCALIZATION brick of the
+> **Umlaufsatz (LATEST round): banked the NON-DEGENERACY half of the interior
+> split (sorry-free) and cleanly extracted the empty bad-diagonal subcase.**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole
+> library still builds end-to-end (8128 jobs through `SAWFinal.lean`); no new
+> axioms, no regressions.  Two changes this round, both in
+> `SAWUmlaufPolygon.lean`:
+> * New sorry-free lemma `interior_split_nondeg` (verified to use only
+>   `propext, Classical.choice, Quot.sound`): the companion of
+>   `interior_split_simple`.  Given the two *genuine* seam clearances at the cut
+>   endpoint `w` (the diagonal `b–w` is collinear with neither edge of `V`
+>   incident to `w`: `hseamL` for the predecessor edge, `hseamR` for the
+>   successor edge), BOTH pieces `chordLeft`/`chordRight` of the `b`-rooted
+>   cycle `b :: c :: rest ++ [a]` cut along `b–w` are `polyCycNondeg`.  The other
+>   two seam corners (at the apex `b`) are discharged automatically from
+>   `hwin : inTriangleStrict a b c w` (`w` off lines `b–c` and `a–b`).  Net
+>   effect: combined with `interior_split_simple`, both split pieces are now
+>   `PolygonSimple` ∧ `polyCycNondeg` ∧ strictly shorter — i.e. FULLY READY for
+>   the `IH2` recursion.  The interior branch's only remaining content is now
+>   exactly (i) the two genuine seam clearances `hseamL`/`hseamR` — the
+>   degenerate-diagonal geometry recorded as the obstruction in earlier rounds —
+>   and (ii) the ear lift / assembly.
+> * Structural refactor: extracted `meisters_reduction_empty2`'s bad-diagonal
+>   subcase into a single targetable declaration `empty_branch_bad_lift`
+>   (carrying the `sorry`), mirroring the existing `empty_branch_good_lift` /
+>   `empty_branch_boundary_lift` split, and rewired the empty-branch call site to
+>   consume it.  No change to the genuine sorry count.
+>
+> The genuine remaining `sorry`s of the Umlaufsatz chain are now
+> `meisters_reduction_interior2`, `empty_branch_boundary_lift`, and
+> `empty_branch_bad_lift` (plus the one textual `sorry` inside the
+> commented-out dead branch `ear_turning_bounds`).
+>
+> **Umlaufsatz (previous round): banked the cyclic-edge LOCALIZATION brick of the
 > chord-split ear-lift, sorry-free.**  Worked exclusively on the top-priority
 > discrete Hopf Umlaufsatz.  The whole library still builds end-to-end (8128
 > jobs through `SAWFinal.lean`); no new axioms, no regressions; the genuine
