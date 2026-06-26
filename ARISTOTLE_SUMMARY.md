@@ -1,3 +1,16 @@
+# Summary of changes for run 01ffb9b5-727a-486f-b252-ce2e267daff5
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`, per the request. The whole library continues to build end-to-end (8128 jobs through `SAWFinal.lean`) with no new axioms and no regressions.
+
+State going in: the Umlaufsatz reduces to the Meisters two-ears existence core, whose only remaining gaps are three genuine Jordan-curve-level `sorry`s — `meisters_reduction_interior2` (interior diagonal split), `empty_branch_bad_lift`, and `empty_branch_boundary_lift`. I confirmed these are the only live Umlaufsatz sorries (the `ear_turning_bounds` occurrence is inside a commented-out, documented dead branch). Direct high-effort attempts on all three timed out — they are the irreducible core that requires the full ear-lift list surgery.
+
+Concrete new progress (verified sorry-free, axioms `propext, Classical.choice, Quot.sound` only): two new lemmas in `SAWUmlaufPolygon.lean`, placed after `seam_one_nonflat` and documented as preparation for `meisters_reduction_interior2` (explicitly linked, not dead branches):
+- `polyCycNondeg_interior_corner`: an interior consecutive triple `(prev, w, succ)` of a cyclically non-degenerate polygon is a non-flat corner, read off `polyNondeg` via `polyNondeg_take`/`polyNondeg_drop`.
+- `interior_split_one_nondeg`: the non-degeneracy half of the interior split, in disjunctive form — for the interior diagonal `b–w`, at least one of the two chord pieces (`chordLeft`/`chordRight` of `W = b :: c :: rest ++ [a]`) is `polyCycNondeg`. It combines the non-flat genuine corner at the cut endpoint with `seam_one_nonflat` and `interior_split_nondeg_left`/`interior_split_nondeg_right`.
+
+Together these discharge the precise "non-degeneracy half" obstruction that prior rounds had recorded as the open gap of the interior branch. I updated the `meisters_reduction_interior2` docstring and `PROOF_STATUS.md` to reflect that the non-degeneracy half is now banked and to record the remaining genuine content (the ear-lift after flat-cut-vertex removal, analogous to the proved `empty_branch_interior_lift`).
+
+No `sorry`s were added; the three deep sorries are unchanged in identity, so partial progress is preserved as Lean lemmas rather than lost. Every file remains imported and building.
+
 # Summary of changes for run 4cc7e825-7949-4db5-b306-22a02a7f08bd
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms and no regressions. The genuine live gaps are unchanged in identity (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`) plus the one textual `sorry` inside the commented-out dead branch `ear_turning_bounds` — and importantly NO new `sorry`s were introduced.
 

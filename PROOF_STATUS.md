@@ -1,6 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the SIMPLICITY half of the flat-cut-vertex
+> **Umlaufsatz (LATEST round): banked the NON-DEGENERACY half of the interior
+> diagonal split (sorry-free, disjunctive form), the documented residual
+> obstruction of the interior branch.**  Worked exclusively on the top-priority
+> discrete Hopf Umlaufsatz.  The whole library still builds end-to-end (8128
+> jobs through `SAWFinal.lean`); no new axioms, no regressions; the three
+> genuine live `sorry`s (`empty_branch_boundary_lift`,
+> `meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in
+> identity and NO new `sorry`s were introduced.  Two new sorry-free lemmas in
+> `SAWUmlaufPolygon.lean` (each verified to use only `propext, Classical.choice,
+> Quot.sound`), placed directly after `seam_one_nonflat` and documented as
+> preparation for `meisters_reduction_interior2` (NOT dead branches):
+> * `polyCycNondeg_interior_corner` — an interior consecutive triple
+>   `(prev, w, succ)` of a cyclically non-degenerate polygon is a non-flat
+>   corner (`cross (w-prev) (succ-w) ≠ 0`), read off `polyNondeg` via
+>   `polyNondeg_take` / `polyNondeg_drop`.
+> * `interior_split_one_nondeg` — **the non-degeneracy half (disjunctive
+>   form)**: for the interior diagonal `b–w`, at least one of the two chord
+>   pieces `chordLeft` / `chordRight` of `W = b :: c :: rest ++ [a]` is
+>   `polyCycNondeg`.  Combines the non-flat genuine corner at `w` with
+>   `seam_one_nonflat` and `interior_split_nondeg_left` /
+>   `interior_split_nondeg_right`.
+>
+> This discharges the precise "non-degeneracy half" obstruction that prior
+> rounds recorded for the interior branch.  The remaining genuine content of
+> `meisters_reduction_interior2` is now the ear-lift after flat-cut-vertex
+> removal (list surgery transporting the recursed sub-polygon ear back to `V`,
+> analogous to the proved `empty_branch_interior_lift`).
+
+> **Umlaufsatz (earlier round): banked the SIMPLICITY half of the flat-cut-vertex
 > removal step (sorry-free), the documented residual obstruction of the interior
 > branch.**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz.
 > The whole library still builds end-to-end (8128 jobs through `SAWFinal.lean`);

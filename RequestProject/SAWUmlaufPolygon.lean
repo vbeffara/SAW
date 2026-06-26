@@ -2968,6 +2968,63 @@ lemma seam_one_nonflat (prev w b succ : ℂ) (hbw : b ≠ w)
   exact hpws (seam_flat_chain prev w b succ hbw h.1 h.2)
 
 /-
+**Interior consecutive-triple non-flatness from cyclic non-degeneracy.**
+    If `V` is cyclically non-degenerate and `prev, w, succ` are three
+    *consecutive* vertices of `V` strictly inside the list (indices
+    `k-1, k, k+1` with `k + 1 < V.length`), then the corner `prev, w, succ` is
+    non-flat: `cross (w - prev) (succ - w) ≠ 0`.  The interior corner lies
+    within `V` itself, so it is read off `polyNondeg V` (obtained from the
+    cyclic `polyNondeg (V ++ V.take 2)` by `polyNondeg_take`) after dropping the
+    first `k-1` vertices.  Sorry-free preparation for
+    `meisters_reduction_interior2` (supplies the genuine non-flat seam corner of
+    the cut endpoint `w`).
+-/
+lemma polyCycNondeg_interior_corner (V : List ℂ) (k : ℕ) (prev w succ : ℂ)
+    (hnd : polyCycNondeg V) (hk1 : 1 ≤ k) (hk : k + 1 < V.length)
+    (hprev : V[k-1]? = some prev) (hw : V[k]? = some w)
+    (hsucc : V[k+1]? = some succ) :
+    HexArea.cross (w - prev) (succ - w) ≠ 0 := by
+  obtain ⟨l, hl⟩ : ∃ l : List ℂ, V.drop (k - 1) = prev :: w :: succ :: l := by
+    grind +suggestions;
+  have h_nondeg_drop : polyNondeg (List.drop (k - 1) (V ++ List.take 2 V)) := by
+    grind +suggestions;
+  have h_nondeg_drop : polyNondeg (prev :: w :: succ :: l ++ List.take 2 V) := by
+    grind +suggestions;
+  have := polyNondeg_cons_cons_cons prev w succ ( l ++ List.take 2 V ) ; aesop;
+
+/-
+**At least one interior-split piece is cyclically non-degenerate.**  The
+    disjunctive form that discharges the documented "non-degeneracy half"
+    obstruction of the interior branch.  The cut endpoint `w` (strictly inside
+    the corner triangle `a,b,c`, so `b ≠ w`) is the index-`k` vertex of the
+    `b`-rooted cycle `W := b :: c :: rest ++ [a]`; its genuine cyclic corner
+    `(prev, w, succ)` is non-flat (`polyCycNondeg_interior_corner` after
+    transporting `polyCycNondeg` across the rotation `W = (a::b::c::rest).rotate 1`),
+    so by `seam_one_nonflat` at least one of the two seam corners at `w` is
+    non-flat, whence `interior_split_nondeg_left` / `interior_split_nondeg_right`
+    make the corresponding chord piece `polyCycNondeg`.  Sorry-free preparation
+    for `meisters_reduction_interior2`.
+-/
+lemma interior_split_one_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hwin : HexArea.inTriangleStrict a b c w) (hbw : b ≠ w)
+    (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
+    (hwk : (b :: c :: rest ++ [a])[k]? = some w)
+    (hprev : (b :: c :: rest ++ [a])[k-1]? = some prev)
+    (hsucc : (b :: c :: rest ++ [a])[k+1]? = some succ) :
+    polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∨
+    polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
+  by_cases hcase : HexArea.cross (w - prev) (b - w) ≠ 0;
+  · refine Or.inl ?_;
+    apply interior_split_nondeg_left a b c w prev rest k hnd hwin hk2 hk hwk hprev hcase;
+  · have hcase2 : HexArea.cross (w - b) (succ - w) ≠ 0 := by
+      contrapose! hcase; have := polyCycNondeg_interior_corner ( b :: c :: rest ++ [ a ] ) k prev w succ ?_ ?_ ?_ hprev hwk hsucc <;> simp_all +decide ;
+      · exact fun h => this <| by simpa [ hcase ] using seam_flat_chain prev w b succ hbw h hcase;
+      · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) ( by simp +arith +decide ) |>.2 hnd using 1;
+      · linarith;
+    exact Or.inr ( interior_split_nondeg_right a b c w succ rest k hnd hwin hk2 hk hwk hsucc hcase2 )
+
+/-
 **Segment split at an interior point.**  If `w` lies on the closed segment
     `[u, v]`, then `[u, v]` is covered by the two sub-segments `[u, w]` and
     `[w, v]`.  Sorry-free preparation (with `PolygonSimple_remove_flat_mid`) for
@@ -3170,17 +3227,24 @@ lemma cross_succ_corner_remove_flat (y u v w : ℂ) (hw : w ∈ segment ℝ u v)
     `k + 2 ≤ W.length`, so `chordLeft_length_lt`/`chordRight_length_lt` give both
     pieces strictly shorter (the `IH2` recursion fuel).
 
-    REMAINING OBSTRUCTION (recorded for the next round): the *non-degeneracy*
-    half (`polyCycNondeg` of the two pieces) is NOT unconditionally true with the
-    naive seam corners.  The seam corner of the left piece at `w` is the triple
-    `(prev, w, b)` where `prev` is `w`'s cyclic predecessor; in a simple polygon
-    the interior diagonal `b–w` can be *collinear* with the edge `prev–w`
-    (`b` on the line of that edge), making the seam corner flat and the piece
-    fail `polyCycNondeg`.  The genuine Meisters argument must avoid this
-    degenerate diagonal (e.g. perturb the pivot `w`, or relax the inductive
-    `polyCycNondeg` invariant to tolerate flat seam corners introduced purely by
-    the cut).  This degenerate-diagonal case is the isolated remaining gap of the
-    interior branch. -/
+    PROGRESS / BANKED (non-degeneracy half, disjunctive form): the
+    `polyCycNondeg` obstruction is now discharged for *one* of the two pieces by
+    the sorry-free `interior_split_one_nondeg` (above): the genuine cyclic corner
+    `(prev, w, succ)` of `W` at the cut endpoint `w` is non-flat
+    (`polyCycNondeg_interior_corner`), so by `seam_one_nonflat` at least one of
+    the two seam corners is non-flat, making the corresponding chord piece
+    `polyCycNondeg` via `interior_split_nondeg_left` / `interior_split_nondeg_right`.
+
+    REMAINING OBSTRUCTION (recorded for the next round): only *one* piece is
+    guaranteed non-degenerate; if the interior diagonal `b–w` is collinear with
+    one incident edge of `w` (a flat seam in the OTHER piece), and the forbidden
+    edge `{z1,z2}` happens to lie in the non-flat piece (forcing the recursion
+    onto the flat one), the flat seam vertex `w` must be removed from that piece
+    via the flat-cut-vertex removal toolkit (`PolygonSimple_remove_flat_mid`,
+    `cross_pred_corner_remove_flat`, `cross_succ_corner_remove_flat`) before the
+    `IH2` recursion.  The remaining genuine content is the ear-lift after this
+    removal (the list surgery transporting the returned sub-polygon ear back to
+    `V`), analogous to the proved `empty_branch_interior_lift`. -/
 lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
