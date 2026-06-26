@@ -2967,6 +2967,182 @@ lemma seam_one_nonflat (prev w b succ : ℂ) (hbw : b ≠ w)
   push_neg at h
   exact hpws (seam_flat_chain prev w b succ hbw h.1 h.2)
 
+/-
+**Segment split at an interior point.**  If `w` lies on the closed segment
+    `[u, v]`, then `[u, v]` is covered by the two sub-segments `[u, w]` and
+    `[w, v]`.  Sorry-free preparation (with `PolygonSimple_remove_flat_mid`) for
+    the flat-cut-vertex removal of `meisters_reduction_interior2`.
+-/
+lemma segment_subset_union_of_mem (u v w : ℂ) (hw : w ∈ segment ℝ u v) :
+    segment ℝ u v ⊆ segment ℝ u w ∪ segment ℝ w v := by
+  intro p hp;
+  simp_all +decide [ segment_eq_image ];
+  rcases hw with ⟨ x, hx, rfl ⟩ ; rcases hp with ⟨ y, hy, rfl ⟩ ; (rcases lt_trichotomy y x with h | rfl | h );
+  · refine Or.inl ⟨ y / x, ⟨ by rw [ le_div_iff₀ ] <;> linarith, by rw [ div_le_iff₀ ] <;> linarith ⟩, ?_ ⟩ ; ring;
+    simp +decide [ mul_assoc, mul_comm, mul_left_comm, ne_of_gt ( show 0 < x from lt_of_le_of_lt hy.1 h ) ] ; ring;
+    simp +decide [ mul_assoc, mul_comm ( x : ℂ ), show x ≠ 0 by linarith ];
+  · exact Or.inr ⟨ 0, by norm_num, by norm_num ⟩;
+  · refine' Or.inr ⟨ ( y - x ) / ( 1 - x ), ⟨ _, _ ⟩, _ ⟩;
+    · exact div_nonneg ( by linarith ) ( by linarith );
+    · rw [ div_le_iff₀ ] <;> linarith;
+    · norm_num [ Complex.ext_iff, hx, hy, h.ne', sub_ne_zero.mpr ( by linarith : ( 1 : ℝ ) ≠ x ) ] ; ring;
+      norm_cast; norm_num [ show ( 1 - x ) ≠ 0 by linarith ] ; ring_nf ;
+      grind
+
+/-
+**Edge surgery for flat-vertex removal: every cyclic edge of the shortened
+    polygon is either the merged edge or a cyclic edge of the original.**  Pure
+    list combinatorics over `closedEdges = zip with rotate 1`.  Sorry-free
+    preparation for `PolygonSimple_remove_flat_mid`.
+-/
+lemma mem_closedEdges_remove_mid (pre suf : List ℂ) (u w v : ℂ) (e : ℂ × ℂ)
+    (he : e ∈ closedEdges (pre ++ u :: v :: suf)) :
+    e = (u, v) ∨ e ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+  induction' pre with pre_head pre_tail pre_ih generalizing u w v e <;> simp_all +decide [ List.rotate ];
+  · rcases suf with ( _ | ⟨ x, _ | ⟨ y, suf ⟩ ⟩ ) <;> simp_all +decide [ closedEdges ]; all_goals grind;
+  · unfold closedEdges at *; simp_all +decide [ List.zip ] ;
+    rw [ List.mem_iff_get ] at he; rcases he with ⟨ i, hi ⟩ ; rcases i with ( _ | i ) <;> simp_all +decide [ List.get ] ;
+    · cases pre_tail <;> aesop;
+    · rcases le_or_gt ( List.length pre_tail ) i with hi' | hi' <;> simp_all +decide [ List.getElem_append, List.getElem?_append ];
+      · rcases i' : i - pre_tail.length with ( _ | _ | i' ) <;> simp_all +decide [ List.get ];
+        · rw [ Nat.sub_eq_iff_eq_add ] at i' <;> aesop;
+        · rw [ Nat.sub_eq_iff_eq_add ] at i' <;> try linarith;
+          rw [ ← hi ];
+          simp +arith +decide [ i', List.getElem_append ];
+          rcases suf with ( _ | ⟨ x, suf ⟩ ) <;> simp +arith +decide [ List.get ] at *;
+          · rw [ List.mem_iff_get ] ; simp +arith +decide [ List.get ];
+            exact Or.inr ⟨ ⟨ pre_tail.length + 3, by simp +arith +decide ⟩, by simp +arith +decide, by simp +arith +decide ⟩;
+          · rw [ List.mem_iff_get ] ; simp +arith +decide [ List.get ];
+            refine' Or.inr ⟨ ⟨ pre_tail.length + 3, _ ⟩, _, _ ⟩ <;> simp +arith +decide [ List.get ];
+        · rw [ ← hi ] ; simp +decide [ List.getElem_append, List.getElem?_append, i' ] ;
+          rw [ List.mem_iff_get ] ; simp +decide [ List.getElem_append, List.getElem?_append, i' ] ;
+          refine' Or.inr ⟨ ⟨ i + 1 - pre_tail.length + pre_tail.length + 1, _ ⟩, _, _ ⟩ <;> simp +decide [ List.getElem_append, List.getElem?_append, i' ];
+          grind; all_goals grind;
+      · refine' Or.inr _;
+        rw [ List.mem_iff_get ] ; use ⟨ i + 1, by
+          grind ⟩ ; simp +decide [ List.get ];
+        grind
+
+/-
+**The two incident edges of the flat vertex are genuine cyclic edges.**
+    Sorry-free preparation for `PolygonSimple_remove_flat_mid`.
+-/
+lemma uw_wv_mem_closedEdges (pre suf : List ℂ) (u w v : ℂ) :
+    (u, w) ∈ closedEdges (pre ++ u :: w :: v :: suf) ∧
+    (w, v) ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+  unfold closedEdges;
+  constructor <;> rw [ List.mem_iff_get ];
+  · use ⟨ pre.length, by simp +arith +decide ⟩ ; simp +decide [ List.get ] ;
+    simp +decide [ List.rotate ];
+    simp +arith +decide [ List.getElem_append ];
+  · use ⟨ pre.length + 1, by simp +arith +decide ⟩ ; simp +arith +decide [ List.get ] ;
+    simp +arith +decide [ List.rotate ]
+
+/-
+**Flat-vertex removal preserves simplicity (middle form).**  In a simple
+    polygon `pre ++ u :: w :: v :: suf`, if the vertex `w` is *flat* — it lies on
+    the closed segment `[u, v]` between its two cyclic neighbours — then deleting
+    it yields the still-simple polygon `pre ++ u :: v :: suf`.  The two incident
+    edges `u–w`, `w–v` merge into `u–v ⊆ [u,w] ∪ [w,v]`, so every disjointness
+    clause of `PolygonSimple` is inherited and `Nodup` survives deletion.
+    Reusable preparation for the flat-cut-vertex removal step of
+    `meisters_reduction_interior2` (rotate the flat seam vertex into the middle,
+    remove, rotate back).  NOT a dead branch.
+-/
+lemma PolygonSimple_remove_flat_mid (pre suf : List ℂ) (u w v : ℂ)
+    (hsimple : PolygonSimple (pre ++ u :: w :: v :: suf))
+    (hflat : w ∈ segment ℝ u v) :
+    PolygonSimple (pre ++ u :: v :: suf) := by
+  refine' ⟨ _, _ ⟩;
+  · have := hsimple.1; simp_all +decide [ List.nodup_append ] ;
+  · intro e₁ he₁ e₂ he₂ h₁ h₂ h₃ h₄
+    by_cases he₁uv : e₁ = (u, v)
+    by_cases he₂uv : e₂ = (u, v);
+    · aesop;
+    · have hseam : e₂ ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+        exact mem_closedEdges_remove_mid _ _ _ _ _ _ he₂ |> Or.resolve_left <| by aesop;
+      have hseam : e₂.1 ≠ w ∧ e₂.2 ≠ w := by
+        have hseam : ∀ x ∈ pre ++ u :: v :: suf, x ≠ w := by
+          have := hsimple.1; simp_all +decide [ List.nodup_append ] ;
+          grind +ring;
+        unfold closedEdges at he₂; simp_all +decide [ List.mem_iff_get ] ;
+        rcases he₂ with ⟨ n, rfl ⟩ ; simp_all +decide [ List.getElem_rotate ] ;
+        exact ⟨ by rename_i h; exact h ⟨ n, by simpa using n.2 ⟩, by rename_i h; exact h ⟨ ( n + 1 ) % ( pre.length + ( suf.length + 1 + 1 ) ), by simpa using Nat.mod_lt _ ( by simp +arith +decide ) ⟩ ⟩;
+      have hseam : Disjoint (segment ℝ u w) (segment ℝ e₂.1 e₂.2) ∧ Disjoint (segment ℝ w v) (segment ℝ e₂.1 e₂.2) := by
+        have := hsimple.2 ( u, w ) ( uw_wv_mem_closedEdges pre suf u w v |>.1 ) e₂ ‹_›; have := hsimple.2 ( w, v ) ( uw_wv_mem_closedEdges pre suf u w v |>.2 ) e₂ ‹_›; simp_all +decide [ Set.disjoint_left ] ;
+        grind;
+      intro a ha; specialize hseam; have := segment_subset_union_of_mem u v w hflat; simp_all +decide [ Set.subset_def ] ;
+      grind;
+    · by_cases he₂uv : e₂ = (u, v);
+      · have h_disjoint_uw : Disjoint (segment ℝ e₁.1 e₁.2) (segment ℝ u w) := by
+          have h_disjoint_uw : e₁ ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+            exact mem_closedEdges_remove_mid _ _ _ _ _ _ he₁ |> Or.resolve_left <| by aesop;
+          apply hsimple.2 e₁ h_disjoint_uw (u, w) (uw_wv_mem_closedEdges pre suf u w v).left;
+          · grind;
+          · have := hsimple.1;
+            contrapose! h₁; have := hsimple.2; simp_all +decide [ closedEdges ] ;
+            rw [ List.mem_iff_get ] at he₁; obtain ⟨ i, hi ⟩ := he₁; simp_all +decide [ List.get ] ;
+            grind;
+          · grind +ring;
+          · have h_mem : ∀ e ∈ closedEdges (pre ++ u :: v :: suf), e.1 ∈ pre ++ u :: v :: suf ∧ e.2 ∈ pre ++ u :: v :: suf := by
+              intros e he; exact (by
+              unfold closedEdges at he; simp_all +decide [ List.mem_iff_get ] ;
+              rcases he with ⟨ n, rfl ⟩ ; simp +decide [ List.getElem_rotate ] ;
+              exact ⟨ ⟨ ⟨ n, by simpa using n.2 ⟩, rfl ⟩, ⟨ ⟨ ( n + 1 ) % ( pre.length + ( suf.length + 1 + 1 ) ), by
+                exact lt_of_lt_of_le ( Nat.mod_lt _ ( by simp +arith +decide ) ) ( by simp +arith +decide ) ⟩, rfl ⟩ ⟩);
+            have := hsimple.1; simp_all +decide [ List.nodup_append ] ;
+            grind
+        have h_disjoint_wv : Disjoint (segment ℝ e₁.1 e₁.2) (segment ℝ w v) := by
+          have h_disjoint_wv : (w, v) ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+            exact uw_wv_mem_closedEdges pre suf u w v |>.2;
+          apply hsimple.2 e₁ (by
+          exact mem_closedEdges_remove_mid _ _ _ _ _ _ he₁ |> Or.resolve_left <| by aesop;) (w, v) h_disjoint_wv (by
+          contrapose! h_disjoint_uw; simp_all +decide [ segment_same ] ;
+          rw [ Set.not_disjoint_iff ];
+          exact ⟨ w, left_mem_segment _ _ _, right_mem_segment _ _ _ ⟩) (by
+          grobner) (by
+          contrapose! h_disjoint_uw; simp_all +decide [ segment_same ] ;
+          exact Set.not_disjoint_iff_nonempty_inter.mpr ⟨ w, right_mem_segment _ _ _, right_mem_segment _ _ _ ⟩) (by
+          grind +ring);
+        have h_subset : segment ℝ u v ⊆ segment ℝ u w ∪ segment ℝ w v := by
+          exact segment_subset_union_of_mem u v w hflat;
+        grind;
+      · have h₁' : e₁ ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+          exact Or.resolve_left ( mem_closedEdges_remove_mid _ _ _ _ _ _ he₁ ) he₁uv
+        have h₂' : e₂ ∈ closedEdges (pre ++ u :: w :: v :: suf) := by
+          exact mem_closedEdges_remove_mid _ _ _ _ _ _ he₂ |> Or.resolve_left <| by aesop;
+        exact hsimple.2 e₁ h₁' e₂ h₂' h₁ h₂ h₃ h₄
+
+/-
+**Flat-vertex removal preserves the predecessor corner (geometric half).**
+    If `w` lies on `[u, v]`, then `w - u` is a (nonnegative) real multiple of
+    `v - u`, so the corner turn `cross (u - x) (· - u)` at `u` cannot become flat
+    by replacing the neighbour `w` with `v`: a non-flat corner `(x, u, w)` stays
+    non-flat as `(x, u, v)`.  Sorry-free preparation for the `polyCycNondeg` half
+    of the flat-cut-vertex removal in `meisters_reduction_interior2`.
+-/
+lemma cross_pred_corner_remove_flat (x u v w : ℂ) (hw : w ∈ segment ℝ u v)
+    (h : HexArea.cross (u - x) (w - u) ≠ 0) :
+    HexArea.cross (u - x) (v - u) ≠ 0 := by
+  obtain ⟨ a, b, ha, hb, hab, rfl ⟩ := hw;
+  contrapose! h; simp_all +decide [ HexArea.cross ] ; ring;
+  grind
+
+/-
+**Flat-vertex removal preserves the successor corner (geometric half).**
+    If `w` lies on `[u, v]`, then `v - w` is a (nonnegative) real multiple of
+    `v - u`, so the corner turn at `v` cannot become flat by replacing the
+    neighbour `w` with `u`: a non-flat corner `(w, v, y)` stays non-flat as
+    `(u, v, y)`.  Sorry-free preparation for the `polyCycNondeg` half of the
+    flat-cut-vertex removal in `meisters_reduction_interior2`.
+-/
+lemma cross_succ_corner_remove_flat (y u v w : ℂ) (hw : w ∈ segment ℝ u v)
+    (h : HexArea.cross (v - w) (y - v) ≠ 0) :
+    HexArea.cross (v - u) (y - v) ≠ 0 := by
+  simp_all +decide [ segment_eq_image, HexArea.cross ];
+  obtain ⟨ x, hx, rfl ⟩ := hw; ring_nf at h ⊢;
+  cases lt_or_gt_of_ne h <;> norm_num [ Complex.ext_iff ] at * <;> nlinarith
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*

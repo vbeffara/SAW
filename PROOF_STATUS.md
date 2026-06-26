@@ -1,6 +1,47 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the PER-PIECE single-seam non-degeneracy
+> **Umlaufsatz (LATEST round): banked the SIMPLICITY half of the flat-cut-vertex
+> removal step (sorry-free), the documented residual obstruction of the interior
+> branch.**  Worked exclusively on the top-priority discrete Hopf Umlaufsatz.
+> The whole library still builds end-to-end (8128 jobs through `SAWFinal.lean`);
+> no new axioms, no regressions.  The genuine live `sorry`s are unchanged in
+> identity (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`), plus the one textual `sorry` in the commented-out
+> dead branch `ear_turning_bounds`.  NO new `sorry`s were introduced.
+>
+> Six new sorry-free lemmas in `SAWUmlaufPolygon.lean` (each verified to use only
+> `propext, Classical.choice, Quot.sound`), placed directly after
+> `seam_one_nonflat` and documented as preparation for
+> `meisters_reduction_interior2` (NOT dead branches).  Together they fully
+> discharge the *simplicity* half of removing the (at most one) flat seam vertex
+> created by the interior diagonal cut, and supply the geometric inputs for the
+> non-degeneracy half:
+> * `segment_subset_union_of_mem` — if `w ∈ [u,v]` then `[u,v] ⊆ [u,w] ∪ [w,v]`.
+> * `mem_closedEdges_remove_mid` — every cyclic edge of the shortened polygon
+>   `pre ++ u :: v :: suf` is either the merged edge `(u,v)` or a cyclic edge of
+>   the original `pre ++ u :: w :: v :: suf` (pure list/`zip`-`rotate` surgery).
+> * `uw_wv_mem_closedEdges` — the two incident edges `(u,w)`,`(w,v)` of the flat
+>   vertex are genuine cyclic edges of the original.
+> * `PolygonSimple_remove_flat_mid` — **the simplicity half**: deleting a flat
+>   vertex `w` (one lying on the segment `[u,v]` between its two cyclic
+>   neighbours) from a `PolygonSimple` list yields a `PolygonSimple` list.  The
+>   two incident edges merge into `u–v ⊆ [u,w] ∪ [w,v]`, so each disjointness
+>   clause is inherited and `Nodup` survives deletion.
+> * `cross_pred_corner_remove_flat` / `cross_succ_corner_remove_flat` — the
+>   geometric half of `polyCycNondeg` preservation: since `w-u` (resp. `v-w`) is
+>   a real multiple of `v-u`, the predecessor corner `(x,u,w)` stays non-flat as
+>   `(x,u,v)` and the successor corner `(w,v,y)` stays non-flat as `(u,v,y)`.
+>
+> Significance: this is the precise infrastructure the documented residual
+> obstruction of the interior branch needs.  Prior rounds isolated that only the
+> recursion-target piece's single flat seam vertex blocks `polyCycNondeg`
+> (`seam_one_nonflat`); these bricks show that flat vertex can be deleted while
+> preserving `PolygonSimple` (done, sorry-free) and that the two neighbour
+> corners stay non-flat under the deletion (geometric inputs banked).  The
+> remaining pieces for full closure are the `polyNondeg`-index surgery wrapping
+> the two corner facts and the `EmptyCornerData2` ear-lift across the deletion.
+>
+> **Umlaufsatz (prior round): banked the PER-PIECE single-seam non-degeneracy
 > bricks for the interior split (sorry-free).**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The whole library still builds
 > end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions.
