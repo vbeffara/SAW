@@ -2861,6 +2861,58 @@ lemma chordRight_cut_isCycEdge (V : List ℂ) (k : ℕ) (v0 vk : ℂ)
   rw [HexArea.closedEdges_eq_pathEdges (HexArea.chordRight V k) vk v0 hh hl]
   simp
 
+/-- **Seam collinearity chain (interior-split non-degeneracy brick).**  If the
+    two seam corners that the diagonal `b–w` creates at the cut endpoint `w` are
+    *both* flat — the predecessor edge `prev–w` is collinear with the diagonal
+    (`cross (w - prev) (b - w) = 0`) and the successor edge `w–succ` is collinear
+    with the diagonal (`cross (w - b) (succ - w) = 0`) — then the original cyclic
+    corner `prev, w, succ` is itself flat (`cross (w - prev) (succ - w) = 0`).
+    Algebraically: both edge vectors `w - prev` and `succ - w` are parallel to the
+    nonzero diagonal vector `b - w`, hence parallel to each other.
+
+    Contrapositive consequence used by the interior branch: since
+    `polyCycNondeg V` makes the genuine cyclic corner `prev, w, succ` non-flat
+    (`cross (w - prev) (succ - w) ≠ 0`), the diagonal split along `b–w` can make
+    *at most one* of the two pieces' seam corners at `w` flat.  The other piece
+    therefore satisfies the `interior_split_nondeg` seam hypothesis automatically;
+    the (at most one) flat piece is the residual case handled by flat-cut-vertex
+    removal.  Sorry-free preparation for `meisters_reduction_interior2`. -/
+lemma seam_flat_chain (prev w b succ : ℂ) (hbw : b ≠ w)
+    (h1 : HexArea.cross (w - prev) (b - w) = 0)
+    (h2 : HexArea.cross (w - b) (succ - w) = 0) :
+    HexArea.cross (w - prev) (succ - w) = 0 := by
+  simp only [HexArea.cross, Complex.sub_re, Complex.sub_im] at *
+  have hv2 : (b.re - w.re) ^ 2 + (b.im - w.im) ^ 2 > 0 := by
+    rcases eq_or_ne b.re w.re with h | h
+    · rcases eq_or_ne b.im w.im with h' | h'
+      · exact absurd (Complex.ext (by linarith) (by linarith)) hbw
+      · have := sub_ne_zero.mpr h'; positivity
+    · have := sub_ne_zero.mpr h; positivity
+  have key : ((w.re - prev.re) * (succ.im - w.im) - (w.im - prev.im) * (succ.re - w.re))
+      * ((b.re - w.re) ^ 2 + (b.im - w.im) ^ 2) = 0 := by
+    linear_combination ((b.re - w.re) * (succ.re - w.re) + (b.im - w.im) * (succ.im - w.im)) * h1
+      - ((w.re - prev.re) * (b.re - w.re) + (w.im - prev.im) * (b.im - w.im)) * h2
+  rcases mul_eq_zero.mp key with h | h
+  · linarith
+  · linarith
+
+/-- **At most one interior-split seam is flat (consumable form).**  If the
+    genuine cyclic corner `prev, w, succ` of the `b`-rooted cycle is non-flat
+    (`cross (w - prev) (succ - w) ≠ 0`, supplied by `polyCycNondeg`), then for
+    the interior diagonal `b–w` at least one of the two seam corners at `w` is
+    non-flat: either the left-piece seam `cross (w - prev) (b - w) ≠ 0` or the
+    right-piece seam `cross (w - b) (succ - w) ≠ 0`.  Hence at least one of the
+    two split pieces satisfies the `interior_split_nondeg` seam hypothesis at `w`
+    outright; the other (at most one) is the flat-cut-vertex residual case.
+    Immediate corollary of `seam_flat_chain`.  Sorry-free preparation for
+    `meisters_reduction_interior2`. -/
+lemma seam_one_nonflat (prev w b succ : ℂ) (hbw : b ≠ w)
+    (hpws : HexArea.cross (w - prev) (succ - w) ≠ 0) :
+    HexArea.cross (w - prev) (b - w) ≠ 0 ∨ HexArea.cross (w - b) (succ - w) ≠ 0 := by
+  by_contra h
+  push_neg at h
+  exact hpws (seam_flat_chain prev w b succ hbw h.1 h.2)
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*

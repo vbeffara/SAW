@@ -1,3 +1,16 @@
+# Summary of changes for run eab1cf2d-1ac4-46cb-bd06-9aeaa6411c3b
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and the set of genuine live gaps is unchanged in identity (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`, plus the one textual `sorry` inside the explicitly commented-out dead branch `ear_turning_bounds`). All partial progress is preserved as compiling, sorry-tracked Lean.
+
+Concrete verified progress this round — two new sorry-free lemmas (each verified to use only `propext, Classical.choice, Quot.sound`), placed directly above their intended consumer `meisters_reduction_interior2` and documented as preparation (not dead branches), so they are part of the imported build chain:
+
+1. `seam_flat_chain` — the 2-D parallelism fact that if BOTH seam corners created at the cut endpoint `w` by the interior diagonal `b–w` are flat (`cross (w-prev) (b-w) = 0` and `cross (w-b) (succ-w) = 0`), then the original cyclic corner `prev, w, succ` is flat as well (`cross (w-prev) (succ-w) = 0`). Proved through the cross/dot identity `cross(p,s)·|v|² = cross(p,v)·⟨v,s⟩ + ⟨p,v⟩·cross(v,s)` with the nonzero diagonal vector `b - w`.
+
+2. `seam_one_nonflat` — its consumable contrapositive: since `polyCycNondeg V` forces the genuine cyclic corner `prev, w, succ` to be non-flat, AT LEAST ONE of the two seam corners at `w` is non-flat.
+
+Significance for the proof: these two bricks precisely tame the documented root obstruction of the interior branch — that the diagonal split can introduce a straight (turning-0) seam corner that the current non-degeneracy invariant `polyCycNondeg` rejects. They show the straightness can affect at MOST ONE of the two split pieces, so the other piece satisfies the `interior_split_nondeg` seam hypothesis outright. This reduces the interior branch to a single flat-cut-vertex removal step on the (at most one) flat piece before the inductive recursion, which is the precise next-round target.
+
+The round is recorded at the top of `PROOF_STATUS.md`. Full closure of the three remaining gaps still requires the additional flat-cut-vertex removal infrastructure (a genuinely Jordan-curve-theorem-level, multi-lemma endeavor); the central new bricks isolating that residual case are now banked and building.
+
 # Summary of changes for run 33b8afcc-5a19-462a-9e6d-a3ffae2cce1e
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean. The three genuine live gaps are unchanged in identity (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift` in `RequestProject/SAWUmlaufPolygon.lean`), plus the one textual `sorry` inside the explicitly commented-out dead branch `ear_turning_bounds`.
 

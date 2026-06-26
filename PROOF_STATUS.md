@@ -1,6 +1,39 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the chord-piece REVERSE-MEMBERSHIP bricks
+> **Umlaufsatz (LATEST round): banked the SEAM-FLATNESS bricks isolating the
+> flat-cut-vertex residual case of the interior split (sorry-free).**  Worked
+> exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole library
+> still builds end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no
+> regressions.  The genuine live `sorry`s are unchanged in identity
+> (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`), plus the one textual `sorry` inside the
+> commented-out dead branch `ear_turning_bounds`.
+>
+> Two new sorry-free lemmas in `SAWUmlaufPolygon.lean` (verified to use only
+> `propext, Classical.choice, Quot.sound`):
+> * `seam_flat_chain` — if *both* seam corners created at the cut endpoint `w` by
+>   the interior diagonal `b–w` are flat (`cross (w-prev) (b-w) = 0` and
+>   `cross (w-b) (succ-w) = 0`), then the original cyclic corner `prev,w,succ` is
+>   flat too (`cross (w-prev) (succ-w) = 0`).  Pure 2-D parallelism: both edge
+>   vectors are parallel to the nonzero diagonal vector, hence to each other
+>   (proved via the cross/dot identity `cross(p,s)·|v|² = cross(p,v)·⟨v,s⟩ +
+>   ⟨p,v⟩·cross(v,s)`).
+> * `seam_one_nonflat` — its consumable contrapositive: since `polyCycNondeg V`
+>   forces the genuine cyclic corner `prev,w,succ` to be non-flat, AT LEAST ONE
+>   of the two seam corners at `w` is non-flat.  So the diagonal split makes at
+>   most ONE of the two pieces' seam corners at `w` flat; that (at most one)
+>   flat piece is precisely the flat-cut-vertex residual case.
+>
+> These pin down the documented root obstruction (the split can introduce a
+> *straight*/turning-0 seam corner that `polyCycNondeg` rejects): the two bricks
+> show the straightness can affect at most one of the two pieces, so the
+> non-flat piece satisfies the `interior_split_nondeg` seam hypothesis outright,
+> reducing the interior branch to a single flat-cut-vertex removal step on the
+> (at most one) flat piece before the `IH2` recursion.  Both are placed directly
+> above their intended consumer `meisters_reduction_interior2` and documented as
+> preparation — not dead branches.
+>
+> **Umlaufsatz (previous round): banked the chord-piece REVERSE-MEMBERSHIP bricks
 > for the interior-branch ear lift (sorry-free); re-attempted all three live
 > gaps with the strongest search at high effort.**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The whole library still builds
