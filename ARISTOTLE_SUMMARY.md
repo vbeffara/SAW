@@ -1,3 +1,17 @@
+# Summary of changes for run 33b8afcc-5a19-462a-9e6d-a3ffae2cce1e
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean. The three genuine live gaps are unchanged in identity (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift` in `RequestProject/SAWUmlaufPolygon.lean`), plus the one textual `sorry` inside the explicitly commented-out dead branch `ear_turning_bounds`.
+
+Concrete verified progress this round:
+
+1. Two new sorry-free lemmas in `RequestProject/SAWUmlaufEarSplit.lean` (verified to use only `propext, Classical.choice, Quot.sound`), the reverse-membership companions of the existing `mem_chord_split`:
+   - `HexArea.mem_of_mem_chordLeft` — every vertex of the left chord piece `chordLeft V k` is a vertex of `V`.
+   - `HexArea.mem_of_mem_chordRight` — every vertex of the right chord piece `chordRight V k` is a vertex of `V`.
+   These are exactly the vertex-transfer ingredient the interior-branch ear lift in `meisters_reduction_interior2` needs to carry an ear returned by the induction hypothesis on a chord piece back to `V`. Both are documented as preparation (not dead branches) and live in an already-imported file, so they are part of the build chain.
+
+2. Re-attempted all three live Jordan-content gaps directly with the strongest search at high effort, each with an explicit informal route and the full list of banked bricks. None closed within budget — consistent with their being genuine Jordan-curve-theorem-level content. The shared root obstruction is precisely characterized and recorded: the interior-diagonal split can create a straight (turning-0) seam corner that the current non-degeneracy invariant `polyCycNondeg` rejects, and the empty branch's boundary subcase needs a finer induction invariant. Closing these requires either relaxing `polyCycNondeg` to forbid only U-turns (a global refactor) or adding a straight-cut-vertex removal step before recursing.
+
+The round is recorded at the top of `PROOF_STATUS.md`. Every Umlauf file remains imported via the `SAWFinal.lean` chain.
+
 # Summary of changes for run 054b9d79-3aba-455b-89ee-47fdcc3f291d
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz proof chain in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions, and all partial progress is preserved as compiling, sorry-tracked Lean.
 

@@ -1,6 +1,45 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the CUT-DIAGONAL cyclic-edge bricks for
+> **Umlaufsatz (LATEST round): banked the chord-piece REVERSE-MEMBERSHIP bricks
+> for the interior-branch ear lift (sorry-free); re-attempted all three live
+> gaps with the strongest search at high effort.**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions.
+> The three genuine live `sorry`s are unchanged in identity
+> (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`), plus the one textual `sorry` inside the
+> commented-out dead branch `ear_turning_bounds`.
+>
+> Two new sorry-free lemmas in `SAWUmlaufEarSplit.lean` (verified to use only
+> `propext, Classical.choice, Quot.sound`):
+> * `HexArea.mem_of_mem_chordLeft` — every vertex of `chordLeft V k` is a vertex
+>   of `V` (the prefix `V.take (k+1)` is a sublist of `V`).
+> * `HexArea.mem_of_mem_chordRight` — every vertex of `chordRight V k` is a
+>   vertex of `V` (`V.drop k ++ V.take 1`, both sublists of `V`).
+>
+> These are the reverse of the existing `mem_chord_split` (which sends a vertex
+> of `V` into one of the two pieces).  They are exactly the vertex-transfer
+> ingredient the interior-branch ear lift in `meisters_reduction_interior2`
+> needs to carry an ear returned by `IH2` on a chord piece back to `V` (an ear
+> apex/tip living in a piece is a genuine vertex of `V`).  Both are documented
+> as preparation for `meisters_reduction_interior2`, placed in the imported
+> `SAWUmlaufEarSplit.lean`, hence part of the build chain — not dead branches.
+>
+> SEARCH OUTCOME this round: all three live gaps
+> (`meisters_reduction_interior2`, `empty_branch_bad_lift`,
+> `empty_branch_boundary_lift`) were re-attempted directly with the strongest
+> search at high effort, each with an explicit informal route and the full list
+> of banked bricks.  None closed within budget — consistent with their being
+> genuine Jordan-curve-theorem-level content.  The shared root obstruction is
+> unchanged: the interior-diagonal split can create a *straight* (turning-0)
+> seam corner that the current `polyCycNondeg` invariant rejects, and the empty
+> branch's boundary subcase needs a finer induction invariant forcing the
+> `IH2`-returned ear into the interior arc.  Closing them needs either to relax
+> `polyCycNondeg` to forbid only U-turns (a global refactor) or to add a
+> straight-cut-vertex removal step before recursing; that remains the precise
+> next-round target.
+>
+> **Umlaufsatz (previous round): banked the CUT-DIAGONAL cyclic-edge bricks for
 > the interior-split recursion (sorry-free).**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The whole library still builds
 > end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions;

@@ -143,6 +143,25 @@ lemma chordRight_nodup (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < V.leng
     rw [ List.mem_iff_getElem ];
     grind
 
+/-- **Reverse membership for the left piece.**  Every vertex of `chordLeft V k`
+    is a vertex of `V` (it is the prefix `V.take (k+1)`, hence a sublist).
+    Preparation for the interior-branch ear lift in
+    `meisters_reduction_interior2`: transferring vertex data from a chord piece
+    back to `V`.  Sorry-free; not a dead branch. -/
+lemma mem_of_mem_chordLeft (V : List ℂ) (k : ℕ) {x : ℂ}
+    (hx : x ∈ chordLeft V k) : x ∈ V :=
+  (List.take_sublist _ _).subset hx
+
+/-- **Reverse membership for the right piece.**  Every vertex of `chordRight V k`
+    is a vertex of `V` (it is `V.drop k ++ V.take 1`, both sublists of `V`).
+    Preparation for the interior-branch ear lift in
+    `meisters_reduction_interior2`.  Sorry-free; not a dead branch. -/
+lemma mem_of_mem_chordRight (V : List ℂ) (k : ℕ) {x : ℂ}
+    (hx : x ∈ chordRight V k) : x ∈ V := by
+  rcases List.mem_append.mp hx with h | h
+  · exact List.mem_of_mem_drop h
+  · exact List.mem_of_mem_take h
+
 end HexArea
 
 end
