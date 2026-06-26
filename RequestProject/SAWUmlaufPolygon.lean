@@ -2828,6 +2828,60 @@ lemma interior_split_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ
       unfold HexArea.cross; ring;
       norm_num [ Complex.ext_iff ] ; ring
 
+/-- **Interior-split non-degeneracy, LEFT piece only (single-seam form).**
+    The `chordLeft` piece's seam corner at the cut endpoint `w` is the triple
+    `(prev, w, b)`, so the LEFT piece is cyclically non-degenerate from the
+    SINGLE seam clearance `hseamL : cross (w - prev) (b - w) ≠ 0` (the other
+    new corner, at the apex `b`, is automatic from `w` lying strictly inside the
+    corner triangle).  Specialization of `interior_split_nondeg`; combined with
+    `seam_one_nonflat` it makes the non-flat piece directly consumable by the
+    interior branch.  Preparation for `meisters_reduction_interior2`. -/
+lemma interior_split_nondeg_left (a b c w prev : ℂ) (rest : List ℂ) (k : ℕ)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hwin : HexArea.inTriangleStrict a b c w)
+    (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
+    (hwk : (b :: c :: rest ++ [a])[k]? = some w)
+    (hprev : (b :: c :: rest ++ [a])[k-1]? = some prev)
+    (hseamL : HexArea.cross (w - prev) (b - w) ≠ 0) :
+    polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) := by
+  obtain ⟨hwac, hwbc⟩ : HexArea.cross (b - a) (w - a) ≠ 0 ∧ HexArea.cross (c - b) (w - b) ≠ 0 := by
+    cases hwin <;> aesop
+  apply_rules [ HexArea.chordLeft_polyCycNondeg ]
+  · linarith
+  · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _
+    · simp +decide [ List.rotate ]
+      grind +suggestions
+    · simp +arith +decide
+  · grind +suggestions
+
+/-- **Interior-split non-degeneracy, RIGHT piece only (single-seam form).**
+    Companion of `interior_split_nondeg_left`: the `chordRight` piece's seam
+    corner at `w` is the triple `(b, w, succ)`, so the RIGHT piece is cyclically
+    non-degenerate from the SINGLE seam clearance
+    `hseamR : cross (w - b) (succ - w) ≠ 0`.  Specialization of
+    `interior_split_nondeg`.  Preparation for `meisters_reduction_interior2`. -/
+lemma interior_split_nondeg_right (a b c w succ : ℂ) (rest : List ℂ) (k : ℕ)
+    (hnd : polyCycNondeg (a :: b :: c :: rest))
+    (hwin : HexArea.inTriangleStrict a b c w)
+    (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
+    (hwk : (b :: c :: rest ++ [a])[k]? = some w)
+    (hsucc : (b :: c :: rest ++ [a])[k+1]? = some succ)
+    (hseamR : HexArea.cross (w - b) (succ - w) ≠ 0) :
+    polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
+  obtain ⟨hwac, hwbc⟩ : HexArea.cross (b - a) (w - a) ≠ 0 ∧ HexArea.cross (c - b) (w - b) ≠ 0 := by
+    cases hwin <;> aesop
+  apply HexArea.chordRight_polyCycNondeg (b :: c :: rest ++ [a]) k b w succ a
+  any_goals omega
+  · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _
+    · simp +decide [ List.rotate ]
+      grind +suggestions
+    · simp +arith +decide
+  · simp +decide
+  · simp +decide [ List.getElem?_append ]
+  · convert hwac using 1
+    unfold HexArea.cross; ring
+    norm_num [ Complex.ext_iff ] ; ring
+
 /-- **The cut diagonal `{v0, vk}` is a cyclic edge of the LEFT chord piece.**
     Preparation for `meisters_reduction_interior2`: when the interior branch
     recurses via `IH2` on `chordLeft V k`, the forbidden pair it must hand to

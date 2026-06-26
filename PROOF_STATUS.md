@@ -1,6 +1,38 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the SEAM-FLATNESS bricks isolating the
+> **Umlaufsatz (LATEST round): banked the PER-PIECE single-seam non-degeneracy
+> bricks for the interior split (sorry-free).**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions.
+> The genuine live `sorry`s are unchanged in identity
+> (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`), plus the one textual `sorry` in the commented-out
+> dead branch `ear_turning_bounds`.
+>
+> Two new sorry-free lemmas in `SAWUmlaufPolygon.lean` (verified to use only
+> `propext, Classical.choice, Quot.sound`), placed directly after
+> `interior_split_nondeg`:
+> * `interior_split_nondeg_left` — the `chordLeft` piece of the `b`-rooted cycle
+>   cut along `b–w` is `polyCycNondeg` from the SINGLE left-seam clearance
+>   `cross (w - prev) (b - w) ≠ 0` (the apex-`b` corner is automatic from `w`
+>   strictly inside the corner triangle).
+> * `interior_split_nondeg_right` — companion: the `chordRight` piece is
+>   `polyCycNondeg` from the SINGLE right-seam clearance
+>   `cross (w - b) (succ - w) ≠ 0`.
+>
+> Significance: `interior_split_nondeg` previously needed BOTH seam clearances
+> to conclude EITHER piece non-degenerate.  Splitting it per-piece makes the
+> output of `seam_one_nonflat` (at least one seam is non-flat) directly
+> consumable: the non-flat piece is `polyCycNondeg` outright, with no dependence
+> on the other (possibly flat) seam.  This pins the interior branch's residual
+> obstruction to the single case where the recursion target (the piece NOT
+> containing `{z1,z2}`) is the at-most-one flat-seam piece, the precise input to
+> the next-round flat-cut-vertex removal step.  Direct high-effort attempts on
+> all three live gaps were re-run and still time out (genuinely
+> Jordan-curve-theorem-level), so partial progress is preserved as the banked
+> bricks above.
+>
+> **Umlaufsatz (prior round): banked the SEAM-FLATNESS bricks isolating the
 > flat-cut-vertex residual case of the interior split (sorry-free).**  Worked
 > exclusively on the top-priority discrete Hopf Umlaufsatz.  The whole library
 > still builds end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no
