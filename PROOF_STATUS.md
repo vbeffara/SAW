@@ -1,6 +1,32 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the piece-selection step of the diagonal
+> **Umlaufsatz (LATEST round): banked the rotation/list-surgery core of the
+> interior-branch ear lift (sorry-free).**  Worked exclusively on the top-priority
+> discrete Hopf Umlaufsatz.  The whole library still builds end-to-end (8128
+> jobs through `SAWFinal.lean`); no new axioms, no regressions.  The three
+> genuine live `sorry`s (`empty_branch_boundary_lift`,
+> `meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in
+> identity; NO new `sorry`s.  Two new sorry-free reusable lemmas in
+> `SAWUmlaufPolygon.lean` (axioms `propext, Classical.choice, Quot.sound` only),
+> placed after `forbidden_lands_in_chord` and documented as preparation for the
+> interior split (NOT dead branches):
+> * `consec_edges_triple` — in a `Nodup` cyclic vertex list `W`, two cyclic
+>   edges `(a',b')`, `(b',c')` sharing the middle vertex `b'` (with `a' ≠ c'`)
+>   force `a',b',c'` to be three consecutive vertices: `∃ r' tl, W.rotate r' =
+>   a' :: b' :: c' :: tl`.
+> * `chord_consec_triple_lift` — if a rotation of a chord piece
+>   (`chordLeft W k` / `chordRight W k`) of a `Nodup` cycle `W` starts with
+>   `a' :: b' :: c'` and the middle `b'` avoids the cut endpoints `W[0]`, `W[k]`,
+>   then `a',b',c'` are consecutive in the parent cycle `W`.  This is the
+>   rotation/list-surgery core of the interior-branch ear lift: an ear of the
+>   recursed chord piece whose tip avoids the cut endpoints lifts to a genuine
+>   consecutive triple (rotation witness) of `V`.  The remaining genuine content
+>   of `meisters_reduction_interior2` is now the *geometric* emptiness /
+>   diagonal-clearance / orientation transfer (vertices of the other piece lie
+>   off the ear triangle), the Jordan-curve-level residue, plus the
+>   flat-cut-vertex removal sub-case.
+
+> **Umlaufsatz (previous round): banked the piece-selection step of the diagonal
 > split (sorry-free).**  Worked exclusively on the top-priority discrete Hopf
 > Umlaufsatz.  The whole library still builds end-to-end (8128 jobs through
 > `SAWFinal.lean`); no new axioms, no regressions.  The three genuine live

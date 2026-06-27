@@ -2033,6 +2033,95 @@ lemma forbidden_lands_in_chord (V : List ℂ) (k : ℕ) (z1 z2 : ℂ)
     · exact Or.inl (Or.inr (mem_closedEdges_of_mem_pathEdges _ _ hL))
     · exact Or.inr (Or.inr (mem_closedEdges_of_mem_pathEdges _ _ hR))
 
+/-
+**Consecutive cyclic edges determine the triple in a nodup cycle.**  In a
+    `Nodup` cyclic vertex list `W`, if `(a', b')` and `(b', c')` are both cyclic
+    edges of `W` (sharing the middle vertex `b'`) and `a' ≠ c'`, then
+    `a', b', c'` are three *consecutive* vertices of `W`: some rotation of `W`
+    has them as its first three entries.  Reason: in a `Nodup` cycle every
+    vertex occurs once, so its predecessor and successor (read off the two
+    incident closed edges) are uniquely determined; the rotation bringing `a'`
+    to the front then exhibits `a' :: b' :: c'`.  Sorry-free preparation for the
+    chord-piece ear lift of `meisters_reduction_interior2`.
+-/
+lemma consec_edges_triple (W : List ℂ) (hnodup : W.Nodup) (a' b' c' : ℂ)
+    (hab : (a', b') ∈ closedEdges W) (hbc : (b', c') ∈ closedEdges W)
+    (hac : a' ≠ c') :
+    ∃ r' tl, W.rotate r' = a' :: b' :: c' :: tl := by
+  -- From `(a', b') ∈ closedEdges W`, obtain `i < n` (where `n = W.length`) with `W[i]? = some a'` and `W[(i+1) % n]? = some b'`.
+  obtain ⟨i, hi, hia', hib'⟩ : ∃ i < W.length, W[i]? = some a' ∧ W[(i + 1) % W.length]? = some b' := by
+    have h_zip : (a', b') ∈ W.zip (W.rotate 1) := by
+      exact hab;
+    obtain ⟨ i, hi ⟩ := List.mem_iff_get.1 h_zip; simp_all +decide [ List.getElem_rotate ] ;
+    exact ⟨ i, Nat.lt_of_lt_of_le i.2 ( by simp ), by aesop ⟩;
+  -- From `(b',c') ∈ closedEdges W`, obtain `j < n` with `W[j]? = some b'` and `W[(j+1) % n]? = some c'`.
+  obtain ⟨j, hj, hjb', hjc'⟩ : ∃ j < W.length, W[j]? = some b' ∧ W[(j + 1) % W.length]? = some c' := by
+    unfold closedEdges at hbc;
+    rw [ List.mem_iff_get ] at hbc;
+    rcases hbc with ⟨ n, hn ⟩ ; use n; simp_all +decide [ List.get ] ;
+    grind +suggestions;
+  -- Since `W` is `Nodup` and `W[(i+1)%n]? = some b' = W[j]?`, index-uniqueness gives `(i+1) % n = j`.
+  have hmod : (i + 1) % W.length = j := by
+    grind +suggestions;
+  -- The list `W.rotate i` has length `n`; its `m`-th entry (for `m < n`) is `W[(i+m) % n]`.
+  -- In particular its first three entries are `W[i] = a'`, `W[(i+1)%n] = b'`, `W[(i+2)%n] = c'`.
+  have hrotate : W.rotate i = List.map (fun m => W[(i + m) % W.length]!) (List.range W.length) := by
+    refine' List.ext_get _ _ <;> simp +decide [ List.getElem_rotate ];
+    exact fun n hn => by rw [ add_comm, List.getElem?_eq_getElem ( Nat.mod_lt _ ( by linarith ) ) ] ; rfl;
+  rcases n : W.length with ( _ | _ | _ | n ) <;> simp_all +decide [ List.range_succ_eq_map ];
+  · interval_cases i <;> interval_cases j <;> simp_all +decide;
+  · simp_all +decide [ Nat.mod_eq_of_lt ];
+    aesop
+
+/-
+**Chord-piece consecutive-triple lift.**  If a rotation of a chord piece
+    `P` (either `chordLeft W k` or `chordRight W k`) of a `Nodup` cycle `W`
+    starts with `a' :: b' :: c'`, and the shared middle vertex `b'` is *not* one
+    of the two cut endpoints `W[0]`, `W[k]`, then `a', b', c'` are three
+    consecutive vertices of the *parent* cycle `W`.  Both ear edges `(a',b')`,
+    `(b',c')` of the piece avoid its single closing (cut) edge — whose endpoints
+    are exactly `W[0]` and `W[k]` — hence are genuine path edges of the piece,
+    therefore cyclic edges of `W` (`pathEdges_chordLeft_mem_closedEdges` /
+    `pathEdges_chordRight_mem_closedEdges`); `consec_edges_triple` then assembles
+    the consecutive triple.  This is the rotation/list-surgery core of the
+    interior-branch ear lift; sorry-free preparation for
+    `meisters_reduction_interior2`.
+-/
+lemma chord_consec_triple_lift (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
+    (hk : k + 1 ≤ W.length) (hnodup : W.Nodup) {P : List ℂ}
+    (hP : P = chordLeft W k ∨ P = chordRight W k)
+    {a' b' c' : ℂ} {s : ℕ} {tl : List ℂ}
+    (hrot : P.rotate s = a' :: b' :: c' :: tl)
+    (hb0 : W[0]? ≠ some b') (hbk : W[k]? ≠ some b') :
+    ∃ r' tl', W.rotate r' = a' :: b' :: c' :: tl' := by
+  have h_mem_closedEdges : (a', b') ∈ closedEdges W ∧ (b', c') ∈ closedEdges W := by
+    have h_mem_closedEdges : (a', b') ∈ closedEdges P ∧ (b', c') ∈ closedEdges P := by
+      have h_edges : (a', b') ∈ closedEdges (a' :: b' :: c' :: tl) ∧ (b', c') ∈ closedEdges (a' :: b' :: c' :: tl) := by
+        simp +decide [ closedEdges ];
+      rw [ ← hrot ] at h_edges; exact mem_closedEdges_rotate _ _ _ |>.1 h_edges.1 |> fun h => ⟨ h, mem_closedEdges_rotate _ _ _ |>.1 h_edges.2 |> fun h => h ⟩ ;
+    rcases hP with ( rfl | rfl ) <;> simp_all +decide [ pathEdges_chordLeft_mem_closedEdges, pathEdges_chordRight_mem_closedEdges ];
+    · have h_mem_closedEdges : (a', b') ∈ pathEdges (chordLeft W k) ∧ (b', c') ∈ pathEdges (chordLeft W k) := by
+        have h_closedEdges : closedEdges (chordLeft W k) = pathEdges (chordLeft W k) ++ [(W[k]!, W[0]!)] := by
+          convert closedEdges_eq_pathEdges ( chordLeft W k ) ( W[0]! ) ( W[k]! ) _ _ using 1 <;> simp +decide [ chordLeft ];
+          · cases W <;> aesop;
+          · rw [ List.getLast?_take ] ; aesop
+        grind;
+      exact ⟨ pathEdges_chordLeft_mem_closedEdges _ _ _ h_mem_closedEdges.1, pathEdges_chordLeft_mem_closedEdges _ _ _ h_mem_closedEdges.2 ⟩;
+    · have h_mem_closedEdges : (a', b') ∈ pathEdges (chordRight W k) ∧ (b', c') ∈ pathEdges (chordRight W k) := by
+        have h_closedEdges : closedEdges (chordRight W k) = pathEdges (chordRight W k) ++ [(W[0], W[k])] := by
+          convert closedEdges_eq_pathEdges _ _ _ _ _ using 1;
+          · unfold chordRight; aesop;
+          · convert chordRight_getLast W k ( by aesop ) hk using 1;
+            cases W <;> aesop
+        grind +splitImp;
+      exact ⟨ pathEdges_chordRight_mem_closedEdges W k hk _ h_mem_closedEdges.1, pathEdges_chordRight_mem_closedEdges W k hk _ h_mem_closedEdges.2 ⟩;
+  apply consec_edges_triple W hnodup a' b' c' h_mem_closedEdges.left h_mem_closedEdges.right;
+  have h_nodup : (a' :: b' :: c' :: tl).Nodup := by
+    have h_nodup : P.Nodup := by
+      rcases hP with ( rfl | rfl ) <;> [ exact chordLeft_nodup _ _ hnodup; exact chordRight_nodup _ _ hk1 ( by linarith ) hnodup ];
+    exact hrot ▸ List.nodup_rotate.mpr h_nodup;
+  grind
+
 /-- **Generalised corner-exit lemma (start point need not be on the base
     line).**  This is `corner_exit_point` with its `hzac : cross (a-c)(z-c) = 0`
     weakened to `0 ≤ cross (a-c)(z-c) * O`: the start point `z` is allowed to be
