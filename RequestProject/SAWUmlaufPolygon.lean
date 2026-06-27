@@ -2507,6 +2507,45 @@ lemma interior_chord_is_diagonal (a b c w : ℂ) (rest : List ℂ)
     exact fun h => by simp_all +decide [ HexArea.cross ] ;);
     exact this.le_bot ⟨ hp₁, hp₂ ⟩
 
+/-
+**Boundary-seam split (sorry-free combinatorial brick).**  In the boundary
+    subcase of the empty-branch lift, the clip cycle `M = a :: c :: rest`
+    (a `Nodup` list) is recursed on and `IH2` returns an ear
+    `M.rotate r' = a' :: b' :: c' :: rest'` whose middle vertex avoids the cut
+    endpoints (`b' ≠ a`, `b' ≠ c`).  When the `a–c` junction does NOT sit
+    strictly inside the returned tail (`hnotint`), it must sit at the rotation
+    seam, and the directed junction edge `a → c` (the unique cyclic successor of
+    `a` is `c`) pins down exactly two configurations:
+    * `c' = a` with `rest'.head? = some c` (ear immediately *before* the
+      junction), or
+    * `a' = c` with `rest'.getLast? = some a` (ear immediately *after* the
+      junction).
+
+    This is the pure list-combinatorics core that reduces the boundary lift to
+    two concrete sub-cases; explicitly NOT a dead branch — it is preparation
+    consumed by `empty_branch_boundary_lift`.
+-/
+lemma boundary_seam_split (a c : ℂ) (rest : List ℂ) (a' b' c' : ℂ)
+    (rest' : List ℂ) (r' : ℕ) (hnodup : (a :: c :: rest).Nodup)
+    (hrest : 2 ≤ rest.length)
+    (hrot' : (a :: c :: rest).rotate r' = a' :: b' :: c' :: rest')
+    (hb'a : b' ≠ a) (hb'c : b' ≠ c)
+    (hnotint : ¬ ∃ s t, rest' = s ++ a :: c :: t) :
+    (c' = a ∧ rest'.head? = some c) ∨ (a' = c ∧ rest'.getLast? = some a) := by
+  rcases r' with ( _ | _ | r' ) <;> simp_all +decide [ List.rotate ];
+  · rcases rest with ( _ | ⟨ a, rest ⟩ ) <;> simp_all +decide [ List.append ];
+    induction rest <;> aesop;
+  · rcases n : ( r' + 1 + 1 ) % ( rest.length + 1 + 1 ) with ( _ | _ | n ) <;> simp_all +decide [ List.drop, List.take ];
+    · rcases rest' with ( _ | ⟨ x, _ | ⟨ y, rest' ⟩ ⟩ ) <;> simp_all +decide [ List.append_assoc ];
+      · rcases rest with ( _ | ⟨ x, _ | ⟨ y, rest ⟩ ⟩ ) <;> simp_all +decide [ List.append_assoc ];
+      · rcases rest with ( _ | ⟨ y, _ | ⟨ z, rest ⟩ ⟩ ) <;> simp_all +decide [ List.append_eq_cons_iff ];
+      · replace hrot' := congr_arg List.reverse hrot'.2 ; simp_all +decide [ List.reverse_append ];
+        replace hrot' := congr_arg List.reverse hrot'; simp_all +decide [ List.reverse_append ] ;
+        replace hrot' := congr_arg List.getLast? hrot'; simp_all +decide [ List.getLast?_append ] ;
+    · rcases x : List.drop ‹_› rest with ( _ | ⟨ a', _ | ⟨ b', _ | ⟨ c', rest' ⟩ ⟩ ⟩ ) <;> simp_all +decide [ List.drop ];
+      · aesop;
+      · grind
+
 /-- **Empty-branch lift — the BOUNDARY subcase (genuine remaining gap).**  Same
     hypotheses as `empty_branch_good_lift`, used to discharge the residual case
     where the ear returned by the induction hypothesis on the clip `a :: c ::
@@ -2522,7 +2561,30 @@ lemma interior_chord_is_diagonal (a b c w : ℂ) (rest : List ℂ)
     empty branch; the *interior* subcase is fully proved (via
     `empty_branch_interior_lift`) and dispatched here from
     `empty_branch_good_lift`.  Recorded, isolated partial progress — NOT a dead
-    branch. -/
+    branch.
+
+    PROGRESS / BANKED: the combinatorial seam split is now sorry-free as
+    `boundary_seam_split` (just above): under `hnotint` the returned ear sits at
+    one of exactly two seam positions — Case A (`c' = a`, `rest'.head? = some c`)
+    or Case B (`a' = c`, `rest'.getLast? = some a`).  In each case the ear lifts
+    to a genuine consecutive triple of `V` (Case A: `(a', b', a)`; Case B:
+    `(c, b', c')`) by inserting the apex `b` at the junction.
+
+    PRECISE REMAINING OBSTRUCTION (recorded for the next round): exactly ONE of
+    the two `EmptyCornerData2` clip-turns survives directly (it equals `hpt'`
+    resp. `hqt'`); the OTHER clip-turn becomes an *apex turn* —
+    `cross (a - a') (b - a)` in Case A, `cross (c - b) (c' - c)` in Case B —
+    because re-inserting `b` makes the apex the cyclic neighbour of the ear
+    diagonal.  This apex turn can genuinely VANISH: e.g. in Case A if `a` lies
+    strictly between `a'` and `b` on a common line (a "spike" configuration),
+    which is forbidden by NEITHER `hbseg` (it only excludes `b` lying on an open
+    segment between two vertices — here it is `a` that lies between `a'` and `b`)
+    NOR `polyCycNondeg` (which only constrains *consecutive* triples, and
+    `a', a, b` are not consecutive).  Hence the natural ear may fail the
+    clip-turn clause and a DIFFERENT ear must be selected — i.e. closing this
+    branch requires the full two-ears theorem (or a strengthened induction
+    invariant forcing the returned ear off the junction).  This is the
+    irreducible Jordan-curve-level residue. -/
 lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)

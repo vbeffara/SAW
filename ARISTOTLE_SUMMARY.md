@@ -1,3 +1,14 @@
+# Summary of changes for run 445953b5-8fc6-48f1-a505-1a6ecfded22f
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions. The three genuine live `sorry`s of the Meisters two-ears core (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in identity, and NO new `sorry`s were introduced — partial progress is preserved as a verified Lean lemma rather than lost.
+
+Concrete verified progress this round (one new sorry-free, reusable lemma, checked to use only `propext, Classical.choice, Quot.sound`), placed directly before `empty_branch_boundary_lift` and documented as preparation (explicitly NOT a dead branch — it is consumed by that lift):
+
+- `boundary_seam_split`: in the boundary subcase, the clip cycle `M = a :: c :: rest` (`Nodup`, `2 ≤ rest.length`) recursed via `IH2` returns an ear `M.rotate r' = a' :: b' :: c' :: rest'` with `b' ≠ a`, `b' ≠ c`; when the `a–c` junction is not interior to `rest'` it must sit at the rotation seam, forcing exactly one of two configurations: `(c' = a ∧ rest'.head? = some c)` (Case A) or `(a' = c ∧ rest'.getLast? = some a)` (Case B). This is the pure list-combinatorics core (the unique cyclic successor of `a` is `c`) that reduces the boundary lift to two concrete sub-cases.
+
+I also pinned down, and recorded in the `empty_branch_boundary_lift` docstring and `PROOF_STATUS.md`, the precise irreducible obstruction of that branch: in each seam sub-case exactly one of the two `EmptyCornerData2` clip-turns survives directly (it equals `hpt'`/`hqt'`); the other becomes an *apex turn* (`cross (a-a') (b-a)` in Case A, `cross (c-b) (c'-c)` in Case B) that can genuinely vanish in a "spike" configuration. This is forbidden by neither `hbseg` (which constrains the apex `b`, not the intermediate vertex) nor `polyCycNondeg` (which only constrains consecutive triples), so the natural ear may fail and a different ear must be selected — i.e. closing this branch requires the full two-ears theorem. This documents the genuine Jordan-curve-level residue for future rounds.
+
+Status: every Umlauf file remains imported in the build chain, the build is green, and the round is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run 51355118-412b-4bbd-8352-055706f53d38
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `SAWFinal.lean`) with no new axioms and no regressions.
 

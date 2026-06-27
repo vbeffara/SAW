@@ -1,6 +1,40 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the rotation/list-surgery core of the
+> **Umlaufsatz (LATEST round): banked the boundary-seam split + pinned the
+> precise residual obstruction of the boundary lift (sorry-free).**  Worked
+> exclusively on the top-priority discrete Hopf Umlaufsatz in
+> `RequestProject/SAWUmlaufPolygon.lean`.  The whole library still builds
+> end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions.
+> The three genuine live `sorry`s (`empty_branch_boundary_lift`,
+> `meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in
+> identity; NO new `sorry`s were introduced.  One new sorry-free reusable lemma
+> (axioms `propext, Classical.choice, Quot.sound` only), placed directly before
+> `empty_branch_boundary_lift` and documented as preparation (NOT a dead
+> branch):
+> * `boundary_seam_split` — in the boundary subcase, the clip cycle
+>   `M = a :: c :: rest` (`Nodup`, `2 ≤ rest.length`) recursed via `IH2` returns
+>   an ear `M.rotate r' = a' :: b' :: c' :: rest'` with `b' ≠ a`, `b' ≠ c`; when
+>   the `a–c` junction is not interior to `rest'` (`hnotint`) it must sit at the
+>   rotation seam, forcing exactly one of two configurations:
+>   `(c' = a ∧ rest'.head? = some c)` (Case A) or
+>   `(a' = c ∧ rest'.getLast? = some a)` (Case B).  Pure list-combinatorics core
+>   (unique cyclic successor of `a` is `c`).
+>
+> This reduces the boundary lift to two concrete sub-cases, in each of which the
+> ear lifts to a genuine consecutive triple of `V` by inserting the apex `b` at
+> the junction.  The precise residual obstruction is now pinned down in the
+> `empty_branch_boundary_lift` docstring: exactly ONE of the two
+> `EmptyCornerData2` clip-turns survives directly (`= hpt'`/`hqt'`); the OTHER
+> becomes an *apex turn* (`cross (a-a') (b-a)` in Case A, `cross (c-b) (c'-c)` in
+> Case B) that can GENUINELY VANISH in a "spike" configuration (where `a` lies
+> strictly between `a'` and `b`), forbidden by neither `hbseg` (which constrains
+> `b`, not `a`) nor `polyCycNondeg` (which only constrains consecutive triples).
+> Hence the natural ear may fail and a DIFFERENT ear must be chosen — closing
+> this branch requires the full two-ears theorem (or a strengthened induction
+> invariant forcing the returned ear off the junction).  This is the
+> irreducible Jordan-curve-level residue.
+
+> **Umlaufsatz (earlier round): banked the rotation/list-surgery core of the
 > interior-branch ear lift (sorry-free).**  Worked exclusively on the top-priority
 > discrete Hopf Umlaufsatz.  The whole library still builds end-to-end (8128
 > jobs through `SAWFinal.lean`); no new axioms, no regressions.  The three
