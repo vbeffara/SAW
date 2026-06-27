@@ -1998,6 +1998,41 @@ lemma closedEdge_mem_chord_pathEdges (V : List ℂ) (k : ℕ)
       grind;
     exact Or.inr h_pair
 
+/-- **`IsCycEdge` is rotation invariant.**  A pair `{x, y}` is a cyclic edge of
+    `V.rotate n` iff it is a cyclic edge of `V`.  Immediate from
+    `mem_closedEdges_rotate` applied to both orderings.  Reusable preparation for
+    `meisters_reduction_interior2` / `empty_branch_bad_lift`: it transports the
+    forbidden cyclic edge `{z1, z2}` of `V` across the rotation
+    `V.rotate r = a :: b :: c :: rest`. -/
+lemma IsCycEdge_rotate (V : List ℂ) (n : ℕ) (x y : ℂ) :
+    IsCycEdge (V.rotate n) x y ↔ IsCycEdge V x y := by
+  unfold IsCycEdge
+  rw [mem_closedEdges_rotate, mem_closedEdges_rotate]
+
+/-- **The forbidden cyclic edge lands in one of the two chord pieces.**  Given a
+    cyclic edge `{z1, z2}` of `V` and a chord cut index `k` (with `1 ≤ k` and
+    `k + 1 ≤ V.length`), the pair `{z1, z2}` is a cyclic edge of the left piece
+    `chordLeft V k` or of the right piece `chordRight V k`.  This is the
+    combinatorial "forbidden pair lies in one piece" step of the interior /
+    bad-diagonal split branches: it lets the split-and-recurse induction choose
+    the piece **not** containing `{z1, z2}` to recurse on.  Assembled from
+    `closedEdge_mem_chord_pathEdges` (every closed edge of `V` is a path edge of
+    a piece) and `mem_closedEdges_of_mem_pathEdges` (a path edge is a closed
+    edge), handling both orderings of the pair.  Sorry-free; reusable
+    preparation for `meisters_reduction_interior2` / `empty_branch_bad_lift`. -/
+lemma forbidden_lands_in_chord (V : List ℂ) (k : ℕ) (z1 z2 : ℂ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ V.length) (he : IsCycEdge V z1 z2) :
+    IsCycEdge (HexArea.chordLeft V k) z1 z2 ∨
+      IsCycEdge (HexArea.chordRight V k) z1 z2 := by
+  unfold IsCycEdge at he ⊢
+  rcases he with he | he
+  · rcases closedEdge_mem_chord_pathEdges V k hk1 hk (z1, z2) he with hL | hR
+    · exact Or.inl (Or.inl (mem_closedEdges_of_mem_pathEdges _ _ hL))
+    · exact Or.inr (Or.inl (mem_closedEdges_of_mem_pathEdges _ _ hR))
+  · rcases closedEdge_mem_chord_pathEdges V k hk1 hk (z2, z1) he with hL | hR
+    · exact Or.inl (Or.inr (mem_closedEdges_of_mem_pathEdges _ _ hL))
+    · exact Or.inr (Or.inr (mem_closedEdges_of_mem_pathEdges _ _ hR))
+
 /-- **Generalised corner-exit lemma (start point need not be on the base
     line).**  This is `corner_exit_point` with its `hzac : cross (a-c)(z-c) = 0`
     weakened to `0 ≤ cross (a-c)(z-c) * O`: the start point `z` is allowed to be

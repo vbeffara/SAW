@@ -1,5 +1,29 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (LATEST round): banked the piece-selection step of the diagonal
+> split (sorry-free).**  Worked exclusively on the top-priority discrete Hopf
+> Umlaufsatz.  The whole library still builds end-to-end (8128 jobs through
+> `SAWFinal.lean`); no new axioms, no regressions.  The three genuine live
+> `sorry`s (`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`) are unchanged in identity; NO new `sorry`s.  Two new
+> sorry-free reusable lemmas in `SAWUmlaufPolygon.lean` (axioms `propext,
+> Classical.choice, Quot.sound` only), placed after
+> `closedEdge_mem_chord_pathEdges` and documented as preparation for the split
+> branches:
+> * `HexArea.IsCycEdge_rotate` — rotation-invariance of `IsCycEdge`.
+> * `HexArea.forbidden_lands_in_chord` — the forbidden cyclic edge `{z1,z2}`
+>   lands in `chordLeft V k` or `chordRight V k` (the combinatorial
+>   "forbidden-pair-in-one-piece" step that lets the split-and-recurse induction
+>   pick the piece NOT containing `{z1,z2}`).
+>
+> Combined with the previously-banked `interior_split_simple` (simplicity half +
+> cut index) and `interior_split_one_nondeg` (non-degeneracy half), the
+> remaining genuine content of the interior / bad-diagonal branches is the
+> ear-lift after the recursion (list surgery, analogous to the proved
+> `empty_branch_interior_lift`) plus the flat-cut-vertex-removal sub-case.
+
+# Proof Status: μ = √(2+√2)
+
 > **Umlaufsatz (LATEST round): banked the NON-DEGENERACY half of the interior
 > diagonal split (sorry-free, disjunctive form), the documented residual
 > obstruction of the interior branch.**  Worked exclusively on the top-priority

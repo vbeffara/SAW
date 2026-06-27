@@ -1,3 +1,48 @@
+# Summary of changes for run f1931f6e-099d-4b18-9d5e-348bd9973ebf
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `SAWFinal.lean`) with no new axioms and no regressions.
+
+State going in: the Umlaufsatz reduces to the Meisters two-ears core, whose only genuine remaining gaps are three Jordan-curve-level `sorry`s — `meisters_reduction_interior2` (interior diagonal split + ear lift), `empty_branch_bad_lift` (bad-diagonal split), and `empty_branch_boundary_lift` (boundary subcase of the empty-branch lift). Direct high-effort proof attempts on all three time out, confirming they are the irreducible split-and-lift core. I confirmed these are the only live Umlaufsatz `sorry`s (a fourth textual `sorry` sits inside a commented-out, documented dead branch).
+
+New progress this round (verified sorry-free; axioms `propext, Classical.choice, Quot.sound` only): two new reusable lemmas in `RequestProject/SAWUmlaufPolygon.lean`, placed directly after `closedEdge_mem_chord_pathEdges` and documented as preparation for the split branches (explicitly linked, not dead branches):
+- `HexArea.IsCycEdge_rotate`: `IsCycEdge (V.rotate n) x y ↔ IsCycEdge V x y` — rotation-invariance of the forbidden cyclic edge, so it transports across the rotation `V.rotate r = a :: b :: c :: rest`.
+- `HexArea.forbidden_lands_in_chord`: given a cyclic edge `{z1,z2}` of `V` and a chord cut index `k` (`1 ≤ k`, `k+1 ≤ V.length`), the pair `{z1,z2}` is a cyclic edge of `chordLeft V k` or of `chordRight V k`.
+
+Together these discharge the combinatorial "the forbidden pair lies in one of the two split pieces" step that both `meisters_reduction_interior2` and `empty_branch_bad_lift` need before choosing the strictly-shorter piece to recurse on. They complement the previously-banked simplicity half (`interior_split_simple`) and non-degeneracy half (`interior_split_one_nondeg`). The remaining genuine content of those branches is the ear-lift after recursion (list surgery, analogous to the proved `empty_branch_interior_lift`) plus the flat-cut-vertex-removal sub-case.
+
+No `sorry`s were added; the three deep sorries are unchanged in identity, so partial progress is preserved as verified Lean lemmas rather than lost. Every file remains imported and building. Status recorded in `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md`.
+
+# Summary of changes for run (Umlaufsatz: banked the piece-selection step of the diagonal split)
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in
+`RequestProject/SAWUmlaufPolygon.lean`.  The whole library still builds
+end-to-end (8128 jobs through `SAWFinal.lean`); no new axioms, no regressions.
+The three genuine live `sorry`s of the Meisters two-ears core
+(`empty_branch_boundary_lift`, `meisters_reduction_interior2`,
+`empty_branch_bad_lift`) are unchanged in identity and NO new `sorry`s were
+introduced.
+
+New progress (verified sorry-free; axioms `propext, Classical.choice,
+Quot.sound` only): two new reusable lemmas in `SAWUmlaufPolygon.lean`, placed
+directly after `closedEdge_mem_chord_pathEdges` and documented as preparation
+for the split branches (explicitly linked, NOT dead branches):
+* `HexArea.IsCycEdge_rotate` — `IsCycEdge (V.rotate n) x y ↔ IsCycEdge V x y`
+  (rotation-invariance of the forbidden cyclic edge), from
+  `mem_closedEdges_rotate` on both orderings.
+* `HexArea.forbidden_lands_in_chord` — given a cyclic edge `{z1,z2}` of `V` and
+  a chord cut index `k` (`1 ≤ k`, `k+1 ≤ V.length`), the pair `{z1,z2}` is a
+  cyclic edge of `chordLeft V k` or of `chordRight V k`.  Assembled from
+  `closedEdge_mem_chord_pathEdges` + `mem_closedEdges_of_mem_pathEdges`.
+
+Together these discharge the combinatorial "the forbidden pair lies in one of
+the two split pieces" step that both the interior branch
+(`meisters_reduction_interior2`) and the bad-diagonal branch
+(`empty_branch_bad_lift`) need before choosing which strictly-shorter piece to
+recurse on through `IH2`.  This complements the previously-banked simplicity
+half (`interior_split_simple`) and non-degeneracy half
+(`interior_split_one_nondeg`).  The remaining genuine content of those branches
+is the ear-lift after the recursion (list surgery analogous to
+`empty_branch_interior_lift`), plus the flat-cut-vertex-removal sub-case.
+
 # Summary of changes for run 01ffb9b5-727a-486f-b252-ce2e267daff5
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`, per the request. The whole library continues to build end-to-end (8128 jobs through `SAWFinal.lean`) with no new axioms and no regressions.
 
