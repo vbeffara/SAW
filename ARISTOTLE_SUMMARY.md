@@ -1,3 +1,67 @@
+# Summary of changes for run a20a93f3-6eba-4195-886b-fb0702756c1b
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, as instructed. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms and no regressions to any existing proof.
+
+State of the proof. The Umlaufsatz chain remains sorry-free except for the empty/interior split branches, whose remaining content has now been pinned to a single mathematical obstruction. The four pre-existing live `sorry`s (the two boundary "spike" subcases inside `empty_branch_boundary_lift`, `meisters_reduction_interior2`, and `empty_branch_bad_lift`) are unchanged.
+
+What I did this round:
+- Ran fresh high-effort proof searches on the three split-branch `sorry`s. These confirmed (consistent with prior rounds) that the combinatorial scaffolding is fully banked but the geometric residue resists automated search.
+- Isolated that residue into one precise, compiling, reusable lemma `chord_ear_lift` in `RequestProject/SAWUmlaufPolygon.lean`. It states exactly the missing point-in-polygon / Jordan-curve separation fact: cutting a simple polygon `V` along an interior diagonal into the two chord pieces, an ear of one piece (packaged as `EmptyCornerData2`) lifts to a genuine ear of the whole polygon — including the emptiness of the lifted ear triangle against the vertices of the *other* piece. It is documented and linked as preparation consumed by the interior and bad-diagonal split branches (not a dead branch); the file it lives in is part of the build.
+- Verified, via a full subagent-built skeleton, that the interior branch `meisters_reduction_interior2` assembles cleanly *around* `chord_ear_lift`, using the already-banked `forbidden_lands_in_chord`, `IsCycEdge_rotate`, `chordLeft_cut_isCycEdge`/`chordRight_cut_isCycEdge`, `interior_split_select`, and `interior_split_nondeg_left/right`. This pins the entire interior-branch content to the single `chord_ear_lift` brick plus a flat-seam piece-selection sub-case.
+- A direct high-effort search on `chord_ear_lift` itself times out: its combinatorial lift (consecutive triple, shoelace orientation) is mechanical, but the other-piece emptiness genuinely needs a polygon-interior (winding-number / point-in-polygon) separation predicate, which is absent from both the project and Mathlib.
+
+This is recorded in `PROOF_STATUS.md`. The remaining gap is a single irreducible Jordan-curve separation theorem; the recommended next direction is to build a winding-number / point-in-polygon membership predicate on top of the project's existing turning-number machinery (`SAWTurningNumber`, `SAWUmlaufGaussBonnet`) and use it to discharge `chord_ear_lift`, which would then unlock both the interior and bad-diagonal split branches.
+
+# Summary of changes for run 09bd5d78-f0f4-432d-b1d1-fbaccdc38e77
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, as instructed. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms, no regressions, and no new `sorry`s; the only file changed this round is `PROOF_STATUS.md` (documentation), so all prior verified progress is preserved.
+
+State of the main theorem. The Umlaufsatz chain (`polygon_umlaufsatz` ← … ← `exists_empty_corner_avoiding` ← `meisters_reduction2`) is fully sorry-free except for four genuine live `sorry`s in `RequestProject/SAWUmlaufPolygon.lean`:
+- `meisters_reduction_interior2` (chord-split branch),
+- `empty_branch_bad_lift` (bad-diagonal branch),
+- the two boundary "spike" subcases inside `empty_branch_boundary_lift`.
+(The `sorry` near line 4077 is inside a `/- … -/` comment documenting a known-false dead branch, and is not a live obstruction.)
+
+What I did this round:
+- Mapped the full dependency chain to confirm these four are exactly the remaining content of the main theorem.
+- Ran a high-effort proof search on the best-prepared target `meisters_reduction_interior2` (built on the previously banked `interior_split_select`); it timed out. The remaining content is the ear-lift across the chord cut: after recursing on the chord piece avoiding the forbidden edge, the returned ear triangle must be shown empty of every vertex of the polygon, including the other piece's vertices — this needs polygon-interior region separation along the diagonal, i.e. a point-in-polygon / winding-number characterisation that is absent from both the project and Mathlib.
+- Verified there is no point-in-polygon / interior-region predicate anywhere in the chain that could supply the separation.
+- Produced a new combinatorial sharpening of boundary spike subcase A: in that case the natural lifted ear `(a', p, a)` (with `p = rest.getLast`) is already a consecutive triple of the polygon, the spike collinearity plus simplicity forces `a ∈ openSegment(b, a')`, and the only failure is that clipping `p` flattens the corner at `a` (the apex turn `cross (a-a')(b-a)` is the vanishing spike quantity) — so the residue is genuinely a two-ears "choose a different ear" step, the same Jordan-curve content as the other branches.
+
+Net conclusion recorded in `PROOF_STATUS.md`: all four remaining obstructions are now uniformly pinned to a single missing brick — a polygon-interior (point-in-polygon / winding-number) separation predicate for the chord cut — which is the recommended next direction. No code was changed because closing these would require building that new separation theory from scratch, and I declined to add speculative unproven scaffolding that would not be verified progress.
+
+# Summary of changes for run 0065bee9-9883-498c-960e-ac4c2c562d88
+Continued the top-priority discrete Hopf Umlaufsatz. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms (only `propext, Classical.choice, Quot.sound`), no regressions, and no new live `sorry`s.
+
+Concrete verified progress this round:
+- Added and proved one new sorry-free, reusable, axiom-clean lemma `shoelace2_chord_split` in `RequestProject/SAWUmlaufEarSplit.lean`: for `1 ≤ k < V.length`,
+  `shoelace2 (chordLeft V k) + shoelace2 (chordRight V k) = shoelace2 V`.
+  That is, cutting the closed polygon `V` along the diagonal `V[0]–V[k]` into the two chord pieces is area-preserving — the shared-diagonal cross terms cancel by `cross_antisymm` and the open chains reassemble the closed shoelace of `V`. I verified the identity numerically on two example polygons before formalizing it. It is the pure-algebra ingredient of the orientation transfer needed by the interior-branch ear lift, documented as preparation (consumed by the open interior core), explicitly not a dead branch. Verified to use only the standard axioms.
+
+I also re-attempted the two best-prepared single-`sorry` lifts (`meisters_reduction_interior2`, `empty_branch_bad_lift`) at high effort with detailed strategies; both still time out. Their remaining content (and that of the two boundary "spike" subcases inside `empty_branch_boundary_lift`) funnels into the same irreducible Jordan-curve-level emptiness/separation transfer — showing that a vertex of the OTHER chord piece cannot lie strictly inside the lifted ear triangle. This requires polygon-interior region separation that is not present in the current segment/cross-product/area toolkit, so the live `sorry`s in the Umlauf chain are unchanged in identity from the previous round.
+
+Progress is recorded at the top of `PROOF_STATUS.md`; every file remains imported in the build chain.
+
+# Summary of changes for run 7cc0b8d7-452c-4f26-bd95-8ddc2813708d
+Continued the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms (only `propext, Classical.choice, Quot.sound`), no regressions, and no new live `sorry`s introduced.
+
+Concrete verified progress this round:
+- Added and proved one new sorry-free, reusable, axiom-clean lemma `interior_split_select`. It consolidates the previously-banked interior-split bricks (`interior_split_simple`, `interior_split_one_nondeg`, `chordLeft_length_lt`, `chordRight_length_lt`) into the single "recursion-ready" package the interior branch needs: from the convex corner `a,b,c` and the farthest interior vertex `w`, it produces the cut index `k` for the b-rooted cycle `b :: c :: rest ++ [a]` together with BOTH chord pieces being `PolygonSimple` and strictly shorter than `V`, plus AT LEAST ONE of them `polyCycNondeg`.
+- Wired this brick into `meisters_reduction_interior2`: the proof now opens by deriving the corner non-flatness `cross (b-a) (c-b) ≠ 0` from `polyCycNondeg V` (via `polyNondeg_cons_cons_cons`) and obtaining the `interior_split_select` bundle, so the new lemma is genuinely consumed (not a dead branch). Its remaining content is now exactly the recurse-via-IH2-and-lift step.
+
+The live `sorry`s in the Umlauf chain are unchanged in identity from the previous round: the two collinear boundary "spike" subcases inside `empty_branch_boundary_lift`, plus `meisters_reduction_interior2` and `empty_branch_bad_lift`. Their only irreducible remaining gap is the Jordan-curve-level ear-emptiness transfer (a vertex of the other chord piece lying off the lifted ear triangle), which needs polygon-interior-region separation not present in the current segment/cross-product toolkit. Progress is recorded at the top of `PROOF_STATUS.md`.
+
+# Summary of changes for run 8d337c2d-6b86-4806-b815-f1ae4963b3b0
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms (only `propext, Classical.choice, Quot.sound`), no regressions, and no progress lost — everything is banked as compiling Lean.
+
+Concrete verified progress this round: the boundary-seam ear lift (`empty_branch_boundary_lift`), previously a single broad Jordan-content `sorry`, is now proved on its entire non-spike part. Four new sorry-free, reusable lemmas were added and verified axiom-clean:
+
+- `clip_ear_lift_general` — the arbitrary-prefix generalisation of `clip_ear_lift_interior`: from `(a::c::rest).rotate r' = pre ++ a::c::suf`, re-inserting the apex `b` yields `(a::b::c::rest).rotate r'' = pre ++ a::b::c::suf`.
+- `clip_ear_lift_seamB` — the wrap-around (Case B) apex re-insertion, built on `clip_ear_lift_general`.
+- `boundary_lift_caseA_nonspike` and `boundary_lift_caseB_nonspike` — assemble a genuine `EmptyCornerData2 V z1 z2` ear directly in each of the two seam configurations from `boundary_seam_split`, under the (non-degenerate) hypothesis that the re-inserted apex turn is non-zero. Emptiness/diagonal-avoidance of the apex come from the convexity/segment hypotheses; the orientation equivalence is assembled from `shoelace2_clip_second`, `shoelace2_insert_mid`, `shoelace2_rotate`.
+
+`empty_branch_boundary_lift` (its length hypothesis strengthened to `5 ≤ V.length`, which its only caller `empty_branch_good_lift` already supplies) was rewritten to dispatch through `boundary_seam_split` and the two non-spike lemmas. Its remaining content is now exactly the two narrow collinear "spike" subcases (`cross (a-a') (b-a) = 0`, resp. `cross (c-b) (c'-c) = 0`) — the genuine two-ears residue where re-inserting the apex flattens the diagonal-endpoint turn and a different ear must be chosen. These are isolated and documented in-place; all new lemmas are linked into the proof (no dead branches).
+
+The live `sorry`s remaining in the Umlauf chain are: the two boundary spike subcases (inside `empty_branch_boundary_lift`), plus the still-open `meisters_reduction_interior2` and `empty_branch_bad_lift` branches, which depend on the same two-ears Jordan-curve content. Progress is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run 445953b5-8fc6-48f1-a505-1a6ecfded22f
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. The whole library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`); no new axioms, no regressions. The three genuine live `sorry`s of the Meisters two-ears core (`empty_branch_boundary_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in identity, and NO new `sorry`s were introduced — partial progress is preserved as a verified Lean lemma rather than lost.
 

@@ -162,6 +162,38 @@ lemma mem_of_mem_chordRight (V : List ℂ) (k : ℕ) {x : ℂ}
   · exact List.mem_of_mem_drop h
   · exact List.mem_of_mem_take h
 
+/-
+**Signed-area additivity across the chord cut (sorry-free, reusable).**
+    Cutting the closed polygon `V` along the diagonal `V[0]–V[k]`
+    (`1 ≤ k < V.length`) into the two pieces `chordLeft V k` and
+    `chordRight V k` is *area-preserving*: the (twice-)signed areas of the two
+    pieces add up to that of `V`.  The shared diagonal contributes
+    `cross V[k] V[0]` to the left piece and `cross V[0] V[k]` to the right
+    piece, and these cancel (`cross_antisymm`); the remaining open chains
+    reassemble the closed shoelace of `V`.
+
+    This is the pure-algebra ingredient of the orientation transfer in the
+    interior-branch ear lift (`meisters_reduction_interior2`): a chord piece
+    has the *same* orientation sign as `V` exactly when the OTHER piece's area
+    has the same sign, which the Jordan-interior diagonal guarantees.  Recorded
+    preparation; not a dead branch.
+-/
+lemma shoelace2_chord_split (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
+    (hk : k < V.length) :
+    shoelace2 (chordLeft V k) + shoelace2 (chordRight V k) = shoelace2 V := by
+  rcases V with ( _ | ⟨ v, _ | ⟨ w, V ⟩ ⟩ ) <;> norm_num at *;
+  · grind;
+  · induction' k with k ih generalizing v w V <;> simp_all +decide [ List.take, List.drop ];
+    rcases k with ( _ | k ) <;> simp_all +decide [ chordLeft, chordRight ];
+    · unfold shoelace2;
+      induction V <;> simp_all +decide [ List.getLast? ];
+      · unfold cross; ring;
+      · cases ‹List ℂ› <;> simp_all +decide [ shoelaceOpen ] ; ring;
+        · linear_combination' ‹cross w v + cross v w = 0›;
+        · linarith [ cross_antisymm v w ];
+    · cases V <;> simp_all +decide [ List.take, List.drop ];
+      grind +suggestions
+
 end HexArea
 
 end

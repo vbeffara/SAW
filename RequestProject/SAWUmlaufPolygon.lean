@@ -1569,6 +1569,38 @@ lemma clip_ear_lift_interior (a b c a' b' c' : ℂ) (rest s t : List ℂ) (r' : 
   rw [ Nat.mod_eq_of_lt ] <;> simp +arith +decide [ List.drop_append, List.take_append ]
 
 /-
+**Apex re-insertion across a clip rotation, GENERAL prefix form.**  The
+    arbitrary-prefix generalisation of `clip_ear_lift_interior`: whenever a
+    rotation of the clip `a :: c :: rest` exhibits the junction `a :: c`
+    consecutively as `pre ++ a :: c :: suf`, re-inserting the apex `b` between
+    that `a` and `c` is realised by a rotation of the full cycle
+    `a :: b :: c :: rest`, giving `pre ++ a :: b :: c :: suf`.  Taking
+    `pre = a' :: b' :: c' :: s` recovers `clip_ear_lift_interior`; taking
+    `pre = [a', b']` (resp. rotating so the junction is internal) covers the two
+    boundary-seam configurations of `boundary_seam_split`.  Pure list surgery
+    (the same `a`-occurs-only-at-index-0 argument), absent from Mathlib.
+    Preparation consumed by the boundary-seam lift below — NOT a dead branch.
+-/
+lemma clip_ear_lift_general (a b c : ℂ) (rest pre suf : List ℂ) (r' : ℕ)
+    (hac : a ≠ c) (hanr : a ∉ rest)
+    (hrot' : (a :: c :: rest).rotate r' = pre ++ a :: c :: suf) :
+    ∃ r'', (a :: b :: c :: rest).rotate r'' = pre ++ a :: b :: c :: suf := by
+  -- From the rotation form of `a :: c :: rest`, we derive that `rest = suf ++ pre`.
+  have hrest : rest = suf ++ pre := by
+    have hrest : (a :: c :: rest).rotate (r' + pre.length) = a :: c :: (suf ++ pre) := by
+      convert congr_arg ( fun x => x.rotate pre.length ) hrot' using 1 <;> simp +decide [ List.rotate_rotate ];
+    have hrest : (a :: c :: rest)[(r' + pre.length) % (a :: c :: rest).length]'(by
+    exact Nat.mod_lt _ ( by simp +decide )) = a := by
+      convert congr_arg ( fun x : List ℂ => x[0]! ) hrest using 1;
+      simp +decide [ List.getElem_rotate ]
+    generalize_proofs at *;
+    rcases n : ( r' + pre.length ) % List.length ( a :: c :: rest ) with ( _ | _ | n ) <;> simp_all +decide [ List.get ];
+    · have := Nat.dvd_of_mod_eq_zero n; obtain ⟨ k, hk ⟩ := this; simp_all +decide [ List.rotate ] ;
+    · exact False.elim <| hanr <| hrest ▸ List.getElem_mem _;
+  use 3 + suf.length; simp +decide [ List.rotate, hrest ] ;
+  rcases pre with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, pre ⟩ ⟩ ⟩ ) <;> simp_all +arith +decide [ Nat.mod_eq_of_lt ]
+
+/-
 **Signed-area additivity for a mid-list apex insertion (pure, reusable).**
     Inserting the apex `b` between consecutive vertices `a, c` anywhere in a
     cycle changes the signed area by exactly the triangle term
@@ -2546,6 +2578,150 @@ lemma boundary_seam_split (a c : ℂ) (rest : List ℂ) (a' b' c' : ℂ)
       · aesop;
       · grind
 
+/-
+**Boundary-seam lift, Case A, non-spike subcase (PROVED).**  In Case A of
+    `boundary_seam_split` the returned clip ear is `a' :: b' :: a :: c :: rest''`
+    (its diagonal endpoint `c'` coincides with the junction vertex `a`, and the
+    junction continues with `c`).  Re-inserting the convex apex `b` between `a`
+    and `c` (via `clip_ear_lift_general` with `pre = [a', b']`) yields the genuine
+    `V`-rotation `a' :: b' :: a :: b :: c :: rest''`.  The ear `(a', b', a)` is
+    then an `EmptyCornerData2` ear of `V`: the surviving clip turn `hpt'` gives
+    the turn at `a'`, while the turn at the new neighbour `b` of the diagonal
+    endpoint `a` is the apex turn `cross (a - a') (b - a)`, supplied non-zero by
+    `hturnA` (the non-spike hypothesis).  Emptiness/diagonal-avoidance of the
+    inserted `b` come from `hbconv`/`hbseg`; the orientation `iff` is assembled
+    from `horient`, `horient'`, `shoelace2_clip_second`, `shoelace2_insert_mid`,
+    `shoelace2_rotate`.  The genuinely open content is only the spike case
+    (`cross (a - a') (b - a) = 0`), left in `empty_branch_boundary_lift`.
+-/
+lemma boundary_lift_caseA_nonspike (V : List ℂ) (z1 z2 : ℂ)
+    (a b c : ℂ) (rest : List ℂ) (r : ℕ)
+    (hrot : V.rotate r = a :: b :: c :: rest)
+    (hac : a ≠ c) (hanr : a ∉ rest) (hba : b ≠ a)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
+    (hzrest : ∀ y ∈ rest, y ≠ z1 ∧ y ≠ z2)
+    (a' b' p' : ℂ) (rest'' : List ℂ) (r' : ℕ)
+    (hrot' : (a :: c :: rest).rotate r' = a' :: b' :: a :: c :: rest'')
+    (hb'rest : b' ∈ rest) (ha'V : a' ∈ V) (hb'V : b' ∈ V) (ha'b : b ≠ a')
+    (hp' : (c :: rest'').getLast? = some p')
+    (hpt' : HexArea.cross (a' - p') (a - a') ≠ 0)
+    (hempty' : ∀ x ∈ (c :: rest''), ¬ HexArea.inTriangleStrict a' b' a x)
+    (hdiag' : ∀ x ∈ (c :: rest''), x ∉ segment ℝ a' a)
+    (horient' : ((0:ℝ) < HexArea.shoelace2 [a', b', a]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: a :: c :: rest'')))
+    (hturnA : HexArea.cross (a - a') (b - a) ≠ 0) :
+    EmptyCornerData2 V z1 z2 := by
+  -- Apply `clip_ear_lift_general` to get the required rotation.
+  obtain ⟨r'', hr''⟩ : ∃ r'', (a :: b :: c :: rest).rotate r'' = a' :: b' :: a :: b :: c :: rest'' := by
+    apply clip_ear_lift_general a b c rest [a', b'] rest'' r' hac hanr hrot';
+  refine' ⟨ r + r'', a', b', a, p', b, b :: c :: rest'', _, _, _, _, _ ⟩ <;> simp_all +decide [ List.rotate_rotate ];
+  · rw [ ← hr'', ← hrot, List.rotate_rotate ];
+  · refine' ⟨ _, _, _ ⟩;
+    · replace hrot := congr_arg List.toFinset hrot; rw [ Finset.ext_iff ] at hrot; specialize hrot a; aesop;
+    · grind +suggestions;
+    · have hshoelace : HexArea.shoelace2 (a' :: a :: b :: c :: rest'') = HexArea.shoelace2 (a' :: a :: c :: rest'') + HexArea.shoelace2 [a, b, c] := by
+        convert shoelace2_insert_mid [ a' ] rest'' a b c using 1;
+      have hshoelace : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 (a' :: a :: c :: rest'') + HexArea.shoelace2 [a', b', a] := by
+        have hshoelace : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 ((a :: c :: rest).rotate r') := by
+          exact?;
+        rw [hshoelace, hrot'];
+        convert shoelace2_insert_mid [ a' ] ( c :: rest'' ) a' b' a using 1; all_goals simp +decide [ HexArea.shoelace2 ];
+      grind
+
+/-
+**Seam-B apex re-insertion (pure list surgery).**  In Case B of
+    `boundary_seam_split` the junction `a → c` wraps the rotation seam.  Rotating
+    `hrot'` by one makes `a :: c` internal as `(b' :: c' :: s') ++ a :: c :: []`,
+    so `clip_ear_lift_general` (with `pre = b' :: c' :: s'`, `suf = []`) inserts
+    the apex `b`, and a further rotation returns the head to `c`, exhibiting the
+    lifted `V`-rotation `c :: b' :: c' :: (s' ++ [a, b])`.  Consumed by
+    `boundary_lift_caseB_nonspike`.
+-/
+lemma clip_ear_lift_seamB (a b c c' b' : ℂ) (rest s' : List ℂ) (r' : ℕ)
+    (hac : a ≠ c) (hanr : a ∉ rest)
+    (hrot' : (a :: c :: rest).rotate r' = c :: b' :: c' :: (s' ++ [a])) :
+    ∃ ρ, (a :: b :: c :: rest).rotate ρ = c :: b' :: c' :: (s' ++ [a, b]) := by
+  have hrot1 : (a :: c :: rest).rotate (r' + 1) = (b' :: c' :: s') ++ a :: c :: [] := by
+    -- Apply the lemma that rotating a list by n+1 is the same as rotating by n and then rotating by 1.
+    have hrotate_step : (a :: c :: rest).rotate (r' + 1) = ((a :: c :: rest).rotate r').rotate 1 := by
+      simp +decide [ List.rotate_rotate ];
+    simp_all +decide [ List.rotate ]
+  generalize_proofs at *; (
+  obtain ⟨r'', hr''⟩ : ∃ r'', (a :: b :: c :: rest).rotate r'' = b' :: c' :: (s' ++ [a, b, c]) := by
+    apply clip_ear_lift_general a b c rest (b' :: c' :: s') [] (r' + 1) hac hanr hrot1
+  generalize_proofs at *; (
+  use r'' + (b' :: c' :: (s' ++ [a, b])).length
+  simp_all +decide [ List.rotate_rotate ];
+  convert congr_arg ( fun l => l.rotate ( l.length - 1 ) ) hr'' using 1;
+  · rw [ ← List.rotate_rotate ] ; simp +arith +decide [ hr'' ] ;
+  · simp +decide [ List.rotate ];
+    simp +arith +decide [ List.take_append ]))
+
+/-
+**Boundary-seam lift, Case B, non-spike subcase (PROVED).**  In Case B of
+    `boundary_seam_split` the returned clip ear is `c :: b' :: c' :: (s' ++ [a])`
+    (its diagonal endpoint `a'` coincides with the junction vertex `c`, and the
+    tail ends with `a`).  Re-inserting the convex apex `b` between `a` and `c`
+    (via `clip_ear_lift_general`, after rotating the junction internal) yields
+    the genuine `V`-rotation `c :: b' :: c' :: (s' ++ [a, b])`.  The ear
+    `(c, b', c')` is then an `EmptyCornerData2` ear of `V`: the surviving clip
+    turn `hqt'` gives the turn at `c'`, while the turn at the new neighbour `b`
+    of the diagonal endpoint `c` is the apex turn `cross (c - b) (c' - c)`,
+    supplied non-zero by `hturnB` (the non-spike hypothesis).  Mirrors
+    `boundary_lift_caseA_nonspike`.  The genuinely open content is only the spike
+    case (`cross (c - b) (c' - c) = 0`), left in `empty_branch_boundary_lift`.
+-/
+lemma boundary_lift_caseB_nonspike (V : List ℂ) (z1 z2 : ℂ)
+    (a b c : ℂ) (rest : List ℂ) (r : ℕ)
+    (hrot : V.rotate r = a :: b :: c :: rest)
+    (hac : a ≠ c) (hanr : a ∉ rest) (hba : b ≠ a) (hbc : b ≠ c)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
+    (hzrest : ∀ y ∈ rest, y ≠ z1 ∧ y ≠ z2)
+    (b' c' q' : ℂ) (s' : List ℂ) (r' : ℕ)
+    (hrot' : (a :: c :: rest).rotate r' = c :: b' :: c' :: (s' ++ [a]))
+    (hb'rest : b' ∈ rest) (hc'V : c' ∈ V) (hb'V : b' ∈ V) (hb'c : b ≠ c')
+    (hq' : (s' ++ [a]).head? = some q')
+    (hqt' : HexArea.cross (c' - c) (q' - c') ≠ 0)
+    (hempty' : ∀ x ∈ (s' ++ [a]), ¬ HexArea.inTriangleStrict c b' c' x)
+    (hdiag' : ∀ x ∈ (s' ++ [a]), x ∉ segment ℝ c c')
+    (horient' : ((0:ℝ) < HexArea.shoelace2 [c, b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (c :: c' :: (s' ++ [a]))))
+    (hturnB : HexArea.cross (c - b) (c' - c) ≠ 0) :
+    EmptyCornerData2 V z1 z2 := by
+  obtain ⟨ ρ, hρ ⟩ := clip_ear_lift_seamB a b c c' b' rest s' r' hac hanr hrot';
+  refine' ⟨ r + ρ, c, b', c', b, q', s' ++ [ a, b ], _, _, _, _, _ ⟩ <;> simp_all +decide [ List.rotate_rotate ];
+  · rw [ ← hρ, ← hrot, List.rotate_rotate ];
+  · have hrotate : HexArea.shoelace2 (c :: c' :: (s' ++ [a, b])) = HexArea.shoelace2 (a :: b :: c :: c' :: s') := by
+      have hrotate : ∃ n : ℕ, (c :: c' :: (s' ++ [a, b])).rotate n = a :: b :: c :: c' :: s' := by
+        use 2 + s'.length;
+        simp +arith +decide [ Nat.mod_eq_of_lt ];
+      obtain ⟨ n, hn ⟩ := hrotate;
+      rw [ ← hn, shoelace2_rotate ];
+    have hrotate : HexArea.shoelace2 (a :: b :: c :: c' :: s') = HexArea.shoelace2 (a :: c :: c' :: s') + HexArea.shoelace2 [a, b, c] := by
+      grind +suggestions;
+    have hrotate : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 (c :: c' :: (s' ++ [a])) + HexArea.shoelace2 [c, b', c'] := by
+      have hrotate : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 (c :: b' :: c' :: (s' ++ [a])) := by
+        rw [ ← hrot', shoelace2_rotate ];
+      convert shoelace2_insert_mid [] ( s' ++ [ a ] ) c b' c' using 1;
+    have hrotate : HexArea.shoelace2 (a :: c :: c' :: s') = HexArea.shoelace2 (c :: c' :: (s' ++ [a])) := by
+      have hrotate : ∀ (L : List ℂ), HexArea.shoelace2 (L ++ [a]) = HexArea.shoelace2 (a :: L) := by
+        intro L; induction L <;> simp_all +decide [ HexArea.shoelace2 ] ;
+        cases ‹List ℂ› <;> simp_all +decide [ HexArea.shoelaceOpen ] ; ring;
+        grind +qlia;
+      convert hrotate ( c :: c' :: s' ) |> Eq.symm using 1;
+    refine' ⟨ _, _, _ ⟩;
+    · replace hrot := congr_arg List.toFinset hrot; rw [ Finset.ext_iff ] at hrot; specialize hrot c; aesop;
+    · replace hrot := congr_arg List.toFinset hrot; rw [ Finset.ext_iff ] at hrot; specialize hrot c; aesop;
+    · grind +splitIndPred
+
 /-- **Empty-branch lift — the BOUNDARY subcase (genuine remaining gap).**  Same
     hypotheses as `empty_branch_good_lift`, used to discharge the residual case
     where the ear returned by the induction hypothesis on the clip `a :: c ::
@@ -2585,7 +2761,7 @@ lemma boundary_seam_split (a c : ℂ) (rest : List ℂ) (a' b' c' : ℂ)
     branch requires the full two-ears theorem (or a strengthened induction
     invariant forcing the returned ear off the junction).  This is the
     irreducible Jordan-curve-level residue. -/
-lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
@@ -2616,7 +2792,77 @@ lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 4 ≤ V.length)
         ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: rest')))
     (hnotint : ¬ ∃ s t, rest' = s ++ a :: c :: t) :
     EmptyCornerData2 V z1 z2 := by
-  sorry
+  -- Derive the combinatorial side facts (mirrors `empty_branch_good_lift`).
+  obtain ⟨ha'M, hb'M, hc'M, hrest'M⟩ :=
+    rotate_cons3_mem (a :: c :: rest) a' b' c' rest' r' hrot'
+  obtain ⟨hac, hanr, hbnr, hba, hbc, hcnr, hrnd⟩ :
+      a ≠ c ∧ a ∉ rest ∧ b ∉ rest ∧ b ≠ a ∧ b ≠ c ∧ c ∉ rest ∧ rest.Nodup := by
+    have hrot_nodup : List.Nodup (V.rotate r) := List.nodup_rotate.mpr hsimple.1
+    rw [hrot] at hrot_nodup
+    simp only [List.nodup_cons, List.mem_cons] at hrot_nodup
+    grind +qlia
+  have hclipnd : (a :: c :: rest).Nodup := by
+    simp only [List.nodup_cons, List.mem_cons]; grind
+  have hrest_len : 2 ≤ rest.length := by
+    have hlenrot := congrArg List.length hrot; simp at hlenrot; omega
+  have hclipsub : ∀ x ∈ (a :: c :: rest), x ∈ V := by
+    intro x hx
+    have hx' : x ∈ a :: b :: c :: rest := by
+      simp only [List.mem_cons] at hx ⊢; tauto
+    rw [← hrot] at hx'; exact (List.mem_rotate).mp hx'
+  have ha'V : a' ∈ V := hclipsub a' ha'M
+  have hb'V : b' ∈ V := hclipsub b' hb'M
+  have hc'V : c' ∈ V := hclipsub c' hc'M
+  have hb'rest : b' ∈ rest := by
+    rcases List.mem_cons.mp hb'M with h | h
+    · exact absurd h hb'a
+    · rcases List.mem_cons.mp h with h2 | h2
+      · exact absurd h2 hb'c
+      · exact h2
+  have ha'b : b ≠ a' := by
+    rcases List.mem_cons.mp ha'M with h | h
+    · exact fun hb => hba (hb.trans h)
+    · rcases List.mem_cons.mp h with h2 | h2
+      · exact fun hb => hbc (hb.trans h2)
+      · exact fun hb => hbnr (hb ▸ h2)
+  have hc'b : b ≠ c' := by
+    rcases List.mem_cons.mp hc'M with h | h
+    · exact fun hb => hba (hb.trans h)
+    · rcases List.mem_cons.mp h with h2 | h2
+      · exact fun hb => hbc (hb.trans h2)
+      · exact fun hb => hbnr (hb ▸ h2)
+  have hzrest : ∀ y ∈ rest, y ≠ z1 ∧ y ≠ z2 := by
+    have := forbidden_subset_corner V r a b c rest hsimple hrot z1 z2 hadj hbf
+    simp_all +decide [List.nodup_cons]
+    grind +ring
+  -- Split the seam into the two boundary configurations.
+  rcases boundary_seam_split a c rest a' b' c' rest' r' hclipnd hrest_len hrot' hb'a hb'c hnotint
+    with ⟨hcA1, hcA2⟩ | ⟨hcB1, hcB2⟩
+  · -- **Case A** : `c' = a`, `rest'.head? = some c`.
+    subst c'
+    obtain ⟨rest'', rfl⟩ : ∃ rest'', rest' = c :: rest'' :=
+      List.head?_eq_some_iff.mp hcA2
+    by_cases hturnA : HexArea.cross (a - a') (b - a) ≠ 0
+    · -- Non-spike: assemble the ear `(a', b', a)` directly.
+      exact boundary_lift_caseA_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbconv hbseg
+        horient hzrest a' b' p' rest'' r' hrot' hb'rest ha'V hb'V ha'b hp'M hpt' hempty' hdiag'
+        horient' hturnA
+    · -- **Spike subcase A** (`cross (a - a') (b - a) = 0`): the genuine
+      -- two-ears residue — re-inserting `b` flattens the apex turn, so a
+      -- different ear must be chosen.  Isolated remaining gap.
+      sorry
+  · -- **Case B** : `a' = c`, `rest'.getLast? = some a`.
+    subst a'
+    obtain ⟨s', rfl⟩ : ∃ s', rest' = s' ++ [a] :=
+      List.getLast?_eq_some_iff.mp hcB2
+    by_cases hturnB : HexArea.cross (c - b) (c' - c) ≠ 0
+    · -- Non-spike: assemble the ear `(c, b', c')` directly.
+      exact boundary_lift_caseB_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbc hbconv hbseg
+        horient hzrest b' c' q' s' r' hrot' hb'rest hc'V hb'V hc'b hq'M hqt' hempty' hdiag'
+        horient' hturnB
+    · -- **Spike subcase B** (`cross (c - b) (c' - c) = 0`): the genuine
+      -- two-ears residue (mirror of spike A).  Isolated remaining gap.
+      sorry
 
 /-- **Empty-branch lift — the "good diagonal" subcase (PROVED modulo the boundary
     subcase).**
@@ -3386,6 +3632,94 @@ lemma cross_succ_corner_remove_flat (y u v w : ℂ) (hw : w ∈ segment ℝ u v)
   obtain ⟨ x, hx, rfl ⟩ := hw; ring_nf at h ⊢;
   cases lt_or_gt_of_ne h <;> norm_num [ Complex.ext_iff ] at * <;> nlinarith
 
+/-
+**Recursion-ready interior split (sorry-free combinatorial bundle).**
+    Consolidates the banked interior-split bricks into the single package the
+    interior branch consumes: from the convex corner `a, b, c` of the simple
+    non-degenerate cycle `V.rotate r = a :: b :: c :: rest` and an interior
+    vertex `w ∈ rest` farthest from the base diagonal `a–c`, it produces the cut
+    index `k` for the `b`-rooted cycle `W := b :: c :: rest ++ [a]` together with
+    BOTH pieces `chordLeft W k` / `chordRight W k` being `PolygonSimple` and
+    strictly shorter than `V`, plus AT LEAST ONE of them `polyCycNondeg`.  This
+    is exactly the data needed to fire the `IH2` recursion on the piece not
+    containing the forbidden edge.  Assembled sorry-free from
+    `interior_split_simple`, `interior_split_one_nondeg`, `chordLeft_length_lt`,
+    `chordRight_length_lt`; preparation for `meisters_reduction_interior2` (NOT a
+    dead branch).
+-/
+lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
+    (hnd : polyCycNondeg V)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest)
+    (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
+    (w : ℂ) (hwrest : w ∈ rest) (hwin : HexArea.inTriangleStrict a b c w)
+    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
+        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
+          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    ∃ k : ℕ, 2 ≤ k ∧ k + 2 ≤ (b :: c :: rest ++ [a]).length ∧
+      (b :: c :: rest ++ [a])[k]? = some w ∧
+      PolygonSimple (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∧
+      PolygonSimple (HexArea.chordRight (b :: c :: rest ++ [a]) k) ∧
+      (HexArea.chordLeft (b :: c :: rest ++ [a]) k).length < V.length ∧
+      (HexArea.chordRight (b :: c :: rest ++ [a]) k).length < V.length ∧
+      (polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∨
+       polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k)) := by
+  have hW_length : (a :: b :: c :: rest).length = V.length := by
+    rw [ ← hrot, List.length_rotate ];
+  have := interior_split_simple a b c w rest ?_ hndtri hwrest hwin hwmax;
+  · obtain ⟨ k, hk₁, hk₂, hk₃, hk₄, hk₅, hk₆ ⟩ := this; use k; simp_all +decide [ List.length_append ] ;
+    refine' ⟨ _, _, _ ⟩;
+    · grind +suggestions;
+    · rw [ HexArea.chordRight_length ] <;> norm_num <;> omega;
+    · apply interior_split_one_nondeg a b c w ( ( b :: c :: ( rest ++ [ a ] ) )[k - 1]! ) ( ( b :: c :: ( rest ++ [ a ] ) )[k + 1]! ) rest k ?_ hwin ?_ hk₁ ?_ hk₄ ?_ ?_;
+      · convert polyCycNondeg_rotate V r _ using 1;
+        · aesop;
+        · linarith;
+      · intro h; simp_all +decide [ HexArea.inTriangleStrict ] ;
+      · grind;
+      · grind;
+      · grind +splitImp;
+  · have := PolygonSimple_rotate V r;
+    grind
+
+/-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
+    Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
+    interior diagonal `W[0]–W[k]` into the two pieces `chordLeft W k` /
+    `chordRight W k`.  An ear of one piece `P` that avoids the cut edge `{u, v}`
+    (where `u = W[0]`, `v = W[k]`) — packaged as `EmptyCornerData2 P u v` — lifts
+    to a genuine ear of the *whole* polygon `V` whose tip `b'` is an interior
+    vertex of `P` (hence `b' ≠ u, v`).  All the `EmptyCornerData2`-shaped data of
+    the lifted triple `(a', b', c')` is produced here, INCLUDING the emptiness of
+    the lifted ear triangle against the vertices of the OTHER piece — the single
+    missing polygon-interior separation fact (a vertex of the other piece lies
+    outside `P`'s region, which contains the ear triangle).
+
+    **Status: `sorry`.**  This is the isolated point-in-polygon / Jordan-curve
+    separation brick, absent from Mathlib and from the project; it is the shared
+    geometric residue of the interior (`meisters_reduction_interior2`) and
+    bad-diagonal (`empty_branch_bad_lift`) split branches.  Everything else in
+    those branches (piece selection via `forbidden_lands_in_chord`, the `IH2`
+    recursion, and the `b' ≠ z1, z2` bookkeeping) is a combinatorial assembly
+    around this brick.  NOT a dead branch — preparation consumed by the two split
+    branches below. -/
+lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
+    (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (hPcyc : EmptyCornerData2 P u v) :
+    ∃ (r' : ℕ) (a' b' c' p' q' : ℂ) (tl : List ℂ),
+      V.rotate r' = a' :: b' :: c' :: tl ∧
+      b' ∈ P ∧ b' ≠ u ∧ b' ≠ v ∧
+      tl.getLast? = some p' ∧ tl.head? = some q' ∧
+      HexArea.cross (a' - p') (c' - a') ≠ 0 ∧
+      HexArea.cross (c' - a') (q' - c') ≠ 0 ∧
+      (∀ x ∈ tl, ¬ HexArea.inTriangleStrict a' b' c' x) ∧
+      (∀ x ∈ tl, x ∉ segment ℝ a' c') ∧
+      ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+          ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tl)) := by
+  sorry
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*
@@ -3449,6 +3783,18 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
         HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
           ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
     EmptyCornerData2 V z1 z2 := by
+  -- Corner non-flatness of the consecutive triple `a, b, c` from `polyCycNondeg V`.
+  have hndtri : HexArea.cross (b - a) (c - b) ≠ 0 := by
+    have hM : polyCycNondeg (a :: b :: c :: rest) :=
+      hrot ▸ (polyCycNondeg_rotate V r (by omega)).mpr hnd
+    have hPN : polyNondeg (a :: b :: c :: (rest ++ (a :: b :: c :: rest).take 2)) := hM
+    rw [polyNondeg_cons_cons_cons] at hPN
+    exact hPN.1
+  -- Banked recursion-ready interior split (consumes `interior_split_select`).
+  obtain ⟨k, hk2, hklen, hwk, hLsimple, hRsimple, hLlt, hRlt, hnondeg⟩ :=
+    interior_split_select V hsimple hnd r a b c rest hrot hndtri w hwrest hwin hwmax
+  -- Remaining content: recurse via `IH2` on the piece avoiding the forbidden edge
+  -- and transfer the returned ear back to `V` (the Jordan-curve-level ear lift).
   sorry
 
 /-- **Empty-branch lift — the BAD-diagonal subcase (genuine remaining gap).**
