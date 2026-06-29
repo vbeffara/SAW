@@ -194,6 +194,25 @@ lemma shoelace2_chord_split (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
     · cases V <;> simp_all +decide [ List.take, List.drop ];
       grind +suggestions
 
+/-
+**The two chord pieces share only the two cut vertices.**  For a `Nodup`
+    cycle `V` cut at `1 ≤ k < V.length`, a vertex lying in BOTH `chordLeft V k`
+    and `chordRight V k` must be one of the two diagonal endpoints `V[0]` or
+    `V[k]`.  This is the vertex-disjointness needed for *piece selection* in the
+    split branches (`meisters_reduction_interior2`, `empty_branch_bad_lift`): a
+    forbidden cyclic edge `{z1,z2}` that lands in one piece cannot have an
+    interior vertex of the other piece equal to `z1` or `z2`, so the ear tip
+    returned by recursion on the other piece avoids the forbidden pair.
+    Sorry-free, reusable; not a dead branch.
+-/
+lemma chord_pieces_inter (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < V.length)
+    (hV : V.Nodup) {x : ℂ} (hL : x ∈ chordLeft V k) (hR : x ∈ chordRight V k) :
+    x = V[0]! ∨ x = V[k]! := by
+  simp_all +decide [ chordLeft, chordRight ];
+  rcases hR with ( hR | hR ) <;> rw [ List.mem_iff_getElem ] at * <;> simp_all +decide [ List.getElem?_take, List.getElem?_drop ];
+  · grind +suggestions;
+  · grind
+
 end HexArea
 
 end

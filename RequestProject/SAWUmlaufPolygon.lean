@@ -3718,6 +3718,17 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
       (∀ x ∈ tl, x ∉ segment ℝ a' c') ∧
       ((0:ℝ) < HexArea.shoelace2 [a', b', c']
           ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tl)) := by
+  -- NOTE (structural finding, see PROOF_STATUS.md): this generic form is
+  -- under-hypothesised.  (1) Turn transfer fails at the seam: the ear may sit
+  -- adjacent to a cut endpoint (`a' = W[0] = u`), so the V-corner turn at `a'`
+  -- differs from the P-corner supplied by `EmptyCornerData2 P` (same content as
+  -- the boundary spike subcases).  (2) The emptiness clause ranges over the
+  -- OTHER piece's vertices, needing genuine point-in-polygon / Jordan
+  -- separation along the valid diagonal (`interior_chord_is_diagonal` gives only
+  -- the 1D chord disjointness).  Recommended fix: carry the diagonal-validity
+  -- hypothesis and the seam non-degeneracy (`interior_split_nondeg_left/right`);
+  -- `chord_pieces_inter` (SAWUmlaufEarSplit) then handles the `b' ≠ z1,z2`
+  -- bookkeeping, leaving only the single Jordan separation residue.
   sorry
 
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**

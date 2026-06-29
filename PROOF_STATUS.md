@@ -1,6 +1,59 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): isolated the single irreducible obstruction into
+> **Umlaufsatz (LATEST round): banked the chord-piece vertex-disjointness brick
+> `chord_pieces_inter` (sorry-free) and pinned down the precise structure of the
+> remaining `chord_ear_lift` obstruction.**  Worked exclusively on the
+> top-priority discrete Hopf Umlaufsatz.  The library still builds end-to-end
+> (8128 jobs through `SAWFinal.lean`); no new axioms (`propext, Classical.choice,
+> Quot.sound` only), no regressions, no new live `sorry`s.
+>
+> What changed this round (one new sorry-free, reusable lemma in
+> `RequestProject/SAWUmlaufEarSplit.lean`, verified axiom-clean):
+> * `chord_pieces_inter` — for a `Nodup` cycle `V` cut at `1 ≤ k < V.length`, a
+>   vertex lying in BOTH `chordLeft V k` and `chordRight V k` is one of the two
+>   diagonal endpoints `V[0]` or `V[k]`.  This is exactly the vertex-disjointness
+>   needed for *piece selection* in the split branches
+>   (`meisters_reduction_interior2`, `empty_branch_bad_lift`): a forbidden cyclic
+>   edge `{z1,z2}` that lands in one piece cannot make an interior vertex of the
+>   OTHER piece equal to `z1`/`z2`, so the ear tip returned by recursion avoids
+>   the forbidden pair.  Documented as preparation consumed by the split
+>   branches; NOT a dead branch (its file is imported by `SAWUmlaufPolygon`).
+>
+> Findings this round (recorded so future rounds do not chase an impossible
+> target):
+> * `chord_ear_lift` is **under-hypothesised as currently stated** and is not
+>   provable in that generic form.  Two distinct gaps were isolated:
+>   1. **Turn-transfer seam.**  The ear tip `b'` returned by the recursion is
+>      forced `≠ u, v`, but its neighbours `a'`/`c'` are NOT: when the ear sits
+>      adjacent to a cut endpoint (e.g. `b' = W[1]`, so `a' = W[0] = u` in the
+>      `chordLeft` cycle), the corner non-degeneracy `cross (a' - p')(c' - a')`
+>      required in `V` is taken at the V-predecessor of `a'` (a vertex of the
+>      OTHER piece), which differs from the P-corner supplied by
+>      `EmptyCornerData2 P`.  So the two turn clauses of the conclusion do not
+>      transfer from the hypotheses without extra non-degeneracy data — the same
+>      flat-seam content as the boundary spike subcases.
+>   2. **Jordan emptiness.**  Even with the turns handled, the emptiness clause
+>      ranges over ALL of `V`'s remaining vertices, including the OTHER chord
+>      piece `Q`.  For `x ∈ Q \ {u,v}` one needs that the lifted ear triangle
+>      `(a',b',c') ⊆ region(P)` is separated from `Q` by the cut diagonal — the
+>      genuine point-in-polygon / Jordan separation, absent from the project and
+>      from Mathlib.  Note `EmptyCornerData2 P u v` constrains only P's own
+>      vertices, so the generic statement (with no diagonal-validity hypothesis)
+>      is in fact *false*: a crossing (non-diagonal) cut can have a `Q`-vertex
+>      strictly inside an ear triangle of `P`.
+> * Recommended correction for the next round: restate `chord_ear_lift` to carry
+>   (i) the diagonal-validity of the cut (available from
+>   `interior_chord_is_diagonal` at the call sites) and (ii) the requirement that
+>   the returned ear be non-adjacent to the cut endpoints (or fold in the
+>   flat-seam non-degeneracy bricks `interior_split_nondeg_left/right`).  Then
+>   `chord_pieces_inter` discharges the `b' ≠ z1,z2` bookkeeping and the only
+>   irreducible residue is the single Jordan separation fact (2.).
+>
+> Net: the four live `sorry`s of the empty/interior branches are unchanged in
+> identity; the new brick + the structural finding sharpen the path without
+> adding speculative scaffolding.
+
+> **Umlaufsatz (earlier round): isolated the single irreducible obstruction into
 > one precise, compiling, reusable brick `chord_ear_lift`, and confirmed the
 > interior split branch reduces cleanly to it.**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The library still builds end-to-end

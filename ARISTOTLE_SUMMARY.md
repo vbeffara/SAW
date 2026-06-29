@@ -1,3 +1,14 @@
+# Summary of changes for run b11ea75c-b01b-41af-b146-45626fcc4243
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms (`propext, Classical.choice, Quot.sound` only), no regressions, and no new live `sorry`s.
+
+Concrete verified progress this round:
+- Added and proved one new sorry-free, reusable, axiom-clean lemma `chord_pieces_inter` in `RequestProject/SAWUmlaufEarSplit.lean`: for a `Nodup` cycle `V` cut at `1 ≤ k < V.length`, any vertex lying in BOTH `chordLeft V k` and `chordRight V k` is one of the two diagonal endpoints `V[0]` or `V[k]`. This is precisely the vertex-disjointness needed for *piece selection* in the two split branches (`meisters_reduction_interior2`, `empty_branch_bad_lift`): a forbidden cyclic edge that lands in one piece cannot make an interior vertex of the other piece equal to a forbidden vertex, so the ear tip returned by the recursion avoids the forbidden pair. It is documented as preparation consumed by those branches (not a dead branch); its file is imported by `SAWUmlaufPolygon`, so it is part of the build chain.
+
+Structural finding recorded (in `PROOF_STATUS.md` and inline at the lemma):
+- The current generic `chord_ear_lift` brick is under-hypothesised and not provable as stated. Two distinct gaps were isolated: (1) a turn-transfer seam — the recursion forces the ear tip `≠` the cut endpoints, but its neighbours can equal a cut endpoint, so the required V-corner non-degeneracy differs from the P-corner supplied by `EmptyCornerData2 P` (the same flat-seam content as the boundary spike subcases); and (2) the emptiness clause ranges over the OTHER chord piece's vertices, requiring genuine point-in-polygon / Jordan separation (absent from the project and Mathlib). In fact, without a diagonal-validity hypothesis the generic statement is false (a crossing cut can place an other-piece vertex inside an ear triangle). The recommended correction — restating `chord_ear_lift` to carry the diagonal-validity (from `interior_chord_is_diagonal`) plus the seam non-degeneracy, after which `chord_pieces_inter` discharges the bookkeeping and only the single Jordan separation residue remains — is documented for the next round.
+
+Partial progress is preserved as compiling Lean (the banked lemma) plus precise recorded analysis, rather than lost. The remaining live `sorry`s of the empty/interior branches are unchanged in identity.
+
 # Summary of changes for run a20a93f3-6eba-4195-886b-fb0702756c1b
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, as instructed. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms and no regressions to any existing proof.
 
