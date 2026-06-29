@@ -213,6 +213,31 @@ lemma chord_pieces_inter (V : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < V.le
   · grind +suggestions;
   · grind
 
+/-- **Split-recursion tip avoids the forbidden pair (pure combinatorics).**  For
+    a `Nodup` cycle `W` cut at `1 ≤ k < W.length`, suppose the ear tip `b'`
+    returned by recursion on one chord piece is an *interior* vertex of that
+    piece (`b' ≠ W[0]`, `b' ≠ W[k]`), while the target vertex `z` lies in the
+    OTHER piece.  Then `b' ≠ z`.  Reason: if `b' = z` then `z` lies in BOTH
+    pieces, so by `chord_pieces_inter` `z` is one of the two cut endpoints
+    `W[0]!`/`W[k]!`, contradicting that `b'` is an interior vertex.  This is
+    exactly the `b' ≠ z1, z2` bookkeeping the diagonal-split branches
+    (`meisters_reduction_interior2`, `empty_branch_bad_lift`) need: recursing on
+    the piece NOT containing the forbidden edge yields a tip avoiding both
+    forbidden endpoints.  Sorry-free, reusable; not a dead branch. -/
+lemma chord_tip_ne_other (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < W.length)
+    (hW : W.Nodup) (b' z : ℂ) (hb'u : b' ≠ W[0]!) (hb'v : b' ≠ W[k]!)
+    (hmem : (b' ∈ chordLeft W k ∧ z ∈ chordRight W k) ∨
+            (b' ∈ chordRight W k ∧ z ∈ chordLeft W k)) :
+    b' ≠ z := by
+  rintro rfl
+  rcases hmem with ⟨hL, hR⟩ | ⟨hR, hL⟩
+  · rcases chord_pieces_inter W k hk1 hk hW hL hR with h | h
+    · exact hb'u h
+    · exact hb'v h
+  · rcases chord_pieces_inter W k hk1 hk hW hL hR with h | h
+    · exact hb'u h
+    · exact hb'v h
+
 end HexArea
 
 end

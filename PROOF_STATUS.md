@@ -1,6 +1,43 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (LATEST round): banked the chord-piece vertex-disjointness brick
+> **Umlaufsatz (CURRENT round): banked the split-recursion tip-disjointness
+> brick `HexArea.chord_tip_ne_other` (sorry-free) in `SAWUmlaufEarSplit.lean`.**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  Library
+> still builds end-to-end (8128 jobs through `SAWFinal.lean`); axioms unchanged
+> (`propext, Classical.choice, Quot.sound`); no regressions; the five live
+> Umlauf `sorry`s are unchanged in identity (the two boundary spike subcases in
+> `empty_branch_boundary_lift`, `chord_ear_lift`, `meisters_reduction_interior2`,
+> `empty_branch_bad_lift`).
+>
+> What changed this round:
+> * New sorry-free reusable lemma `HexArea.chord_tip_ne_other` (placed right
+>   after `chord_pieces_inter`): for a `Nodup` cycle `W` cut at `1 ≤ k < W.length`,
+>   if the ear tip `b'` is an interior vertex of one chord piece (`b' ≠ W[0]!`,
+>   `b' ≠ W[k]!`) and the target `z` lies in the OTHER piece, then `b' ≠ z`.
+>   This is exactly the `b' ≠ z1, z2` bookkeeping the diagonal-split branches
+>   (`meisters_reduction_interior2`, `empty_branch_bad_lift`) need: recursing on
+>   the piece NOT containing the forbidden edge yields a tip avoiding both
+>   forbidden endpoints.  Consumed (as preparation) by the split branches; NOT a
+>   dead branch (its file is imported by `SAWUmlaufPolygon`).
+>
+> Findings this round (recorded so future rounds do not chase an infeasible
+> one-shot target): the cut-edge bricks `chordLeft_cut_isCycEdge` /
+> `chordRight_cut_isCycEdge` already exist sorry-free in `SAWUmlaufPolygon`, so
+> the interior-branch *combinatorial* bricks are all present
+> (`interior_split_select`, `rotate_corner_succ`, `forbidden_lands_in_chord`,
+> the cut-edge lemmas, `chord_consec_triple_lift`, `chord_pieces_inter`,
+> `chord_tip_ne_other`).  An assembly attempt on
+> `meisters_reduction_interior2` modulo `chord_ear_lift` confirmed it is NOT
+> one-shot closable: piece selection must simultaneously satisfy (i) avoid the
+> forbidden edge, (ii) `polyCycNondeg` (only ONE piece is guaranteed — the
+> flat-seam gap, needing `PolygonSimple_remove_flat_mid`), and (iii) length ≥ 4
+> (a length-3 piece is a triangle with no `rest`, so `EmptyCornerData2` cannot
+> be formed — the triangle base case).  These two combinatorial residues, on
+> top of the shared Jordan keystone `chord_ear_lift` (point-in-polygon
+> separation of the OTHER piece's vertices from the lifted ear triangle), are
+> the precise remaining content of the interior/bad-diagonal branches.
+
+> **Umlaufsatz (earlier round): banked the chord-piece vertex-disjointness brick
 > `chord_pieces_inter` (sorry-free) and pinned down the precise structure of the
 > remaining `chord_ear_lift` obstruction.**  Worked exclusively on the
 > top-priority discrete Hopf Umlaufsatz.  The library still builds end-to-end
