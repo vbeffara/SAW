@@ -2041,6 +2041,38 @@ lemma IsCycEdge_rotate (V : List ℂ) (n : ℕ) (x y : ℂ) :
   unfold IsCycEdge
   rw [mem_closedEdges_rotate, mem_closedEdges_rotate]
 
+/-- **Endpoints of a cyclic edge are vertices.**  If `{x, y}` is a cyclic edge
+    of `V` then both `x` and `y` are vertices of `V`.  Pure combinatorial
+    bookkeeping (a closed edge `V.zip (V.rotate 1)` has both coordinates in `V`).
+    Sorry-free, reusable preparation for the diagonal-split recursion
+    (`meisters_reduction_interior2` / `empty_branch_bad_lift`): the forbidden
+    pair handed to `IH2` must be shown to be genuine vertices of the cycle. -/
+lemma IsCycEdge_mem (V : List ℂ) (x y : ℂ) (h : IsCycEdge V x y) :
+    x ∈ V ∧ y ∈ V := by
+  have hsub : ∀ p : ℂ × ℂ, p ∈ closedEdges V → p.1 ∈ V ∧ p.2 ∈ V := by
+    intro p hp
+    rw [closedEdges] at hp
+    have h1 := List.of_mem_zip hp
+    refine ⟨h1.1, ?_⟩
+    have := h1.2
+    rwa [List.mem_rotate] at this
+  rcases h with h | h
+  · exact hsub _ h
+  · exact (hsub _ h).symm
+
+/-- **Rotating the corner-rooted cycle by one step.**  From
+    `V.rotate r = a :: b :: c :: rest` we get
+    `V.rotate (r + 1) = b :: c :: rest ++ [a]`, the `b`-rooted cycle `W` used by
+    the interior diagonal split.  Sorry-free, reusable preparation for
+    `meisters_reduction_interior2`: it is the rotation identity
+    `W = V.rotate (r+1)` that lets `IsCycEdge_rotate` and `forbidden_lands_in_chord`
+    transfer the forbidden edge from `V` to `W`. -/
+lemma rotate_corner_succ (V : List ℂ) (r : ℕ) (a b c : ℂ) (rest : List ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) :
+    V.rotate (r + 1) = b :: c :: rest ++ [a] := by
+  rw [← List.rotate_rotate, hrot]
+  simp [List.rotate_cons_succ]
+
 /-- **The forbidden cyclic edge lands in one of the two chord pieces.**  Given a
     cyclic edge `{z1, z2}` of `V` and a chord cut index `k` (with `1 ≤ k` and
     `k + 1 ≤ V.length`), the pair `{z1, z2}` is a cyclic edge of the left piece

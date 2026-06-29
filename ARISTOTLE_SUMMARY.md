@@ -1,3 +1,45 @@
+# Summary of changes for run 36d9376a-aeb4-4b7b-8539-50d717ef6529
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms (`propext, Classical.choice, Quot.sound` only), no regressions, and no new live `sorry`s. The five live `sorry`s of the Umlauf chain are unchanged in identity (the two boundary "spike" subcases inside `empty_branch_boundary_lift`, `chord_ear_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`).
+
+Concrete verified progress this round: banked two new sorry-free, reusable, axiom-clean lemmas in `RequestProject/SAWUmlaufPolygon.lean` (placed right after `IsCycEdge_rotate`), each a recurring bookkeeping step of the diagonal-split recursion that the interior/bad branches need:
+- `IsCycEdge_mem`: the endpoints of a cyclic edge of `V` are vertices of `V` (`IsCycEdge V x y → x ∈ V ∧ y ∈ V`).
+- `rotate_corner_succ`: from `V.rotate r = a :: b :: c :: rest` derive `V.rotate (r+1) = b :: c :: rest ++ [a]`, the rotation identity for the `b`-rooted cut cycle `W = V.rotate (r+1)` that lets `IsCycEdge_rotate`/`forbidden_lands_in_chord` transfer the forbidden edge from `V` to `W`.
+
+Both are documented as preparation consumed by `meisters_reduction_interior2`/`empty_branch_bad_lift` (explicitly not dead branches). Two high-effort assembly searches on `meisters_reduction_interior2` confirmed these helpers are exactly the friction points the assembly previously hit — the rotation identity and the `z ∈ V` step are now discharged cleanly by them. The residual that still blocks full closure is the documented flat-seam piece-selection together with the triangle-piece lift (a length-3 chord piece cannot form `EmptyCornerData2`, which requires ≥ 4 vertices), i.e. the same Jordan-curve separation core isolated by `chord_ear_lift`. No speculative scaffolding was added; partial progress is preserved as compiling Lean (the two banked lemmas) plus recorded analysis in `ARISTOTLE_SUMMARY.md` and `PROOF_STATUS.md`.
+
+# Summary of changes (LATEST run)
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library
+still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with
+no new axioms (`propext, Classical.choice, Quot.sound` only), no regressions, and
+no new live `sorry`s. The five live `sorry`s of the Umlauf chain (the two
+boundary spike subcases inside `empty_branch_boundary_lift`, `chord_ear_lift`,
+`meisters_reduction_interior2`, `empty_branch_bad_lift`) are unchanged in
+identity.
+
+Concrete verified progress this round: banked TWO new sorry-free, reusable,
+axiom-clean lemmas in `RequestProject/SAWUmlaufPolygon.lean` (placed right after
+`IsCycEdge_rotate`), each a recurring bookkeeping step of the diagonal-split
+recursion that the interior/bad branches need:
+- `IsCycEdge_mem` — the endpoints of a cyclic edge of `V` are vertices of `V`
+  (`IsCycEdge V x y → x ∈ V ∧ y ∈ V`). Needed to show the forbidden pair handed
+  to the `IH2` recursion are genuine vertices.
+- `rotate_corner_succ` — from `V.rotate r = a :: b :: c :: rest` derive
+  `V.rotate (r+1) = b :: c :: rest ++ [a]`, i.e. the rotation identity
+  `W = V.rotate (r+1)` for the `b`-rooted cut cycle `W`. This is the seam that
+  lets `IsCycEdge_rotate` / `forbidden_lands_in_chord` transfer the forbidden
+  edge from `V` to `W`.
+
+Both are documented as preparation consumed by `meisters_reduction_interior2` /
+`empty_branch_bad_lift` (NOT dead branches). Two high-effort assembly searches on
+`meisters_reduction_interior2` confirmed these helpers are exactly the friction
+points the assembly hit (the rotation identity and the `z ∈ V` step are now
+discharged cleanly by `rotate_corner_succ` / `IsCycEdge_mem`); the residual that
+still blocks full closure is the documented flat-seam piece-selection plus the
+triangle-piece lift (a length-3 chord piece cannot form `EmptyCornerData2`,
+which requires ≥ 4 vertices), i.e. the same Jordan-curve separation core that
+`chord_ear_lift` isolates. No speculative scaffolding was added; partial progress
+is preserved as the two banked lemmas plus this recorded analysis.
+
 # Summary of changes for run b11ea75c-b01b-41af-b146-45626fcc4243
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no new axioms (`propext, Classical.choice, Quot.sound` only), no regressions, and no new live `sorry`s.
 
