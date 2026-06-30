@@ -1,3 +1,14 @@
+# Summary of changes for run 3f1fbbf6-460f-48d2-b4a6-ec88345126cb
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `SAWFinal.lean`) with only the standard axioms (`propext, Classical.choice, Quot.sound`) and no regressions.
+
+Two concrete, sound pieces of progress, both kept as Lean code that builds:
+
+1. **Soundness fix to `chord_ear_lift`** (in `RequestProject/SAWUmlaufPolygon.lean`). Earlier rounds had documented this preparation brick as *false in its generic form*: with no diagonal-validity hypothesis, a crossing (non-diagonal) cut can place a vertex of the other chord piece strictly inside an ear triangle of `P`, contradicting its emptiness clause. I restated it to carry the diagonal-validity hypothesis `hdiag` (the conclusion shape of `interior_chord_is_diagonal`, available at every call site). The statement is now a *true*, sound lemma (still `sorry`), properly anchored to the keystone `chord_ear_empty_other`. It is consumed by no other declaration yet (pure preparation), so the re-statement does not affect the build; the docstring documents the fix and links it as preparation for the interior/bad split branches.
+
+2. **New sorry-free, axiom-clean reusable brick `HexArea.chord_other_piece_mem`** (in `RequestProject/SAWUmlaufEarSplit.lean`, which is imported by `SAWUmlaufPolygon`). For `k + 1 ≤ V.length`, a vertex `x ∈ V` with `x ∉ chordLeft V k` lies in `chordRight V k` and differs from both cut endpoints `V[0]!`, `V[k]!`. This is exactly the first reduction step of the Jordan keystone `chord_ear_empty_other` — converting `x ∉ P` into "`x` is an interior vertex of the other chord piece". Verified axiom-clean.
+
+Findings recorded in `PROOF_STATUS.md`: high-effort attempts on the keystone `chord_ear_empty_other` and on the now-sound `chord_ear_lift` time out. The irreducible remaining residue of the Umlaufsatz is genuine point-in-polygon / Jordan-curve separation (a convex ear triangle of one chord piece lies in that piece's region, separated from the other piece's interior vertices by the valid diagonal), which is absent from Mathlib and from the project and needs a winding-number / region-membership predicate to discharge. The set of live `sorry`s is otherwise unchanged: the two boundary spike subcases in `empty_branch_boundary_lift`, plus `chord_ear_empty_other`, `chord_ear_lift`, `meisters_reduction_interior2`, and `empty_branch_bad_lift`. No new `sorry`s were introduced.
+
 # Summary of changes for run 820d72cd-45f9-4f57-93f5-aa76fd703a77
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end with no regressions and the standard axioms only (propext, Classical.choice, Quot.sound).
 

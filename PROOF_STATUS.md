@@ -1,6 +1,43 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): banked the split-recursion tip-disjointness
+> **Umlaufsatz (CURRENT round): soundness fix to `chord_ear_lift` + banked the
+> keystone's first-step brick `chord_other_piece_mem` (sorry-free).**
+> Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The library
+> still builds end-to-end (8128 jobs through `SAWFinal.lean`); axioms unchanged
+> (`propext, Classical.choice, Quot.sound`); no regressions.
+>
+> What changed this round:
+> * **Correctness fix.**  `chord_ear_lift` (in `SAWUmlaufPolygon.lean`) was
+>   documented in earlier rounds as *false in its generic form*: with no
+>   diagonal-validity hypothesis, a crossing (non-diagonal) cut can place a
+>   vertex of the OTHER chord piece strictly inside an ear triangle of `P`,
+>   contradicting the emptiness clause.  The statement now carries the
+>   diagonal-validity hypothesis `hdiag` (`∀ e ∈ closedEdges W, … → Disjoint
+>   (segment ℝ u v) (segment ℝ e.1 e.2)`), exactly the conclusion shape of
+>   `interior_chord_is_diagonal` available at every call site.  With it the
+>   other-piece emptiness is supplied by the isolated keystone
+>   `chord_ear_empty_other`, so the (still `sorry`) brick is now a *sound* true
+>   statement rather than a false one.  It is consumed by nobody yet (pure
+>   preparation), so this re-statement does not affect the build.
+> * **New sorry-free, axiom-clean reusable brick** `HexArea.chord_other_piece_mem`
+>   in `SAWUmlaufEarSplit.lean`: for `k + 1 ≤ V.length`, a vertex `x ∈ V` with
+>   `x ∉ chordLeft V k` lies in `chordRight V k` and differs from both cut
+>   endpoints `V[0]!`, `V[k]!`.  This is precisely the first reduction step of
+>   the keystone `chord_ear_empty_other` — converting `x ∉ P` into "`x` is an
+>   interior vertex of the OTHER piece".  Assembled from `mem_chord_cover` plus
+>   the endpoint memberships `V[0]!, V[k]! ∈ chordLeft V k`.  Preparation
+>   consumed by `chord_ear_empty_other`; NOT a dead branch (its file is imported
+>   by `SAWUmlaufPolygon`).
+>
+> Findings this round: high-effort assembly attempts on the keystone
+> `chord_ear_empty_other` and on the (now-sound) `chord_ear_lift` again time out
+> — the irreducible residue is genuine point-in-polygon / Jordan-curve
+> separation (a convex ear triangle of one chord piece lies in that piece's
+> region, which is separated from the other piece's interior vertices by the
+> valid diagonal).  This content is absent from Mathlib and from the project and
+> needs a winding-number / region-membership predicate to discharge.
+
+> **Umlaufsatz (earlier round): banked the split-recursion tip-disjointness
 > brick `HexArea.chord_tip_ne_other` (sorry-free) in `SAWUmlaufEarSplit.lean`.**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  Library
 > still builds end-to-end (8128 jobs through `SAWFinal.lean`); axioms unchanged

@@ -3775,6 +3775,15 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     missing polygon-interior separation fact (a vertex of the other piece lies
     outside `P`'s region, which contains the ear triangle).
 
+    **Correctness fix (this round).**  The statement now carries the
+    diagonal-validity hypothesis `hdiag` (the conclusion shape of
+    `interior_chord_is_diagonal`, available at every call site).  Without it the
+    generic form was *false*: a crossing (non-diagonal) cut can place a vertex of
+    the OTHER piece strictly inside an ear triangle of `P`, contradicting the
+    emptiness clause.  With `hdiag` the other-piece emptiness is supplied by the
+    isolated Jordan keystone `chord_ear_empty_other` (above), so the statement is
+    now sound.
+
     **Status: `sorry`.**  This is the isolated point-in-polygon / Jordan-curve
     separation brick, absent from Mathlib and from the project; it is the shared
     geometric residue of the interior (`meisters_reduction_interior2`) and
@@ -3787,6 +3796,8 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
     (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (hPcyc : EmptyCornerData2 P u v) :
     ∃ (r' : ℕ) (a' b' c' p' q' : ℂ) (tl : List ℂ),

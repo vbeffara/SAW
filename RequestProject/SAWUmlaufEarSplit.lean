@@ -264,6 +264,43 @@ lemma chord_tip_ne_other (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k) (hk : k < W.le
     · exact hb'u h
     · exact hb'v h
 
+/-- **Other-piece membership for a vertex outside one chord piece (sorry-free,
+    reusable).**  For a `Nodup` cycle `V` cut at `1 ≤ k`, `k + 1 ≤ V.length`,
+    a vertex `x ∈ V` that is NOT in `chordLeft V k` lies in `chordRight V k` and
+    differs from both cut endpoints `V[0]!` and `V[k]!`.  This is exactly the
+    first reduction step of the Jordan keystone `chord_ear_empty_other` (in
+    `SAWUmlaufPolygon`): it converts `x ∉ P` (here `P = chordLeft V k`) into
+    "`x` is an *interior* vertex of the OTHER piece".  Proof: `mem_chord_cover`
+    forces `x ∈ chordRight V k`; both endpoints `V[0]!`, `V[k]!` lie in
+    `chordLeft V k = V.take (k+1)` (indices `0` and `k`), so `x ∉ chordLeft`
+    rules them out.  Sorry-free, reusable; not a dead branch — preparation for
+    `chord_ear_empty_other`. -/
+lemma chord_other_piece_mem (V : List ℂ) (k : ℕ)
+    (hk : k + 1 ≤ V.length) {x : ℂ}
+    (hx : x ∈ V) (hxL : x ∉ chordLeft V k) :
+    x ∈ chordRight V k ∧ x ≠ V[0]! ∧ x ≠ V[k]! := by
+  have hklt : k < V.length := by omega
+  have h0L : V[0]! ∈ chordLeft V k := by
+    rw [chordLeft, List.mem_iff_getElem]
+    refine ⟨0, ?_, ?_⟩
+    · rw [List.length_take]; omega
+    · rw [List.getElem_take]
+      rw [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem (by omega)]
+      rfl
+  have hkL : V[k]! ∈ chordLeft V k := by
+    rw [chordLeft, List.mem_iff_getElem]
+    refine ⟨k, ?_, ?_⟩
+    · rw [List.length_take]; omega
+    · rw [List.getElem_take]
+      rw [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hklt]
+      rfl
+  refine ⟨?_, ?_, ?_⟩
+  · rcases mem_chord_cover V k hk hx with h | h
+    · exact absurd h hxL
+    · exact h
+  · rintro rfl; exact hxL h0L
+  · rintro rfl; exact hxL hkL
+
 end HexArea
 
 end
