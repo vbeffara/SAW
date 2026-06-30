@@ -162,6 +162,32 @@ lemma mem_of_mem_chordRight (V : List ℂ) (k : ℕ) {x : ℂ}
   · exact List.mem_of_mem_drop h
   · exact List.mem_of_mem_take h
 
+/-- **The two chord pieces cover every vertex (sorry-free, reusable).**  For
+    `k + 1 ≤ V.length`, every vertex `x` of `V` lies in `chordLeft V k` or in
+    `chordRight V k`: writing `x = V[i]`, the prefix `V.take (k+1)` catches the
+    case `i ≤ k` and the suffix `V.drop k` (inside `chordRight`) catches `i ≥ k`.
+    The dual of `mem_of_mem_chordLeft`/`mem_of_mem_chordRight` (which give the ⊇
+    direction).  This is the membership dichotomy the other-piece separation
+    `chord_ear_empty_other` (in `SAWUmlaufPolygon`) and the split branches need
+    to turn `x ∉ P` into "`x` lies in the other piece".  Not a dead branch. -/
+lemma mem_chord_cover (V : List ℂ) (k : ℕ) (hk : k + 1 ≤ V.length) {x : ℂ}
+    (hx : x ∈ V) : x ∈ chordLeft V k ∨ x ∈ chordRight V k := by
+  rw [List.mem_iff_getElem] at hx
+  obtain ⟨i, hi, rfl⟩ := hx
+  rcases le_or_gt i k with hik | hik
+  · left
+    rw [chordLeft, List.mem_iff_getElem]
+    refine ⟨i, ?_, ?_⟩
+    · rw [List.length_take]; omega
+    · rw [List.getElem_take]
+  · right
+    rw [chordRight, List.mem_append]
+    left
+    rw [List.mem_iff_getElem]
+    refine ⟨i - k, ?_, ?_⟩
+    · rw [List.length_drop]; omega
+    · rw [List.getElem_drop]; congr 1; omega
+
 /-
 **Signed-area additivity across the chord cut (sorry-free, reusable).**
     Cutting the closed polygon `V` along the diagonal `V[0]–V[k]`

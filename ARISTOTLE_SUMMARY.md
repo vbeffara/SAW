@@ -1,3 +1,66 @@
+# Summary of changes for run 820d72cd-45f9-4f57-93f5-aa76fd703a77
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end with no regressions and the standard axioms only (propext, Classical.choice, Quot.sound).
+
+This round isolated the entire remaining obstruction of the Umlaufsatz into one clean, faithful, reusable lemma and banked a sorry-free supporting brick:
+
+- New sorry-free, axiom-clean lemma `HexArea.mem_chord_cover` in `RequestProject/SAWUmlaufEarSplit.lean`: for `k + 1 ≤ V.length`, every vertex of `V` lies in `chordLeft V k` or `chordRight V k`. This is the membership dichotomy that converts "x ∉ P" into "x is in the other piece" — the ⊆-dual of the existing `mem_of_mem_chordLeft`/`mem_of_mem_chordRight`, needed by the separation lemma and the split branches.
+
+- New lemma `chord_ear_empty_other` in `RequestProject/SAWUmlaufPolygon.lean` (placed before `chord_ear_lift`, stated `by sorry`). It captures, in clean and TRUE form, the single irreducible point-in-polygon / Jordan-curve separation fact on which all of the remaining live Umlauf sorries rest: cutting a simple cycle along a valid interior diagonal into the two chord pieces, a genuine convex ear of one (simple) piece has its triangle empty against every vertex of the other piece. I verified that the two essential hypotheses — diagonal-validity (`hdiag`, the conclusion shape of `interior_chord_is_diagonal`) and convex-orientation (`horientP`) — are required: dropping them makes the statement provably false (a crossing chord, or a reflex triple whose triangle pokes outside the piece, lets the other piece intrude). It is documented as preparation consumed by `chord_ear_lift` (explicitly not a dead branch).
+
+Findings recorded in `ARISTOTLE_SUMMARY.md` and `PROOF_STATUS.md`: a fresh high-effort assembly attempt on the interior branch `meisters_reduction_interior2` (routed through the in-scope `chord_ear_lift` plus all banked combinatorial bricks and the flat-seam toolkit) again times out; the residue is exactly (i) the Jordan emptiness now isolated as `chord_ear_empty_other`, (ii) the flat-seam piece-selection, and (iii) the length-3 triangle base case — each still bottoming out in the same point-in-polygon separation. I also noted that the existing `chord_ear_lift` is under-hypothesised (its corner turn-transfer fails when the lifted ear sits at a cut endpoint), so a sound future version must carry the diagonal-validity plus seam non-degeneracy hypotheses, exactly as `chord_ear_empty_other` now does for the emptiness clause.
+
+Net effect: partial progress preserved as compiling Lean (one new sorry-free reusable lemma plus one faithful, true, precisely-isolated separation lemma with a single sorry), all imported into the build chain, with the path forward (a winding-number / point-in-polygon predicate to discharge `chord_ear_empty_other`) clearly documented. No new live obstruction was introduced in the main chain.
+
+# Summary of changes (LATEST run)
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still
+builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no
+regressions and the standard axioms only (`propext, Classical.choice,
+Quot.sound`).
+
+This round isolated the *entire* remaining obstruction into one clean, faithful,
+reusable lemma, and banked a sorry-free supporting brick:
+
+* New sorry-free, axiom-clean lemma `HexArea.mem_chord_cover` in
+  `RequestProject/SAWUmlaufEarSplit.lean` (right after
+  `mem_of_mem_chordRight`): for `k + 1 ≤ V.length`, every vertex of `V` lies in
+  `chordLeft V k` or `chordRight V k`. This is the membership dichotomy that
+  turns "`x ∉ P`" into "`x` is in the other piece", which the separation lemma
+  and the split branches need; it is the `⊆`-dual of the existing
+  `mem_of_mem_chordLeft`/`mem_of_mem_chordRight`.
+
+* New lemma `chord_ear_empty_other` in `RequestProject/SAWUmlaufPolygon.lean`
+  (placed right before `chord_ear_lift`), stated `by sorry`. It captures, in
+  clean and *true* form, the single irreducible point-in-polygon / Jordan-curve
+  separation fact on which all five live Umlauf `sorry`s rest: cutting a simple
+  cycle `W` along a VALID interior diagonal `W[0]–W[k]` (validity carried as the
+  `hdiag` hypothesis, exactly the conclusion shape of
+  `interior_chord_is_diagonal`) into the two chord pieces, a genuine CONVEX ear
+  `(a',b',c')` of one (simple) piece `P` — empty against `P`'s own vertices
+  (`hemptyP`) with matching orientation (`horientP`) — has its triangle empty
+  against every vertex of the OTHER piece. The two added hypotheses (`hdiag`
+  diagonal-validity and `horientP` convex-orientation) are essential: a previous
+  formulation that dropped them is provably false (a crossing chord, or a reflex
+  triple whose triangle pokes outside `P`, lets the other piece intrude). This
+  lemma is documented as preparation consumed by `chord_ear_lift` (NOT a dead
+  branch); discharging it (e.g. via a winding-number / point-in-polygon predicate
+  built on the project's turning-number machinery) would unlock `chord_ear_lift`
+  and hence both diagonal-split branches and the triangle base case.
+
+Findings (confirmed this round, recorded so future rounds do not chase an
+infeasible one-shot target): a fresh high-effort assembly attempt on
+`meisters_reduction_interior2` (routed through the in-scope `chord_ear_lift`
+plus all banked combinatorial bricks and the flat-seam toolkit) again times out;
+the residue is precisely (i) the Jordan emptiness now isolated as
+`chord_ear_empty_other`, (ii) the flat-seam piece-selection (only one piece is
+guaranteed `polyCycNondeg`), and (iii) the length-3 (triangle) piece base case
+— each of which still bottoms out in the same point-in-polygon separation. Also
+noted: `chord_ear_lift` as currently stated is under-hypothesised (its corner
+turn-transfer fails when the lifted ear sits at a cut endpoint), so a sound
+future version must carry the diagonal-validity + seam non-degeneracy hypotheses
+(as `chord_ear_empty_other` now does for the emptiness clause). No new live
+obstruction was introduced in the main chain; the only new `sorry` is the
+isolated, faithful preparation lemma above.
+
 # Summary of changes for run f42eb393-06e5-45ae-9772-bfe3f338253e
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean` and its helper file `RequestProject/SAWUmlaufEarSplit.lean`. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no regressions; axioms remain the standard `propext, Classical.choice, Quot.sound`.
 

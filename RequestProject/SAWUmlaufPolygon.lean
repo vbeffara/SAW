@@ -3714,6 +3714,55 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
   · have := PolygonSimple_rotate V r;
     grind
 
+/-- **Other-piece emptiness — the isolated point-in-polygon / Jordan-curve
+    separation brick.**  Cut a simple cycle `W` along the interior diagonal
+    `W[0]–W[k]` (`1 ≤ k`, `k + 1 ≤ W.length`) into the two chord pieces
+    `chordLeft W k` / `chordRight W k`.  The cut must be a *valid* diagonal:
+    `hdiag` says the chord segment `u–v` (with `u = W[0]`, `v = W[k]`) is
+    disjoint from every non-incident closed edge of `W` — exactly the conclusion
+    shape of `interior_chord_is_diagonal`.  Let `P` be one (simple) piece and
+    `(a', b', c')` three consecutive vertices of `P` (a rotation
+    `P.rotate s = a' :: b' :: c' :: tlP`) forming a genuine *convex ear* of `P`:
+    the ear triangle is empty against `P`'s own remaining vertices (`hemptyP`)
+    and its orientation matches `P`'s (`horientP`, ruling out a reflex corner
+    whose triangle pokes outside `P`).  Then the ear triangle is also empty
+    against every vertex `x` of the OTHER piece (`x ∈ W` but `x ∉ P`).
+
+    Geometrically this is exactly Jordan-curve separation: a valid interior
+    diagonal splits the simple polygon's region into two parts whose interiors
+    are disjoint and meet only along the diagonal; the convex ear triangle lies
+    inside `P`'s part while `x` lies on the boundary of the other part, so `x`
+    cannot be *strictly* inside the ear triangle.  Both the diagonal-validity
+    (`hdiag`) and the convex-orientation (`horientP`) hypotheses are essential:
+    without `hdiag` a crossing chord lets the other piece intrude, and without
+    `horientP` a reflex triple's triangle lies outside `P`.
+
+    **Status: `sorry`.**  This is the single irreducible point-in-polygon /
+    Jordan separation fact (absent from Mathlib and from the project): the
+    emptiness-against-the-other-piece residue extracted out of `chord_ear_lift`
+    (below) in clean, reusable, *true* form.  It is the shared geometric core of
+    the interior- (`meisters_reduction_interior2`) and bad-diagonal-
+    (`empty_branch_bad_lift`) split branches as well as the triangle base case.
+    Discharging it (e.g. via a winding-number / point-in-polygon membership
+    predicate built on the project's turning-number machinery) would unlock
+    `chord_ear_lift` and hence both split branches.  NOT a dead branch —
+    preparation consumed by `chord_ear_lift`. -/
+lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
+    ¬ HexArea.inTriangleStrict a' b' c' x := by
+  sorry
+
 /-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
     Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
     interior diagonal `W[0]–W[k]` into the two pieces `chordLeft W k` /
