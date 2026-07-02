@@ -1,3 +1,59 @@
+# Summary of changes for run 47421e9f-0b61-48f5-b676-6fd632268476
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no regressions and the standard axioms only (`propext, Classical.choice, Quot.sound`).
+
+Concrete verified progress this round:
+- Banked one new sorry-free, axiom-clean, reusable brick `HexArea.chord_other_piece_mem_left` in `RequestProject/SAWUmlaufEarSplit.lean` (right after `chord_other_piece_mem`): for a cycle `V` cut at `1 ≤ k`, `k + 1 ≤ V.length`, a vertex `x ∈ V` not in `chordRight V k` lies in `chordLeft V k` and differs from both cut endpoints `V[0]!`, `V[k]!`. This is the mirror of the existing `chord_other_piece_mem` (which only handled the `chordLeft` side) and is exactly the first reduction step of the Jordan keystone `chord_ear_empty_other` in the case `P = chordRight V k`, converting "`x ∉ P`" into "`x` is an interior vertex of the other (left) piece". It is preparation for the keystone (not a dead branch; its file is imported by `SAWUmlaufPolygon`). Verified sorry-free and axiom-clean.
+
+Findings recorded in `ARISTOTLE_SUMMARY.md` so future rounds don't chase an infeasible one-shot target:
+- A fresh high-effort attempt on the Jordan keystone `chord_ear_empty_other` again times out; its residue is genuine point-in-polygon / Jordan-curve separation (the convex ear triangle of one chord piece lies in that piece's region, separated by the valid diagonal from the other piece's vertices), which is absent from Mathlib and the project and needs a winding-number / region-membership predicate to discharge.
+- The two boundary-spike subcases inside `empty_branch_boundary_lift` are structurally blocked from a direct attempt because their resolution needs the flat-cut-vertex removal toolkit (`PolygonSimple_remove_flat_mid` and companions), which is defined later in the same file and so is out of scope above the target; a sound future route is to move that toolkit earlier (after checking intervening dependencies).
+- The dead branch `ear_turning_bounds` (documented false in earlier rounds) remains correctly inside a block comment — an inert, explicitly-linked dead branch, not a live `sorry`.
+
+The live `sorry`s of the Umlauf chain are unchanged in identity (the two boundary spike subcases in `empty_branch_boundary_lift`, plus `chord_ear_empty_other`, `chord_ear_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`). No new live `sorry`s were introduced; partial progress is preserved as compiling Lean, and every Umlauf file remains part of the build via the project library glob.
+
+# Summary of changes (LATEST run)
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library
+still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with
+no regressions and the standard axioms only (`propext, Classical.choice,
+Quot.sound`).
+
+Banked one new sorry-free, axiom-clean, reusable brick
+`HexArea.chord_other_piece_mem_left` in `RequestProject/SAWUmlaufEarSplit.lean`
+(right after `chord_other_piece_mem`): for a cycle `V` cut at `1 ≤ k`,
+`k + 1 ≤ V.length`, a vertex `x ∈ V` that is NOT in `chordRight V k` lies in
+`chordLeft V k` and differs from both cut endpoints `V[0]!`, `V[k]!`. This is the
+mirror of the existing `chord_other_piece_mem` (which handles the `chordLeft`
+side); it is exactly the first reduction step of the Jordan keystone
+`chord_ear_empty_other` in the case `P = chordRight V k` — converting `x ∉ P`
+into "`x` is an interior vertex of the OTHER (left) piece". It is preparation
+consumed by `chord_ear_empty_other`; NOT a dead branch (its file is imported by
+`SAWUmlaufPolygon`).
+
+Findings reconfirmed this round (recorded so future rounds do not chase an
+infeasible one-shot target):
+* A fresh high-effort attempt on the Jordan keystone `chord_ear_empty_other`
+  again times out. Its residue is genuine point-in-polygon / Jordan-curve
+  separation (the convex ear triangle of one chord piece lies in that piece's
+  region, separated by the valid diagonal from the other piece's vertices),
+  absent from Mathlib and the project; it needs a winding-number /
+  region-membership predicate to discharge.
+* The two boundary-spike subcases inside `empty_branch_boundary_lift`
+  (line ~2885/2897) are structurally blocked from a direct subagent pass: the
+  resolution needs the flat-cut-vertex removal toolkit
+  (`PolygonSimple_remove_flat_mid`, `cross_pred_corner_remove_flat`,
+  `cross_succ_corner_remove_flat`), which is defined LATER in
+  `SAWUmlaufPolygon.lean` (line ~3573+) and so is not in scope above the target.
+  A sound future route is to move that toolkit before
+  `empty_branch_boundary_lift` (checking the intervening dependencies first).
+* The dead branch `ear_turning_bounds` (a statement documented FALSE in earlier
+  rounds) remains correctly inside a `/- ... -/` block comment — an inert,
+  explicitly-linked dead branch, not a live `sorry`.
+
+The live `sorry`s of the Umlauf chain are unchanged in identity (the two
+boundary spike subcases in `empty_branch_boundary_lift`, plus
+`chord_ear_empty_other`, `chord_ear_lift`, `meisters_reduction_interior2`,
+`empty_branch_bad_lift`). No new live `sorry`s were introduced.
+
 # Summary of changes for run 3f1fbbf6-460f-48d2-b4a6-ec88345126cb
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `SAWFinal.lean`) with only the standard axioms (`propext, Classical.choice, Quot.sound`) and no regressions.
 

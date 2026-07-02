@@ -301,6 +301,32 @@ lemma chord_other_piece_mem (V : List ℂ) (k : ℕ)
   · rintro rfl; exact hxL h0L
   · rintro rfl; exact hxL hkL
 
+/-
+**Other-piece membership, mirror form (sorry-free, reusable).**  Companion of
+    `chord_other_piece_mem` for the `chordRight` side: for a cycle `V` cut at
+    `1 ≤ k`, `k + 1 ≤ V.length`, a vertex `x ∈ V` that is NOT in `chordRight V k`
+    lies in `chordLeft V k` and differs from both cut endpoints `V[0]!` and
+    `V[k]!`.  This is exactly the first reduction step of the Jordan keystone
+    `chord_ear_empty_other` (in `SAWUmlaufPolygon`) in the case `P = chordRight V k`:
+    it converts `x ∉ P` into "`x` is an *interior* vertex of the OTHER piece"
+    (the left piece).  Proof: `mem_chord_cover` forces `x ∈ chordLeft V k`; both
+    endpoints `V[0]!` (head of `V.take 1`) and `V[k]!` (head of `V.drop k`) lie
+    in `chordRight V k = V.drop k ++ V.take 1`, so `x ∉ chordRight` rules them
+    out.  Sorry-free, reusable; not a dead branch — preparation for
+    `chord_ear_empty_other` (the `chordRight` case).
+-/
+lemma chord_other_piece_mem_left (V : List ℂ) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ V.length) {x : ℂ}
+    (hx : x ∈ V) (hxR : x ∉ chordRight V k) :
+    x ∈ chordLeft V k ∧ x ≠ V[0]! ∧ x ≠ V[k]! := by
+  refine' ⟨ _, _, _ ⟩;
+  · exact Or.resolve_right ( mem_chord_cover V k hk hx ) hxR;
+  · contrapose! hxR; simp_all +decide [ chordRight ] ;
+    cases V <;> aesop;
+  · contrapose! hxR;
+    simp +decide [ hxR, chordRight ];
+    grind +suggestions
+
 end HexArea
 
 end
