@@ -1,3 +1,43 @@
+# Summary of changes for run 63de0c0e-9ee1-403e-b159-ab194e0e4523
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no regressions.
+
+Verified progress this round:
+- **Enabling refactor.** Relocated the six sorry-free flat-vertex-removal lemmas (`segment_subset_union_of_mem`, `mem_closedEdges_remove_mid`, `uw_wv_mem_closedEdges`, `PolygonSimple_remove_flat_mid`, `cross_pred_corner_remove_flat`, `cross_succ_corner_remove_flat`) to *before* `empty_branch_boundary_lift` in `RequestProject/SAWUmlaufPolygon.lean`. Prior rounds had noted the two boundary-spike subcases of `empty_branch_boundary_lift` were structurally blocked from a direct attempt because this toolkit was defined later in the same file (out of scope above the target). The toolkit depends only on earlier definitions (`closedEdges`/`PolygonSimple`/`segment`/`HexArea.cross`) and was not yet consumed by code, so moving it up is sound, keeps the build green, and unblocks future work on the spike subcases. Verified with a full clean build.
+
+Status of the remaining gaps (unchanged in identity): the live Umlauf `sorry`s are the two boundary-spike subcases in `empty_branch_boundary_lift`, plus `meisters_reduction_interior2`, `empty_branch_bad_lift`, and the two explicitly-linked preparation bricks `chord_ear_empty_other` / `chord_ear_lift` (kept as sorries and referenced from the branches they will feed — not dead branches). The lone `ear_turning_bounds` remains an inert, explicitly-linked dead branch inside a block comment.
+
+I confirmed that all four critical branches reduce to the single Jordan-separation keystone `chord_ear_empty_other` (a point-in-polygon fact). A fresh high-effort attempt on that keystone again timed out; discharging it needs a winding-number / region-membership predicate that is absent from Mathlib and from the project, so it is left as an isolated, clearly-documented `sorry` rather than closed with unsound scaffolding. All partial progress is preserved as Lean files with sorries, every relevant file remains imported, and the findings are recorded at the top of `ARISTOTLE_SUMMARY.md`.
+
+# Summary of changes — current round (enabling refactor)
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library
+still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with
+no regressions and the standard axioms only.
+
+Concrete verified change this round:
+- **Relocated the flat-vertex-removal toolkit** (the six sorry-free lemmas
+  `segment_subset_union_of_mem`, `mem_closedEdges_remove_mid`,
+  `uw_wv_mem_closedEdges`, `PolygonSimple_remove_flat_mid`,
+  `cross_pred_corner_remove_flat`, `cross_succ_corner_remove_flat`) to *before*
+  `empty_branch_boundary_lift` in `SAWUmlaufPolygon.lean`.  Prior rounds noted
+  the two boundary-spike subcases of `empty_branch_boundary_lift` were
+  structurally blocked from a direct attempt because this toolkit was defined
+  later in the same file (out of scope above the target).  The toolkit only
+  depends on `closedEdges`/`PolygonSimple`/`segment`/`HexArea.cross` (all much
+  earlier) and is not yet consumed by any code, so moving it up is sound and
+  keeps the build green; it unblocks future work on the spike subcases.
+
+Status of the remaining Umlauf gaps is unchanged in identity: the two
+boundary-spike subcases in `empty_branch_boundary_lift`, plus
+`meisters_reduction_interior2`, `empty_branch_bad_lift`, and the two isolated
+preparation bricks `chord_ear_empty_other` / `chord_ear_lift`.  A fresh
+high-effort attempt on the keystone `chord_ear_empty_other` (the single
+point-in-polygon / Jordan-separation fact that all four critical branches reduce
+to) again timed out; discharging it needs a winding-number / region-membership
+predicate absent from Mathlib and the project.  The dead branch
+`ear_turning_bounds` remains an inert, explicitly-linked block comment.
+
+---
+
 # Summary of changes for run 47421e9f-0b61-48f5-b676-6fd632268476
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library still builds end-to-end (8128 jobs through `RequestProject/SAWFinal.lean`) with no regressions and the standard axioms only (`propext, Classical.choice, Quot.sound`).
 
