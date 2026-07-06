@@ -1,3 +1,18 @@
+# Summary of changes for run 98379f9e-30c6-4bef-a8fd-2b3b849e1292
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, building genuine new Lean toward its single irreducible gap.
+
+The whole Umlaufsatz chain (`polygon_umlaufsatz` in `RequestProject/SAWUmlaufPolygon.lean`) reduces to one plane-topology fact, the keystone `chord_ear_empty_other`: a convex empty ear triangle of one chord piece contains no vertex of the *other* piece. This is genuine point-in-polygon / winding-number separation, absent from Mathlib and from the project, and it needs a winding-number tool that did not exist here.
+
+This round I created that tool: a new file `RequestProject/SAWUmlaufPtWind.lean` developing the **winding number of a closed polygon around a base point**, `ptWind x V` (the sweep-angle sum `Σ arg((vᵢ₊₁-x)/(vᵢ-x))`). It is imported by `SAWUmlaufPolygon.lean`, so it is part of the build and available to the keystone (not a dead branch). Proved sorry-free this round:
+- `ptWind_triangle` — the winding number of a triangle around an interior point is `2π·sign(area)` (the point-winding analogue of the existing `polyWind_triangle`);
+- `ptWind_triangle_exterior` — the winding number of a triangle around an exterior point is `0`;
+- `ptWind_ear_clip` — ear-clip additivity: removing the middle vertex of a consecutive triple changes `ptWind` by exactly the triangle winding, under the (essential) hypothesis that the base point lies off the merged diagonal segment;
+- plus the supporting `cross_pos_vec`, `ptWind_triangle_expand`, `ptWind_triangle_ne_zero`, and the `ptTurn`/`ptWind` definitions and cons lemmas.
+
+Together these are the base case and additivity step of the point-in-polygon winding function. The remaining plane-topological content — the point-in-polygon / Jordan behaviour of the winding number of a *simple* polygon (that its winding is `0` outside the enclosed region), which pins the winding of a chord piece around a vertex of the other piece to `0` and thereby discharges `chord_ear_empty_other` — is the target of the next rounds. As documented in the file and in `PROOF_STATUS.md`, this must be proved independently of the project's ear machinery, since that machinery itself depends on `chord_ear_empty_other` (an ear-induction proof would be circular).
+
+State: the library builds end-to-end (8129 jobs) with no regressions and no new sorries; the pre-existing live Umlaufsatz sorries in `SAWUmlaufPolygon.lean` are unchanged in count but are now backed by the new winding foundation. `PROOF_STATUS.md` records the round. Everything is committed and pushed.
+
 # Summary of changes for run 19fd1415-e131-4787-a39e-f7bb95a8c39b
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz (`polygon_umlaufsatz` in `RequestProject/SAWUmlaufPolygon.lean`). The library remains healthy: it builds end-to-end (8128 jobs, no errors — only pre-existing unused-`simp`-argument linter warnings in `SAWMainNew.lean`), with no regressions, and the working tree is fully committed and pushed.
 

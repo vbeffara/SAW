@@ -60,6 +60,7 @@ import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
 import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
+import RequestProject.SAWUmlaufPtWind
 
 open Real Complex ComplexConjugate
 

@@ -1,5 +1,45 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): new sorry-free point-winding foundation
+> `RequestProject/SAWUmlaufPtWind.lean` toward the Jordan-separation keystone
+> `chord_ear_empty_other`.**
+>
+> The single irreducible gap of the discrete Hopf Umlaufsatz is
+> `chord_ear_empty_other` (in `SAWUmlaufPolygon.lean`): a convex empty ear
+> triangle of one chord piece `P` contains no vertex of the *other* piece.  It is
+> genuine point-in-polygon / winding-number separation, absent from Mathlib and
+> from the project.  This round builds the missing tool: the **winding number of
+> a closed polygon around a base point** `ptWind x V` (the sweep-angle sum
+> `Σ arg((vᵢ₊₁-x)/(vᵢ-x))`), in the new file `SAWUmlaufPtWind.lean`, imported by
+> `SAWUmlaufPolygon` (part of the build; NOT a dead branch).
+>
+> Proved this round (all sorry-free):
+> * `ptWind_triangle` — the winding number of a triangle around an interior
+>   point is `2π·sign(area)` (the point-winding analogue of `polyWind_triangle`).
+> * `ptWind_triangle_exterior` — the winding number of a triangle around an
+>   exterior point (all three edge-cross products nonzero, signs mixed) is `0`.
+> * `ptWind_ear_clip` — ear-clip additivity: removing the middle vertex `b` of a
+>   consecutive triple changes `ptWind` by exactly the triangle winding, provided
+>   `x` is off the merged diagonal segment `[a,c]` (hypothesis shown essential).
+> * `cross_pos_vec`, `ptWind_triangle_expand`, `ptWind_triangle_ne_zero`, and the
+>   `ptTurn`/`ptWind` definitions and cons lemmas.
+>
+> These are the base case + additivity of the point-in-polygon winding function.
+> The remaining plane-topological content — the point-in-polygon / Jordan
+> behaviour of the winding number of a *simple* polygon (locally constant,
+> integer-valued, `0` outside the enclosed region), which pins the winding of a
+> chord piece around a vertex of the *other* piece to `0` and thereby discharges
+> `chord_ear_empty_other` — is the target of the next rounds; it must be proved
+> independently of the project's ear machinery (that machinery depends on
+> `chord_ear_empty_other`, so an ear-induction proof would be circular).
+>
+> The library builds end-to-end (8129 jobs through `SAWFinal.lean`); no
+> regressions; the working tree is committed and pushed.  Live Umlaufsatz sorries
+> unchanged in count (all in `SAWUmlaufPolygon.lean`: `chord_ear_empty_other`,
+> `chord_ear_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`, and
+> the two boundary spike subcases), now backed by the new winding foundation.
+
+
 > **Umlaufsatz (CURRENT round): soundness fix to `chord_ear_lift` + banked the
 > keystone's first-step brick `chord_other_piece_mem` (sorry-free).**
 > Worked exclusively on the top-priority discrete Hopf Umlaufsatz.  The library
