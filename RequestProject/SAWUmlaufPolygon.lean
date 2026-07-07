@@ -62,6 +62,7 @@ import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind
 import RequestProject.SAWUmlaufPtWindJordan
+import RequestProject.SAWUmlaufPtWindHalfPlane
 
 open Real Complex ComplexConjugate
 
@@ -3750,7 +3751,7 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     predicate built on the project's turning-number machinery) would unlock
     `chord_ear_lift` and hence both split branches.  NOT a dead branch —
     preparation consumed by `chord_ear_lift`. -/
-/-- **Point-in-polygon, inside direction (winding ≠ 0).**  Under the same setup
+/- **Point-in-polygon, inside direction (winding ≠ 0).**  Under the same setup
     as `chord_ear_empty_other`, if `x` *were* strictly inside the convex empty
     ear triangle `(a', b', c')` of the piece `P`, then the winding number of `P`
     around `x` would be nonzero.  Reason: by `HexArea.ptWind_rotate` and
@@ -3766,6 +3767,35 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     residue is the "outside ⟹ winding 0" behaviour of the winding number of a
     simple polygon.  NOT a dead branch — consumed directly by
     `chord_ear_empty_other` just below. -/
+/-- **Winding of the ear-clipped piece around the ear-interior point is `0`
+    (the isolated Jordan residue of the inside direction).**  Same setup as
+    `chord_ear_inner_ptWind_ne_zero`: `x` lies strictly inside the empty convex
+    ear `(a', b', c')` of the chord piece `P`, hence `x` is exterior to the
+    strictly-smaller clipped simple polygon `a' :: c' :: tlP` (the ear is empty),
+    so the piece does not wind around `x`.  This is precisely the
+    "point exterior to a simple polygon ⟹ winding `0`" plane-topology fact,
+    now isolated on the *smaller* clipped polygon.  NOT a dead branch —
+    consumed directly by `chord_ear_inner_ptWind_ne_zero` just below via
+    `HexArea.ptWind_ear_split`.
+
+    **Status: `sorry`.** -/
+lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
+    (hin : HexArea.inTriangleStrict a' b' c' x) :
+    HexArea.ptWind x (a' :: c' :: tlP) = 0 := by
+  sorry
+
 lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -3781,7 +3811,19 @@ lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) 
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
     (hin : HexArea.inTriangleStrict a' b' c' x) :
     HexArea.ptWind x P ≠ 0 := by
-  sorry
+  -- `x` lies off the clip diagonal `a'–c'` (a strict interior point is off the
+  -- edge line), so the ear-split identity applies.
+  have hac : x ∉ segment ℝ a' c' := by
+    intro hx
+    have hzero := HexArea.cross_combo_segment a' c' x hx
+    have hside := HexArea.inTriangleStrict_diag_side a' b' c' x hin
+    rw [hzero] at hside; simp at hside
+  rw [HexArea.ptWind_ear_split x a' b' c' P s tlP hrotP hac hin,
+    clipped_ear_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple hP
+      a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin]
+  simp only [zero_add, ne_eq]
+  intro hcontra
+  split_ifs at hcontra <;> nlinarith [Real.pi_pos]
 
 /-- **Point-in-polygon, outside direction (winding 0).**  Under the same setup
     as `chord_ear_empty_other`, the winding number of the piece `P` around a

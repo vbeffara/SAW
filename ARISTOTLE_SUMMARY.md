@@ -1,3 +1,18 @@
+# Summary of changes for run a3c8c91e-d060-40e8-bc67-7b1d7a6a54b8
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz. All changes are real Lean, build end-to-end (8131 jobs, no regressions), and are committed and pushed. No axioms or `@[implemented_by]` were introduced.
+
+Concrete verified progress this round, all backing the winding-number keystone `chord_ear_empty_other`:
+
+New sorry-free file `RequestProject/SAWUmlaufPtWindHalfPlane.lean` (imported by `SAWUmlaufPolygon`), providing a reusable vanishing criterion for the point-winding number `ptWind`:
+- `arg_div_of_pos_re` — exact, wrap-free argument subtraction `arg(A/B) = arg A − arg B` for numbers with positive real part.
+- `arg_div_of_halfplane` — the same relative to a common test direction `d`.
+- `ptTurn_halfplane` — telescoping of the sweep-angle sum inside an open half-plane.
+- `ptWind_eq_zero_of_halfplane` — if every vertex of `P` lies in the open half-plane `0 < ((v − x)·d).re`, then `ptWind x P = 0` (the "outside ⟹ winding 0" tool for the half-plane-separated case).
+
+In `SAWUmlaufPolygon.lean`, the inside-direction piece `chord_ear_inner_ptWind_ne_zero` is now sorry-free: it is reduced via `HexArea.ptWind_ear_split` to a cleaner isolated residue `clipped_ear_ptWind_zero` (`ptWind x (a'::c'::tlP) = 0`, the winding of the clipped polygon around the now-exterior ear-interior point), and the ±2π triangle-winding step is discharged.
+
+Net effect: the winding gaps of the Umlaufsatz are now concentrated in exactly two clean `= 0` point-in-polygon facts — `clipped_ear_ptWind_zero` and `chord_ear_other_ptWind_zero` — both instances of the "point exterior to a simple polygon ⟹ winding 0" statement, each explicitly linked and consumed (documented as preparation, not dead branches). Five new reusable sorry-free lemmas were banked and one keystone lemma was closed. `PROOF_STATUS.md` records the round. Remaining live gaps (the two exterior-winding facts plus the combinatorial ear-lift/split wiring `chord_ear_lift`, `meisters_reduction_interior2`, `empty_branch_bad_lift`, `empty_branch_boundary_lift`) are the genuine Jordan-curve-level content and are targets for future rounds; a low-effort automated attempt confirmed the exterior-winding fact needs further infrastructure rather than a one-shot proof.
+
 # Summary of changes for run ad10b270-c5dd-4f18-a966-6055614d1c3c
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library builds end-to-end (8130 jobs) with no regressions; every new file is imported and part of the build, and all work is committed and pushed.
 

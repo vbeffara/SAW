@@ -1,6 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): point-winding infrastructure completed and the
+> **Umlaufsatz (CURRENT round): half-plane vanishing tool for `ptWind`
+> completed sorry-free, and the inside-direction winding lemma reduced to a
+> single clean `= 0` residue on the clipped polygon.**
+>
+> New sorry-free file `RequestProject/SAWUmlaufPtWindHalfPlane.lean` (imported by
+> `SAWUmlaufPolygon`) proves the elementary but reusable vanishing criterion for
+> the point-winding number:
+> * `arg_div_of_pos_re` — exact (wrap-free) argument subtraction for two numbers
+>   with positive real part.
+> * `arg_div_of_halfplane` — the same with a common test direction `d`
+>   (`0 < (z*d).re`, `0 < (w*d).re`).
+> * `ptTurn_halfplane` — telescoping of the sweep-angle sum inside a half-plane.
+> * `ptWind_eq_zero_of_halfplane` — **if every vertex of `P` lies in the open
+>   half-plane `0 < ((v - x) * d).re` then `ptWind x P = 0`** (the "outside ⟹
+>   winding 0" tool for the half-plane-separated case).
+>
+> In `SAWUmlaufPolygon.lean` the inside-direction keystone piece
+> `chord_ear_inner_ptWind_ne_zero` is now **sorry-free**, reduced via
+> `HexArea.ptWind_ear_split` (ear-split of the winding around an interior point)
+> to the new, cleaner isolated residue `clipped_ear_ptWind_zero`
+> (`ptWind x (a'::c'::tlP) = 0`, the winding of the *clipped* piece around the
+> now-exterior ear-interior point).  The remaining winding gaps are exactly the
+> two `= 0` point-in-polygon facts `clipped_ear_ptWind_zero` and
+> `chord_ear_other_ptWind_zero` — both instances of the genuine "point exterior
+> to a simple polygon ⟹ winding 0" plane-topology theorem, isolated and
+> explicitly consumed (not dead branches).  The library builds end-to-end
+> (8131 jobs); all committed and pushed.
+
+> **Umlaufsatz (earlier round): point-winding infrastructure completed and the
 > Jordan keystone `chord_ear_empty_other` decomposed into two clean
 > point-in-polygon lemmas (keystone now sorry-free).**
 >
