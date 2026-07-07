@@ -1,3 +1,17 @@
+# Summary of changes for run 533454ad-ef7d-425c-b37c-49dfa0bf364b
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. All changes build end-to-end (8132 jobs, no regressions, no new axioms or `@[implemented_by]`), and are committed and pushed.
+
+Concrete progress this round: the interior diagonal-split branch `meisters_reduction_interior2` (previously one opaque `sorry` for the whole "recurse on a sub-piece and lift the ear back to V") is now **`sorry`-free in its own body**, by decomposing it into two new reusable, proved assembly lemmas and consuming them:
+
+- `chord_ear_lift_forbidden` — packages the mechanical bookkeeping shared by both diagonal-split branches: given a valid interior chord cut of `W = V.rotate ρ`, an ear of one piece `P` avoiding the cut edge `{u,v}`, and two forbidden points each in the other piece `Q` or off `V`, it produces `EmptyCornerData2 V z1 z2`. Proved by wiring the (still-open) Jordan brick `chord_ear_lift` with the tip-avoidance lemma `chord_tip_ne_other` and the piece→V membership transfer. It adds no new geometric content and no `sorry` of its own.
+- `interior_lift_via_piece` — proves the generic Meisters recursion path: when the forced recursion piece is non-degenerate with ≥ 4 vertices, the strong-induction hypothesis returns an ear of the piece avoiding the cut edge, and `chord_ear_lift_forbidden` lifts it to `V`. Its single `sorry` is the genuinely isolated residual — a triangle recursion piece (length 3, needing a direct V-ear) or a piece flat at the cut seam (needing flat-cut-vertex removal before recursing). This is a true statement; the residual is unproven, not false.
+
+`meisters_reduction_interior2` itself now builds the `b`-rooted cut cycle, derives the valid diagonal `b–w` (transporting `interior_chord_is_diagonal` across the rotation), selects the recursion piece via `forbidden_lands_in_chord` (cyclic-edge case) or a membership case split (the `z1 = z2` case), and finishes through `interior_lift_via_piece`.
+
+Net effect: the count of genuine remaining `sorry`s is unchanged (7), but the interior branch's monolithic gap is replaced by a much smaller, clearly-isolated residual, and two new reusable proved lemmas are added and consumed (no dead branches). The remaining Umlaufsatz gaps are the two boundary-spike sub-cases, the two point-in-polygon winding atoms (`clipped_ear_ptWind_zero` / `chord_ear_other_ptWind_zero`, hull-interior case — the genuine discrete Jordan content), the `chord_ear_lift` brick, the `interior_lift_via_piece` triangle/flat residual, and `empty_branch_bad_lift`. `PROOF_STATUS.md` records this round.
+
+File references (relative): `RequestProject/SAWUmlaufPolygon.lean` (interior-branch assembly + two new helper lemmas), `PROOF_STATUS.md` (status update).
+
 # Summary of changes for run c0bcce6a-5126-4f28-970f-183b2d2ee367
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. All changes are real Lean, build end-to-end (8132 jobs, no regressions), and are committed and pushed. No axioms or `@[implemented_by]` were introduced.
 

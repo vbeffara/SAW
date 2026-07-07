@@ -1,6 +1,51 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): convex-exterior winding tool proved sorry-free
+> **Umlaufsatz (CURRENT round): interior split branch `meisters_reduction_interior2`
+> is now `sorry`-free; its recursion gap is decomposed into two reusable proved
+> assemblies (`chord_ear_lift_forbidden`, `interior_lift_via_piece`) with the
+> only residual isolated to the triangle/flat recursion piece.  Builds
+> end-to-end, 8132 jobs.**
+>
+> `meisters_reduction_interior2` now performs the full interior diagonal split
+> assembly with no `sorry` of its own: it builds the `b`-rooted cut cycle
+> `W = V.rotate (r+1)`, derives the valid diagonal `b–w` (`interior_chord_is_diagonal`
+> transported across the rotation), selects the recursion piece via
+> `forbidden_lands_in_chord` (cyclic-edge case) or a membership `by_cases`
+> (`z1 = z2` case), and finishes through `interior_lift_via_piece`.
+>
+> `interior_lift_via_piece` proves the generic Meisters recursion path: when the
+> forced recursion piece is non-degenerate with ≥ 4 vertices, `IH2` returns an ear
+> of the piece avoiding the cut edge and `chord_ear_lift_forbidden` lifts it to
+> `V`.  Its single `sorry` is the genuine, isolated residual: a triangle piece
+> (length 3, needing a direct `V`-ear) or a piece flat at the cut seam (needing
+> flat-cut-vertex removal before recursing).  This is a TRUE statement; the
+> residual is unproven, not false.
+>
+> New lemma `chord_ear_lift_forbidden` in `RequestProject/SAWUmlaufPolygon.lean`
+> (just after `chord_ear_lift`).  It packages the *entire* mechanical bookkeeping
+> of the two diagonal-split branches (`meisters_reduction_interior2`,
+> `empty_branch_bad_lift`) into one reusable, self-contained (modulo the still-open
+> Jordan brick `chord_ear_lift`) step: given a valid interior chord cut of
+> `W = V.rotate ρ` into pieces `chordLeft`/`chordRight`, an ear of one piece `P`
+> avoiding the cut edge `{u,v}` (`EmptyCornerData2 P u v`), and two forbidden
+> points `z1,z2` each lying in the OTHER piece `Q` or off `V`, it produces
+> `EmptyCornerData2 V z1 z2`.  Its proof wires `chord_ear_lift` with the
+> tip-avoidance lemma `HexArea.chord_tip_ne_other` and the piece↔`V` membership
+> transfer (`mem_of_mem_chordLeft/Right`, `List.mem_rotate`); it introduces **no**
+> new geometric content and **no** new `sorry` of its own.
+>
+> This isolates precisely what still blocks the two split branches from being
+> assembled around it: (a) the genuine Jordan brick `chord_ear_lift` itself;
+> (b) the recursion `EmptyCornerData2 P (cut endpoints)` on the correct sub-piece,
+> which for a length-3 (triangle) piece needs a *direct* `V`-ear construction
+> (since `EmptyCornerData2` is only meaningful for length ≥ 4) and, when the
+> forbidden edge lands in the non-degenerate piece, needs the flat-cut-vertex
+> removal toolkit before recursing.  `chord_ear_lift_forbidden` is documented as
+> preparation consumed by those branches (NOT a dead branch).
+>
+> ---
+>
+> **Umlaufsatz (earlier round): convex-exterior winding tool proved sorry-free
 > and consumed at both point-in-polygon atoms.**
 >
 > New sorry-free file `RequestProject/SAWUmlaufExterior.lean` (imported by

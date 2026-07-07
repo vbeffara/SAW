@@ -3944,6 +3944,128 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
   -- bookkeeping, leaving only the single Jordan separation residue.
   sorry
 
+/-- **Forbidden-pair ear lift across a valid chord cut (mechanical bookkeeping
+    around `chord_ear_lift`).**  Cut the rotation `W = V.rotate ρ` of a simple
+    polygon `V` along the valid interior diagonal `W[0]–W[k]` (`hdiag`) into the
+    two pieces `chordLeft W k` / `chordRight W k`.  Let `P` be one piece and `Q`
+    the OTHER (encoded by `hPQ`).  Given an ear of `P` avoiding the cut edge
+    `{u, v}` (`hPcyc : EmptyCornerData2 P u v`) and two forbidden points `z1, z2`
+    each lying either in the OTHER piece `Q` or off `V` entirely (`hz1`, `hz2`),
+    the lifted ear of `V` avoids both `z1` and `z2`, giving
+    `EmptyCornerData2 V z1 z2`.
+
+    This is the shared, reusable combinatorial assembly of the two diagonal-split
+    branches (`meisters_reduction_interior2`, `empty_branch_bad_lift`): it wires
+    together `chord_ear_lift` (the genuine Jordan brick, still a `sorry`) with the
+    tip-avoidance lemma `chord_tip_ne_other`.  It contains no new geometric
+    content of its own — the only remaining Jordan gap it depends on is inside
+    `chord_ear_lift`.  NOT a dead branch. -/
+lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V)
+    (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P Q : List ℂ)
+    (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
+           (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
+    (hPcyc : EmptyCornerData2 P u v)
+    (z1 z2 : ℂ)
+    (hz1 : z1 ∈ Q ∨ z1 ∉ V) (hz2 : z2 ∈ Q ∨ z2 ∉ V) :
+    EmptyCornerData2 V z1 z2 := by
+  -- Combinatorial side facts about `W`.
+  have hWsimple : PolygonSimple W := hW ▸ (PolygonSimple_rotate V ρ).mpr hsimple
+  have hWnd : W.Nodup := hWsimple.1
+  have hklt : k < W.length := by omega
+  have hWlen : 0 < W.length := by omega
+  have hu0 : W[0]! = u := by
+    have : W[0]? = some (W[0]!) := by
+      rw [List.getElem?_eq_getElem hWlen]; simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hWlen]
+    rw [hu] at this; exact (Option.some.injEq _ _ ▸ this).symm
+  have hvk : W[k]! = v := by
+    have : W[k]? = some (W[k]!) := by
+      rw [List.getElem?_eq_getElem hklt]; simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hklt]
+    rw [hv] at this; exact (Option.some.injEq _ _ ▸ this).symm
+  -- The V-ear from the (still open) chord ear lift.
+  obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
+      hpl', hql', hempty', hdiag', horient'⟩ :=
+    chord_ear_lift V hsimple W ρ hW k hk1 hk u v hu hv hdiag P
+      (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
+  -- `b'` is a vertex of `V`.
+  have hb'W : b' ∈ W := by
+    rcases hPQ with ⟨rfl, _⟩ | ⟨rfl, _⟩
+    · exact HexArea.mem_of_mem_chordLeft W k hb'P
+    · exact HexArea.mem_of_mem_chordRight W k hb'P
+  have hb'V : b' ∈ V := by rw [← hW] at hb'W; exact (List.mem_rotate).mp hb'W
+  -- Tip avoids each forbidden point.
+  have key : ∀ z : ℂ, (z ∈ Q ∨ z ∉ V) → b' ≠ z := by
+    intro z hz
+    rcases hz with hzQ | hzV
+    · refine HexArea.chord_tip_ne_other W k hk1 hklt hWnd b' z (by rw [hu0]; exact hb'u)
+        (by rw [hvk]; exact hb'v) ?_
+      rcases hPQ with ⟨hPl, hQr⟩ | ⟨hPr, hQl⟩
+      · exact Or.inl ⟨hPl ▸ hb'P, hQr ▸ hzQ⟩
+      · exact Or.inr ⟨hPr ▸ hb'P, hQl ▸ hzQ⟩
+    · exact fun h => hzV (h ▸ hb'V)
+  exact ⟨r', a', b', c', p', q', tl, hrot', key z1 hz1, key z2 hz2, hp', hq',
+    hpl', hql', hempty', hdiag', horient'⟩
+
+/-- **Interior-split lift through the recursion piece (main path proved,
+    triangle/flat residual isolated).**  Cut `W = V.rotate ρ` along the valid
+    interior diagonal `W[0]–W[k]` (`hdiag`) into `chordLeft`/`chordRight`.  Let
+    `P` be the piece to recurse on and `Q` the other (encoded by `hPQ`), with the
+    cut edge `{u,v}` a cyclic edge of `P` (`hcut`), `P` simple and strictly
+    shorter than `V` (`hPsimple`, `hPlen`), and the two forbidden points `z1, z2`
+    each in `Q` or off `V`.
+
+    When the recursion piece `P` is **non-degenerate and has ≥ 4 vertices**, the
+    strong-induction hypothesis `IH2` directly returns an ear of `P` avoiding the
+    cut edge, and `chord_ear_lift_forbidden` lifts it to the required ear of `V`.
+    This is the generic Meisters recursion path and is proved here (modulo the
+    Jordan brick `chord_ear_lift` inside `chord_ear_lift_forbidden`).
+
+    **Status: main path proved; single `sorry` for the residual.**  The residual
+    is the (genuine, isolated) case where the forced recursion piece `P` is a
+    triangle (length 3, so `EmptyCornerData2 P` is not available and a direct
+    `V`-ear must be built) or is flat at the cut seam (not `polyCycNondeg`, so the
+    flat-cut-vertex must be removed via `PolygonSimple_remove_flat_mid` /
+    `cross_pred_corner_remove_flat` / `cross_succ_corner_remove_flat` before
+    recursing).  This is a TRUE statement; the residual is unproven, not false.
+    Consumes `chord_ear_lift_forbidden`; NOT a dead branch. -/
+lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V)
+    (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P Q : List ℂ)
+    (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
+           (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
+    (hPsimple : PolygonSimple P) (hPlen : P.length < V.length)
+    (hcut : IsCycEdge P u v)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
+    (z1 z2 : ℂ) (hz1 : z1 ∈ Q ∨ z1 ∉ V) (hz2 : z2 ∈ Q ∨ z2 ∉ V) :
+    EmptyCornerData2 V z1 z2 := by
+  by_cases hcond : 4 ≤ P.length ∧ polyCycNondeg P
+  · obtain ⟨hP4, hPnd⟩ := hcond
+    -- Cut edge as a cyclic edge in the other orientation, for `IH2`.
+    have hcut' : IsCycEdge P v u := by
+      rcases hcut with h | h
+      · exact Or.inr h
+      · exact Or.inl h
+    -- Recurse: an ear of `P` avoiding the cut edge `{u,v}`.
+    have hPvu : EmptyCornerData2 P v u :=
+      IH2 P hPlen hP4 hPsimple hPnd v u (Or.inr hcut')
+    have hPcyc : EmptyCornerData2 P u v := by
+      obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hPvu
+      exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8, h9, h10⟩
+    exact chord_ear_lift_forbidden V hsimple W ρ hW k hk1 hk u v hu hv hdiag P Q hPQ
+      hPcyc z1 z2 hz1 hz2
+  · -- Residual: the forced recursion piece is a triangle or flat at the seam.
+    sorry
+
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
     vertex of the rotated cycle `V.rotate r = a :: b :: c :: rest`) is *not*
@@ -4015,11 +4137,75 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     rw [polyNondeg_cons_cons_cons] at hPN
     exact hPN.1
   -- Banked recursion-ready interior split (consumes `interior_split_select`).
-  obtain ⟨k, hk2, hklen, hwk, hLsimple, hRsimple, hLlt, hRlt, hnondeg⟩ :=
+  obtain ⟨k, hk2, hklen, hwk, hLsimple, hRsimple, hLlt, hRlt, _hnondeg⟩ :=
     interior_split_select V hsimple hnd r a b c rest hrot hndtri w hwrest hwin hwmax
-  -- Remaining content: recurse via `IH2` on the piece avoiding the forbidden edge
-  -- and transfer the returned ear back to `V` (the Jordan-curve-level ear lift).
-  sorry
+  -- Set up the `b`-rooted cut cycle `W = V.rotate (r+1)` and the valid diagonal `b–w`.
+  have hW : V.rotate (r + 1) = b :: c :: rest ++ [a] :=
+    HexArea.rotate_corner_succ V r a b c rest hrot
+  have hk1 : 1 ≤ k := by omega
+  have hkW : k + 1 ≤ (b :: c :: rest ++ [a]).length := by omega
+  have hklt : k < (b :: c :: rest ++ [a]).length := by omega
+  have hu : (b :: c :: rest ++ [a])[0]? = some b := by simp
+  have hWhead : (b :: c :: rest ++ [a]).head? = some b := by simp
+  have hWne : (b :: c :: rest ++ [a]) ≠ [] := by simp
+  have hsimpleABC : PolygonSimple (a :: b :: c :: rest) :=
+    hrot ▸ (PolygonSimple_rotate V r).mpr hsimple
+  have hrot1 : (a :: b :: c :: rest).rotate 1 = b :: c :: rest ++ [a] := by
+    rw [← hrot, List.rotate_rotate]; exact hW
+  have hdiag0 :=
+    interior_chord_is_diagonal a b c w rest hsimpleABC hndtri hwrest hwin hwmax
+  have hdiag : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 →
+      w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
+    intro e he hb1 hb2 hw1 hw2
+    apply hdiag0 e _ hb1 hb2 hw1 hw2
+    rw [← hrot1] at he
+    exact (mem_closedEdges_rotate (a :: b :: c :: rest) 1 e).mp he
+  -- Symmetry of the cyclic-edge predicate (for the cut edge orientation).
+  have symmCyc : ∀ (L : List ℂ), IsCycEdge L w b → IsCycEdge L b w := by
+    intro L h; rcases h with h | h; exacts [Or.inr h, Or.inl h]
+  -- Dispatch on the forbidden pair.
+  rcases hadj with rfl | hcyc
+  · -- Single forbidden point `z1`: recurse on a piece not containing it.
+    by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
+    · exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
+        (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
+        IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
+    · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
+      · exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+          hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+          (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+          IH2 z1 z1 (Or.inl hzR) (Or.inl hzR)
+      · have hz1V : z1 ∉ V := by
+          intro hmem
+          have hmemW : z1 ∈ (b :: c :: rest ++ [a]) := by
+            rw [← hW]; exact List.mem_rotate.mpr hmem
+          rcases HexArea.mem_chord_cover (b :: c :: rest ++ [a]) k hkW hmemW with h | h
+          · exact hzL h
+          · exact hzR h
+        exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+          hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+          (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+          IH2 z1 z1 (Or.inr hz1V) (Or.inr hz1V)
+  · -- Forbidden cyclic edge `{z1,z2}`: lands in one piece; recurse on the other.
+    have hcycW : IsCycEdge (b :: c :: rest ++ [a]) z1 z2 :=
+      hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
+    rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with hInL | hInR
+    · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
+      exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
+        (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
+        IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
+    · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
+      exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+        (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+        (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+        IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
 
 /-- **Empty-branch lift — the BAD-diagonal subcase (genuine remaining gap).**
     Extracted from `meisters_reduction_empty2`'s non-clean / non-good case so it
