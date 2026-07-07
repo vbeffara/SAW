@@ -1,6 +1,37 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): new sorry-free point-winding foundation
+> **Umlaufsatz (CURRENT round): point-winding infrastructure completed and the
+> Jordan keystone `chord_ear_empty_other` decomposed into two clean
+> point-in-polygon lemmas (keystone now sorry-free).**
+>
+> New sorry-free file `RequestProject/SAWUmlaufPtWindJordan.lean` (imported by
+> `SAWUmlaufPolygon`) develops the structural laws of the point-winding
+> `ptWind`:
+> * `ptTurn_append` — concatenation telescoping of the sweep-angle sum.
+> * `exp_I_ptTurn` — the sweep-exponential telescopes to the endpoint ratio.
+> * `ptWind_int` — the winding of a closed polygon (vertices off `x`) is an
+>   integer multiple of `2π`.
+> * `ptWind_rotate1` / `ptWind_rotate` — rotation invariance of the winding.
+> * `ptWind_diagonal_split` — diagonal-cut additivity
+>   `ptWind x (chordLeft V k) + ptWind x (chordRight V k) = ptWind x V` for `x`
+>   off the diagonal (the `ptWind` analogue of `shoelace2_chord_split`).
+> * `ptWind_ear_split` — `ptWind x P = ptWind x (a'::c'::tlP) + 2π·sign` when `x`
+>   is strictly inside the ear `a',b',c'` (composes rotate + ear-clip + triangle).
+>
+> In `SAWUmlaufPolygon.lean` the single Jordan keystone `chord_ear_empty_other`
+> is now **sorry-free**, assembled from two new, well-scoped point-in-polygon
+> direction lemmas (each still `sorry`, explicitly linked, consumed by the
+> keystone directly above them):
+> * `chord_ear_inner_ptWind_ne_zero` — inside an empty consistent ear ⟹
+>   `ptWind x P ≠ 0` (reduced by `ptWind_ear_split` to "winding of the clipped
+>   piece around the now-exterior `x` is `0`").
+> * `chord_ear_other_ptWind_zero` — a vertex of the *other* piece ⟹
+>   `ptWind x P = 0`.
+> Both residues are the "outside ⟹ winding 0" behaviour of a simple polygon,
+> the target of future rounds. The library builds end-to-end (8130 jobs); all
+> committed and pushed.
+
+> **Umlaufsatz (earlier round): new sorry-free point-winding foundation
 > `RequestProject/SAWUmlaufPtWind.lean` toward the Jordan-separation keystone
 > `chord_ear_empty_other`.**
 >

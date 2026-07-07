@@ -1,3 +1,20 @@
+# Summary of changes for run ad10b270-c5dd-4f18-a966-6055614d1c3c
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The library builds end-to-end (8130 jobs) with no regressions; every new file is imported and part of the build, and all work is committed and pushed.
+
+Concrete, verified progress this round (real Lean, not paper reasoning), all backing the single Jordan-separation keystone `chord_ear_empty_other`:
+
+New file `RequestProject/SAWUmlaufPtWindJordan.lean` (imported by `SAWUmlaufPolygon`), completing the structural laws of the point-winding function `ptWind` — all proved sorry-free:
+- `ptTurn_append`: concatenation telescoping of the sweep-angle sum (additivity backbone).
+- `exp_I_ptTurn`: the sweep-exponential telescopes to the endpoint ratio.
+- `ptWind_int`: the winding of a closed polygon around a point off its vertices is an integer multiple of 2π.
+- `ptWind_rotate1` / `ptWind_rotate`: rotation invariance of the winding.
+- `ptWind_diagonal_split`: diagonal-cut additivity `ptWind x (chordLeft V k) + ptWind x (chordRight V k) = ptWind x V` for x off the diagonal (the ptWind analogue of the existing `shoelace2_chord_split`).
+- `ptWind_ear_split`: `ptWind x P = ptWind x (a'::c'::tlP) + 2π·sign` when x lies strictly inside the ear triangle (composes rotate + ear-clip + triangle).
+
+In `SAWUmlaufPolygon.lean`, the Jordan keystone `chord_ear_empty_other` is now sorry-free: it is assembled from two new, cleanly-stated point-in-polygon direction lemmas — `chord_ear_inner_ptWind_ne_zero` (inside an empty consistent ear ⟹ winding ≠ 0, further reduced by `ptWind_ear_split` to a clipped-piece winding) and `chord_ear_other_ptWind_zero` (a vertex of the other chord piece ⟹ winding = 0). These two remain `sorry` but are much smaller, well-scoped targets — both are the "outside ⟹ winding 0" behaviour of a simple polygon — and are explicitly linked, consumed directly by the keystone above them (not dead branches).
+
+Net effect: the keystone that all four critical Umlaufsatz branches reduce to no longer carries a `sorry`; the remaining plane-topology residue is isolated in two clean lemmas backed by a now-complete point-winding foundation, and seven new reusable sorry-free lemmas were banked. `PROOF_STATUS.md` records the round.
+
 # Summary of changes for run 98379f9e-30c6-4bef-a8fd-2b3b849e1292
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, building genuine new Lean toward its single irreducible gap.
 

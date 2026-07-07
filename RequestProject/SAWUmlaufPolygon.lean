@@ -61,6 +61,7 @@ import RequestProject.SAWUmlaufSegment
 import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind
+import RequestProject.SAWUmlaufPtWindJordan
 
 open Real Complex ComplexConjugate
 
@@ -3716,7 +3717,7 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
   · have := PolygonSimple_rotate V r;
     grind
 
-/-- **Other-piece emptiness — the isolated point-in-polygon / Jordan-curve
+/- **Other-piece emptiness — the isolated point-in-polygon / Jordan-curve
     separation brick.**  Cut a simple cycle `W` along the interior diagonal
     `W[0]–W[k]` (`1 ≤ k`, `k + 1 ≤ W.length`) into the two chord pieces
     `chordLeft W k` / `chordRight W k`.  The cut must be a *valid* diagonal:
@@ -3749,6 +3750,66 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     predicate built on the project's turning-number machinery) would unlock
     `chord_ear_lift` and hence both split branches.  NOT a dead branch —
     preparation consumed by `chord_ear_lift`. -/
+/-- **Point-in-polygon, inside direction (winding ≠ 0).**  Under the same setup
+    as `chord_ear_empty_other`, if `x` *were* strictly inside the convex empty
+    ear triangle `(a', b', c')` of the piece `P`, then the winding number of `P`
+    around `x` would be nonzero.  Reason: by `HexArea.ptWind_rotate` and
+    `HexArea.ptWind_ear_clip` the winding of `P` splits as the winding of the
+    ear-clipped polygon `P'` (`a' :: c' :: tlP`) plus the winding of the ear
+    triangle `[a', b', c']`; the latter is `±2π ≠ 0` by
+    `HexArea.ptWind_triangle` (x is strictly inside), while the former is `0`
+    because `x` lies outside the smaller simple polygon `P'` (the ear is empty),
+    a point-in-polygon fact for the clipped piece.
+
+    **Status: `sorry`.**  One of the two point-in-polygon directions the
+    Jordan-separation keystone `chord_ear_empty_other` now reduces to.  Its
+    residue is the "outside ⟹ winding 0" behaviour of the winding number of a
+    simple polygon.  NOT a dead branch — consumed directly by
+    `chord_ear_empty_other` just below. -/
+lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
+    (hin : HexArea.inTriangleStrict a' b' c' x) :
+    HexArea.ptWind x P ≠ 0 := by
+  sorry
+
+/-- **Point-in-polygon, outside direction (winding 0).**  Under the same setup
+    as `chord_ear_empty_other`, the winding number of the piece `P` around a
+    vertex `x` of the *other* chord piece (`x ∈ W`, `x ∉ P`) is `0`: `x` lies in
+    the region cut off by the valid diagonal on the far side of `P`, so `P` does
+    not wind around it.  This is the "outside ⟹ winding 0" point-in-polygon
+    behaviour of a simple polygon, specialised to the two pieces of a valid
+    diagonal cut (where the diagonal separates `P`'s region from `x`).
+
+    **Status: `sorry`.**  The second point-in-polygon direction the
+    Jordan-separation keystone `chord_ear_empty_other` reduces to.  NOT a dead
+    branch — consumed directly by `chord_ear_empty_other` just below. -/
+lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
+    HexArea.ptWind x P = 0 := by
+  sorry
+
 lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -3763,7 +3824,11 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
         ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
     ¬ HexArea.inTriangleStrict a' b' c' x := by
-  sorry
+  intro hin
+  exact chord_ear_inner_ptWind_ne_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
+      hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin
+    (chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
+      hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP)
 
 /-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
     Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
