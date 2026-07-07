@@ -1,6 +1,31 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): half-plane vanishing tool for `ptWind`
+> **Umlaufsatz (CURRENT round): convex-exterior winding tool proved sorry-free
+> and consumed at both point-in-polygon atoms.**
+>
+> New sorry-free file `RequestProject/SAWUmlaufExterior.lean` (imported by
+> `SAWUmlaufPolygon`) proves the intrinsic "outside the convex hull ⟹ winding
+> `0`" criterion for the point-winding `HexArea.ptWind`:
+> * `linearFunctional_eq_mul_re` — realises any continuous `ℝ`-linear functional
+>   `f : ℂ →L[ℝ] ℝ` as a complex test direction `d = ⟨f 1, -(f I)⟩` with
+>   `f w = (w * d).re`.
+> * `ptWind_zero_of_not_mem_convexHull` — **if `x ∉ convexHull ℝ P.toFinset`
+>   then `ptWind x P = 0`**, via `geometric_hahn_banach_point_closed`
+>   (the hull of a finite vertex set is compact, hence closed) plus the existing
+>   half-plane tool `ptWind_eq_zero_of_halfplane`.  This is the convex base case
+>   of the ear-clipping induction (a point strictly outside a convex polygon /
+>   triangle never winds around it).
+>
+> This tool is now **consumed** at both Jordan atoms in `SAWUmlaufPolygon`:
+> `clipped_ear_ptWind_zero` and `chord_ear_other_ptWind_zero` each `by_cases` on
+> convex-hull membership; the convex-*exterior* branch is discharged by the new
+> lemma, so only the genuine hull-*interior* (region-wrapping) sub-case remains
+> as a `sorry` in each.  The library builds end-to-end (8132 jobs); all
+> committed and pushed.
+>
+> ---
+>
+> **Umlaufsatz (earlier round): half-plane vanishing tool for `ptWind`
 > completed sorry-free, and the inside-direction winding lemma reduced to a
 > single clean `= 0` residue on the clipped polygon.**
 >

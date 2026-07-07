@@ -63,6 +63,7 @@ import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind
 import RequestProject.SAWUmlaufPtWindJordan
 import RequestProject.SAWUmlaufPtWindHalfPlane
+import RequestProject.SAWUmlaufExterior
 
 open Real Complex ComplexConjugate
 
@@ -3794,7 +3795,13 @@ lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
     (hin : HexArea.inTriangleStrict a' b' c' x) :
     HexArea.ptWind x (a' :: c' :: tlP) = 0 := by
-  sorry
+  -- The convex-exterior case is discharged by the Hahn-Banach base case
+  -- `HexArea.ptWind_zero_of_not_mem_convexHull` (SAWUmlaufExterior): if `x` is
+  -- outside the convex hull of the clipped polygon's vertices it cannot wind
+  -- around it.  Only the genuine hull-interior (region-wrapping) case remains.
+  by_cases hx : x ∈ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ)
+  · sorry
+  · exact HexArea.ptWind_zero_of_not_mem_convexHull x (a' :: c' :: tlP) hx
 
 lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
@@ -3850,7 +3857,12 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k 
         ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
     HexArea.ptWind x P = 0 := by
-  sorry
+  -- The convex-exterior case is discharged by the Hahn-Banach base case
+  -- `HexArea.ptWind_zero_of_not_mem_convexHull` (SAWUmlaufExterior).  Only the
+  -- genuine hull-interior (region-wrapping) case remains.
+  by_cases hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)
+  · sorry
+  · exact HexArea.ptWind_zero_of_not_mem_convexHull x P hx
 
 lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)

@@ -1,3 +1,16 @@
+# Summary of changes for run c0bcce6a-5126-4f28-970f-183b2d2ee367
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. All changes are real Lean, build end-to-end (8132 jobs, no regressions), and are committed and pushed. No axioms or `@[implemented_by]` were introduced.
+
+New sorry-free file `RequestProject/SAWUmlaufExterior.lean` (imported by `SAWUmlaufPolygon`), providing an intrinsic "outside ⟹ winding 0" tool for the point-winding `HexArea.ptWind`:
+- `linearFunctional_eq_mul_re` — realises any continuous ℝ-linear functional `f : ℂ →L[ℝ] ℝ` as a complex test direction `d = ⟨f 1, -(f I)⟩` so that `f w = (w * d).re`.
+- `ptWind_zero_of_not_mem_convexHull` — if `x ∉ convexHull ℝ P.toFinset` then `ptWind x P = 0`. Proved via the geometric Hahn–Banach separation theorem (`geometric_hahn_banach_point_closed`; the convex hull of a finite vertex set is compact, hence closed) combined with the existing half-plane vanishing lemma `ptWind_eq_zero_of_halfplane`. This is the convex base case of the ear-clipping induction: a point strictly outside a convex polygon (in particular a triangle) never winds around it.
+
+This tool is now genuinely consumed (not a dead branch) at both remaining point-in-polygon Jordan atoms in `SAWUmlaufPolygon.lean`: `clipped_ear_ptWind_zero` and `chord_ear_other_ptWind_zero` each now `by_cases` on convex-hull membership; the convex-exterior branch is discharged outright by the new lemma, leaving only the genuine hull-interior (region-wrapping) sub-case as a `sorry` in each. So both atoms are strictly smaller than before.
+
+Status of the remaining gaps (all in `SAWUmlaufPolygon.lean`, all genuine Jordan-curve-level content, each isolated and documented as preparation consumed downstream, not dead branches): the two hull-interior wrapping sub-cases of the ptWind atoms; the combinatorial/Jordan ear-lift `chord_ear_lift` and its two consumers `meisters_reduction_interior2` and `empty_branch_bad_lift`; and the two boundary-spike sub-cases inside `empty_branch_boundary_lift`. `PROOF_STATUS.md` records this round. An automated attempt on the full `chord_ear_lift` assembly confirmed it still needs the seam/Jordan infrastructure rather than a one-shot proof; the natural next step is the winding-number ↔ ray-crossing (region-exterior) bridge, for which the convex base case is now in place.
+
+Relative file references: `RequestProject/SAWUmlaufExterior.lean` (new), `RequestProject/SAWUmlaufPolygon.lean` (import + two atom sub-cases discharged), `PROOF_STATUS.md` (round note).
+
 # Summary of changes for run a3c8c91e-d060-40e8-bc67-7b1d7a6a54b8
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz. All changes are real Lean, build end-to-end (8131 jobs, no regressions), and are committed and pushed. No axioms or `@[implemented_by]` were introduced.
 
