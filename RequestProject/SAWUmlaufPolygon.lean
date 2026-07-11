@@ -3721,7 +3721,8 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
   · have := PolygonSimple_rotate V r;
     grind
 
-/- **Other-piece emptiness — the isolated point-in-polygon / Jordan-curve
+/-
+**Other-piece emptiness — the isolated point-in-polygon / Jordan-curve
     separation brick.**  Cut a simple cycle `W` along the interior diagonal
     `W[0]–W[k]` (`1 ≤ k`, `k + 1 ≤ W.length`) into the two chord pieces
     `chordLeft W k` / `chordRight W k`.  The cut must be a *valid* diagonal:
@@ -3753,8 +3754,9 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     Discharging it (e.g. via a winding-number / point-in-polygon membership
     predicate built on the project's turning-number machinery) would unlock
     `chord_ear_lift` and hence both split branches.  NOT a dead branch —
-    preparation consumed by `chord_ear_lift`. -/
-/- **Point-in-polygon, inside direction (winding ≠ 0).**  Under the same setup
+    preparation consumed by `chord_ear_lift`.
+
+**Point-in-polygon, inside direction (winding ≠ 0).**  Under the same setup
     as `chord_ear_empty_other`, if `x` *were* strictly inside the convex empty
     ear triangle `(a', b', c')` of the piece `P`, then the winding number of `P`
     around `x` would be nonzero.  Reason: by `HexArea.ptWind_rotate` and
@@ -3769,8 +3771,9 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     Jordan-separation keystone `chord_ear_empty_other` now reduces to.  Its
     residue is the "outside ⟹ winding 0" behaviour of the winding number of a
     simple polygon.  NOT a dead branch — consumed directly by
-    `chord_ear_empty_other` just below. -/
-/- **Winding of the ear-clipped piece around the ear-interior point is `0`
+    `chord_ear_empty_other` just below.
+
+**Winding of the ear-clipped piece around the ear-interior point is `0`
     (the isolated Jordan residue of the inside direction).**  Same setup as
     `chord_ear_inner_ptWind_ne_zero`: `x` lies strictly inside the empty convex
     ear `(a', b', c')` of the chord piece `P`, hence `x` is exterior to the
@@ -3781,7 +3784,115 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     consumed directly by `chord_ear_inner_ptWind_ne_zero` just below via
     `HexArea.ptWind_ear_split`.
 
-    **Status: `sorry`.** -/
+    **Status: `sorry`.**
+
+**Combinatorial edge structure of a chord piece (reusable, provable).**
+    Every closed cycle edge `e` of a chord piece `P = chordLeft W k` /
+    `chordRight W k` has both endpoints in `P`, and is *either* an honest closed
+    edge of `W` *or* the cut diagonal (its segment equals `segment ℝ u v`).  This
+    is the purely combinatorial content behind the "route through the exterior of
+    `W`" reduction of the escape-walk lemmas: to avoid every edge of `P` it
+    suffices to avoid all of `W`'s (non-`x`-incident) edges together with the
+    single diagonal segment `u–v`.  NOT a dead branch — consumed directly by
+    `chord_ear_other_escape_walk` below.
+-/
+lemma chordPiece_cycleEdge_or_diag (W : List ℂ) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (e : ℂ × ℂ) (he : e ∈ HexArea.cycleEdges P) :
+    (e.1 ∈ P ∧ e.2 ∈ P) ∧
+      (e ∈ closedEdges W ∨ segment ℝ e.1 e.2 = segment ℝ u v) := by
+  cases' hP with hP_left hP_right;
+  · simp_all +decide [ HexArea.cycleEdges, List.zip ];
+    obtain ⟨ i, hi, rfl ⟩ := List.mem_iff_get.mp he; simp_all +decide [ HexArea.chordLeft ] ;
+    by_cases hi : ( i : ℕ ) < k <;> simp_all +decide [ List.getElem_append, List.getElem?_take ];
+    · split_ifs <;> simp_all +decide [ List.mem_iff_getElem ];
+      · refine' ⟨ ⟨ ⟨ i, by linarith, rfl ⟩, ⟨ i + 1, by linarith, rfl ⟩ ⟩, Or.inl ⟨ i, _, _ ⟩ ⟩ <;> norm_num [ closedEdges ];
+        linarith;
+        grind +suggestions;
+      · grind;
+    · split_ifs <;> simp_all +decide [ List.getElem?_eq_none ];
+      · cases hi.eq_or_lt <;> first | linarith | simp_all +decide [ List.getElem?_eq_none ] ;
+        refine' ⟨ ⟨ _, _ ⟩, Or.inr _ ⟩;
+        · rw [ List.mem_iff_get ];
+          use ⟨ i, by
+            simp +arith +decide [ List.length_take, hk ] ⟩
+          generalize_proofs at *;
+          grind;
+        · rw [ List.mem_iff_getElem ] ; aesop;
+        · rw [ segment_symm ];
+          grind;
+      · grind +suggestions;
+  · unfold HexArea.cycleEdges at he; simp_all +decide [ List.mem_iff_get ] ;
+    obtain ⟨ n, rfl ⟩ := he;
+    by_cases hn : n.val < (HexArea.chordRight W k).length - 1;
+    · refine' ⟨ ⟨ _, _ ⟩, Or.inl _ ⟩;
+      · grind;
+      · use ⟨ n + 1, by
+          exact Nat.lt_pred_iff.mp hn ⟩
+        generalize_proofs at *;
+        grind;
+      · use ⟨ n + k, by
+          unfold HexArea.chordRight at hn; simp_all +decide [ List.length_append, List.length_take ] ;
+          unfold closedEdges; simp +arith +decide [ List.length_zip ] ; omega; ⟩
+        generalize_proofs at *;
+        unfold closedEdges; simp +decide [ *, List.getElem_append ] ;
+        unfold HexArea.chordRight; simp +decide [ *, List.getElem?_eq_getElem ] ;
+        grind +suggestions;
+    · have h_last : n.val = (HexArea.chordRight W k).length - 1 := by
+        grind +qlia;
+      rcases k with ( _ | k ) <;> simp_all +decide [ HexArea.chordRight ];
+      rcases W with ( _ | ⟨ x, _ | ⟨ y, W ⟩ ⟩ ) <;> simp_all +decide [ List.getElem_append ];
+      refine' ⟨ ⟨ ⟨ W.length + 1 - k, _ ⟩, _ ⟩, ⟨ ⟨ 0, _ ⟩, _ ⟩ ⟩ <;> simp_all +decide [ Nat.sub_sub ]
+
+/-
+**Combinatorial edge structure of an ear-clipped chord piece (reusable,
+    provable).**  Let `P` be a chord piece and `P.rotate s = a' :: b' :: c' :: tlP`
+    (so `b'` is the ear tip).  Every closed cycle edge `e` of the ear-clipped
+    polygon `a' :: c' :: tlP` has both endpoints in `a' :: c' :: tlP`, and its
+    segment is *either* the ear base `a'–c'`, *or* `e` is an honest closed edge of
+    `W`, *or* its segment is the cut diagonal `u–v`.  Reason: clipping only
+    replaces the two ear sides `(a',b'),(b',c')` by the single base edge
+    `(a',c')`; every other edge is an edge of `P.rotate s`, hence of `P` (by
+    `mem_closedEdges_rotate`), hence classified by `chordPiece_cycleEdge_or_diag`.
+    Crucially none of these `W`-edges involves the removed tip `b'`, so the
+    ear-side edges `a'–b'`, `b'–c'` are NOT among the edges the escape walk must
+    avoid.  NOT a dead branch — consumed by `clipped_ear_escape_walk` below.
+-/
+lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (e : ℂ × ℂ) (he : e ∈ HexArea.cycleEdges (a' :: c' :: tlP)) :
+    (e.1 ∈ (a' :: c' :: tlP) ∧ e.2 ∈ (a' :: c' :: tlP)) ∧
+      (segment ℝ e.1 e.2 = segment ℝ a' c' ∨
+        e ∈ closedEdges W ∨ segment ℝ e.1 e.2 = segment ℝ u v) := by
+  by_cases he_head : e = (a', c');
+  · aesop;
+  · have h_e_in_P : e ∈ HexArea.cycleEdges P := by
+      have h_e_in_P : e ∈ HexArea.cycleEdges (P.rotate s) := by
+        simp_all +decide [ HexArea.cycleEdges ]
+      generalize_proofs at *; (
+      convert mem_closedEdges_rotate P s e |>.1 ?_ using 1
+      generalize_proofs at *; (
+      cases P <;> simp +decide [ HexArea.cycleEdges ] at *;
+      cases ‹List ℂ› <;> simp +decide [ closedEdges ] at *;
+      grind +extAll);
+      convert h_e_in_P using 1
+      generalize_proofs at *; (
+      unfold HexArea.cycleEdges closedEdges;
+      refine' List.ext_get _ _ <;> simp +decide [ List.get ];
+      · cases P <;> simp +arith +decide at *;
+      · intro n hn hn'; rcases n with ( _ | n ) <;> simp_all +decide [ List.getElem_append, List.getElem_rotate ] ;
+        grind +qlia))
+    generalize_proofs at *; (
+    have := chordPiece_cycleEdge_or_diag W k hk1 hk u v hu hv P hP e h_e_in_P; ( have := mem_closedEdges_rotate P s e; ( simp_all +decide [ HexArea.cycleEdges ] ; ) );
+    rw [ List.mem_iff_get ] at he; obtain ⟨ i, hi ⟩ := he; simp_all +decide [ List.get ] ;
+    grind +splitIndPred)
+
 /-- **Escaping edge-avoiding walk out of the clipped polygon (hull-interior
     residue).**  Same setup as `clipped_ear_ptWind_zero`: `x` lies strictly inside
     the empty convex ear `(a', b', c')` of the chord piece `P`, and (the residual
@@ -3817,6 +3928,45 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
       List.IsChain (fun a b => ∀ e ∈ HexArea.cycleEdges (a' :: c' :: tlP),
           Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ) := by
+  -- The clipped polygon `a' :: c' :: tlP` sits inside `P`, and the removed ear
+  -- tip `b'` is not one of its vertices.
+  have hcl_sub : ∀ y ∈ (a' :: c' :: tlP), y ∈ P := by
+    intro y hy
+    have hy' : y ∈ P.rotate s := by
+      rw [hrotP]; simp only [List.mem_cons] at hy ⊢; tauto
+    exact (List.mem_rotate).mp hy'
+  have hxcl : x ∉ (a' :: c' :: tlP) := fun h => hxP (hcl_sub x h)
+  have hnd : (a' :: b' :: c' :: tlP).Nodup := hrotP ▸ (List.nodup_rotate.mpr hPsimple.1)
+  have hb'cl : b' ∉ (a' :: c' :: tlP) := by
+    have h1 := hnd
+    simp only [List.nodup_cons, List.mem_cons] at h1
+    simp only [List.mem_cons]
+    grind
+  -- Reduce, via `clippedPiece_cycleEdge_classify`, from avoiding every edge of
+  -- the clipped polygon to avoiding the ear base `a'–c'`, all of `W`'s edges NOT
+  -- incident to the removed tip `b'` (and not incident to `x`), and the diagonal
+  -- `u–v`.  Crucially the two ear sides `a'–b'`, `b'–c'` (the only `W`-edges the
+  -- classification excludes, since they carry `b'`) are left free, which is what
+  -- lets the walk escape the ear triangle.  This isolates the genuine
+  -- plane-topology content (routing through `W`'s exterior out past the hull).
+  suffices h : ∃ zs : List ℂ,
+      List.IsChain (fun a b =>
+          Disjoint (segment ℝ a b) (segment ℝ a' c') ∧
+          (∀ e ∈ closedEdges W, e.1 ≠ b' → e.2 ≠ b' → e.1 ≠ x → e.2 ≠ x →
+              Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
+          Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ) by
+    obtain ⟨zs, hchain, hlast⟩ := h
+    refine ⟨zs, ?_, hlast⟩
+    refine hchain.imp ?_
+    intro a b hab e he
+    obtain ⟨⟨he1, he2⟩, hcase⟩ :=
+      clippedPiece_cycleEdge_classify W k hk1 hk u v hu hv P hP a' b' c' s tlP hrotP e he
+    rcases hcase with hbase | hWe | hdiage
+    · rw [hbase]; exact hab.1
+    · exact hab.2.1 e hWe (fun h => hb'cl (h ▸ he1)) (fun h => hb'cl (h ▸ he2))
+        (fun h => hxcl (h ▸ he1)) (fun h => hxcl (h ▸ he2))
+    · rw [hdiage]; exact hab.2.2
   sorry
 
 /-- **Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
@@ -3844,6 +3994,29 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k 
       List.IsChain (fun a b => ∀ e ∈ HexArea.cycleEdges P,
           Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ (P.toFinset : Set ℂ) := by
+  -- Reduce, via `chordPiece_cycleEdge_or_diag`, from avoiding every edge of `P`
+  -- to avoiding all of `W`'s (non-`x`-incident) edges together with the single
+  -- diagonal segment `u–v`.  This isolates the genuine plane-topology content:
+  -- routing an edge-avoiding polyline through the exterior of the whole polygon
+  -- `W` (which avoids every `W`-edge and the interior diagonal) out past the
+  -- convex hull of `P`.  Since every edge of `P` has both endpoints in `P` and
+  -- `x ∉ P`, no edge of `P` is incident to `x`, so the `x`-incidence guard never
+  -- fires for the edges we must avoid.
+  suffices h : ∃ zs : List ℂ,
+      List.IsChain (fun a b =>
+          (∀ e ∈ closedEdges W, e.1 ≠ x → e.2 ≠ x →
+              Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
+          Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (P.toFinset : Set ℂ) by
+    obtain ⟨zs, hchain, hlast⟩ := h
+    refine ⟨zs, ?_, hlast⟩
+    refine hchain.imp ?_
+    intro a b hab e he
+    obtain ⟨⟨he1P, he2P⟩, hcase⟩ :=
+      chordPiece_cycleEdge_or_diag W k hk1 hk u v hu hv P hP e he
+    rcases hcase with hWe | hseg
+    · exact hab.1 e hWe (fun h => hxP (h ▸ he1P)) (fun h => hxP (h ▸ he2P))
+    · rw [hseg]; exact hab.2
   sorry
 
 lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)

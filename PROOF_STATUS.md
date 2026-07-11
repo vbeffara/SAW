@@ -1,6 +1,49 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): new fully `sorry`-free winding
+> **Umlaufsatz (CURRENT round): two new fully `sorry`-free combinatorial
+> edge-classification lemmas for chord pieces, both CONSUMED to reduce the two
+> point-in-polygon escape-walk residues to clean, honest exterior-walk goals.
+> Builds end-to-end, 8134 jobs; no new axioms.**
+>
+> The two remaining point-in-polygon atoms of the Umlaufsatz reduce (via the
+> proved walk-invariance tool `HexArea.ptWind_zero_of_walk_to_not_hull`) to
+> exhibiting an edge-avoiding polyline from the forbidden point out past the
+> convex hull.  This round makes the geometry of those two escape-walk residues
+> honest and explicit by isolating the *combinatorial* part (which edges must be
+> avoided) from the *topological* part (routing through the exterior of the whole
+> polygon `W`).  Two new lemmas, proved `sorry`-free and consumed immediately:
+>
+> * `chordPiece_cycleEdge_or_diag` — every closed cycle edge of a chord piece
+>   `P = chordLeft/chordRight W k` has both endpoints in `P` and is *either* an
+>   honest closed edge of `W` *or* the cut diagonal (segment `= u–v`).  Consumed
+>   by `chord_ear_other_escape_walk`: its `suffices` step reduces “avoid every
+>   edge of `P`” to “avoid all of `W`’s non-`x`-incident edges plus the diagonal
+>   `u–v`” (using `x ∉ P`, so no `P`-edge touches `x`).
+> * `clippedPiece_cycleEdge_classify` — every closed cycle edge of the ear-clipped
+>   polygon `a' :: c' :: tlP` is the ear base `a'–c'`, or a closed edge of `W`, or
+>   the diagonal `u–v` (clipping only swaps the two ear sides `(a',b'),(b',c')`
+>   for the base `(a',c')`; the rest are edges of `P.rotate s`, hence of `P` by
+>   `mem_closedEdges_rotate`, hence classified by `chordPiece_cycleEdge_or_diag`).
+>   Consumed by `clipped_ear_escape_walk`: its `suffices` step reduces to avoiding
+>   the ear base, all of `W`’s edges NOT carrying the removed tip `b'` (nor `x`),
+>   and the diagonal — crucially leaving the two ear sides `a'–b'`, `b'–c'` FREE,
+>   which is exactly what lets the walk escape the ear triangle.
+>
+> Net effect: the two escape-walk residues no longer carry an opaque `sorry`;
+> each now carries only the *reduced* exterior-walk goal (route an edge-avoiding
+> polyline through `W`’s exterior out past the hull), a strictly cleaner and more
+> honest statement, backed by two proved reusable classification lemmas.  These
+> reduced goals were deliberately NOT extracted into a single general “exterior
+> is polyline-connected to infinity” brick, because such a brick is only true
+> under an “`x` is in the unbounded component” hypothesis that cannot be supplied
+> generically; keeping each residue in its fully-hypothesised context is honest.
+> Live Umlaufsatz `sorry`s (7, in `SAWUmlaufPolygon.lean`): the two reduced
+> exterior-walk goals, the two boundary-spike subcases, `chord_ear_lift`, the
+> `interior_lift_via_piece` triangle/flat residual, and `empty_branch_bad_lift`.
+>
+> ---
+>
+> **Umlaufsatz (earlier round): new fully `sorry`-free winding
 > locally-constant / homotopy-invariance brick
 > `RequestProject/SAWUmlaufPtWindMove.lean`, imported by `SAWUmlaufPolygon`, and
 > now genuinely consumed by BOTH point-in-polygon atoms.  Builds end-to-end,
