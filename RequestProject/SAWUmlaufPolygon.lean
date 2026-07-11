@@ -65,6 +65,7 @@ import RequestProject.SAWUmlaufPtWindJordan
 import RequestProject.SAWUmlaufPtWindHalfPlane
 import RequestProject.SAWUmlaufPtWindRay
 import RequestProject.SAWUmlaufExterior
+import RequestProject.SAWUmlaufPtWindMove
 
 open Real Complex ComplexConjugate
 
@@ -3769,7 +3770,7 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     residue is the "outside ⟹ winding 0" behaviour of the winding number of a
     simple polygon.  NOT a dead branch — consumed directly by
     `chord_ear_empty_other` just below. -/
-/-- **Winding of the ear-clipped piece around the ear-interior point is `0`
+/- **Winding of the ear-clipped piece around the ear-interior point is `0`
     (the isolated Jordan residue of the inside direction).**  Same setup as
     `chord_ear_inner_ptWind_ne_zero`: `x` lies strictly inside the empty convex
     ear `(a', b', c')` of the chord piece `P`, hence `x` is exterior to the
@@ -3781,6 +3782,70 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     `HexArea.ptWind_ear_split`.
 
     **Status: `sorry`.** -/
+/-- **Escaping edge-avoiding walk out of the clipped polygon (hull-interior
+    residue).**  Same setup as `clipped_ear_ptWind_zero`: `x` lies strictly inside
+    the empty convex ear `(a', b', c')` of the chord piece `P`, and (the residual
+    case) `x` lies inside the convex hull of the clipped polygon `a' :: c' :: tlP`.
+    Since `x` is genuinely exterior to the *simple* clipped polygon (the ear is
+    empty, so the ear-triangle interior meets `a' :: c' :: tlP` only along the
+    shared edge `a'–c'`, and its other two sides `a'–b'`, `b'–c'` are not edges of
+    the clipped polygon), `x` lies in the unbounded complementary component and
+    can be joined to a hull-exterior point by an edge-avoiding polyline.
+
+    **Status: `sorry`.**  This is the honest exterior-path (polygon Jordan
+    complement path-connectivity) residue.  It is a TRUE statement.  NOT a dead
+    branch — consumed directly by `clipped_ear_ptWind_zero` just below via the
+    proved walk-invariance tool `HexArea.ptWind_zero_of_walk_to_not_hull`
+    (`SAWUmlaufPtWindMove`), which is exactly what reduces the winding-`0` fact to
+    exhibiting this walk. -/
+lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
+    (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
+    (hin : HexArea.inTriangleStrict a' b' c' x)
+    (hx : x ∈ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ)) :
+    ∃ zs : List ℂ,
+      List.IsChain (fun a b => ∀ e ∈ HexArea.cycleEdges (a' :: c' :: tlP),
+          Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ) := by
+  sorry
+
+/-- **Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
+    Same setup as `chord_ear_other_ptWind_zero`: `x` is a vertex of the OTHER
+    chord piece (`x ∈ W`, `x ∉ P`), and (the residual case) `x` lies inside the
+    convex hull of `P`.  A valid diagonal cut splits the simple polygon into two
+    simply-connected pieces, neither surrounding the other, so `x` (on the
+    boundary of `W`, off `P`) lies in the unbounded complementary component of the
+    simple polygon `P` and can be joined to a hull-exterior point by an
+    edge-avoiding polyline.
+
+    **Status: `sorry`.**  Honest exterior-path residue; a TRUE statement.  NOT a
+    dead branch — consumed directly by `chord_ear_other_ptWind_zero` just below
+    via `HexArea.ptWind_zero_of_walk_to_not_hull` (`SAWUmlaufPtWindMove`). -/
+lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
+    (hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)) :
+    ∃ zs : List ℂ,
+      List.IsChain (fun a b => ∀ e ∈ HexArea.cycleEdges P,
+          Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (P.toFinset : Set ℂ) := by
+  sorry
+
 lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -3799,9 +3864,13 @@ lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : �
   -- The convex-exterior case is discharged by the Hahn-Banach base case
   -- `HexArea.ptWind_zero_of_not_mem_convexHull` (SAWUmlaufExterior): if `x` is
   -- outside the convex hull of the clipped polygon's vertices it cannot wind
-  -- around it.  Only the genuine hull-interior (region-wrapping) case remains.
+  -- around it.  The genuine hull-interior (region-wrapping) case is reduced to an
+  -- escaping edge-avoiding walk (`clipped_ear_escape_walk`) via the proved
+  -- walk-invariance tool `HexArea.ptWind_zero_of_walk_to_not_hull`.
   by_cases hx : x ∈ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ)
-  · sorry
+  · obtain ⟨zs, hchain, hy⟩ := clipped_ear_escape_walk W hsimple k hk1 hk u v hu hv
+      hdiag P hPsimple hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin hx
+    exact HexArea.ptWind_zero_of_walk_to_not_hull (a' :: c' :: tlP) x zs hchain hy
   · exact HexArea.ptWind_zero_of_not_mem_convexHull x (a' :: c' :: tlP) hx
 
 lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
@@ -3859,10 +3928,14 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k 
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
     HexArea.ptWind x P = 0 := by
   -- The convex-exterior case is discharged by the Hahn-Banach base case
-  -- `HexArea.ptWind_zero_of_not_mem_convexHull` (SAWUmlaufExterior).  Only the
-  -- genuine hull-interior (region-wrapping) case remains.
+  -- `HexArea.ptWind_zero_of_not_mem_convexHull` (SAWUmlaufExterior).  The genuine
+  -- hull-interior (region-wrapping) case is reduced to an escaping edge-avoiding
+  -- walk (`chord_ear_other_escape_walk`) via the proved walk-invariance tool
+  -- `HexArea.ptWind_zero_of_walk_to_not_hull`.
   by_cases hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)
-  · sorry
+  · obtain ⟨zs, hchain, hy⟩ := chord_ear_other_escape_walk W hsimple k hk1 hk u v hu hv
+      hdiag P hPsimple hP x hxW hxP hx
+    exact HexArea.ptWind_zero_of_walk_to_not_hull P x zs hchain hy
   · exact HexArea.ptWind_zero_of_not_mem_convexHull x P hx
 
 lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)

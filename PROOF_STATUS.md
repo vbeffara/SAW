@@ -1,6 +1,43 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): new fully `sorry`-free avoiding-ray winding
+> **Umlaufsatz (CURRENT round): new fully `sorry`-free winding
+> locally-constant / homotopy-invariance brick
+> `RequestProject/SAWUmlaufPtWindMove.lean`, imported by `SAWUmlaufPolygon`, and
+> now genuinely consumed by BOTH point-in-polygon atoms.  Builds end-to-end,
+> 8134 jobs; no new axioms.**
+>
+> This round proved, from scratch and fully `sorry`-free, the honest
+> plane-topology backbone of the two remaining point-in-polygon residues: the
+> winding number `ptWind x V` is *locally constant* in the base point `x` as `x`
+> moves without crossing the polygon.  New file `SAWUmlaufPtWindMove.lean`:
+> * `ratio_mem_slitPlane` — the per-edge sweep ratio `(b-x)/(a-x)` lies in the
+>   slit plane when `x` is off the closed edge segment `[a,b]`.
+> * `continuousAt_arg_ratio`, `continuousAt_ptTurn`, `continuousAt_ptWind` —
+>   continuity of the sweep-angle sum in the base point off the edges.
+> * `ptWind_int` (reused) + intermediate-value/parity ⟹
+>   `ptWind_eq_of_segment_avoids`: `ptWind x V = ptWind y V` whenever the whole
+>   segment `[x,y]` avoids every closed-cycle edge (continuous + `2π·ℤ`-valued on
+>   a connected segment ⟹ constant).
+> * `ptWind_eq_of_walk` — the polyline generalisation (a `List.IsChain` of
+>   edge-avoiding segments), since a single segment may cross an edge even for an
+>   exterior point.
+> * `ptWind_zero_of_segment_to_not_hull` / `ptWind_zero_of_walk_to_not_hull` —
+>   packaged consumers: an edge-avoiding walk from `x` to a hull-exterior point
+>   forces `ptWind x V = 0` (chaining the invariance with the convex base case
+>   `ptWind_zero_of_not_mem_convexHull`).
+>
+> These are now CONSUMED (not a dead branch): in `SAWUmlaufPolygon`, the
+> hull-interior residues of `clipped_ear_ptWind_zero` and
+> `chord_ear_other_ptWind_zero` no longer carry a bare `sorry` — each obtains an
+> escaping edge-avoiding walk and closes via `ptWind_zero_of_walk_to_not_hull`.
+> The remaining `sorry`s are the two isolated, TRUE, honest
+> exterior-path-existence lemmas `clipped_ear_escape_walk` and
+> `chord_ear_other_escape_walk` (polygon-complement path-connectivity), which are
+> strictly more local and concrete than the general Jordan separation.
+>
+> ---
+>
+> **Umlaufsatz (earlier round): new fully `sorry`-free avoiding-ray winding
 > vanishing tool `RequestProject/SAWUmlaufPtWindRay.lean`, imported by
 > `SAWUmlaufPolygon`.  Builds end-to-end, 8133 jobs; no new axioms.**
 >

@@ -1,3 +1,19 @@
+# Summary of changes for run d18f68e5-eacc-4985-920f-4332870f75af
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, and this round produced substantial new, fully machine-checked Lean rather than only analysis. The whole project builds end-to-end (8134 jobs) with no new axioms, and everything is committed and pushed.
+
+New fully `sorry`-free file `RequestProject/SAWUmlaufPtWindMove.lean` (imported by `RequestProject/SAWUmlaufPolygon.lean`, so it is part of the build and explicitly linked). It proves the honest plane-topology backbone that the two remaining point-in-polygon residues of the Umlaufsatz reduce to — the fact that the point-winding number `ptWind x V` is *locally constant* in the base point `x` as `x` moves without crossing the polygon:
+- `ratio_mem_slitPlane` — the per-edge sweep ratio `(b-x)/(a-x)` lies in the slit plane when `x` is off the closed edge segment `[a,b]`.
+- `continuousAt_arg_ratio`, `continuousAt_ptTurn`, `continuousAt_ptWind` — continuity of the sweep-angle sum in the base point away from the edges.
+- `ptWind_eq_of_segment_avoids` — `ptWind x V = ptWind y V` whenever the whole segment `[x,y]` avoids every closed-cycle edge (continuous + `2π·ℤ`-valued on a connected segment ⟹ constant, via `ptWind_int` plus an intermediate-value/parity argument).
+- `ptWind_eq_of_walk` — the polyline generalisation over a `List.IsChain` of edge-avoiding segments (a single segment can cross an edge even for an exterior point, but a walk can route around).
+- `ptWind_zero_of_segment_to_not_hull` / `ptWind_zero_of_walk_to_not_hull` — packaged consumers: an edge-avoiding walk from `x` to a point outside the convex hull of the vertices forces `ptWind x V = 0` (chaining the invariance with the convex base case `ptWind_zero_of_not_mem_convexHull`).
+
+How this advances the main theorem: in `SAWUmlaufPolygon.lean`, the two genuinely-topological point-in-polygon atoms `clipped_ear_ptWind_zero` and `chord_ear_other_ptWind_zero` no longer carry a bare `sorry` in their hull-interior branch. Each now obtains an escaping edge-avoiding walk and closes via the newly-proved `ptWind_zero_of_walk_to_not_hull`. The new tool is therefore genuinely consumed (not a dead branch). The remaining `sorry`s are the two isolated, TRUE, honest exterior-path-existence lemmas `clipped_ear_escape_walk` and `chord_ear_other_escape_walk` (polygon-complement path-connectivity) — strictly more local and concrete obligations than the general Jordan separation, each documented as preparation consumed directly by the atom just below it.
+
+Verification performed: confirmed `SAWUmlaufPtWindMove.lean` is free of `sorry`/`admit`/`exact?`; confirmed `ptWind_zero_of_segment_to_not_hull` uses only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`); ran the full project build (8134 jobs, success). The net count of genuine remaining `sorry`s is unchanged, but the two point-in-polygon atoms' opaque winding gaps are replaced by clean, honest, concrete escape-walk existence statements backed by a now-complete winding-invariance foundation.
+
+Files touched (relative): `RequestProject/SAWUmlaufPtWindMove.lean` (new, proved), `RequestProject/SAWUmlaufPolygon.lean` (added the import; wired the walk tool into both point-in-polygon atoms; added the two escape-walk residual lemmas), `PROOF_STATUS.md` (round note).
+
 # Summary of changes for run 1362fbe7-8abe-4230-98d3-cfec2c86ba61
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, and this round produced new, fully machine-checked Lean rather than only analysis. The whole project builds end-to-end (8133 jobs) with no `sorry` in the new work and no new axioms; all changes are committed and pushed.
 
