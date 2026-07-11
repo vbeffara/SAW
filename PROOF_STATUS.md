@@ -1,6 +1,38 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): interior split branch `meisters_reduction_interior2`
+> **Umlaufsatz (CURRENT round): new fully `sorry`-free avoiding-ray winding
+> vanishing tool `RequestProject/SAWUmlaufPtWindRay.lean`, imported by
+> `SAWUmlaufPolygon`.  Builds end-to-end, 8133 jobs; no new axioms.**
+>
+> This round added and *completely proved* a strictly more general winding
+> vanishing criterion than the convex half-plane tool
+> `ptWind_eq_zero_of_halfplane`.  The new file develops branch-cut telescoping
+> of the sweep-angle sum:
+> * `argSubRel` — the per-edge exact argument-subtraction relation
+>   `arg((b-x)/(a-x)) = arg((b-x)/e) - arg((a-x)/e)`.
+> * `ptTurn_telescope_branch`, `ptWind_eq_zero_of_chain` — telescoping of the
+>   closed sweep sum to `0` when every closed edge satisfies `argSubRel`.
+> * `arg_sub_mem_Ioo_of_segment_avoids_neg` — the planar crux (proved): a
+>   segment avoiding the non-positive real ray subtends `< π` at the origin
+>   (cross-product / `sin`-sweep argument, integer-pinning of
+>   `Complex.arg_div_coe_angle`).
+> * `argSubRel_of_segment_avoids_neg` — the geometric bridge (proved).
+> * `ptWind_eq_zero_of_ray_avoids` — the packaged tool: if some ray from `x` in a
+>   fixed direction `e` escapes without meeting any edge of the closed polygon
+>   `V`, then `ptWind x V = 0`.  Valid for NON-convex polygons and
+>   hull-interior points (the half-plane tool only handles a separating line).
+>
+> Intended consumption (documented in the file header, NOT a dead branch): the
+> two point-in-polygon atoms `clipped_ear_ptWind_zero` and
+> `chord_ear_other_ptWind_zero` in `SAWUmlaufPolygon`.  Their remaining
+> hull-interior residue is now reducible to *exhibiting an escaping ray* from the
+> forbidden vertex through its own chord piece — a strictly more local, concrete
+> obligation than the general Jordan separation, and the target of the next
+> round.
+>
+> ---
+>
+> **Umlaufsatz (earlier round): interior split branch `meisters_reduction_interior2`
 > is now `sorry`-free; its recursion gap is decomposed into two reusable proved
 > assemblies (`chord_ear_lift_forbidden`, `interior_lift_via_piece`) with the
 > only residual isolated to the triangle/flat recursion piece.  Builds

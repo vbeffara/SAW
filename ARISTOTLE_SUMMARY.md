@@ -1,3 +1,19 @@
+# Summary of changes for run 1362fbe7-8abe-4230-98d3-cfec2c86ba61
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, and this round produced new, fully machine-checked Lean rather than only analysis. The whole project builds end-to-end (8133 jobs) with no `sorry` in the new work and no new axioms; all changes are committed and pushed.
+
+New fully `sorry`-free file `RequestProject/SAWUmlaufPtWindRay.lean` (imported by `RequestProject/SAWUmlaufPolygon.lean`, so it is part of the build and explicitly linked). It develops a strictly more general winding-number vanishing criterion than the existing convex half-plane tool `ptWind_eq_zero_of_halfplane` — the missing brick for the two remaining point-in-polygon atoms of the Umlaufsatz:
+- `argSubRel` — the per-edge exact argument-subtraction relation `arg((b−x)/(a−x)) = arg((b−x)/e) − arg((a−x)/e)`.
+- `ptTurn_telescope_branch` and `ptWind_eq_zero_of_chain` — telescoping of the closed sweep-angle sum to `0` when every closed edge satisfies `argSubRel`.
+- `arg_sub_mem_Ioo_of_segment_avoids_neg` — the isolated planar crux, now proved: a straight segment avoiding the non-positive real ray subtends less than a half-turn at the origin (cross-product / sine-sweep argument plus integer-pinning of `Complex.arg_div_coe_angle`).
+- `argSubRel_of_segment_avoids_neg` — the geometric bridge, proved from the crux.
+- `ptWind_eq_zero_of_ray_avoids` — the packaged tool: if some ray from `x` in a fixed direction escapes without meeting any edge of the closed polygon, then `ptWind x = 0`. Unlike the half-plane tool this applies to non-convex polygons and hull-interior points.
+
+How this advances the main theorem: the two genuinely-topological gaps `clipped_ear_ptWind_zero` and `chord_ear_other_ptWind_zero` in `SAWUmlaufPolygon.lean` reduce to "winding is `0` outside the polygon region". The new tool reduces that to exhibiting a single escaping ray from the forbidden vertex through its own chord piece — a strictly more local and concrete obligation than the general Jordan separation, and the natural next target.
+
+Verification performed this round: I confirmed `SAWUmlaufPtWindRay.lean` is `sorry`-free and that `ptWind_eq_zero_of_ray_avoids` uses only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`); I confirmed `SAWUmlaufPolygon.lean` still builds with the new import; and I ran a full project build (8133 jobs, success). Two combinatorial residual branches (`interior_lift_via_piece`, `empty_branch_bad_lift`) were attempted but confirmed to still require the deeper Jordan infrastructure, so they were left as documented `sorry`s (no regressions). The remaining Umlaufsatz gaps in `SAWUmlaufPolygon.lean` are unchanged in count (the two point-in-polygon atoms, the `chord_ear_lift` combinatorial/Jordan brick, the interior triangle/flat recursion residual, the bad-diagonal empty branch, and the two boundary-spike sub-cases); each is isolated and documented as preparation consumed downstream, not a dead branch. `PROOF_STATUS.md` records this round.
+
+Files touched (relative): `RequestProject/SAWUmlaufPtWindRay.lean` (new, proved), `RequestProject/SAWUmlaufPolygon.lean` (added the import), `PROOF_STATUS.md` (round note).
+
 # Summary of changes for run 533454ad-ef7d-425c-b37c-49dfa0bf364b
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`. All changes build end-to-end (8132 jobs, no regressions, no new axioms or `@[implemented_by]`), and are committed and pushed.
 

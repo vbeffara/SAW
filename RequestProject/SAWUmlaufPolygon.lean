@@ -63,6 +63,7 @@ import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind
 import RequestProject.SAWUmlaufPtWindJordan
 import RequestProject.SAWUmlaufPtWindHalfPlane
+import RequestProject.SAWUmlaufPtWindRay
 import RequestProject.SAWUmlaufExterior
 
 open Real Complex ComplexConjugate
