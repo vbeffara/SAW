@@ -1,3 +1,20 @@
+# Summary of changes for run 4bcc5817-4daf-45f0-b4b4-db0f689cfac0
+Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving all other branches of the SAW formalization untouched. The whole library still builds successfully (`lake build`, 8135 jobs, including `RequestProject/SAWFinal.lean`), and all new declarations are in `RequestProject/SAWUmlaufPolygon.lean`, which is transitively imported from `SAWFinal`.
+
+Context: the general planar Umlaufsatz (`polygon_umlaufsatz`) and its whole ear-clipping induction are already proved; the remaining content is concentrated in the Meisters two-ears / point-in-polygon core. I confirmed the exact live gaps: 7 genuine Jordan-curve-theorem-level `sorry`s (the two escape-walk lemmas, `chord_ear_lift`, `interior_lift_via_piece`'s residual, `empty_branch_bad_lift`, and the two `empty_branch_boundary_lift` spike subcases); the 8th `sorry` in the file is inside a block comment (the documented-false `ear_turning_bounds` dead branch).
+
+Concrete progress this round (all verified, committed, pushed):
+
+1. **Soundness fix.** The `chord_ear_lift` chain was documented as "under-hypothesised" (its seam-corner claim is unsound without cyclic non-degeneracy of the whole polygon). I added `hnd : polyCycNondeg V` to `chord_ear_lift`, `chord_ear_lift_forbidden` and `interior_lift_via_piece`, threading it through all call sites from `meisters_reduction_interior2`, which supplies it. This makes the statements honest without weakening anything, and the library still builds.
+
+2. **Two new sorry-free list-surgery bricks** — the pure combinatorial core of `chord_ear_lift`'s list surgery, both numerically validated before formalizing and proved with only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`):
+   - `chordLeft_interior_ear_extract`: an ear rotation of the left chord piece whose tip avoids both cut endpoints sits at an interior index `i`, so the ear triple appears as three consecutive vertices of `W` via `W.rotate (i-1) = a'::b'::c'::(W.drop (i+2) ++ W.take (i-1))`.
+   - `chordRight_interior_ear_extract`: the symmetric statement for the right chord piece (with the cyclic-wraparound tail left existential).
+
+3. **Documentation/linking.** Updated the `chord_ear_lift` note to link these bricks as consumed preparation and to record precisely the remaining genuine content: (a) the seam-corner non-degeneracy residue (when the ear tip is adjacent to a cut endpoint, the clip corner involves the far piece's neighbour and is not a consecutive polygon corner), and (b) the other-piece emptiness/diagonal transfer (already reducible to the proved Jordan keystone `chord_ear_empty_other`).
+
+Net effect: an unsound (under-hypothesised) statement was made honest, and the list-surgery half of the pivotal `chord_ear_lift` brick is now available sorry-free as two reusable lemmas, isolating the remaining Umlaufsatz content into a smaller, sharply-documented set of genuine geometric residues. All partial progress is preserved as building Lean with honest `sorry`s; the count of active gaps is unchanged (7) but two new proved bricks were added toward closing them. The remaining gaps are genuine Jordan-curve-theorem-level content requiring further multi-round development.
+
 # Summary of changes for run 0bcfad75-ed4a-432f-8461-015eeb6a623a
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project still builds end-to-end (8135 jobs, no new axioms), and all work is committed and pushed.
 

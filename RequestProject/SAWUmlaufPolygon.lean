@@ -4132,6 +4132,196 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP)
 
+/-
+**List-surgery brick for `chord_ear_lift` (chordLeft case).**
+    An ear rotation of the left chord piece `chordLeft W k = W.take (k+1)` whose
+    tip `b'` avoids both cut endpoints `u = W[0]` and `v = W[k]` is an *interior*
+    ear: its tip sits at some interior index `i` (`1 ≤ i`, `i+1 ≤ k`) of `W`, so
+    the ear triple `a', b', c'` are three cyclically-consecutive vertices of `W`
+    itself, exhibited by the rotation `W.rotate (i-1)`.  This is pure
+    list/modular arithmetic (no geometry): the head of `(W.take (k+1)).rotate s`
+    is `W[s % (k+1)]`, and `W.Nodup` turns the value inequalities `b' ≠ W[0]`,
+    `b' ≠ W[k]` into the index bounds that place the tip strictly inside the arc
+    (so no modular wraparound occurs and the three vertices are genuinely
+    consecutive in `W`).  Numerically validated.  NOT a dead branch — preparation
+    consumed by `chord_ear_lift`.
+-/
+lemma chordLeft_interior_ear_extract (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
+    (hk : k + 1 ≤ W.length) (hWnd : W.Nodup) (s : ℕ) (a' b' c' : ℂ)
+    (rest0 : List ℂ)
+    (hrotP : (HexArea.chordLeft W k).rotate s = a' :: b' :: c' :: rest0)
+    (hbu : b' ≠ W[0]!) (hbv : b' ≠ W[k]!) :
+    ∃ i : ℕ, 1 ≤ i ∧ i + 1 ≤ k ∧
+      W.rotate (i - 1) = a' :: b' :: c' :: (W.drop (i + 2) ++ W.take (i - 1)) := by
+  -- Calculate the indices of the vertices in the rotated list.
+  set i := (s + 1) % (k + 1) with hi_def
+  have hi_bounds : 1 ≤ i ∧ i + 1 ≤ k := by
+    have hi_bounds : b' = W[i]! := by
+      have hb'_eq : b' = (HexArea.chordLeft W k)[(1 + s) % (k + 1)]! := by
+        convert congr_arg ( fun l : List ℂ => l[1]! ) hrotP using 1
+        generalize_proofs at *;
+        · grind;
+        · rw [ ← hrotP ] ; simp +decide [ add_comm, List.getElem?_rotate ] ;
+          rw [ List.getElem?_rotate ] ;
+          · rw [ add_comm, HexArea.chordLeft ] ; aesop;
+          · grind +suggestions
+      generalize_proofs at *;
+      rw [ hb'_eq, add_comm 1 s ];
+      unfold HexArea.chordLeft; simp +decide [ List.getElem?_take, Nat.mod_lt _ ( by linarith : 0 < k + 1 ) ] ;
+      rfl;
+    constructor <;> contrapose! hbu;
+    · aesop;
+    · have : i = k := by
+        linarith [ Nat.mod_lt ( s + 1 ) ( by linarith : 0 < k + 1 ) ]
+      rw [this] at hi_bounds; simp_all +decide [ Nat.mod_eq_of_lt ] ;
+  -- By definition of $i$, we know that $a' = W[i - 1]$, $b' = W[i]$, and $c' = W[i + 1]$.
+  have ha' : a' = W[i - 1] := by
+    have ha' : a' = (HexArea.chordLeft W k)[s % (k + 1)]! := by
+      replace hrotP := congr_arg List.head? hrotP; simp_all +decide [ List.rotate ] ;
+      simp_all +decide [ HexArea.chordLeft ];
+      cases hrotP <;> simp_all +decide [ Nat.mod_lt ];
+      linarith [ Nat.mod_lt s ( Nat.succ_pos k ) ];
+    have h_mod : s % (k + 1) = (s + 1) % (k + 1) - 1 := by
+      rw [ Nat.ModEq.symm ];
+      exact Nat.mod_eq_of_lt ( show ( s + 1 ) % ( k + 1 ) - 1 < k + 1 from lt_of_le_of_lt ( Nat.sub_le _ _ ) ( Nat.mod_lt _ ( Nat.succ_pos _ ) ) );
+      simp +decide [ ← ZMod.natCast_eq_natCast_iff, Nat.cast_sub ( show 1 ≤ ( s + 1 ) % ( k + 1 ) from hi_bounds.1 ) ];
+    convert ha' using 1;
+    simp +decide [ HexArea.chordLeft, List.getElem?_take, List.getElem?_drop, h_mod ];
+    rw [ if_pos ( Nat.le_of_lt ( Nat.mod_lt _ ( Nat.succ_pos _ ) ) ), List.getElem?_eq_getElem ] ; aesop
+  have hb' : b' = W[i] := by
+    replace hrotP := congr_arg List.tail hrotP; simp_all +decide [ HexArea.chordLeft ] ;
+    replace hrotP := congr_arg List.head? hrotP; simp_all +decide [ List.getElem_rotate ] ;
+    rw [ List.getElem?_eq_some_iff ] at hrotP;
+    rw [ ← hrotP.choose_spec, List.getElem_rotate ];
+    simp +decide [ add_comm, List.length_take, hk ]
+  have hc' : c' = W[i + 1] := by
+    have hc' : c' = (HexArea.chordLeft W k)[(s + 2) % (k + 1)]! := by
+      have hc' : c' = ((HexArea.chordLeft W k).rotate s)[2]! := by
+        aesop;
+      convert hc' using 1;
+      simp +decide [ List.getElem_rotate, Nat.mod_eq_of_lt ];
+      rw [ List.getElem?_rotate ];
+      · rw [ add_comm, HexArea.chordLeft ];
+        rw [ List.length_take, min_eq_left hk ];
+      · simp +arith +decide [ HexArea.chordLeft ];
+        omega;
+    rw [ hc', show ( s + 2 ) % ( k + 1 ) = i + 1 from by
+                rw [ show s + 2 = ( s + 1 ) + 1 by ring, Nat.add_mod ];
+                rw [ Nat.add_mod, Nat.mod_eq_of_lt ];
+                · norm_num [ Nat.mod_eq_of_lt ( by linarith : 1 < k + 1 ) ];
+                  rfl;
+                · rcases k with ( _ | _ | k ) <;> simp_all +arith +decide [ Nat.mod_eq_of_lt ];
+                  · linarith;
+                  · grobner ];
+    simp +decide [ HexArea.chordLeft, List.getElem?_take, List.getElem?_drop, hk ];
+    rw [ if_pos ( by linarith ), List.getElem?_eq_getElem ] ; aesop;
+  use i; simp_all +decide [ List.rotate_eq_drop_append_take ] ;
+  rw [ List.rotate_eq_drop_append_take ];
+  · rw [ List.drop_eq_getElem_cons ];
+    rw [ Nat.sub_add_cancel ( by linarith ) ];
+    rw [ List.drop_eq_getElem_cons ];
+    rw [ List.drop_eq_getElem_cons ];
+    exact ⟨ hi_bounds.1, by linarith, by rfl ⟩;
+  · omega
+
+/-
+**List-surgery brick for `chord_ear_lift` (chordRight case).**
+    Symmetric companion of `chordLeft_interior_ear_extract` for the right chord
+    piece `chordRight W k = W.drop k ++ W.take 1`.  An ear rotation whose tip `b'`
+    avoids both cut endpoints `u = W[0]` and `v = W[k]` sits at an interior index
+    `i` of `W` with `k+1 ≤ i ≤ W.length - 1`, so the ear triple `a', b', c'` are
+    three cyclically-consecutive vertices of `W`, exhibited by `W.rotate (i-1)`
+    (the tail `tl` is left existential because the cyclic successor `c'` of the
+    last interior vertex wraps around to `W[0]`).  Pure list/modular arithmetic
+    (no geometry); numerically validated.  NOT a dead branch — preparation
+    consumed by `chord_ear_lift`.
+-/
+lemma chordRight_interior_ear_extract (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
+    (hk : k + 1 ≤ W.length) (hWnd : W.Nodup) (s : ℕ) (a' b' c' : ℂ)
+    (rest0 : List ℂ)
+    (hrotP : (HexArea.chordRight W k).rotate s = a' :: b' :: c' :: rest0)
+    (hbu : b' ≠ W[0]!) (hbv : b' ≠ W[k]!) :
+    ∃ (i : ℕ) (tl : List ℂ), k + 1 ≤ i ∧ i + 1 ≤ W.length ∧
+      W.rotate (i - 1) = a' :: b' :: c' :: tl := by
+  -- Let $t = (s + 1) \% m$ where $m = W.length - k + 1$.
+  set m := W.length - k + 1 with hm
+  set t := (s + 1) % m with ht;
+  have h_t_range : 1 ≤ t ∧ t < m - 1 := by
+    have ht_range : b' = (HexArea.chordRight W k)[t]! := by
+      have := List.getElem_rotate ( HexArea.chordRight W k ) s ( 1 : ℕ ) ?_ <;> simp_all +decide [ List.getElem?_eq_getElem, Nat.mod_eq_of_lt ];
+      simp_all +decide [ add_comm, HexArea.chordRight ];
+      cases min_cases 1 W.length <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+      rw [ List.getElem?_eq_getElem ];
+      rw [ Option.getD_some ];
+    constructor;
+    · contrapose! hbv; simp_all +decide [ HexArea.chordRight ] ;
+    · have ht_lt_m_minus_1 : b' ≠ (HexArea.chordRight W k)[m - 1]! := by
+        unfold HexArea.chordRight; simp +decide [ List.getElem?_append, List.getElem?_drop, List.getElem?_take ] ;
+        grind;
+      exact lt_of_le_of_ne ( Nat.le_sub_one_of_lt ( Nat.mod_lt _ ( Nat.succ_pos _ ) ) ) fun h => ht_lt_m_minus_1 <| h ▸ ht_range;
+  have h_a' : a' = W[(k + t - 1) % W.length]! := by
+    have h_a' : a' = (HexArea.chordRight W k)[(s % m)]! := by
+      replace hrotP := congr_arg List.head? hrotP; simp_all +decide [ List.rotate ] ;
+      cases hrotP <;> simp_all +decide [ HexArea.chordRight ];
+      · cases min_cases 1 W.length <;> aesop;
+      · cases min_cases 1 W.length <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+        linarith [ Nat.mod_lt s ( by linarith : 0 < W.length - k + 1 ) ];
+    have h_a'_index : (s % m) = t - 1 := by
+      rw [ Nat.ModEq.symm ];
+      exact Nat.mod_eq_of_lt ( show t - 1 < m from lt_of_lt_of_le ( Nat.sub_lt h_t_range.1 zero_lt_one ) ( Nat.le_of_lt ( Nat.lt_of_lt_of_le h_t_range.2 ( Nat.sub_le _ _ ) ) ) );
+      simp +decide [ ← ZMod.natCast_eq_natCast_iff, Nat.cast_sub h_t_range.1 ];
+      simp +zetaDelta at *;
+    rw [h_a', h_a'_index];
+    have h_a'_index : (HexArea.chordRight W k)[t - 1]! = W[(k + t - 1) % W.length]! := by
+      have h_t_range : t - 1 < W.length - k := by
+        omega
+      simp +decide [ HexArea.chordRight, Nat.mod_eq_of_lt ( show k + t - 1 < W.length from by omega ) ];
+      rw [ List.getElem?_append ] ; norm_num [ Nat.add_sub_assoc ( show 1 ≤ k + t from by linarith ) ];
+      rw [ if_pos h_t_range, Nat.add_sub_assoc ( by linarith ) ];
+    exact h_a'_index
+  have h_b' : b' = W[(k + t) % W.length]! := by
+    have h_b' : b' = (HexArea.chordRight W k)[(s + 1) % m]! := by
+      convert congr_arg ( fun l => l[1]! ) hrotP using 1;
+      · aesop;
+      · rw [ ← hrotP ];
+        simp +decide [ List.getElem?_rotate ];
+        rw [ List.getElem?_rotate ];
+        · rw [ add_comm, HexArea.chordRight_length ];
+          finiteness;
+        · unfold HexArea.chordRight; simp +arith +decide;
+          omega;
+    convert h_b' using 1;
+    unfold HexArea.chordRight; simp +decide [ Nat.mod_eq_of_lt ( show k + t < W.length from by omega ) ] ;
+    rw [ List.getElem?_append ] ; norm_num;
+    grind
+  have h_c' : c' = W[(k + t + 1) % W.length]! := by
+    have h_c' : c' = (HexArea.chordRight W k)[(t + 1) % m]! := by
+      have h_c' : c' = (List.rotate (HexArea.chordRight W k) s)[2]! := by
+        aesop;
+      convert h_c' using 1;
+      simp +zetaDelta at *;
+      rw [ List.getElem?_rotate ];
+      · simp +arith +decide [ HexArea.chordRight, hk.le ];
+        rw [ min_eq_left ( by linarith ) ] ; ring;
+      · simp +arith +decide [ HexArea.chordRight ];
+        omega;
+    convert h_c' using 1;
+    unfold HexArea.chordRight; simp +decide [ List.getElem?_append, List.getElem?_drop, List.getElem?_take ] ;
+    split_ifs <;> simp_all +decide [ Nat.mod_eq_of_lt ];
+    · rw [ Nat.mod_eq_of_lt ( by omega ) ] ; simp +decide [ add_assoc ] ;
+    · norm_num [ show ( k + ( s + 1 ) % ( W.length - k + 1 ) + 1 ) % W.length = 0 by exact Nat.mod_eq_zero_of_dvd <| by exact ⟨ 1, by linarith [ Nat.sub_add_cancel hk.le ] ⟩ ];
+  refine' ⟨ k + t, _, _, _, _ ⟩ <;> norm_num [ h_a', h_b', h_c' ];
+  exact ( W.rotate ( k + t - 1 ) ).drop 3;
+  · grind;
+  · omega;
+  · have h_rotate : W.rotate (k + t - 1) = List.map (fun i => W[(k + t - 1 + i) % W.length]!) (List.range W.length) := by
+      refine' List.ext_get _ _ <;> simp +decide [ List.getElem?_eq_getElem ];
+      intro n hn; rw [ List.getElem_rotate ] ;
+      rw [ add_comm, List.getElem?_eq_getElem ] ; aesop;
+    rcases W with ( _ | ⟨ x, _ | ⟨ y, _ | ⟨ z, W ⟩ ⟩ ⟩ ) <;> simp_all +decide [ List.range_succ_eq_map ];
+    · grind;
+    · lia
+
 /-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
     Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
     interior diagonal `W[0]–W[k]` into the two pieces `chordLeft W k` /
@@ -4161,7 +4351,7 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     recursion, and the `b' ≠ z1, z2` bookkeeping) is a combinatorial assembly
     around this brick.  NOT a dead branch — preparation consumed by the two split
     branches below. -/
-lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
+lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -4179,17 +4369,40 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
       (∀ x ∈ tl, x ∉ segment ℝ a' c') ∧
       ((0:ℝ) < HexArea.shoelace2 [a', b', c']
           ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tl)) := by
-  -- NOTE (structural finding, see PROOF_STATUS.md): this generic form is
-  -- under-hypothesised.  (1) Turn transfer fails at the seam: the ear may sit
-  -- adjacent to a cut endpoint (`a' = W[0] = u`), so the V-corner turn at `a'`
-  -- differs from the P-corner supplied by `EmptyCornerData2 P` (same content as
-  -- the boundary spike subcases).  (2) The emptiness clause ranges over the
-  -- OTHER piece's vertices, needing genuine point-in-polygon / Jordan
-  -- separation along the valid diagonal (`interior_chord_is_diagonal` gives only
-  -- the 1D chord disjointness).  Recommended fix: carry the diagonal-validity
-  -- hypothesis and the seam non-degeneracy (`interior_split_nondeg_left/right`);
-  -- `chord_pieces_inter` (SAWUmlaufEarSplit) then handles the `b' ≠ z1,z2`
-  -- bookkeeping, leaving only the single Jordan separation residue.
+  -- NOTE (structural state).  The statement is now SOUND: the cyclic
+  -- non-degeneracy hypothesis `hnd : polyCycNondeg V` was added (and threaded
+  -- through `chord_ear_lift_forbidden` / `interior_lift_via_piece` from the
+  -- caller `meisters_reduction_interior2`, which supplies it).  This fixes the
+  -- previously under-hypothesised seam corner: when the ear tip `b'` is adjacent
+  -- to a cut endpoint (`a' = W[0] = u`), the required V-corner turn
+  -- `cross (a' - p') (c' - a') ≠ 0` is now available from `hnd` (the genuine
+  -- V-corner at `a'`), rather than from `EmptyCornerData2 P`'s P-corner at the
+  -- closing seam edge, which is a different corner.
+  --
+  -- Progress this round: the LIST-SURGERY half is now available sorry-free as
+  -- the two proved bricks `chordLeft_interior_ear_extract` /
+  -- `chordRight_interior_ear_extract` (just above).  Applied to `hPcyc`'s
+  -- rotation `P.rotate s = a'::b'::c'::rest0` (tip `b' ≠ u, v`), they produce an
+  -- interior index `i` and the V-rotation `W.rotate (i-1) = a'::b'::c'::tl`;
+  -- composing with `hW : V.rotate ρ = W` (via `List.rotate_rotate`) gives
+  -- `V.rotate ((ρ + (i-1)) % V.length) = a'::b'::c'::tl`, with `tl` the cyclic
+  -- remainder of `W`, so `p' = tl.getLast?`, `q' = tl.head?` are the genuine
+  -- cyclic `W`-neighbours of `a'`, `c'`.
+  --
+  -- Remaining genuine content:
+  --   (a) SEAM corner non-degeneracy.  In the CLEAN case (`a' ≠ u` and
+  --       `c' ≠ v`) the clip corners `cross (a'-p') (c'-a') ≠ 0`,
+  --       `cross (c'-a') (q'-c') ≠ 0` transfer directly from `EmptyCornerData2 P`
+  --       (there `p' = pP`, `q' = qP`).  In the SEAM case (`a' = u` or `c' = v`)
+  --       the clip corner involves the OTHER piece's neighbour (e.g. the
+  --       V-predecessor `W[n-1]` of `u`), which is NOT a consecutive V-corner,
+  --       so it is supplied neither by `EmptyCornerData2 P` nor directly by
+  --       `hnd`; this is a genuine geometric residue (the clip diagonal must
+  --       make a non-flat corner against the far neighbour).
+  --   (b) other-piece emptiness/diagonal: the clause over `tl` splits into
+  --       `P`'s own vertices (from `EmptyCornerData2 P`) and the OTHER piece's
+  --       vertices (from the proved Jordan keystone `chord_ear_empty_other`,
+  --       valid under `hdiag`).
   sorry
 
 /-- **Forbidden-pair ear lift across a valid chord cut (mechanical bookkeeping
@@ -4208,7 +4421,7 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V)
     tip-avoidance lemma `chord_tip_ne_other`.  It contains no new geometric
     content of its own — the only remaining Jordan gap it depends on is inside
     `chord_ear_lift`.  NOT a dead branch. -/
-lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V)
+lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -4237,7 +4450,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V)
   -- The V-ear from the (still open) chord ear lift.
   obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
       hpl', hql', hempty', hdiag', horient'⟩ :=
-    chord_ear_lift V hsimple W ρ hW k hk1 hk u v hu hv hdiag P
+    chord_ear_lift V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag P
       (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
   -- `b'` is a vertex of `V`.
   have hb'W : b' ∈ W := by
@@ -4280,7 +4493,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V)
     `cross_pred_corner_remove_flat` / `cross_succ_corner_remove_flat` before
     recursing).  This is a TRUE statement; the residual is unproven, not false.
     Consumes `chord_ear_lift_forbidden`; NOT a dead branch. -/
-lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V)
+lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
     (hVlen : 4 ≤ V.length)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
@@ -4310,7 +4523,7 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V)
     have hPcyc : EmptyCornerData2 P u v := by
       obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hPvu
       exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8, h9, h10⟩
-    exact chord_ear_lift_forbidden V hsimple W ρ hW k hk1 hk u v hu hv hdiag P Q hPQ
+    exact chord_ear_lift_forbidden V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag P Q hPQ
       hPcyc z1 z2 hz1 hz2
   · -- Residual: the forced recursion piece is a triangle or flat at the seam.
     sorry
@@ -4416,13 +4629,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
   rcases hadj with rfl | hcyc
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
     by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
-    · exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+    · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
     · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
-      · exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -4434,7 +4647,7 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
           rcases HexArea.mem_chord_cover (b :: c :: rest ++ [a]) k hkW hmemW with h | h
           · exact hzL h
           · exact hzR h
-        exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -4444,13 +4657,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
       hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
     rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with hInL | hInR
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
-      exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
-      exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
         (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
