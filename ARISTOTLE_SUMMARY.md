@@ -1,3 +1,22 @@
+# Summary of changes for run 8d2c33d1-b1aa-4d04-bddd-f3e0b5c720f1
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project builds end-to-end (the top statements `hex_total_signed_turn_pm_six` / `umlaufsatz_pm_one` / `hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`, and the planar core `polygon_umlaufsatz` in `RequestProject/SAWUmlaufPolygon.lean`), and no new axioms are introduced.
+
+What I did this round (all durable, committed, and pushed):
+
+1. Mapped the live remaining gaps precisely. All remaining `sorry`s reduce to genuine polygon Jordan-curve / two-ears separation content that is absent from Mathlib. They are, in `RequestProject/SAWUmlaufPolygon.lean`: the two "spike" subcases of `empty_branch_boundary_lift`, the two escape-walk residues (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`), the interior separation brick `chord_ear_lift`, the small-piece residual of `interior_lift_via_piece`, and the bad-diagonal case `empty_branch_bad_lift`. The `ear_turning_bounds` `sorry` is inside a block comment (a documented dead branch), not live.
+
+2. Banked six new, fully proved (`sorry`-free), reusable geometry/combinatorics bricks in `RequestProject/SAWUmlaufEscapeHelpers.lean` (already imported into `SAWUmlaufPolygon`), all directly on the escape-walk path:
+   - `combo3_mem_convexHull` — a nonnegative barycentric combination of three points lies in their convex hull;
+   - `inTriangleStrict_mem_convexHull` — a strict interior point of a triangle lies in its convex hull;
+   - `segment_apex_subset_hull` — the segment from a strict interior point to the apex stays inside the triangle hull;
+   - `segment_apex_disjoint_of_hull_disjoint` — that apex step is disjoint from any edge disjoint from the ear triangle (the "first step avoids far edges" clause);
+   - `exists_walk_cons` — prepend one valid step to any escape walk (lets the clipped-ear walk step interior→apex, then continue from the apex);
+   - `exists_walk_of_two_steps` — the interior→apex→hull-exterior two-step escape shape.
+
+3. Attempted the automated prover on the most combinatorial residue (`empty_branch_bad_lift`); no proof was found — it genuinely requires the interior-diagonal split machinery, confirming this is multi-round work rather than a one-step fix.
+
+Net effect: the remaining Jordan-content `sorry`s are unchanged and clearly stated, and the new atoms provide the local, Jordan-free building blocks (triangle-hull membership, apex-step disjointness, and walk composition) that the escape-walk residues will consume once the remaining global visibility/edge-avoidance lemma is established. Everything is verified to build with the module targets and committed on `main`.
+
 # Summary of changes for run 1b3afadd-bbac-4dc7-8064-289f31468b6b
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project still builds end-to-end and all new lemmas use only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
 

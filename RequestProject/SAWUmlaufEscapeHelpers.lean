@@ -33,6 +33,7 @@ final construction.  It is **not** a dead branch.
 
 import Mathlib
 import RequestProject.SAWUmlaufEar
+import RequestProject.SAWUmlaufEarExtreme
 import RequestProject.SAWUmlaufSegment
 
 open Real Complex ComplexConjugate
@@ -89,6 +90,86 @@ lemma exists_walk_of_step {α : Type*} (R : α → α → Prop) (P : α → Prop
   refine ⟨[y], ?_, ?_⟩
   · exact List.isChain_cons_cons.mpr ⟨hxy, List.IsChain.singleton y⟩
   · simpa using hy
+
+/-- **Prepend one step to an escape walk (generic brick).**  If `R x y` and there
+    is an `R`-walk from `y` reaching the predicate `P`, then there is an `R`-walk
+    from `x` reaching `P`.  This is exactly what lets the clipped-ear escape walk
+    first step from the interior point `x` to the ear apex `b'`, then continue
+    with any escape walk that starts at `b'`. -/
+lemma exists_walk_cons {α : Type*} (R : α → α → Prop) (P : α → Prop) (x y : α)
+    (hxy : R x y)
+    (h : ∃ zs : List α, List.IsChain R (y :: zs) ∧ P (zs.getLastD y)) :
+    ∃ zs : List α, List.IsChain R (x :: zs) ∧ P (zs.getLastD x) := by
+  obtain ⟨zs, hchain, hlast⟩ := h
+  refine ⟨y :: zs, ?_, ?_⟩
+  · exact List.isChain_cons_cons.mpr ⟨hxy, hchain⟩
+  · cases zs with
+    | nil => simpa using hlast
+    | cons w ws => simpa [List.getLastD] using hlast
+
+/-- **Two-step escape walk (generic brick).**  If `R x y`, `R y z` and `P z`,
+    then there is an `R`-walk `x :: [y, z]` reaching `P`.  Matches the
+    interior → apex → hull-exterior escape shape directly. -/
+lemma exists_walk_of_two_steps {α : Type*} (R : α → α → Prop) (P : α → Prop)
+    (x y z : α) (hxy : R x y) (hyz : R y z) (hz : P z) :
+    ∃ zs : List α, List.IsChain R (x :: zs) ∧ P (zs.getLastD x) := by
+  refine ⟨[y, z], ?_, ?_⟩
+  · exact List.isChain_cons_cons.mpr
+      ⟨hxy, List.isChain_cons_cons.mpr ⟨hyz, List.IsChain.singleton z⟩⟩
+  · simpa using hz
+
+/-- **Convex combination of three points lies in their convex hull.**  A generic
+    reusable brick: any barycentric combination `α•a + β•b + γ•c` with
+    nonnegative weights summing to `1` is in `convexHull ℝ {a,b,c}`. -/
+lemma combo3_mem_convexHull (a b c : ℂ) (α β γ : ℝ)
+    (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ) (hsum : α + β + γ = 1) :
+    α • a + β • b + γ • c ∈ convexHull ℝ ({a, b, c} : Set ℂ) := by
+  have hconv := convex_convexHull ℝ ({a,b,c} : Set ℂ)
+  have ha : a ∈ convexHull ℝ ({a,b,c} : Set ℂ) := subset_convexHull ℝ _ (by simp)
+  have hb : b ∈ convexHull ℝ ({a,b,c} : Set ℂ) := subset_convexHull ℝ _ (by simp)
+  have hc : c ∈ convexHull ℝ ({a,b,c} : Set ℂ) := subset_convexHull ℝ _ (by simp)
+  by_cases hs : β + γ = 0
+  · have hβ0 : β = 0 := by linarith
+    have hγ0 : γ = 0 := by linarith
+    have hα1 : α = 1 := by linarith
+    simp only [hβ0, hγ0, hα1, zero_smul, add_zero, one_smul]; exact ha
+  · have hs' : 0 < β + γ := lt_of_le_of_ne (by linarith) (Ne.symm hs)
+    have hy : (β/(β+γ))•b + (γ/(β+γ))•c ∈ convexHull ℝ ({a,b,c} : Set ℂ) :=
+      hconv hb hc (by positivity) (by positivity) (by field_simp)
+    have hx : α•a + (β+γ)•((β/(β+γ))•b + (γ/(β+γ))•c) ∈ convexHull ℝ ({a,b,c} : Set ℂ) :=
+      hconv ha hy hα (by linarith) (by linarith)
+    have heq : α•a+β•b+γ•c = α•a + (β+γ)•((β/(β+γ))•b + (γ/(β+γ))•c) := by
+      rw [smul_add, smul_smul, smul_smul, mul_div_cancel₀ _ hs, mul_div_cancel₀ _ hs]; abel
+    rw [heq]; exact hx
+
+/-- **A strict interior point of a triangle lies in its (closed) convex hull.**
+    Escape-walk brick: converts `inTriangleStrict` into hull membership via the
+    barycentric backbone `inTriangleStrict_convexCombo`. -/
+lemma inTriangleStrict_mem_convexHull (a b c x : ℂ) (h : inTriangleStrict a b c x) :
+    x ∈ convexHull ℝ ({a, b, c} : Set ℂ) := by
+  obtain ⟨α, β, γ, hα, hβ, hγ, hsum, rfl⟩ := inTriangleStrict_convexCombo a b c x h
+  exact combo3_mem_convexHull a b c α β γ hα.le hβ.le hγ.le hsum
+
+/-- **The segment from a strict interior point to the apex stays in the triangle
+    hull (escape-walk brick).**  Since both `x` (strict interior) and `b` (a
+    vertex) lie in the convex hull `convexHull ℝ {a,b,c}`, the whole segment
+    `x–b` does too.  This is the geometric core letting the escape walk's first
+    step to the ear apex avoid any edge that is disjoint from the ear triangle. -/
+lemma segment_apex_subset_hull (a b c x : ℂ) (h : inTriangleStrict a b c x) :
+    segment ℝ x b ⊆ convexHull ℝ ({a, b, c} : Set ℂ) := by
+  have hx : x ∈ convexHull ℝ ({a,b,c} : Set ℂ) := inTriangleStrict_mem_convexHull a b c x h
+  have hb : b ∈ convexHull ℝ ({a,b,c} : Set ℂ) := subset_convexHull ℝ _ (by simp)
+  exact (convex_convexHull ℝ _).segment_subset hx hb
+
+/-- **Step-to-apex avoids any hull-disjoint edge (escape-walk brick).**  If the
+    edge segment `d–e` is disjoint from the ear triangle `convexHull ℝ {a,b,c}`,
+    then the escape step `x–b` (from a strict interior point `x` to the apex `b`)
+    is disjoint from it, since `x–b ⊆ convexHull ℝ {a,b,c}`. -/
+lemma segment_apex_disjoint_of_hull_disjoint (a b c x d e : ℂ)
+    (h : inTriangleStrict a b c x)
+    (hde : Disjoint (segment ℝ d e) (convexHull ℝ ({a, b, c} : Set ℂ))) :
+    Disjoint (segment ℝ x b) (segment ℝ d e) :=
+  (hde.mono_right (segment_apex_subset_hull a b c x h)).symm
 
 end HexArea
 
