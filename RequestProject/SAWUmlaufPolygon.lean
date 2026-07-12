@@ -4281,6 +4281,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V)
     recursing).  This is a TRUE statement; the residual is unproven, not false.
     Consumes `chord_ear_lift_forbidden`; NOT a dead branch. -/
 lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V)
+    (hVlen : 4 ≤ V.length)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -4415,13 +4416,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
   rcases hadj with rfl | hcyc
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
     by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
-    · exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+    · exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
     · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
-      · exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      · exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -4433,7 +4434,7 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
           rcases HexArea.mem_chord_cover (b :: c :: rest ++ [a]) k hkW hmemW with h | h
           · exact hzL h
           · exact hzR h
-        exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -4443,13 +4444,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
       hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
     rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with hInL | hInR
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
-      exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
-      exact interior_lift_via_piece V hsimple (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece V hsimple hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
         (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))

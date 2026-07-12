@@ -1,6 +1,26 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): two new fully `sorry`-free combinatorial
+> **Umlaufsatz (CURRENT round): soundness fix to `interior_lift_via_piece`.**
+> The theorem prover found that `interior_lift_via_piece` (in
+> `RequestProject/SAWUmlaufPolygon.lean`) was FALSE as previously stated: its
+> residual branch (`¬(4 ≤ P.length ∧ polyCycNondeg P)`) admitted a degenerate
+> counterexample with `V` a triangle (`V.length = 3`), so the residual `sorry`
+> could never have been filled and the lemma was unsound.  Added the missing
+> hypothesis `hVlen : 4 ≤ V.length` (which is available at the sole call site,
+> `meisters_reduction_interior2`, as `hlen`) and threaded it through all five
+> recursive call sites.  The whole project still builds end-to-end (8135 jobs),
+> no new axioms.  The residual `sorry` is now a genuinely-true, isolated
+> statement (triangle piece needs a direct V-ear; flat-seam piece needs the flat
+> cut vertex removed before recursing).  Also verified by the prover that
+> `chord_ear_lift` is NOT disprovable (remains a true, open Jordan brick).
+> Live Umlaufsatz `sorry`s remain the two escape-walk residues
+> (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`), the two boundary
+> spike subcases, `chord_ear_lift`, the `interior_lift_via_piece` triangle/flat
+> residual, and `empty_branch_bad_lift` — all genuine polygon-Jordan content.
+>
+> ---
+>
+> **Umlaufsatz (earlier round): two new fully `sorry`-free combinatorial
 > edge-classification lemmas for chord pieces, both CONSUMED to reduce the two
 > point-in-polygon escape-walk residues to clean, honest exterior-walk goals.
 > Builds end-to-end, 8134 jobs; no new axioms.**

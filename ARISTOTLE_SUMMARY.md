@@ -1,3 +1,16 @@
+# Summary of changes for run 0bcfad75-ed4a-432f-8461-015eeb6a623a
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project still builds end-to-end (8135 jobs, no new axioms), and all work is committed and pushed.
+
+Concrete, durable Lean progress this round:
+
+1. **Soundness fix (the main result).** The theorem prover discovered that `interior_lift_via_piece` in `RequestProject/SAWUmlaufPolygon.lean` was FALSE as previously stated: its residual branch (`¬(4 ≤ P.length ∧ polyCycNondeg P)`) admitted a degenerate counterexample with `V` a triangle (`V.length = 3`). This meant the residual `sorry` could never have been filled — a latent landmine in the proof chain, not merely an incomplete step. I fixed it by adding the missing hypothesis `hVlen : 4 ≤ V.length` (which is genuinely available at the sole call site `meisters_reduction_interior2`, where it appears as `hlen`) and threaded it through all five recursive call sites. After the fix the residual is a genuinely-true, isolated statement, and the whole project still builds.
+
+2. **Soundness check of the central brick.** Ran the prover in a mode that would surface a disproof on `chord_ear_lift` (the interior Jordan-separation ear-lift, the load-bearing brick shared by the interior and bad-diagonal branches). It was NOT disprovable — confirming it remains a true, open statement rather than a hidden false one.
+
+3. Recorded the round in `PROOF_STATUS.md`.
+
+Honest status of the remaining gaps. The remaining live `sorry`s in `RequestProject/SAWUmlaufPolygon.lean` are all genuine polygon-Jordan-curve content that is absent from Mathlib: the two exterior escape-walk residues (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`), the two boundary "spike" subcases, `chord_ear_lift`, the triangle/flat residual of `interior_lift_via_piece`, and `empty_branch_bad_lift`. I made an honest high-effort attempt at the exterior escape walk (the true core), with a full geometric strategy supplied; it was not solved in a single search — it requires the polygon Jordan complement path-connectivity theorem, which is multi-round infrastructure work. The `sorry` at line ~4773 is inside a block comment (a documented dead branch), not live. Every Umlauf file that feeds the proof remains imported in the build chain, and each live `sorry` is documented in place as preparation consumed downstream.
+
 # Summary of changes for run 8d2c33d1-b1aa-4d04-bddd-f3e0b5c720f1
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project builds end-to-end (the top statements `hex_total_signed_turn_pm_six` / `umlaufsatz_pm_one` / `hex_closed_trail_turning_number` in `RequestProject/SAWUmlaufGaussBonnet.lean`, and the planar core `polygon_umlaufsatz` in `RequestProject/SAWUmlaufPolygon.lean`), and no new axioms are introduced.
 
