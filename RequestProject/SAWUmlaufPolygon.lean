@@ -58,6 +58,7 @@ import RequestProject.SAWUmlaufEarExtreme
 import RequestProject.SAWUmlaufEarSide
 import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
+import RequestProject.SAWUmlaufEscapeHelpers
 import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind

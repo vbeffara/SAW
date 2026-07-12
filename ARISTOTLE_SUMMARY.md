@@ -1,3 +1,15 @@
+# Summary of changes for run 1b3afadd-bbac-4dc7-8064-289f31468b6b
+Continued work exclusively on the top-priority discrete Hopf Umlaufsatz. The whole project still builds end-to-end and all new lemmas use only the standard axioms (`propext`, `Classical.choice`, `Quot.sound`).
+
+What I mapped this round: the top theorems `hex_closed_trail_turning_number` / `umlaufsatz_pm_one` reduce, through the already-proved analytic and signed-area toolchain, to a single genuine remaining core in `RequestProject/SAWUmlaufPolygon.lean` — the planar two-ears / point-in-polygon (Jordan) content. Concretely, the live remaining gaps are: the two edge-avoiding **escape-walk residues** (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`), the seam-adjacent **`chord_ear_lift`** brick, and the split-machinery residues (`interior_lift_via_piece` residual, `empty_branch_bad_lift`, the two spike subcases of `empty_branch_boundary_lift`). I confirmed the list-surgery those need (`chord_consec_triple_lift`) already exists, and that `chord_ear_lift` is genuinely seam-degenerate under its current hypotheses (an architectural strengthening, not a one-step fix). The previously-dead `ear_turning_bounds` branch is correctly commented out and its `sorry` is inside a block comment (not live).
+
+New machine-checked Lean produced (kept as partial progress so future rounds build on it): a new file `RequestProject/SAWUmlaufEscapeHelpers.lean`, now imported into `SAWUmlaufPolygon`, containing three fully `sorry`-free, reusable bricks that directly attack the two escape-walk residues:
+- `segment_apex_disjoint_base` — the segment from a strict interior point of an ear triangle to its apex is disjoint from the ear base (the "avoid the ear base" clause of the escape walk);
+- `exists_far_not_mem_convexHull` — along any ray there is a point outside the convex hull of any finite point set (the "reach past the convex hull" clause, supplying the hull-exterior endpoint);
+- `exists_walk_of_step` — a generic reduction of the escape-*walk* goal (a `List.IsChain` reaching a predicate) to producing a single next step, matching the exact shape of both escape-walk lemmas.
+
+These isolate the purely-local, Jordan-free atoms of the escape construction from the genuinely global visibility content that remains open. The remaining escape-walk/Jordan gaps are legitimately multi-round work (polygon Jordan-curve theorem, absent from Mathlib); I have not overstated any of them as closed. All files that will feed the proof are imported in the build chain, and every remaining `sorry` is documented in place.
+
 # Summary of changes for run df5be070-e7f9-458b-84cd-a438d45c281a
 Continued work exclusively on the top-priority discrete Hopf Umlaufsatz, producing new machine-checked Lean this round. The whole project builds end-to-end (8134 jobs) with no new axioms, and all work is committed and pushed.
 
