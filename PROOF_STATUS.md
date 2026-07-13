@@ -1,5 +1,24 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (latest round): new proven hull-containment file + escape-walk
+> reformulation.**  Added `RequestProject/SAWUmlaufEscapeHull.lean`, a fully
+> `sorry`-free, reusable convex-geometry file (`not_mem_convexHull_sub`,
+> `chordLeft/chordRight_toFinset_subset`, `convexHull_chord{Left,Right}_subset`,
+> `not_mem_convexHull_chordPiece_of_not_mem`).  It is imported by
+> `SAWUmlaufPolygon` and **consumed** by both escape-walk residues
+> (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`): their remaining
+> `sorry` now targets the natural, larger hull `convexHull W` (instead of the
+> sub-polygon hull), and the endpoint clause is discharged by these bricks via
+> `hull P ⊆ hull W` / `hull (clipped) ⊆ hull P ⊆ hull W`.  This isolates the
+> genuine remaining content (routing an edge-avoiding polyline through the
+> exterior of `W`).  Whole library still builds end-to-end (8136 jobs), no new
+> axioms.  Live Umlaufsatz `sorry`s unchanged in count: the two escape-walk
+> residues (now vs. `convexHull W`), the two boundary spike subcases,
+> `chord_ear_lift`, the `interior_lift_via_piece` triangle/flat residual, and
+> `empty_branch_bad_lift` — all genuine polygon-Jordan / two-ears content.
+>
+> ---
+
 > **Umlaufsatz (CURRENT round): soundness fix to `interior_lift_via_piece`.**
 > The theorem prover found that `interior_lift_via_piece` (in
 > `RequestProject/SAWUmlaufPolygon.lean`) was FALSE as previously stated: its

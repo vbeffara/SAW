@@ -1,3 +1,20 @@
+# Summary of changes for run d564de68-c8c8-4c72-833e-49d07839f09a
+Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving every other branch of the SAW formalization untouched. The whole library still builds end-to-end (`lake build`, 8136 jobs, including `SAWFinal.lean` which transitively imports the entire Umlauf chain), with no new axioms. All work is committed and pushed.
+
+What I did this round:
+
+1. Added a new, fully proven (`sorry`-free) reusable file `RequestProject/SAWUmlaufEscapeHull.lean` with convex-hull containment bricks:
+   - `not_mem_convexHull_sub` (general monotonicity: a point outside the hull of a superset's vertices is outside the hull of a subset's vertices),
+   - `chordLeft_toFinset_subset` / `chordRight_toFinset_subset`,
+   - `convexHull_chordLeft_subset` / `convexHull_chordRight_subset`,
+   - `not_mem_convexHull_chordPiece_of_not_mem` (packaged: outside `convexHull W` ⟹ outside `convexHull P` for either chord piece).
+
+2. Imported this file into `SAWUmlaufPolygon.lean` and **consumed** the bricks inside both escape-walk residues (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`). Each remaining `sorry` is now reformulated to reach the natural, larger target `convexHull W` (rather than the sub-polygon hull); the endpoint clause is then discharged by the new bricks via `hull(P) ⊆ hull(W)` and `hull(clipped) ⊆ hull(P) ⊆ hull(W)`. This isolates the genuine remaining content to routing an edge-avoiding polyline through the exterior of the whole polygon `W`, and makes the new file explicitly linked (not a dead branch). Verified the whole project rebuilds.
+
+3. Recorded the state at the top of `PROOF_STATUS.md`.
+
+Honest status of the remaining work: the Umlaufsatz's still-open pieces are all genuine polygon Jordan-curve / two-ears content that does not fit in a single round — the two escape-walk residues (now targeting `convexHull W`), the two boundary "spike" subcases (needing the two-ears theorem), `chord_ear_lift` (seam-corner assembly over the already-assembled Jordan keystone), the `interior_lift_via_piece` triangle/flat-seam residual, and `empty_branch_bad_lift`. I attempted the assembly lemmas `chord_ear_lift`, `interior_lift_via_piece`, and the crux `chord_ear_other_escape_walk` with the automated prover; these did not close in one pass, confirming they need the deeper Jordan/two-ears infrastructure. Partial progress is preserved as building Lean with honest, sharply-isolated `sorry`s (nothing was lost), and this round adds new proven, reusable geometry that future rounds build on directly.
+
 # Summary of changes for run 5d2c61a8-42a0-4502-beef-7c9a00e1e470
 Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving every other branch of the SAW formalization untouched. The whole library still builds end-to-end (`lake build`, 8135 jobs, including `RequestProject/SAWFinal.lean`, which transitively imports all Umlauf files). All work is committed and pushed.
 

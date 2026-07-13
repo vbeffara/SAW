@@ -59,6 +59,7 @@ import RequestProject.SAWUmlaufEarSide
 import RequestProject.SAWUmlaufEarOneSided
 import RequestProject.SAWUmlaufSegment
 import RequestProject.SAWUmlaufEscapeHelpers
+import RequestProject.SAWUmlaufEscapeHull
 import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
 import RequestProject.SAWUmlaufPtWind
@@ -3968,7 +3969,23 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     · exact hab.2.1 e hWe (fun h => hb'cl (h ▸ he1)) (fun h => hb'cl (h ▸ he2))
         (fun h => hxcl (h ▸ he1)) (fun h => hxcl (h ▸ he2))
     · rw [hdiage]; exact hab.2.2
-  sorry
+  -- Reduce the endpoint clause to the LARGER hull `convexHull W`: every vertex
+  -- of the clipped polygon lies in `P` (`hcl_sub`), hence in `W`, so a point
+  -- outside `convexHull W` is outside `convexHull (a'::c'::tlP)` by the general
+  -- monotonicity brick `HexArea.not_mem_convexHull_sub`.  This isolates the
+  -- genuine remaining plane-topology content (routing through the exterior of
+  -- `W`) with the natural, larger target hull.
+  obtain ⟨zs, hchain, hlast⟩ : ∃ zs : List ℂ,
+      List.IsChain (fun a b =>
+          Disjoint (segment ℝ a b) (segment ℝ a' c') ∧
+          (∀ e ∈ closedEdges W, e.1 ≠ b' → e.2 ≠ b' → e.1 ≠ x → e.2 ≠ x →
+              Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
+          Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
+    sorry
+  exact ⟨zs, hchain,
+    HexArea.not_mem_convexHull_sub (a' :: c' :: tlP) P hcl_sub _
+      (HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast)⟩
 
 /-- **Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
     Same setup as `chord_ear_other_ptWind_zero`: `x` is a vertex of the OTHER
@@ -4018,7 +4035,20 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k 
     rcases hcase with hWe | hseg
     · exact hab.1 e hWe (fun h => hxP (h ▸ he1P)) (fun h => hxP (h ▸ he2P))
     · rw [hseg]; exact hab.2
-  sorry
+  -- Reduce the endpoint clause to the LARGER hull `convexHull W`: `hull P ⊆
+  -- hull W`, so a point outside `convexHull W` is outside `convexHull P` by the
+  -- packaged brick `HexArea.not_mem_convexHull_chordPiece_of_not_mem`.  This
+  -- isolates the genuine remaining plane-topology content (routing through the
+  -- exterior of `W`) with the natural, larger target hull.
+  obtain ⟨zs, hchain, hlast⟩ : ∃ zs : List ℂ,
+      List.IsChain (fun a b =>
+          (∀ e ∈ closedEdges W, e.1 ≠ x → e.2 ≠ x →
+              Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
+          Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
+    sorry
+  exact ⟨zs, hchain,
+    HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast⟩
 
 lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
