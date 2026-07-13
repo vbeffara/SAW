@@ -171,6 +171,54 @@ lemma segment_apex_disjoint_of_hull_disjoint (a b c x d e : ℂ)
     Disjoint (segment ℝ x b) (segment ℝ d e) :=
   (hde.mono_right (segment_apex_subset_hull a b c x h)).symm
 
+/-- **A far point on any ray lies outside a finite hull, with nonnegative
+    parameter (escape-walk brick).**  Strengthening of
+    `exists_far_not_mem_convexHull`: the escape parameter `T` can always be taken
+    `≥ 0`, so the far point lies on the *forward* ray `{x + T•d : T ≥ 0}`.  This
+    is what lets a straight forward-ray escape feed a single-step escape walk. -/
+lemma exists_far_not_mem_convexHull_nonneg (S : Finset ℂ) (p d : ℂ) (hd : d ≠ 0) :
+    ∃ T : ℝ, 0 ≤ T ∧ p + (T : ℂ) * d ∉ convexHull ℝ (S : Set ℂ) := by
+  have hdpos : 0 < ‖d‖ := norm_pos_iff.mpr hd
+  have h_bounded : Bornology.IsBounded (convexHull ℝ (S : Set ℂ)) := by
+    simp +zetaDelta at *
+    exact S.finite_toSet.isBounded
+  obtain ⟨R, hR⟩ := h_bounded.exists_pos_norm_le
+  have hTnn : (0:ℝ) ≤ (R + ‖p‖ + 1) / ‖d‖ :=
+    div_nonneg (by linarith [hR.1, norm_nonneg p]) hdpos.le
+  set T : ℝ := (R + ‖p‖ + 1) / ‖d‖ with hTdef
+  refine ⟨T, hTnn, fun h => ?_⟩
+  have hTd : T * ‖d‖ = R + ‖p‖ + 1 := by
+    rw [hTdef, div_mul_cancel₀ _ (ne_of_gt hdpos)]
+  have hnorm : ‖p + (T : ℂ) * d‖ ≤ R := hR.2 _ h
+  have hnT : ‖(T : ℂ) * d‖ = T * ‖d‖ := by
+    rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hTnn]
+  have hcancel : (p + (T : ℂ) * d) + (-p) = (T : ℂ) * d := by ring
+  have h1 : ‖(T : ℂ) * d‖ ≤ ‖p + (T : ℂ) * d‖ + ‖p‖ := by
+    have := norm_add_le (p + (T : ℂ) * d) (-p)
+    rw [hcancel, norm_neg] at this
+    exact this
+  rw [hnT, hTd] at h1
+  linarith
+
+/-- **Single straight forward-ray escape walk (generic brick).**  If there is a
+    nonzero direction `d` such that the escape relation `R` holds from `x` to
+    *every* forward-ray point `x + T•d` (`T ≥ 0`), then there is an `R`-walk from
+    `x` whose endpoint lies outside `convexHull ℝ S`.  Combines
+    `exists_far_not_mem_convexHull_nonneg` (pick `T` large enough to leave the
+    hull) with `exists_walk_of_step` (a single step suffices).  This is a
+    reusable reduction of the escape-walk goal to *finding an escaping forward
+    ray direction* — the shape shared by both escape-walk residues in
+    `SAWUmlaufPolygon`.  (It only applies when a straight ray escapes, so it is
+    banked preparation rather than a universal solver: a non-convex "pocket"
+    point may need a genuine polyline.) -/
+lemma exists_escape_walk_of_ray (S : Finset ℂ) (R : ℂ → ℂ → Prop) (x d : ℂ)
+    (hd : d ≠ 0) (hstep : ∀ T : ℝ, 0 ≤ T → R x (x + (T : ℂ) * d)) :
+    ∃ zs : List ℂ, List.IsChain R (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (S : Set ℂ) := by
+  obtain ⟨T, hT0, hTout⟩ := exists_far_not_mem_convexHull_nonneg S x d hd
+  exact exists_walk_of_step R (· ∉ convexHull ℝ (S : Set ℂ)) x (x + (T : ℂ) * d)
+    (hstep T hT0) hTout
+
 end HexArea
 
 end

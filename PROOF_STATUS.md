@@ -1,5 +1,34 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (latest round): two new proven forward-ray escape bricks.**
+> Added to `RequestProject/SAWUmlaufEscapeHelpers.lean` (already imported by
+> `SAWUmlaufPolygon`), both `sorry`-free:
+> - `exists_far_not_mem_convexHull_nonneg` — strengthens the far-point lemma so
+>   the escape parameter `T` is `≥ 0` (the far point lies on the *forward* ray),
+> - `exists_escape_walk_of_ray` — a generic reduction: given a nonzero direction
+>   `d` such that the escape relation `R` holds from `x` to every forward-ray
+>   point `x + T•d` (`T ≥ 0`), it produces the `R`-walk `x :: zs` whose endpoint
+>   is outside `convexHull ℝ S`.  This is the exact shape of both escape-walk
+>   residues (`clipped_ear_escape_walk`, `chord_ear_other_escape_walk`) and
+>   reduces them, whenever a straight forward ray escapes, to *finding an escaping
+>   ray direction*.  (Banked prep: a non-convex "pocket" point can still need a
+>   genuine polyline, so it is not consumed unsoundly.)
+>
+> Whole library still builds end-to-end (8136 jobs), no new axioms.  The 7 live
+> Umlaufsatz `sorry`s are unchanged in count and remain genuine polygon-Jordan /
+> two-ears content: the two escape-walk residues (now vs. `convexHull W`), the
+> two boundary spike subcases, the linchpin `chord_ear_lift`, the
+> `interior_lift_via_piece` triangle/flat residual, and `empty_branch_bad_lift`.
+> High-effort automated attempts on `chord_ear_lift` (with the full list of
+> banked bricks — `chord_consec_triple_lift`, `chord_ear_empty_other`,
+> `chordLeft/chordRight_interior_ear_extract`, `chordLeft_ear_tl_neighbours`,
+> `rotate_drop3_neighbours`, `polyCycNondeg_interior_corner`) and on the
+> `interior_lift_via_piece` residual did not close in one search, confirming the
+> remaining seam-corner / neighbour-identification / two-ears content is
+> genuinely multi-round.
+>
+> ---
+
 > **Umlaufsatz (latest round): new proven hull-containment file + escape-walk
 > reformulation.**  Added `RequestProject/SAWUmlaufEscapeHull.lean`, a fully
 > `sorry`-free, reusable convex-geometry file (`not_mem_convexHull_sub`,
