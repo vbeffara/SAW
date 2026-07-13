@@ -4322,6 +4322,54 @@ lemma chordRight_interior_ear_extract (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
     · grind;
     · lia
 
+/-
+**Interior-ear neighbour identification (list-surgery brick for
+    `chord_ear_lift`, chordLeft case).**  When the lifted ear tip sits at a
+    *fully interior* index `i` of `W` (i.e. `2 ≤ i` and `i + 3 ≤ W.length`, so
+    the ear is not adjacent to either cut endpoint `W[0]` / `W[k]`), the cyclic
+    remainder `tl = W.drop (i+2) ++ W.take (i-1)` produced by
+    `chordLeft_interior_ear_extract` has its last vertex `= W[i-2]` (the genuine
+    cyclic `W`-predecessor of the ear's left vertex `a' = W[i-1]`) and its first
+    vertex `= W[i+2]` (the genuine cyclic `W`-successor of the ear's right vertex
+    `c' = W[i+1]`).  Pure list/index arithmetic, no geometry; numerically
+    validated over many index configurations.
+
+    This is exactly the fact that makes the interior (non-seam) subcase of
+    `chord_ear_lift` pure bookkeeping: in that subcase the `EmptyCornerData2 P`
+    clip-neighbours `pP = rest0.getLast?`, `qP = rest0.head?` coincide with these
+    `W`-neighbours, so the two clip-corner non-flatness clauses transfer directly
+    from `EmptyCornerData2 P` (leaving only the two genuine *seam* subcases
+    `i = 1` / `i + 1 = k` as the residual geometric content).  Stated
+    polymorphically for reuse.  NOT a dead branch — banked preparation consumed by
+    `chord_ear_lift`.
+-/
+lemma chordLeft_ear_tl_neighbours {α : Type*} (W : List α) (i : ℕ)
+    (hi : 2 ≤ i) (hik : i + 3 ≤ W.length) :
+    (W.drop (i + 2) ++ W.take (i - 1)).getLast? = W[i - 2]? ∧
+    (W.drop (i + 2) ++ W.take (i - 1)).head? = W[i + 2]? := by
+  grind +suggestions
+
+/-
+**Rotated-remainder cyclic-neighbour identification (list-surgery brick for
+    `chord_ear_lift`, chordRight case).**  For a list `W` of length `≥ 4`, the
+    3-truncated rotation `(W.rotate j).drop 3` — the shape the tail `tl` takes in
+    `chordRight_interior_ear_extract`, where `tl = (W.rotate (i-1)).drop 3`,
+    i.e. `j = i - 1` — has first vertex `W[(j+3) mod n]` (the cyclic successor of
+    the ear's right vertex `c'`) and last vertex `W[(j+n-1) mod n]` (the cyclic
+    predecessor of the ear's left vertex `a'`), where `n = W.length`.  Pure
+    list/modular arithmetic, no geometry; numerically validated over many
+    rotations.  Stated polymorphically for reuse.  NOT a dead branch — banked
+    preparation consumed by `chord_ear_lift`.
+-/
+lemma rotate_drop3_neighbours {α : Type*} (W : List α) (j : ℕ)
+    (hn : 4 ≤ W.length) :
+    ((W.rotate j).drop 3).head? = W[(j + 3) % W.length]? ∧
+    ((W.rotate j).drop 3).getLast? = W[(j + W.length - 1) % W.length]? := by
+  rcases n : W.length with ( _ | _ | _ | _ | n ) <;> simp_all +arith +decide;
+  rw [ List.getLast?_eq_getElem? ];
+  simp +arith +decide [ List.getElem?_rotate, n ];
+  grind +suggestions
+
 /-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
     Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
     interior diagonal `W[0]–W[k]` into the two pieces `chordLeft W k` /

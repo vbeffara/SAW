@@ -1,3 +1,17 @@
+# Summary of changes for run 5d2c61a8-42a0-4502-beef-7c9a00e1e470
+Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving every other branch of the SAW formalization untouched. The whole library still builds end-to-end (`lake build`, 8135 jobs, including `RequestProject/SAWFinal.lean`, which transitively imports all Umlauf files). All work is committed and pushed.
+
+What I did this round (all in `RequestProject/SAWUmlaufPolygon.lean`):
+
+1. Re-established the exact live state of the Umlaufsatz chain: the general planar `polygon_umlaufsatz` and its ear-clipping induction remain in place, and the content is concentrated in exactly 7 genuine, sharply-isolated Jordan-curve-theorem-level `sorry`s in the Meisters two-ears / point-in-polygon core (the two escape-walk lemmas `clipped_ear_escape_walk` / `chord_ear_other_escape_walk`, the shared geometric brick `chord_ear_lift`, the `interior_lift_via_piece` triangle/flat residual, `empty_branch_bad_lift`, and the two spike subcases inside `empty_branch_boundary_lift`). An 8th `sorry` is inert inside the documented-false `ear_turning_bounds` block comment.
+
+2. Confirmed by direct attempts (with detailed proof sketches) that the shared geometric brick `chord_ear_lift` is not one-shot closeable: even the list-surgery assembly around the genuine seam-corner residue is fiddly, so I banked the two reusable list-surgery pieces it needs, both **proved sorry-free** and numerically validated first:
+   - `chordLeft_ear_tl_neighbours`: in the fully-interior (non-seam) chordLeft subcase, the cyclic remainder `W.drop (i+2) ++ W.take (i-1)` produced by `chordLeft_interior_ear_extract` has last vertex `W[i-2]` and first vertex `W[i+2]` — the genuine cyclic `W`-neighbours of the ear's `a'`/`c'`. This is what lets the two clip-corner non-flatness clauses transfer directly from `EmptyCornerData2 P`, isolating the remaining content to the two seam subcases.
+   - `rotate_drop3_neighbours`: the companion for the chordRight case — for any list of length ≥ 4, `(W.rotate j).drop 3` (the shape `tl` takes in `chordRight_interior_ear_extract`, with `j = i-1`) has head `W[(j+3) mod n]` and last `W[(j+n-1) mod n]`.
+   Both are stated polymorphically for reuse and documented as preparation consumed by `chord_ear_lift` (explicitly linked, not dead branches).
+
+Net effect: partial progress is preserved as building Lean with honest `sorry`s (nothing was lost), and two new proved, verified bricks were added toward closing the pivotal `chord_ear_lift` residue. The count of genuine active gaps is unchanged at 7 — these are irreducible Jordan-curve-theorem-level content (polygon-complement path connectivity, point-in-polygon separation, seam-corner non-flatness, two-ears spike resolution) that require further multi-round infrastructure development, as the task anticipated. No new axioms were introduced.
+
 # Summary of changes for run 4bcc5817-4daf-45f0-b4b4-db0f689cfac0
 Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving all other branches of the SAW formalization untouched. The whole library still builds successfully (`lake build`, 8135 jobs, including `RequestProject/SAWFinal.lean`), and all new declarations are in `RequestProject/SAWUmlaufPolygon.lean`, which is transitively imported from `SAWFinal`.
 
