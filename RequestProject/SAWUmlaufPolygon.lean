@@ -3895,6 +3895,38 @@ lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
     rw [ List.mem_iff_get ] at he; obtain ⟨ i, hi ⟩ := he; simp_all +decide [ List.get ] ;
     grind +splitIndPred)
 
+/-- **Shared vertex-escape core (the single genuine Jordan residue of both
+    escape-walk lemmas).**  For a simple polygon `W`, a vertex `x ∈ W`, and a
+    finite family `diags` of "diagonal" segments, each disjoint from every
+    `W`-edge not incident to its own endpoints (`hdiags`), there is an
+    edge-avoiding polyline from `x` reaching a point outside `convexHull ℝ W`
+    whose every step avoids all `W`-edges not incident to `x` and every diagonal
+    in `diags`.
+
+    This is the genuine polygon-Jordan complement path-connectivity content shared
+    by *both* escape residues below: `chord_ear_other_escape_walk` uses
+    `diags = [(u,v)]`, and `clipped_ear_escape_walk` uses `diags = [(u,v),(a',c')]`
+    (the second being the empty-ear base).  Extracting it here removes the
+    duplicated Jordan content from the two residues, which now reduce to this one
+    statement (plus, for the clipped case, the local fact that the ear base is a
+    valid `W`-diagonal).  It is a TRUE statement (the exterior of a simple polygon
+    is path-connected and unbounded, and a boundary vertex has an outward escape
+    direction; interior diagonals are avoided by staying in the exterior); NOT a
+    dead branch. -/
+lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ∃ zs : List ℂ,
+      List.IsChain (fun a b =>
+          (∀ e ∈ closedEdges W, e.1 ≠ x → e.2 ≠ x →
+              Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
+          (∀ s ∈ diags, Disjoint (segment ℝ a b) (segment ℝ s.1 s.2))) (x :: zs) ∧
+      (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
+  sorry
+
 /-- **Escaping edge-avoiding walk out of the clipped polygon (hull-interior
     residue).**  Same setup as `clipped_ear_ptWind_zero`: `x` lies strictly inside
     the empty convex ear `(a', b', c')` of the chord piece `P`, and (the residual
@@ -3982,6 +4014,14 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
               Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
           Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
+    -- This clipped-case residue morally reduces to the shared Jordan core
+    -- `vertex_escape_walk_core` (with diagonals `u–v` and the ear base `a'–c'`),
+    -- BUT the ear base `a'–c'` is only an ear of the *piece* `P`, not of the whole
+    -- polygon `W`: a vertex or edge of the OTHER chord piece can poke into the
+    -- ear triangle, so `a'–c'` need not be a valid `W`-diagonal.  Hence the base
+    -- clause cannot be discharged by the core unconditionally, and this residue
+    -- is kept as an isolated `sorry` rather than reduced through a possibly-false
+    -- diagonal-validity lemma.
     sorry
   exact ⟨zs, hchain,
     HexArea.not_mem_convexHull_sub (a' :: c' :: tlP) P hcl_sub _
@@ -4046,7 +4086,27 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k 
               Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
           Disjoint (segment ℝ a b) (segment ℝ u v)) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
-    sorry
+    -- Reduced to the shared Jordan core `vertex_escape_walk_core` with the single
+    -- valid diagonal `u–v`.  Both cut endpoints `u, v` lie in `P`, hence differ
+    -- from `x ∉ P` (the required diagonal-incidence side condition `hdiagx`).
+    have hkW : k < W.length := by omega
+    have hWne : W ≠ [] := by rintro rfl; simp at hu
+    have hWhead : W.head? = some u := by rw [List.head?_eq_getElem?]; exact hu
+    have huP : u ∈ P := by
+      rcases hP with h | h <;> subst h
+      · exact List.mem_of_mem_head? (by rw [HexArea.chordLeft_head]; exact hWhead)
+      · exact List.mem_of_mem_getLast?
+          (by rw [HexArea.chordRight_getLast W k hWne hkW]; exact hWhead)
+    have hvP : v ∈ P := by
+      rcases hP with h | h <;> subst h
+      · exact List.mem_of_mem_getLast? (by rw [HexArea.chordLeft_getLast W k hkW]; exact hv)
+      · exact List.mem_of_mem_head? (by rw [HexArea.chordRight_head W k hkW]; exact hv)
+    obtain ⟨zs, hch, hl⟩ := vertex_escape_walk_core W hsimple x hxW [(u, v)]
+      (by
+        intro s hs; simp only [List.mem_singleton] at hs; subst hs
+        exact ⟨fun h => hxP (h ▸ huP), fun h => hxP (h ▸ hvP)⟩)
+      (by intro s hs; simp only [List.mem_singleton] at hs; subst hs; exact hdiag)
+    exact ⟨zs, hch.imp (fun a b hab => ⟨hab.1, hab.2 (u, v) (by simp)⟩), hl⟩
   exact ⟨zs, hchain,
     HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast⟩
 

@@ -1,5 +1,38 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (latest round): shared escape core extracted + soundness fix.**
+> Added `vertex_escape_walk_core` in `RequestProject/SAWUmlaufPolygon.lean`: the
+> single genuine polygon-Jordan complement path-connectivity residue shared by
+> BOTH escape-walk lemmas.  For a simple polygon `W`, a vertex `x ∈ W`, and a
+> family `diags` of diagonals (each non-incident to `x` and disjoint from
+> non-incident `W`-edges), it produces an edge-avoiding polyline from `x` out
+> past `convexHull ℝ W`.
+> - `chord_ear_other_escape_walk`'s hull residue is now **fully reduced** to this
+>   core (`diags = [(u,v)]`); the required side condition `u ≠ x`, `v ≠ x` is
+>   discharged by showing both cut endpoints lie in `P` (via `chordLeft_head` /
+>   `chordLeft_getLast` / `chordRight_head` / `chordRight_getLast`) while `x ∉ P`.
+> - `clipped_ear_escape_walk`'s hull residue is left as its own isolated `sorry`
+>   (documented): it also needs the ear base `a'–c'` avoided, but that base is an
+>   ear only of the *piece* `P`, not of `W`, so it need NOT be a valid
+>   `W`-diagonal (the OTHER piece can poke into the ear triangle); reducing it
+>   through a base-validity lemma would be building on a possibly-false fact.
+>
+> **Soundness fix (important).**  The first draft of the core was stated WITHOUT
+> the `x`-incidence hypothesis on diagonals and was DISPROVED (degenerate
+> `W = [0]`, `diags = [(0,0)]`: a diagonal through `x` blocks every first step).
+> A false `sorry`ed lemma in scope is a landmine — the prover promptly used it to
+> "prove" `empty_branch_bad_lift` vacuously by contradiction.  That bogus proof
+> was reverted, the missing hypothesis `hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x`
+> was added, and the corrected core was re-checked to be **not disprovable**
+> (genuinely open).  Whole library rebuilds end-to-end (8136 jobs), no new axioms.
+> Live Umlaufsatz `sorry` count unchanged (7): the shared core, the clipped
+> escape residue, `chord_ear_lift`, the `interior_lift_via_piece` triangle/flat
+> residual, `empty_branch_bad_lift`, and the two boundary spike subcases —
+> all genuine polygon-Jordan / two-ears content.  High-effort attempts on the
+> core, `chord_ear_lift`, and the interior residual did not close in one search.
+>
+> ---
+
 > **Umlaufsatz (latest round): two new proven forward-ray escape bricks.**
 > Added to `RequestProject/SAWUmlaufEscapeHelpers.lean` (already imported by
 > `SAWUmlaufPolygon`), both `sorry`-free:

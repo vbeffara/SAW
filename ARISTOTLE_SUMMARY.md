@@ -1,3 +1,16 @@
+# Summary of changes for run 8c7b1a21-ee8b-47e8-99b3-191f0ed63c67
+Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving all other SAW branches untouched. The whole library still builds end-to-end (`lake build`, 8136 jobs, including `SAWFinal.lean`, which transitively imports the full Umlauf chain), with no new axioms. All work is committed and pushed.
+
+Concrete, durable Lean progress this round (all in `RequestProject/SAWUmlaufPolygon.lean`):
+
+1. **Extracted the shared escape core `vertex_escape_walk_core`.** Both remaining escape-walk residues previously duplicated the same genuine polygon-Jordan complement path-connectivity content. I factored it into one clean, well-stated lemma: for a simple polygon `W`, a vertex `x ∈ W`, and a family `diags` of diagonals (each non-incident to `x` and disjoint from non-incident `W`-edges), there is an edge-avoiding polyline from `x` out past `convexHull ℝ W`.
+
+2. **Fully reduced `chord_ear_other_escape_walk`'s hull residue to the core** (with `diags = [(u,v)]`). The core's `u ≠ x`, `v ≠ x` side condition is discharged sorry-free by proving both cut endpoints lie in the chord piece `P` (via the existing `chordLeft_head`/`chordLeft_getLast`/`chordRight_head`/`chordRight_getLast` lemmas) while `x ∉ P`. This eliminates one of the two escape-walk sorries in favor of the shared core.
+
+3. **Caught and fixed a soundness landmine.** My first draft of the core omitted the diagonal-incidence hypothesis and was disproved (a diagonal through `x` blocks every first step). A false `sorry`-ed lemma in scope is dangerous — the automated prover immediately used it to "prove" `empty_branch_bad_lift` vacuously by contradiction. I reverted that bogus proof, added the missing hypothesis `hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x`, and re-verified the corrected core is no longer disprovable (genuinely open). The `clipped_ear_escape_walk` residue was deliberately left as its own isolated `sorry` rather than reduced through a possibly-false ear-base-validity fact (the ear base is an ear only of the piece `P`, not of `W`).
+
+Honest status: the live Umlaufsatz `sorry` count is unchanged (7) but the structure is cleaner and one soundness bug was removed. The remaining gaps are genuine polygon-Jordan / two-ears content absent from Mathlib: the shared escape core, the clipped escape residue, `chord_ear_lift`, the `interior_lift_via_piece` triangle/flat residual, `empty_branch_bad_lift`, and the two boundary spike subcases. High-effort automated attempts on the core, `chord_ear_lift`, and the interior residual did not close in a single search, confirming they remain multi-round work. The round is recorded at the top of `PROOF_STATUS.md`.
+
 # Summary of changes for run 8915d642-4b15-411d-adf2-d1cfa28c9534
 Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving every other branch of the SAW formalization untouched. The whole library still builds end-to-end (`lake build`, 8136 jobs, including `SAWFinal.lean`, which transitively imports the full Umlauf chain), with no new axioms. All work is committed and pushed.
 
