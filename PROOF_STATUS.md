@@ -2531,3 +2531,82 @@ The project builds successfully with `lake build RequestProject.SAWFinal`.
 - `SAWPairWindingProof` — Pair winding proof infrastructure
 
 All of these files are imported from SAWFinal.lean and build successfully.
+
+## Umlaufsatz exterior endpoint factoring (latest)
+
+`SAWUmlaufHullExterior.lean` is now part of the imported proof graph and proves
+that every finite polygonal convex hull has an exterior point. Consequently
+`vertex_escape_joinedIn` is proved from the sharper remaining topological core
+`vertex_escape_joinedIn_to` (connect the boundary vertex to a *prescribed*
+exterior endpoint while avoiding the forbidden segments). This separates the
+completed boundedness half from the outstanding Jordan-connectivity half and
+feeds directly into `vertex_escape_walk_core` and both escape branches.
+
+## Quantitative exterior endpoint package
+
+The Umlaufsatz escape route now has a verified large-radius package:
+`exists_not_mem_convexHull_finset_norm_gt`, `exists_norm_bound_segments`, and
+`exists_exterior_point_beyond_segments`. The derived
+`vertex_escape_joinedIn_large` explicitly supplies an exterior endpoint beyond
+a circle containing every forbidden segment, and feeds the existing escape
+chain. The unresolved leaf is now exactly the fixed-endpoint Jordan path
+`vertex_escape_joinedIn_to`; endpoint existence and large-circle separation are
+proved.
+
+## Escape endpoint membership correction
+
+The fixed-endpoint Jordan interface now includes the logically necessary source
+membership and diagonal-interior avoidance premises. The formerly implicit
+claim from endpoint inequalities alone was false. Target membership beyond the
+large radius and polygon-source membership away from nonincident edges are now
+proved as `mem_compl_iUnion_segments_of_norm_gt` and
+`vertex_escape_source_mem`. The chord caller exposes two remaining finite
+incidence facts as sorries and consumes them immediately.
+
+## Corrected chord-piece length fact
+
+`SAWUmlaufChordIncidence.lean` is imported into the main Umlaufsatz graph and
+proves `chordPiece_omits_vertex_length_four` with the essential premise that the
+piece has at least three vertices. The weaker statement was false for a
+triangle and has been removed. The caller derives the premise from its explicit
+three-vertex ear rotation.
+
+## Valid-diagonal incidence factoring
+
+`other_piece_vertex_not_on_valid_diagonal` is now proved from the general core
+`valid_diagonal_no_third_vertex`. Cyclic nondegeneracy is threaded through the
+escape/Jordan chain because it is essential when the third vertex's two cyclic
+neighbors are exactly the diagonal endpoints. The remaining incidence leaf is
+now the general geometric statement rather than chord-piece bookkeeping.
+
+## Valid-diagonal incidence closed
+
+The incidence chain `third_vertex_incident_edge_or_between` →
+`valid_diagonal_no_third_vertex` →
+`other_piece_vertex_not_on_valid_diagonal` is now fully proved without sorries.
+The proof handles the exceptional adjacent-to-both-endpoints case using cyclic
+nondegeneracy rather than the false claim that an avoiding incident edge always
+exists.
+
+## Jordan path layer completed
+
+Finite forbidden-segment complements are now proved open. The path-level core
+`vertex_escape_joinedIn_to` is derived from the connected-component statement
+using local path connectedness of `ℂ`. Thus the remaining Jordan obligation is
+exactly `vertex_escape_same_component_to`; endpoint/path conversion is proved.
+
+## Large-circle routing completed
+
+The exterior `{z : ℂ | R < ‖z‖}` is now proved path connected for `R>0`, and
+`vertex_escape_joinedIn_of_reaches_norm_gt` extends any local avoiding escape
+past the radius to an arbitrary exterior endpoint. The outstanding Jordan work
+is reduced to producing one local escape from the boundary source beyond the
+radius containing all forbidden segments.
+
+## Escape core sharpened to component unboundedness
+
+The under-specified arbitrary-diagonal fixed-endpoint claim was removed. The
+actual proof chain now carries `diags.length ≤ 1`. All consequences of
+unboundedness are proved: arbitrary large points, path extraction in the open
+component, and large-circle continuation. The remaining Jordan leaf is exactly
+`vertex_escape_component_unbounded`.

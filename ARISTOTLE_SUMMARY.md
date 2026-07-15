@@ -1576,3 +1576,218 @@ Remaining Umlaufsatz leaf sorries (all genuinely-true, Jordan/Meisters cores):
 `interior_lift_via_piece` (residual), `empty_branch_bad_lift`,
 `empty_branch_boundary_lift` (two spike subcases), plus honeycomb-planarity
 `hexEmbeddedPolygon_edges_disjoint`.
+
+---
+# Summary — Umlaufsatz fixed-endpoint exterior factoring round
+
+Worked exclusively on the top-priority planar/discrete Umlaufsatz. Added
+`RequestProject/SAWUmlaufHullExterior.lean`, imported directly by
+`SAWUmlaufPolygon` and hence transitively by `SAWFinal`.
+
+The new file proves, without `sorry`, that the convex hull of a finite set in a
+nontrivial real normed space has an exterior point:
+`HexArea.exists_not_mem_convexHull_finset`, plus the list specialization
+`exists_not_mem_convexHull_list`. The proof uses boundedness of finite sets and
+of their convex hulls; its checked axioms are only `propext`,
+`Classical.choice`, and `Quot.sound`.
+
+The old existential Jordan gap `vertex_escape_joinedIn` is now derived rather
+than assumed: it chooses an exterior endpoint with the new boundedness lemma.
+The genuinely topological residue is isolated more precisely as
+`vertex_escape_joinedIn_to`, which asks for an avoiding path to an arbitrary
+prescribed exterior endpoint. This is explicitly linked to
+`vertex_escape_joinedIn`, then `vertex_escape_walk_core`, and onward to both
+escape-walk branches in the ear induction; it is not a dead branch.
+
+The full project builds successfully (8138 jobs, including `SAWFinal`). Existing
+Jordan/Meisters `sorry` leaves remain honestly recorded in
+`SAWUmlaufPolygon.lean`.
+
+---
+# Summary — quantitative Umlaufsatz exterior endpoint formalization
+
+Continued only the Umlaufsatz. The exterior endpoint preparation is now
+quantitative and fully formalized in `SAWUmlaufHullExterior.lean`:
+
+- `exists_not_mem_convexHull_finset_norm_gt`: an exterior point can be chosen
+  beyond any prescribed norm radius;
+- `exists_not_mem_convexHull_list_norm_gt`: list specialization;
+- `exists_norm_bound_segments`: every finite family of complex line segments is
+  strictly enclosed by some norm ball;
+- `exists_exterior_point_beyond_segments`: packages a radius and endpoint with
+  all forbidden segments inside the radius and the endpoint outside both the
+  radius and the polygonal convex hull.
+
+All four declarations are sorry-free and use only `propext`,
+`Classical.choice`, and `Quot.sound`. In `SAWUmlaufPolygon.lean`, the new
+`vertex_escape_joinedIn_large` consumes this endpoint package and is explicitly
+linked into `vertex_escape_joinedIn`, `vertex_escape_walk_core`, and the two
+escape branches. Thus the large-circle endpoint geometry is formalized; the
+remaining `vertex_escape_joinedIn_to` sorry is precisely the Jordan
+path-connectivity step itself.
+
+The complete project builds successfully (8138 jobs, including `SAWFinal`).
+
+---
+# Summary — correcting and formalizing escape endpoint membership
+
+Continued only the Umlaufsatz escape/Jordan branch. Formalized two further
+sorry-free facts:
+
+- `HexArea.mem_compl_iUnion_segments_of_norm_gt`: an endpoint beyond a common
+  strict norm bound lies in the complement of the finite union of segments
+  (with `not_mem_segment_of_norm_bound` as its local helper);
+- `vertex_escape_source_mem`: for a simple polygon of length at least four, a
+  polygon vertex lies in the complement of all nonincident polygon edges plus
+  any explicitly avoided diagonals. This is proved from the existing
+  `simple_vertex_not_on_far_edge` theorem.
+
+A correctness issue in the prior fixed-endpoint statement was found and fixed:
+endpoint inequalities for a diagonal do not imply that the source point is off
+its interior (e.g. zero lies in the segment from `1` to `-1`). The Jordan core
+interfaces now explicitly require both diagonal avoidance and source membership.
+The quantitative endpoint construction supplies target membership in the same
+complement, so the remaining `vertex_escape_joinedIn_to` gap is now honestly
+stated with both endpoints actually in its ambient set.
+
+The chord-piece caller is wired to these corrected premises. Two small chord
+incidence/length facts are isolated as honest sorries
+`chord_piece_omits_vertex_length_four` and
+`other_piece_vertex_not_on_valid_diagonal`; they directly feed the main escape
+branch and are not dead code. Full project build succeeds (8138 jobs).
+
+---
+# Summary — corrected chord-piece length formalization
+
+Continued only the Umlaufsatz escape branch. A proposed generic claim that any
+chord piece omitting a polygon vertex forces four vertices was checked and found
+false for a triangle (`W=[a,b,c]`, `k=1`, left piece `[a,b]`). The false
+declaration was removed and documented rather than retained.
+
+Added imported file `SAWUmlaufChordIncidence.lean` with the corrected theorem
+`HexArea.chordPiece_omits_vertex_length_four`: if the chord piece itself has at
+least three vertices and omits a vertex of the original cycle, then the cycle
+has at least four vertices. The theorem is fully proved, sorry-free, and checked
+to use only `propext`, `Classical.choice`, and `Quot.sound`.
+
+The actual caller has a rotation `P.rotate s = a'::b'::c'::tlP`, so `3 ≤
+P.length` is proved there and the corrected theorem supplies the needed
+`4 ≤ W.length`. This is wired into the source-membership and escape path chain.
+The remaining diagonal incidence lemma is honestly isolated as
+`other_piece_vertex_not_on_valid_diagonal`. Full project build succeeds (8139
+jobs, including `SAWFinal`).
+
+---
+# Summary — valid-diagonal incidence factoring
+
+Continued only the Umlaufsatz escape branch. The previously open
+`other_piece_vertex_not_on_valid_diagonal` is now proved as a wrapper: it derives
+that both cut endpoints lie in the selected chord piece, obtains the required
+endpoint inequalities from `x ∉ P`, and applies a new general geometric core
+`valid_diagonal_no_third_vertex`.
+
+The general core is stated with the necessary cyclic nondegeneracy hypothesis:
+a simple, cyclically nondegenerate polygon has no third vertex on a valid
+diagonal. This handles the exceptional case where the third vertex is adjacent
+to both diagonal endpoints: mere combinatorics cannot choose an incident edge
+avoiding both endpoints, but collinearity would contradict `polyCycNondeg`.
+Accordingly `polyCycNondeg W` is now threaded explicitly through the escape,
+point-winding, and Jordan-separation chain. The sole incidence `sorry` is the
+honest general core `valid_diagonal_no_third_vertex`; the chord-piece-specific
+wrapper and all caller bookkeeping are proved.
+
+The full project builds successfully (8139 jobs, including `SAWFinal`).
+
+---
+# Summary — valid-diagonal incidence completed
+
+Continued only the Umlaufsatz. Closed the entire valid-diagonal incidence leaf
+sorry-free in `SAWUmlaufPolygon.lean`:
+
+- `third_vertex_incident_edge_or_between`: a finite cyclic-list dichotomy. A
+  third vertex either has an incident edge avoiding both diagonal endpoints, or
+  is cyclically between those endpoints.
+- `valid_diagonal_no_third_vertex`: combines that dichotomy with polygon
+  edge-disjointness in the first case and cyclic nondegeneracy in the second to
+  prove that no third polygon vertex lies on a valid diagonal.
+- Consequently `other_piece_vertex_not_on_valid_diagonal`, already factored as
+  a chord-piece wrapper, is now fully sorry-free as well.
+
+All three checked declarations use only `propext`, `Classical.choice`, and
+`Quot.sound`. The corrected `polyCycNondeg` premise remains threaded through the
+escape/Jordan chain and is genuinely used. Full project build succeeds (8139
+jobs, including `SAWFinal`).
+
+---
+# Summary — Jordan path layer reduced to connected-component separation
+
+Continued only the Umlaufsatz escape/Jordan branch. Added three sorry-free
+topological layers:
+
+- `HexArea.isClosed_complex_segment`: a complex line segment is closed, proved
+  as the compact continuous image of `[0,1]`;
+- `HexArea.isOpen_compl_iUnion_segments`: the complement of a finite union of
+  forbidden segments is open;
+- `vertex_escape_forbidden_isOpen`: specialization to the exact forbidden set
+  used by the polygon escape core.
+
+The former path-level sorry `vertex_escape_joinedIn_to` is now proved: an open
+connected component in `ℂ` is path connected, so membership of the exterior
+endpoint in the source's connected component yields `JoinedIn`. All path
+construction and local-topology content is therefore discharged. The remaining
+Jordan leaf is sharpened to `vertex_escape_same_component_to`, the pure
+separation statement that the prescribed exterior point lies in the same
+connected component of the forbidden-segment complement as the boundary
+source.
+
+The new segment/open-set theorems are axiom-clean. `vertex_escape_joinedIn_to`
+uses `sorryAx` only transitively through the newly isolated connected-component
+leaf. Full project build succeeds (8139 jobs, including `SAWFinal`).
+
+---
+# Summary — large-circle routing formalized
+
+Continued only the Umlaufsatz Jordan/escape branch. Formalized the global
+large-radius routing stage without sorries:
+
+- `HexArea.isPathConnected_norm_gt`: for `R>0`, the complex-plane region
+  `{z | R < ‖z‖}` is path connected. The proof gives an explicit polar
+  parametrization of the closed-ball complement as a continuous image of the
+  convex half-plane `(R,∞) × ℝ`.
+- `HexArea.joinedIn_norm_gt`: any two points beyond that radius are joined in
+  the ball exterior.
+- `vertex_escape_joinedIn_of_reaches_norm_gt`: if all forbidden segments lie
+  inside radius `R`, any avoiding path that reaches one point beyond `R` extends
+  to every other point beyond `R`, by concatenating with the ball-exterior path.
+
+These declarations are axiom-clean and imported in the main proof graph. This
+finishes the large-circle half of the connected-component/Jordan escape. The
+remaining geometric content is now the local escape from the polygon boundary
+to one point beyond the containing radius, represented by
+`vertex_escape_same_component_to` and its downstream clipped-ear residue.
+Full project build succeeds (8139 jobs, including `SAWFinal`).
+
+---
+# Summary — escape reduced to unbounded-component Jordan core
+
+Continued only the Umlaufsatz escape branch. Corrected the overly generic
+fixed-endpoint component formulation: arbitrary lists of diagonals can create
+extra closed barriers, so that under-specified theorem was removed and replaced
+by a local unbounded-escape interface with `diags.length ≤ 1`, exactly matching
+the actual chord caller.
+
+New sorry-free infrastructure:
+
+- `exists_norm_gt_of_component_unbounded`: an unbounded connected component
+  contains points of arbitrarily large norm;
+- `vertex_escape_reaches_norm_gt`: derived from component unboundedness, openness
+  of the forbidden complement, and local path connectedness of `ℂ`;
+- downstream large-circle routing now uses this result directly, with the
+  singleton-diagonal cardinality premise discharged at the real caller.
+
+The one remaining escape/Jordan leaf is now
+`vertex_escape_component_unbounded`: for a simple polygon boundary source and
+at most one valid extra diagonal, the source component of the forbidden-segment
+complement is unbounded. All metric, component-to-path, arbitrary-radius, and
+large-circle consequences above it are proved. Full project build succeeds
+(8139 jobs, including `SAWFinal`).

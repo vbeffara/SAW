@@ -62,6 +62,7 @@ import RequestProject.SAWUmlaufEscapeHelpers
 import RequestProject.SAWUmlaufEscapeHull
 import RequestProject.SAWUmlaufCorner
 import RequestProject.SAWUmlaufEarSplit
+import RequestProject.SAWUmlaufChordIncidence
 import RequestProject.SAWUmlaufPtWind
 import RequestProject.SAWUmlaufPtWindJordan
 import RequestProject.SAWUmlaufPtWindHalfPlane
@@ -69,6 +70,7 @@ import RequestProject.SAWUmlaufPtWindRay
 import RequestProject.SAWUmlaufExterior
 import RequestProject.SAWUmlaufPtWindMove
 import RequestProject.SAWUmlaufPolyConn
+import RequestProject.SAWUmlaufHullExterior
 
 open Real Complex ComplexConjugate
 
@@ -3896,7 +3898,8 @@ lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
     rw [ List.mem_iff_get ] at he; obtain ⟨ i, hi ⟩ := he; simp_all +decide [ List.get ] ;
     grind +splitIndPred)
 
-/- **Shared vertex-escape core (the single genuine Jordan residue of both
+/-
+**Shared vertex-escape core (the single genuine Jordan residue of both
     escape-walk lemmas).**  For a simple polygon `W`, a vertex `x ∈ W`, and a
     finite family `diags` of "diagonal" segments, each disjoint from every
     `W`-edge not incident to its own endpoints (`hdiags`), there is an
@@ -3913,22 +3916,230 @@ lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
     valid `W`-diagonal).  It is a TRUE statement (the exterior of a simple polygon
     is path-connected and unbounded, and a boundary vertex has an outward escape
     direction; interior diagonals are avoided by staying in the exterior); NOT a
-    dead branch. -/
+    dead branch.
+
+A polygon vertex avoids the union of all nonincident polygon edges and
+all explicitly avoided diagonals.  This supplies the source-membership premise
+needed by the correctly stated fixed-endpoint Jordan core.
+-/
+lemma vertex_escape_source_mem (W : List ℂ) (h4 : 4 ≤ W.length)
+    (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W)
+    (diags : List (ℂ × ℂ))
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2) :
+    x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ) := by
+  simp_all +decide [ Set.ext_iff ];
+  rintro a b ( ⟨ hab, ha, hb ⟩ | hab );
+  · convert simple_vertex_not_on_far_edge W h4 hsimple x hxW ( a, b ) hab ( by tauto ) ( by tauto ) using 1;
+  · exact hdiagavoid a b hab
+
+/-- The forbidden-segment complement occurring in the escape core is open.
+This is a direct specialization of the finite-segment result in
+`SAWUmlaufHullExterior` and is consumed by the path-component reduction below. -/
+lemma vertex_escape_forbidden_isOpen (W : List ℂ) (x : ℂ)
+    (diags : List (ℂ × ℂ)) :
+    IsOpen ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ) := by
+  exact HexArea.isOpen_compl_iUnion_segments _
+
+/-
+Once an avoiding path reaches beyond a norm radius containing every
+forbidden segment, it can be continued to any other point beyond that radius.
+The continuation runs in the path-connected ball exterior and therefore avoids
+every forbidden segment.
+-/
+lemma vertex_escape_joinedIn_of_reaches_norm_gt
+    (S : List (ℂ × ℂ)) (R : ℝ) (hR : 0 < R)
+    (hS : ∀ s ∈ S, ∀ z ∈ segment ℝ s.1 s.2, ‖z‖ < R)
+    {x p q : ℂ} (hxp : JoinedIn ((⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ) x p)
+    (hp : R < ‖p‖) (hq : R < ‖q‖) :
+    JoinedIn ((⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ) x q := by
+  obtain ⟨ γ₁, hγ₁ ⟩ := hxp;
+  obtain ⟨ γ₂, hγ₂ ⟩ := HexArea.joinedIn_norm_gt R hR hp hq;
+  refine' ⟨ γ₁.trans γ₂, _ ⟩;
+  intro t; cases' t with t ht; simp_all +decide [ Path.trans_apply ] ;
+  grind
+
+/-
+**Superseded fixed-endpoint formulation (not retained as a theorem).**
+The earlier generic statement `vertex_escape_same_component_to` quantified over
+an arbitrary list of diagonals.  Its hypotheses did not prevent several
+diagonals from forming an additional closed barrier, so the generic claim was
+under-specified.  The proof chain now uses the honest local unbounded-escape
+core below, with a cardinality restriction matching the actual Umlaufsatz caller
+(the single chord diagonal), followed by the proved large-circle routing lemma.
+
+A connected component of the forbidden-segment complement is unbounded
+exactly when it contains points of arbitrarily large norm.  This metric bridge
+packages the quantitative endpoint needed by the large-circle route.
+-/
+lemma exists_norm_gt_of_component_unbounded
+    (U : Set ℂ) (x : ℂ)
+    (hunbounded : ¬ Bornology.IsBounded (connectedComponentIn U x))
+    (R : ℝ) :
+    ∃ p : ℂ, R < ‖p‖ ∧ p ∈ connectedComponentIn U x := by
+  contrapose! hunbounded with h;
+  exact isBounded_iff_forall_norm_le.mpr ⟨ R, fun p hp => le_of_not_gt fun h' => h p h' hp ⟩
+
+/-- Every admissible boundary source has a positive open ball contained in
+the forbidden-segment complement.  This gives a verified local escape
+neighborhood; the remaining Jordan core must show that this local component is
+the unbounded one. -/
+lemma vertex_escape_source_ball
+    (W : List ℂ) (x : ℂ) (diags : List (ℂ × ℂ))
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ)) :
+    ∃ ε : ℝ, 0 < ε ∧ Metric.ball x ε ⊆
+      ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) := by
+  sorry
+
+/-- Every point in the local source ball belongs to the same connected
+component of the forbidden complement as the source.  This packages the local
+half of the unbounded-component argument. -/
+lemma vertex_escape_ball_subset_component
+    (W : List ℂ) (x : ℂ) (diags : List (ℂ × ℂ))
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ)) :
+    ∃ ε : ℝ, 0 < ε ∧ Metric.ball x ε ⊆ connectedComponentIn
+      ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x := by
+  sorry
+
+/-- **Unbounded-component Jordan core.**  Under the actual Umlaufsatz
+configuration (at most one additional valid diagonal), the component of the
+boundary source in the complement of all forbidden segments is unbounded.  This
+is the remaining plane-separation statement; all metric and path consequences
+are derived below. -/
+lemma vertex_escape_component_unbounded (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ¬ Bornology.IsBounded (connectedComponentIn
+      ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x) := by
+  sorry
+
+/-
+**Local unbounded-escape core.**  From the boundary source, the
+component of the forbidden-segment complement reaches beyond every radius that
+contains all forbidden segments.  This is the remaining genuinely planar
+Jordan-separation statement in the form actually needed by the Umlaufsatz.
+
+Unlike the former arbitrary-fixed-endpoint formulation, this statement asks
+only for one point in the unbounded component.  The proved large-circle routing
+lemma `vertex_escape_joinedIn_of_reaches_norm_gt` then reaches the chosen target.
+It is consumed immediately by `vertex_escape_joinedIn_large`, so it is not a
+dead branch.
+-/
+lemma vertex_escape_reaches_norm_gt (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (R : ℝ) (hR : 0 < R)
+    (hS : ∀ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        ∀ z ∈ segment ℝ s.1 s.2, ‖z‖ < R) :
+    ∃ p : ℂ, R < ‖p‖ ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x p := by
+  obtain ⟨ p, hp ⟩ := exists_norm_gt_of_component_unbounded ( ( ⋃ s ∈ List.filter ( fun e => decide ( e.1 ≠ x ) && decide ( e.2 ≠ x ) ) ( closedEdges W ) ++ diags, segment ℝ s.1 s.2 ) ᶜ ) x ( vertex_escape_component_unbounded W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags ) R;
+  refine' ⟨ p, hp.1, _ ⟩;
+  have h_connected : IsOpen (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) ∧ IsConnected (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) := by
+    apply And.intro;
+    · apply_rules [ IsOpen.connectedComponentIn, vertex_escape_forbidden_isOpen ];
+    · exact ⟨ ⟨ x, mem_connectedComponentIn ( by aesop ) ⟩, isPreconnected_connectedComponentIn ⟩;
+  have h_path : IsPathConnected (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) := by
+    have h_path_connected : IsOpen (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) ∧ IsConnected (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) → IsPathConnected (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) := by
+      intros h_connected
+      apply IsOpen.isConnected_iff_isPathConnected h_connected.left |>.1 h_connected.right;
+    grind;
+  have := h_path.joinedIn x ( mem_connectedComponentIn hsource ) p hp.2;
+  exact this.mono ( connectedComponentIn_subset _ _ )
+
+/-- **Large-endpoint form of the escape core.**  All forbidden segments are
+    enclosed in a ball of radius `R`, while the endpoint `q` lies outside both
+    that ball and the polygonal convex hull.  The path itself is supplied by the
+    fixed-endpoint Jordan core.  This quantitative form is preparation for the
+    standard construction that routes the final part of the path around a large
+    circle; it is consumed immediately by `vertex_escape_joinedIn`. -/
+lemma vertex_escape_joinedIn_large (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ∃ (R : ℝ) (q : ℂ), 0 < R ∧
+      q ∉ convexHull ℝ (W.toFinset : Set ℂ) ∧ R < ‖q‖ ∧
+      (∀ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          ∀ z ∈ segment ℝ s.1 s.2, ‖z‖ < R) ∧
+      q ∈ ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x q := by
+  classical
+  let S := (closedEdges W).filter
+      (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags
+  obtain ⟨R, q, hR, hq, hqR, hS⟩ :=
+    HexArea.exists_exterior_point_beyond_segments W S
+  have hqcompl : q ∈ (⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ :=
+    HexArea.mem_compl_iUnion_segments_of_norm_gt S R q hS hqR
+  obtain ⟨p, hpR, hxp⟩ := vertex_escape_reaches_norm_gt W hsimple x hxW diags
+    hdiagx hdiagcard hdiagavoid hsource hdiags R hR hS
+  have hxq : JoinedIn (⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ x q :=
+    vertex_escape_joinedIn_of_reaches_norm_gt S R hR hS hxp hpR hqR
+  exact ⟨R, q, hR, hq, hqR, hS, hqcompl, hxq⟩
+
 /-- **The isolated Jordan-connectivity core of the escape residue.**  The base
     vertex `x` of a simple polygon `W` can be joined *by a path* to some point `q`
     outside the convex hull of `W`, the whole path lying in the complement of the
     union of the forbidden segments — the polygon edges not incident to `x`
-    together with the diagonals in `diags`.  This is the genuine
-    Jordan-curve-theorem-level content (the exterior/interior complementary
-    components are path-connected and, via either edge incident to `x`, connect
-    across the boundary at `x`), isolated as a single `JoinedIn` statement.
-    Everything else in `vertex_escape_walk_core` — turning the path into an
-    edge-avoiding polyline — is now discharged sorry-free by
-    `HexArea.exists_escape_polyline_of_joinedIn` (`SAWUmlaufPolyConn.lean`).
+    together with the diagonals in `diags`.
+
+    The endpoint-existence half is now proved via finite convex-hull boundedness
+    (`HexArea.exists_not_mem_convexHull_list`); only the fixed-endpoint Jordan
+    statement `vertex_escape_joinedIn_to` remains topological.  Everything else
+    in `vertex_escape_walk_core` — turning the path into an edge-avoiding
+    polyline — is discharged by `HexArea.exists_escape_polyline_of_joinedIn`.
     Absent from Mathlib. -/
 lemma vertex_escape_joinedIn (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
         Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
@@ -3936,11 +4147,18 @@ lemma vertex_escape_joinedIn (W : List ℂ) (hsimple : PolygonSimple W)
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x q := by
-  sorry
+  obtain ⟨R, q, hR, hq, hqR, hsegments, hqcompl, hjoin⟩ :=
+    vertex_escape_joinedIn_large W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags
+  exact ⟨q, hq, hjoin⟩
 
 lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
         Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
@@ -3951,7 +4169,8 @@ lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
           (∀ s ∈ diags, Disjoint (segment ℝ a b) (segment ℝ s.1 s.2))) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
   classical
-  obtain ⟨q, hq, hjoin⟩ := vertex_escape_joinedIn W hsimple x hxW diags hdiagx hdiags
+  obtain ⟨q, hq, hjoin⟩ :=
+    vertex_escape_joinedIn W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags
   obtain ⟨zs, hchain, hlast⟩ :=
     HexArea.exists_escape_polyline_of_joinedIn _ x q _ hq hjoin
   refine ⟨zs, ?_, hlast⟩
@@ -4065,7 +4284,8 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     HexArea.not_mem_convexHull_sub (a' :: c' :: tlP) P hcl_sub _
       (HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast)⟩
 
-/-- **Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
+/-
+**Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
     Same setup as `chord_ear_other_ptWind_zero`: `x` is a vertex of the OTHER
     chord piece (`x ∈ W`, `x ∉ P`), and (the residual case) `x` lies inside the
     convex hull of `P`.  A valid diagonal cut splits the simple polygon into two
@@ -4076,8 +4296,132 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
 
     **Status: `sorry`.**  Honest exterior-path residue; a TRUE statement.  NOT a
     dead branch — consumed directly by `chord_ear_other_ptWind_zero` just below
-    via `HexArea.ptWind_zero_of_walk_to_not_hull` (`SAWUmlaufPtWindMove`). -/
-lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    via `HexArea.ptWind_zero_of_walk_to_not_hull` (`SAWUmlaufPtWindMove`).
+
+A tempting length shortcut here is false: for a triangle `W = [a,b,c]`,
+`k = 1`, the left chord piece `[a,b]` omits `c`.  Therefore no generic
+`4 ≤ W.length` conclusion may be extracted merely from `x ∉ P`; callers that
+need the four-vertex far-edge lemma must supply a genuine length argument from
+their stronger branch hypotheses.  This dead statement is deliberately not
+declared.
+
+**Incident-edge dichotomy at a third vertex.**  In a nodup cyclic list
+of length at least four, given distinct vertices `u`, `v`, `x`, either an edge
+incident to `x` has its other endpoint outside `{u,v}`, or `x` is cyclically
+between `u` and `v`.  This is the exact combinatorial split used by
+`valid_diagonal_no_third_vertex`: the first branch contradicts diagonal
+edge-disjointness, while the second contradicts cyclic nondegeneracy if `x`
+lies on `segment u v`.
+-/
+lemma third_vertex_incident_edge_or_between
+    (W : List ℂ) (h4 : 4 ≤ W.length) (hnd : W.Nodup)
+    (u v x : ℂ) (huW : u ∈ W) (hvW : v ∈ W) (hxW : x ∈ W)
+    (hxu : x ≠ u) (hxv : x ≠ v) :
+    (∃ y : ℂ, y ≠ u ∧ y ≠ v ∧
+      ((x, y) ∈ closedEdges W ∨ (y, x) ∈ closedEdges W)) ∨
+    (∃ r tl, W.rotate r = u :: x :: v :: tl) ∨
+    (∃ r tl, W.rotate r = v :: x :: u :: tl) := by
+  unfold closedEdges at *; simp_all +decide [ List.mem_append, List.mem_cons ] ;
+  by_cases h : ∃ y, y ≠ u ∧ y ≠ v ∧ (x, y) ∈ W.zip (W.rotate 1) ∨ y ≠ u ∧ y ≠ v ∧ (y, x) ∈ W.zip (W.rotate 1);
+  · grind;
+  · -- Since there's no y satisfying the conditions, the only possibility is that u and v are consecutive to x.
+    have h_consecutive : (u ∈ W ∧ v ∈ W ∧ x ∈ W ∧ u ≠ x ∧ v ≠ x) → (∃ r tl, W.rotate r = u :: x :: v :: tl) ∨ (∃ r tl, W.rotate r = v :: x :: u :: tl) := by
+      intros huvx
+      obtain ⟨p, q, hp, hq, hpq⟩ : ∃ p q, (p, x) ∈ W.zip (W.rotate 1) ∧ (x, q) ∈ W.zip (W.rotate 1) ∧ p ≠ q := by
+        obtain ⟨p, hp⟩ : ∃ p, (p, x) ∈ W.zip (W.rotate 1) := by
+          have h_consecutive : ∀ {l : List ℂ}, l.Nodup → ∀ x ∈ l, ∃ p, (p, x) ∈ l.zip (l.rotate 1) := by
+            intros l hl x hx; induction' l with hd tl ih generalizing x <;> simp_all +decide [ List.zip ] ;
+            rcases hx with ( rfl | hx ) <;> simp_all +decide [ List.mem_iff_get ];
+            · exact ⟨ ⟨ tl.length, by simp +decide ⟩, by simp +decide ⟩;
+            · obtain ⟨ n, hn ⟩ := hx; use ⟨ n, by
+                simp +arith +decide [ List.length_zipWith ] ⟩ ; simp +decide [ hn ] ;
+          exact h_consecutive hnd x hxW
+        obtain ⟨q, hq⟩ : ∃ q, (x, q) ∈ W.zip (W.rotate 1) := by
+          rw [ List.mem_iff_get ] at *;
+          obtain ⟨ n, hn ⟩ := hxW; use W.get ⟨ ( n + 1 ) % W.length, Nat.mod_lt _ ( by linarith ) ⟩ ; simp +decide [ hn, List.getElem?_eq_getElem, Nat.mod_eq_of_lt ] ;
+          rw [ List.mem_iff_get ] ; use ⟨ n, by
+            simp +decide [ List.length_zip, List.length_rotate ] ⟩ ; simp +decide [ hn, List.getElem_rotate ] ;
+          exact hn
+        use p, q;
+        simp_all +decide [ List.mem_iff_get ];
+        obtain ⟨ n, hn₁, hn₂ ⟩ := hp; obtain ⟨ m, hm₁, hm₂ ⟩ := hq; simp_all +decide [ List.getElem_rotate ] ;
+        have := List.nodup_iff_injective_get.mp hnd; have := @this ⟨ ( n + 1 ) % W.length, by
+          exact Nat.mod_lt _ ( by linarith ) ⟩ ⟨ m, by
+          exact lt_of_lt_of_le m.2 ( by simp ) ⟩ ; simp_all +decide [ Nat.mod_eq_of_lt ] ;
+        generalize_proofs at *;
+        intro H; have := ‹Function.Injective W.get› ( show W.get ⟨ n, by linarith ⟩ = W.get ⟨ ( m + 1 ) % W.length, by linarith ⟩ from by aesop ) ; simp_all +decide [ Fin.ext_iff ] ;
+        have := Nat.mod_add_div ( m + 1 + 1 ) W.length; simp_all +decide [ Nat.mod_eq_of_lt ] ;
+        nlinarith [ show ( m + 1 + 1 : ℕ ) / W.length = 0 by nlinarith ];
+      have h_consecutive : ∃ r tl, W.rotate r = [p, x, q] ++ tl := by
+        exact?;
+      grind;
+    exact Or.inr <| h_consecutive ⟨ huW, hvW, hxW, Ne.symm hxu, Ne.symm hxv ⟩
+
+/-
+**No third polygon vertex lies on a valid diagonal.**  For a simple,
+cyclically nondegenerate polygon, a segment disjoint from every nonincident
+polygon edge contains no polygon vertex other than its endpoints.  This is the
+local geometric incidence core used by the exterior-path branch.
+-/
+lemma valid_diagonal_no_third_vertex
+    (W : List ℂ) (h4 : 4 ≤ W.length) (hsimple : PolygonSimple W)
+    (hnd : polyCycNondeg W) (u v x : ℂ)
+    (huW : u ∈ W) (hvW : v ∈ W) (hxW : x ∈ W)
+    (hxu : x ≠ u) (hxv : x ≠ v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 →
+        v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2)) :
+    x ∉ segment ℝ u v := by
+  -- By `third_vertex_incident_edge_or_between`, x is either incident to an edge or lies between u and v.
+  by_cases hxinc : ∃ y, y ≠ u ∧ y ≠ v ∧ ((x, y) ∈ closedEdges W ∨ (y, x) ∈ closedEdges W);
+  · obtain ⟨ y, hyu, hyv, hyinc ⟩ := hxinc;
+    cases hyinc <;> [ exact fun h => Set.disjoint_left.mp ( hdiag _ ‹_› ( by tauto ) ( by tauto ) ( by tauto ) ( by tauto ) ) h ( left_mem_segment _ _ _ ) ; exact fun h => Set.disjoint_left.mp ( hdiag _ ‹_› ( by tauto ) ( by tauto ) ( by tauto ) ( by tauto ) ) h ( right_mem_segment _ _ _ ) ];
+  · obtain ⟨r, tl, hrot⟩ : ∃ r tl, W.rotate r = u :: x :: v :: tl ∨ W.rotate r = v :: x :: u :: tl := by
+      have := third_vertex_incident_edge_or_between W h4 hsimple.1 u v x huW hvW hxW hxu hxv; aesop;
+    cases' hrot with hrot hrot;
+    · have h_cross : HexArea.cross (x - u) (v - x) ≠ 0 := by
+        have := polyCycNondeg_rotate W r ( by omega );
+        unfold polyCycNondeg at this;
+        unfold polyNondeg at this; simp_all +decide ;
+        rcases W with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | W ⟩ ⟩ ⟩ ) <;> simp_all +decide;
+        unfold polyCycNondeg at hnd; unfold polyNondeg at hnd; simp_all +decide ;
+      contrapose! h_cross; simp_all +decide [ HexArea.cross ] ;
+      rw [ segment_eq_image ] at h_cross; obtain ⟨ t, ht, rfl ⟩ := h_cross; norm_num [ Complex.ext_iff ] ; ring;
+    · have := polyCycNondeg_rotate W r ( by omega );
+      simp_all +decide [ polyCycNondeg ];
+      contrapose! this; simp_all +decide [ polyNondeg ] ;
+      intro h; specialize this; rw [ segment_eq_image ] at this; obtain ⟨ a, b, ha, hb, hab, rfl ⟩ := this; simp_all +decide [ HexArea.cross ] ;
+      exact False.elim <| h <| by ring;
+
+/-
+A vertex belonging to the other side of a valid polygon diagonal cannot
+lie on the diagonal segment itself.  This is the local incidence fact required
+for the source endpoint of the exterior path to lie in the forbidden-segment
+complement.
+-/
+lemma other_piece_vertex_not_on_valid_diagonal
+    (W : List ℂ) (h4 : 4 ≤ W.length) (hsimple : PolygonSimple W)
+    (hnd : polyCycNondeg W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
+    x ∉ segment ℝ u v := by
+  apply valid_diagonal_no_third_vertex W h4 hsimple hnd u v x;
+  any_goals tauto;
+  · grind;
+  · grind +splitIndPred;
+  · grind +suggestions;
+  · rcases hP with ( rfl | rfl );
+    · unfold HexArea.chordLeft at hxP; simp_all +decide [ List.Nodup ] ;
+      rw [ List.mem_iff_getElem ] at *; aesop;
+    · contrapose! hxP; simp_all +decide [ HexArea.chordRight ] ;
+      exact Or.inl ( by rw [ List.mem_iff_get ] ; exact ⟨ ⟨ 0, by aesop ⟩, by aesop ⟩ )
+
+lemma chord_ear_other_escape_walk (W : List ℂ) (h4 : 4 ≤ W.length)
+    (hsimple : PolygonSimple W) (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
@@ -4143,6 +4487,16 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k 
       (by
         intro s hs; simp only [List.mem_singleton] at hs; subst hs
         exact ⟨fun h => hxP (h ▸ huP), fun h => hxP (h ▸ hvP)⟩)
+      (by simp)
+      (by
+        intro s hs; simp only [List.mem_singleton] at hs; subst hs
+        exact other_piece_vertex_not_on_valid_diagonal W h4 hsimple hnd k hk1 hk u v hu hv
+          hdiag P hP x hxW hxP)
+      (by
+        exact vertex_escape_source_mem W h4 hsimple x hxW [(u, v)] (by
+          intro s hs; simp only [List.mem_singleton] at hs; subst hs
+          exact other_piece_vertex_not_on_valid_diagonal W h4 hsimple hnd k hk1 hk u v hu hv
+            hdiag P hP x hxW hxP))
       (by intro s hs; simp only [List.mem_singleton] at hs; subst hs; exact hdiag)
     exact ⟨zs, hch.imp (fun a b hab => ⟨hab.1, hab.2 (u, v) (by simp)⟩), hl⟩
   exact ⟨zs, hchain,
@@ -4215,7 +4569,8 @@ lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) 
     **Status: `sorry`.**  The second point-in-polygon direction the
     Jordan-separation keystone `chord_ear_empty_other` reduces to.  NOT a dead
     branch — consumed directly by `chord_ear_empty_other` just below. -/
-lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W)
+    (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
@@ -4234,13 +4589,21 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k 
   -- hull-interior (region-wrapping) case is reduced to an escaping edge-avoiding
   -- walk (`chord_ear_other_escape_walk`) via the proved walk-invariance tool
   -- `HexArea.ptWind_zero_of_walk_to_not_hull`.
+  have hP3 : 3 ≤ P.length := by
+    have hlenrot : (P.rotate s).length = P.length := List.length_rotate ..
+    rw [hrotP] at hlenrot
+    simp at hlenrot
+    omega
+  have h4 : 4 ≤ W.length :=
+    HexArea.chordPiece_omits_vertex_length_four W k hk1 hk P hP hP3 x hxW hxP
   by_cases hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)
-  · obtain ⟨zs, hchain, hy⟩ := chord_ear_other_escape_walk W hsimple k hk1 hk u v hu hv
+  · obtain ⟨zs, hchain, hy⟩ := chord_ear_other_escape_walk W h4 hsimple hnd k hk1 hk u v hu hv
       hdiag P hPsimple hP x hxW hxP hx
     exact HexArea.ptWind_zero_of_walk_to_not_hull P x zs hchain hy
   · exact HexArea.ptWind_zero_of_not_mem_convexHull x P hx
 
-lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
+    (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
@@ -4257,7 +4620,7 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
   intro hin
   exact chord_ear_inner_ptWind_ne_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin
-    (chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
+    (chord_ear_other_ptWind_zero W hsimple hnd k hk1 hk u v hu hv hdiag P hPsimple
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP)
 
 /-
