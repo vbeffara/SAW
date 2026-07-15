@@ -68,6 +68,7 @@ import RequestProject.SAWUmlaufPtWindHalfPlane
 import RequestProject.SAWUmlaufPtWindRay
 import RequestProject.SAWUmlaufExterior
 import RequestProject.SAWUmlaufPtWindMove
+import RequestProject.SAWUmlaufPolyConn
 
 open Real Complex ComplexConjugate
 
@@ -3895,7 +3896,7 @@ lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
     rw [ List.mem_iff_get ] at he; obtain ⟨ i, hi ⟩ := he; simp_all +decide [ List.get ] ;
     grind +splitIndPred)
 
-/-- **Shared vertex-escape core (the single genuine Jordan residue of both
+/- **Shared vertex-escape core (the single genuine Jordan residue of both
     escape-walk lemmas).**  For a simple polygon `W`, a vertex `x ∈ W`, and a
     finite family `diags` of "diagonal" segments, each disjoint from every
     `W`-edge not incident to its own endpoints (`hdiags`), there is an
@@ -3913,6 +3914,30 @@ lemma clippedPiece_cycleEdge_classify (W : List ℂ) (k : ℕ)
     is path-connected and unbounded, and a boundary vertex has an outward escape
     direction; interior diagonals are avoided by staying in the exterior); NOT a
     dead branch. -/
+/-- **The isolated Jordan-connectivity core of the escape residue.**  The base
+    vertex `x` of a simple polygon `W` can be joined *by a path* to some point `q`
+    outside the convex hull of `W`, the whole path lying in the complement of the
+    union of the forbidden segments — the polygon edges not incident to `x`
+    together with the diagonals in `diags`.  This is the genuine
+    Jordan-curve-theorem-level content (the exterior/interior complementary
+    components are path-connected and, via either edge incident to `x`, connect
+    across the boundary at `x`), isolated as a single `JoinedIn` statement.
+    Everything else in `vertex_escape_walk_core` — turning the path into an
+    edge-avoiding polyline — is now discharged sorry-free by
+    `HexArea.exists_escape_polyline_of_joinedIn` (`SAWUmlaufPolyConn.lean`).
+    Absent from Mathlib. -/
+lemma vertex_escape_joinedIn (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ∃ q : ℂ, q ∉ convexHull ℝ (W.toFinset : Set ℂ) ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x q := by
+  sorry
+
 lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
@@ -3925,7 +3950,20 @@ lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
               Disjoint (segment ℝ a b) (segment ℝ e.1 e.2)) ∧
           (∀ s ∈ diags, Disjoint (segment ℝ a b) (segment ℝ s.1 s.2))) (x :: zs) ∧
       (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
-  sorry
+  classical
+  obtain ⟨q, hq, hjoin⟩ := vertex_escape_joinedIn W hsimple x hxW diags hdiagx hdiags
+  obtain ⟨zs, hchain, hlast⟩ :=
+    HexArea.exists_escape_polyline_of_joinedIn _ x q _ hq hjoin
+  refine ⟨zs, ?_, hlast⟩
+  refine hchain.imp ?_
+  intro a b hab
+  refine ⟨?_, ?_⟩
+  · intro e he he1 he2
+    exact hab e (by
+      rw [List.mem_append]; left; rw [List.mem_filter]
+      exact ⟨he, by simp [he1, he2]⟩)
+  · intro s hs
+    exact hab s (by rw [List.mem_append]; right; exact hs)
 
 /-- **Escaping edge-avoiding walk out of the clipped polygon (hull-interior
     residue).**  Same setup as `clipped_ear_ptWind_zero`: `x` lies strictly inside

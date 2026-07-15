@@ -1,3 +1,16 @@
+# Summary of changes for run abbbfa3b-d0bd-4d50-b142-37462555a461
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8137 jobs, including `RequestProject/SAWFinal.lean`), and all new work is committed and pushed.
+
+What changed this round:
+
+1. New file `RequestProject/SAWUmlaufPolyConn.lean` (imported by `RequestProject/SAWUmlaufPolygon.lean`, so it is wired into the proof chain), containing two lemmas proved fully sorry-free (each depending only on the standard axioms `propext, Classical.choice, Quot.sound`):
+   - `exists_polyline_segments_subset_of_joinedIn` — polygonal (polyline) connectivity of an open set: if two points are joined by a path inside an open set `U ⊆ ℂ`, they are joined by a finite polyline (a `List.IsChain` of straight segments) each of whose segments stays inside `U`. Proved by the standard Lebesgue-number sampling of a connecting path.
+   - `exists_escape_polyline_of_joinedIn` — the abstract polygon-escape brick: from a path lying in the complement of a finite list of forbidden segments, it produces a polyline that avoids every forbidden segment and ends outside a target set.
+
+2. Refactored the escape core `vertex_escape_walk_core` in `RequestProject/SAWUmlaufPolygon.lean`. Its previously monolithic `sorry` is now replaced by a genuine proof of the polyline-construction half (via the two new lemmas), with the sole remaining gap cleanly isolated as a new, honestly-stated lemma `vertex_escape_joinedIn` — the boundary vertex is path-connected (`JoinedIn`) to a hull-exterior point within the complement of the non-incident edges and diagonals. This concentrates the escape residue's remaining content into exactly the Jordan-curve-theorem-level connectivity statement, while the topological polyline machinery around it is now verified.
+
+Remaining Umlaufsatz gaps are preserved as honest, well-documented `sorry` lemmas (genuine Jordan/Meisters cores absent from Mathlib): `vertex_escape_joinedIn`, `clipped_ear_escape_walk`, `chord_ear_lift`, the residual case of `interior_lift_via_piece`, `empty_branch_bad_lift`, the two spike subcases of `empty_branch_boundary_lift`, and the honeycomb-planarity fact `hexEmbeddedPolygon_edges_disjoint`. A concise status note was appended to `ARISTOTLE_SUMMARY.md`. Net effect: a large monolithic topological `sorry` was reduced to verified polyline infrastructure plus one clean, isolated connectivity `sorry`, and partial progress is banked as building Lean files.
+
 # Summary of changes for run 8c7b1a21-ee8b-47e8-99b3-191f0ed63c67
 Worked exclusively on the top-priority discrete Hopf **Umlaufsatz**, leaving all other SAW branches untouched. The whole library still builds end-to-end (`lake build`, 8136 jobs, including `SAWFinal.lean`, which transitively imports the full Umlauf chain), with no new axioms. All work is committed and pushed.
 
@@ -1534,3 +1547,32 @@ In `RequestProject/SAWUmlaufPolygon.lean`:
 
 All analytic / combinatorial glue connecting the integer signed-turn count ↔
 real turning ↔ signed-area sign remains proved sorry-free.
+
+---
+# Summary — Umlaufsatz escape-core factoring round
+
+Worked exclusively on the top-priority discrete Hopf Umlaufsatz. The whole
+library builds (`lake build`, 8137 jobs, incl. `SAWFinal`).
+
+New file `RequestProject/SAWUmlaufPolyConn.lean` (imported by
+`SAWUmlaufPolygon`), two lemmas proved **sorry-free** (axioms `propext,
+Classical.choice, Quot.sound`):
+- `HexArea.exists_polyline_segments_subset_of_joinedIn` — polygonal
+  connectivity: a path inside an open `U ⊆ ℂ` yields a `List.IsChain` polyline
+  whose every segment stays in `U` (Lebesgue-number sampling of the path).
+- `HexArea.exists_escape_polyline_of_joinedIn` — abstract polygon-escape:
+  from a path in the complement of a finite list of forbidden segments, a
+  polyline avoiding every forbidden segment reaching outside a target `hull`.
+
+Refactored `vertex_escape_walk_core` (`SAWUmlaufPolygon.lean`): the polyline
+construction is now **proved** via the two lemmas above; the sole remaining gap
+is isolated as the clean Jordan-connectivity lemma `vertex_escape_joinedIn`
+(the boundary vertex is `JoinedIn` the edge/diagonal complement to a
+hull-exterior point). Net: the topological polyline half of the escape residue
+is discharged; the genuine Jordan-curve content is a single `JoinedIn` sorry.
+
+Remaining Umlaufsatz leaf sorries (all genuinely-true, Jordan/Meisters cores):
+`vertex_escape_joinedIn`, `clipped_ear_escape_walk`, `chord_ear_lift`,
+`interior_lift_via_piece` (residual), `empty_branch_bad_lift`,
+`empty_branch_boundary_lift` (two spike subcases), plus honeycomb-planarity
+`hexEmbeddedPolygon_edges_disjoint`.
