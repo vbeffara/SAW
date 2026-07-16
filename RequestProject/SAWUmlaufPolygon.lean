@@ -4065,14 +4065,84 @@ lemma connectedComponentIn_unbounded_of_ray
   contrapose! h_ray_unbounded;
   exact h_ray_unbounded.exists_norm_le.imp fun R hR t ht => hR _ ( h_ray_subset t ht )
 
-/-- **Finite polygonal escape certificate (remaining geometric leaf).**
-For every radius, construct a connected avoiding set containing the boundary
-source and reaching beyond that radius.  Unlike a ray certificate, this permits
-the route to bend around a nonconvex polygon.  This is exactly the geometric
-input consumed by `vertex_escape_component_unbounded` immediately below, so the
-branch is explicitly live.  The conversion from these certificates to an
-unbounded connected component is fully proved in
-`SAWUmlaufComponentEscape`. -/
+/-- **Boundary-to-exterior routing without a diagonal.**  This is the first
+of the two geometric leaves in the finite polygon escape problem.  It isolates
+the assertion that the exterior germ at a boundary vertex belongs to an
+unbounded component after deleting all nonincident polygon edges.  It is
+consumed by `vertex_escape_joinedIn_arbitrarily_far` below. -/
+lemma vertex_escape_joinedIn_arbitrarily_far_no_diag
+    (W : List ℂ) (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x))),
+        segment ℝ s.1 s.2)ᶜ)) :
+    ∀ R : ℝ, ∃ y : ℂ, R < ‖y‖ ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x))),
+          segment ℝ s.1 s.2)ᶜ) x y := by
+  sorry
+
+/-- **Boundary-to-exterior routing with one valid diagonal.**  This is the
+second geometric leaf.  The diagonal misses the source and every nonincident
+polygon edge, so the exterior boundary germ can be chosen on its exterior side
+and continued to infinity.  It is consumed by
+`vertex_escape_joinedIn_arbitrarily_far` below. -/
+lemma vertex_escape_joinedIn_arbitrarily_far_one_diag
+    (W : List ℂ) (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W)
+    (d : ℂ × ℂ) (hdx : d.1 ≠ x ∧ d.2 ≠ x)
+    (hdavoid : x ∉ segment ℝ d.1 d.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ [d]),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiag : ∀ e ∈ closedEdges W,
+        d.1 ≠ e.1 → d.1 ≠ e.2 → d.2 ≠ e.1 → d.2 ≠ e.2 →
+        Disjoint (segment ℝ d.1 d.2) (segment ℝ e.1 e.2)) :
+    ∀ R : ℝ, ∃ y : ℂ, R < ‖y‖ ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ [d]),
+          segment ℝ s.1 s.2)ᶜ) x y := by
+  sorry
+
+/-- **Arbitrarily-far avoiding paths (remaining geometric leaf).**
+For every norm radius, the boundary source can be joined inside the complement
+of the forbidden segments to a point beyond that radius.  This is the precise
+bent-route replacement for the stronger straight-ray certificate above.
+
+This declaration is not a dead branch: `vertex_escape_connected_reaches`
+immediately converts it into connected sets, then
+`vertex_escape_component_unbounded` converts those sets into the unbounded
+component used by every downstream escape walk.  Thus all remaining geometry
+of this branch is now expressed directly as construction of finite-polygon
+exterior paths rather than as an opaque connectedness assertion. -/
+lemma vertex_escape_joinedIn_arbitrarily_far
+    (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ∀ R : ℝ, ∃ y : ℂ, R < ‖y‖ ∧
+      JoinedIn ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) x y := by
+  rcases HexArea.eq_nil_or_eq_singleton_of_length_le_one diags hdiagcard with
+    rfl | ⟨d, rfl⟩
+  · simpa using
+      vertex_escape_joinedIn_arbitrarily_far_no_diag W hsimple x hxW (by simpa using hsource)
+  · simpa using vertex_escape_joinedIn_arbitrarily_far_one_diag W hsimple x hxW d
+      (hdiagx d (by simp)) (hdiagavoid d (by simp)) hsource
+      (fun e he => hdiags d (by simp) e he)
+
+/-- **Finite polygonal escape certificate (proved from the path leaf).**
+For every radius, obtain a connected avoiding set containing the boundary
+source and reaching beyond that radius by taking the range of the path supplied
+by `vertex_escape_joinedIn_arbitrarily_far`.  Unlike a ray certificate, this
+permits the route to bend around a nonconvex polygon.  This is consumed
+immediately by `vertex_escape_component_unbounded`. -/
 lemma vertex_escape_connected_reaches (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
@@ -4090,7 +4160,9 @@ lemma vertex_escape_connected_reaches (W : List ℂ) (hsimple : PolygonSimple W)
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) ∧
       ∃ y ∈ C, R < ‖y‖ := by
-  sorry
+  apply HexArea.connected_reaches_of_joinedIn
+  exact vertex_escape_joinedIn_arbitrarily_far W hsimple x hxW diags hdiagx
+    hdiagcard hdiagavoid hsource hdiags
 
 /-- **Unbounded-component Jordan core.**  Under the actual Umlaufsatz
 configuration (at most one additional valid diagonal), the component of the

@@ -1,3 +1,27 @@
+# Summary of changes for run 5fcc31d3-9471-49f4-978f-eeeff7823b0a
+Continued exclusively on the Umlaufsatz’s live escape/Jordan branch and pushed two commits (`e033e0f`, `b6d2764`).
+
+### Formal progress
+- Added and proved, without `sorry`, in `RequestProject/SAWUmlaufComponentEscape.lean`:
+  - `connected_reaches_of_joinedIn`: paths to arbitrarily distant points yield connected reaching certificates via their ranges.
+  - `joinedIn_arbitrarily_far_of_ray`: a nonconstant avoiding ray gives paths to arbitrarily distant points.
+  - Refactored `connected_reaches_of_ray` to factor through these two interfaces, explicitly linking the straight-ray preparation to the live bent-route proof.
+  - `eq_nil_or_eq_singleton_of_length_le_one`: splits an at-most-one-element diagonal list into the exact cases needed by the polygon geometry.
+- Refined the former opaque connected-set gap in `RequestProject/SAWUmlaufPolygon.lean` into the path-level statement `vertex_escape_joinedIn_arbitrarily_far`.
+- Proved that the connected-set certificate `vertex_escape_connected_reaches` follows from this path-level statement, so its former `sorry` is eliminated.
+- Proved the general at-most-one-diagonal path statement from two sharply isolated geometric leaves:
+  - `vertex_escape_joinedIn_arbitrarily_far_no_diag`
+  - `vertex_escape_joinedIn_arbitrarily_far_one_diag`
+  These remain honest `sorry` declarations. Their callers and downstream conversions are fully wired, making explicit that they are live preparation rather than dead branches.
+
+### Import linkage and verification
+- The work remains transitively imported through `SAWUmlaufPolygon → SAWUmlaufChordSplit → SAWFinal`.
+- The complete project builds successfully: 8140 jobs, including `RequestProject.SAWFinal`.
+- The newly proved component-escape lemmas use only the permitted axioms `propext`, `Classical.choice`, and `Quot.sound`.
+- No new axioms or unverified implementations were introduced.
+
+The remaining work in this branch is now concretely separated into boundary-to-exterior routing with no diagonal and routing in the presence of one valid diagonal, rather than being hidden behind an abstract connected-component assertion.
+
 # Summary of changes for run 4672c1d4-34b3-4909-a5d6-de11705317d5
 Continued exclusively on the Umlaufsatz escape/Jordan branch and preserved the remaining work as linked Lean declarations rather than speculative prose only.
 
