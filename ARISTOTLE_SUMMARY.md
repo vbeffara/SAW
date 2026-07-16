@@ -1,3 +1,19 @@
+# Summary of changes for run 4672c1d4-34b3-4909-a5d6-de11705317d5
+Continued exclusively on the Umlaufsatz escape/Jordan branch and preserved the remaining work as linked Lean declarations rather than speculative prose only.
+
+Added `RequestProject/SAWUmlaufComponentEscape.lean`, imported transitively through `SAWUmlaufPolygon.lean` and therefore through `SAWFinal.lean`. It contains two fully proved, sorry-free interfaces:
+
+- `HexArea.connectedComponentIn_unbounded_of_connected_reaches`: connected avoiding sets that reach beyond every radius imply that the source’s connected component is unbounded.
+- `HexArea.connected_reaches_of_ray`: a nonconstant avoiding ray supplies those connected-reaching certificates.
+
+Refactored the former `vertex_escape_component_unbounded` gap in `SAWUmlaufPolygon.lean`:
+
+- The component-theoretic conversion is now proved, using the new general interface.
+- The remaining geometry is isolated as `vertex_escape_connected_reaches`: construct, for each radius, a connected avoiding set from the polygon vertex reaching past that radius.
+- This formulation permits bent polygonal routes, while the straight-ray branch is explicitly linked as a sufficient special case. Both branches are documented as preparation consumed directly by the live Umlaufsatz proof.
+
+The new proved declarations use only `propext`, `Classical.choice`, and `Quot.sound`. The complete project builds successfully (8140 jobs, including `RequestProject.SAWFinal`). All changes were committed and pushed in commits `af4d136` and `3c957a1`.
+
 # Summary of changes for run 508c0774-a2f3-4c49-b3bf-dfd5442b4846
 Continued exclusively on the top-priority Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`.
 

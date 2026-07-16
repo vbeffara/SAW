@@ -71,6 +71,7 @@ import RequestProject.SAWUmlaufExterior
 import RequestProject.SAWUmlaufPtWindMove
 import RequestProject.SAWUmlaufPolyConn
 import RequestProject.SAWUmlaufHullExterior
+import RequestProject.SAWUmlaufComponentEscape
 
 open Real Complex ComplexConjugate
 
@@ -4064,16 +4065,42 @@ lemma connectedComponentIn_unbounded_of_ray
   contrapose! h_ray_unbounded;
   exact h_ray_unbounded.exists_norm_le.imp fun R hR t ht => hR _ ( h_ray_subset t ht )
 
+/-- **Finite polygonal escape certificate (remaining geometric leaf).**
+For every radius, construct a connected avoiding set containing the boundary
+source and reaching beyond that radius.  Unlike a ray certificate, this permits
+the route to bend around a nonconvex polygon.  This is exactly the geometric
+input consumed by `vertex_escape_component_unbounded` immediately below, so the
+branch is explicitly live.  The conversion from these certificates to an
+unbounded connected component is fully proved in
+`SAWUmlaufComponentEscape`. -/
+lemma vertex_escape_connected_reaches (W : List ℂ) (hsimple : PolygonSimple W)
+    (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
+    (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
+    (hdiagcard : diags.length ≤ 1)
+    (hdiagavoid : ∀ s ∈ diags, x ∉ segment ℝ s.1 s.2)
+    (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
+        (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+        segment ℝ s.1 s.2)ᶜ))
+    (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
+        s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+    ∀ R : ℝ, ∃ C : Set ℂ,
+      IsConnected C ∧ x ∈ C ∧
+      C ⊆ ((⋃ s ∈ ((closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
+          segment ℝ s.1 s.2)ᶜ) ∧
+      ∃ y ∈ C, R < ‖y‖ := by
+  sorry
+
 /-- **Unbounded-component Jordan core.**  Under the actual Umlaufsatz
 configuration (at most one additional valid diagonal), the component of the
 boundary source in the complement of all forbidden segments is unbounded.
 
 `connectedComponentIn_unbounded_of_ray` above is a proved sufficient
-certificate and is explicitly available to this live branch if the remaining
-finite geometry can produce a straight escaping ray.  The statement here stays
-more general, however: a simple polygon may require a bent polygonal escape,
-so no unproved straight-ray assertion is inserted.  All metric and path
-consequences are derived below. -/
+certificate if the finite geometry produces a straight escaping ray.  The
+more general bent-route certificate is `vertex_escape_connected_reaches`, and
+the component conversion below is now entirely sorry-free.  All metric and path
+consequences are derived downstream. -/
 lemma vertex_escape_component_unbounded (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)
@@ -4089,7 +4116,9 @@ lemma vertex_escape_component_unbounded (W : List ℂ) (hsimple : PolygonSimple 
       ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x) := by
-  sorry
+  apply HexArea.connectedComponentIn_unbounded_of_connected_reaches
+  exact vertex_escape_connected_reaches W hsimple x hxW diags hdiagx hdiagcard
+    hdiagavoid hsource hdiags
 
 /-
 **Local unbounded-escape core.**  From the boundary source, the
