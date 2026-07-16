@@ -72,6 +72,7 @@ import RequestProject.SAWUmlaufPtWindMove
 import RequestProject.SAWUmlaufPolyConn
 import RequestProject.SAWUmlaufHullExterior
 import RequestProject.SAWUmlaufComponentEscape
+import RequestProject.SAWUmlaufArcEscape
 
 open Real Complex ComplexConjugate
 
@@ -4065,11 +4066,91 @@ lemma connectedComponentIn_unbounded_of_ray
   contrapose! h_ray_unbounded;
   exact h_ray_unbounded.exists_norm_le.imp fun R hR t ht => hR _ ( h_ray_subset t ht )
 
+/-
+**Opening a polygon at a boundary vertex produces a simple arc.**  The
+closed polygon edges not incident to `x` can be ordered as the consecutive
+edges of an open simple polygonal arc.  This is the finite list/rotation half of
+the no-diagonal escape branch.  It is consumed immediately by
+`vertex_escape_joinedIn_arbitrarily_far_no_diag`; together with
+`HexArea.simpleArc_complement_isPathConnected` it gives the required exterior
+route.
+-/
+lemma polygon_nonincident_edges_form_simpleArc
+    (W : List ℂ) (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W) :
+    ∃ A : List ℂ,
+      HexArea.PlaneArcSimple A ∧
+      (⋃ e ∈ HexArea.chainEdges A, segment ℝ e.1 e.2) =
+        (⋃ e ∈ (closedEdges W).filter
+          (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)),
+          segment ℝ e.1 e.2) := by
+  -- Let's take the tail of the rotated list W at the index where x is found.
+  obtain ⟨r, hr⟩ : ∃ r : ℕ, r < W.length ∧ (W.rotate r).head? = some x := by
+    obtain ⟨ r, hr ⟩ := List.mem_iff_get.1 hxW;
+    use r.val + 0;
+    simp +decide [ ← hr, List.rotate ];
+    simp +decide [ Nat.mod_eq_of_lt r.2 ];
+  refine' ⟨ ( W.rotate r ).tail, _, _ ⟩;
+  · refine' ⟨ _, _ ⟩;
+    · have h_tail_nodup : (W.rotate r).Nodup := by
+        exact hsimple.1 |> fun h => by simpa [ List.nodup_rotate ] using h;
+      exact h_tail_nodup.tail;
+    · intro e₁ he₁ e₂ he₂ h₁ h₂ h₃ h₄;
+      have h_chain_edges : e₁ ∈ closedEdges (W.rotate r) ∧ e₂ ∈ closedEdges (W.rotate r) := by
+        unfold HexArea.chainEdges at *; simp_all +decide [ closedEdges ] ;
+        rcases n : W.rotate r with ( _ | ⟨ a, _ | ⟨ b, l ⟩ ⟩ ) <;> simp_all +decide [ List.rotate ];
+        · linarith [ Nat.mod_lt r ( List.length_pos_iff.mpr ( show W ≠ [] from by aesop_cat ) ) ];
+        · have h_chain_edges : ∀ {l : List ℂ}, ∀ e ∈ List.zip (b :: l) l, e ∈ List.zip (b :: l) (l ++ [a]) := by
+            intros l e he; induction l <;> simp_all +decide [ List.zip ] ;
+            cases ‹List ℂ› <;> simp_all +decide [ List.zipWith ];
+            grind +suggestions;
+          exact ⟨ Or.inr ( h_chain_edges _ he₁ ), Or.inr ( h_chain_edges _ he₂ ) ⟩;
+      have := hsimple.2;
+      convert this e₁ ( by simpa only [ mem_closedEdges_rotate ] using h_chain_edges.1 ) e₂ ( by simpa only [ mem_closedEdges_rotate ] using h_chain_edges.2 ) h₁ h₂ h₃ h₄ using 1;
+  · -- By definition of `chainEdges`, we know that every edge in `chainEdges (W.rotate r).tail` is also in `closedEdges W`.
+    have h_chainEdges_subset_closedEdges : ∀ e ∈ HexArea.chainEdges (W.rotate r).tail, e ∈ closedEdges W ∧ e.1 ≠ x ∧ e.2 ≠ x := by
+      intro e he
+      have h_chainEdges_subset_closedEdges : e ∈ closedEdges (W.rotate r) := by
+        rcases n : W.rotate r with ( _ | ⟨ a, _ | ⟨ b, l ⟩ ⟩ ) <;> simp_all +decide [ HexArea.chainEdges, closedEdges ];
+        rw [ List.mem_iff_get ] at *; obtain ⟨ i, hi ⟩ := he; simp_all +decide [ List.get ] ;
+        refine' Or.inr ⟨ ⟨ i, _ ⟩, _ ⟩ <;> simp_all +decide [ Fin.add_def, Nat.mod_eq_of_lt ];
+        grind +qlia;
+        grind;
+      have h_chainEdges_subset_closedEdges : ∀ e ∈ HexArea.chainEdges (W.rotate r).tail, e.1 ∈ (W.rotate r).tail ∧ e.2 ∈ (W.rotate r).tail := by
+        intros e he
+        simp [HexArea.chainEdges] at he;
+        rw [ List.mem_iff_get ] at he;
+        grind;
+      have h_chainEdges_subset_closedEdges : ∀ e ∈ HexArea.chainEdges (W.rotate r).tail, e.1 ≠ x ∧ e.2 ≠ x := by
+        intros e he
+        obtain ⟨he1, he2⟩ := h_chainEdges_subset_closedEdges e he
+        have h_ne_x : ∀ y ∈ (W.rotate r).tail, y ≠ x := by
+          have h_ne_x : List.Nodup (W.rotate r) := by
+            exact hsimple.1 |> fun h => List.nodup_rotate.mpr h;
+          cases h : W.rotate r <;> aesop
+        exact ⟨h_ne_x e.1 he1, h_ne_x e.2 he2⟩;
+      exact ⟨ by rw [ mem_closedEdges_rotate ] at *; aesop, h_chainEdges_subset_closedEdges e he ⟩;
+    -- By definition of `closedEdges`, we know that every edge in `closedEdges W` that is not incident to `x` is also in `chainEdges (W.rotate r).tail`.
+    have h_closedEdges_subset_chainEdges : ∀ e ∈ closedEdges W, e.1 ≠ x ∧ e.2 ≠ x → e ∈ HexArea.chainEdges (W.rotate r).tail := by
+      intro e he hne
+      obtain ⟨e', he', heq⟩ : ∃ e' ∈ closedEdges (W.rotate r), e' = e := by
+        exact ⟨ e, by simpa [ mem_closedEdges_rotate ] using he, rfl ⟩;
+      rcases n : W.rotate r with ( _ | ⟨ a, _ | ⟨ b, l ⟩ ⟩ ) <;> simp_all +decide [ closedEdges ];
+      cases he' <;> simp_all +decide [ HexArea.chainEdges ];
+      rw [ List.mem_iff_get ] at *;
+      obtain ⟨ n, hn ⟩ := ‹∃ n, _›; use ⟨ n, by
+        grind ⟩ ; simp_all +decide [ List.get ] ;
+      grind;
+    ext; simp [h_chainEdges_subset_closedEdges, h_closedEdges_subset_chainEdges];
+    grind
+
 /-- **Boundary-to-exterior routing without a diagonal.**  This is the first
 of the two geometric leaves in the finite polygon escape problem.  It isolates
 the assertion that the exterior germ at a boundary vertex belongs to an
 unbounded component after deleting all nonincident polygon edges.  It is
-consumed by `vertex_escape_joinedIn_arbitrarily_far` below. -/
+consumed by `vertex_escape_joinedIn_arbitrarily_far` below.  The proof now
+factors explicitly through the simple-arc complement theorem, so the former
+opaque Jordan residue is split into a combinatorial polygon-opening lemma and a
+standard planar arc non-separation lemma. -/
 lemma vertex_escape_joinedIn_arbitrarily_far_no_diag
     (W : List ℂ) (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W)
     (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
@@ -4079,7 +4160,9 @@ lemma vertex_escape_joinedIn_arbitrarily_far_no_diag
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x))),
           segment ℝ s.1 s.2)ᶜ) x y := by
-  sorry
+  obtain ⟨A, hA, hedge⟩ := polygon_nonincident_edges_form_simpleArc W hsimple x hxW
+  rw [← hedge] at hsource ⊢
+  exact HexArea.simpleArc_joinedIn_arbitrarily_far A hA x hsource
 
 /-- **Boundary-to-exterior routing with one valid diagonal.**  This is the
 second geometric leaf.  The diagonal misses the source and every nonincident

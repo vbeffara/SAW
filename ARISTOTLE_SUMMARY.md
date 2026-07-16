@@ -1,3 +1,28 @@
+# Summary of changes for run d6ace1fe-97be-462d-8fef-58a3f1f10339
+Continued exclusively on the live Umlaufsatz proof and pushed two commits (`1dbe994`, `1015d99`).
+
+### New formal structure
+- Added `RequestProject/SAWUmlaufArcEscape.lean`, imported by `SAWUmlaufPolygon` and therefore transitively by `SAWFinal`.
+- Defined:
+  - `HexArea.chainEdges`, the edges of an open polygonal chain;
+  - `HexArea.PlaneArcSimple`, the appropriate simplicity predicate for a polygonal arc.
+- Proved `HexArea.simpleArc_joinedIn_arbitrarily_far` modulo one sharply isolated planar-topology theorem. It converts path-connectedness of a simple arc’s complement into avoiding paths from a source to points of arbitrarily large norm, using the existing finite-segment norm bounds.
+
+### Main Umlaufsatz branch progress
+- Added and fully proved `polygon_nonincident_edges_form_simpleArc`: deleting all edges incident to a chosen vertex of a simple closed polygon leaves exactly the segment union of a simple open polygonal arc.
+- Eliminated the former `sorry` in `vertex_escape_joinedIn_arbitrarily_far_no_diag`. It now follows explicitly from:
+  1. `polygon_nonincident_edges_form_simpleArc`, and
+  2. `HexArea.simpleArc_joinedIn_arbitrarily_far`.
+- The no-diagonal boundary escape branch is thus linked directly into `vertex_escape_joinedIn_arbitrarily_far`, rather than remaining an opaque or apparently dead branch.
+
+### Remaining isolated residue
+- The new file retains one honest `sorry` in `simpleArc_complement_isPathConnected`: a finite simple polygonal arc does not separate the complex plane. This is now the exact topological residue underlying the no-diagonal escape branch.
+- The separate one-valid-diagonal escape leaf remains open in `SAWUmlaufPolygon`.
+
+### Verification
+- The full project, including `RequestProject.SAWFinal`, builds successfully (8141 jobs).
+- The newly proved polygon-opening theorem uses only `propext`, `Classical.choice`, and `Quot.sound`.
+
 # Summary of changes for run 5fcc31d3-9471-49f4-978f-eeeff7823b0a
 Continued exclusively on the Umlaufsatz’s live escape/Jordan branch and pushed two commits (`e033e0f`, `b6d2764`).
 
