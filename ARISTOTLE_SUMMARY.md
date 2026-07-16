@@ -1,3 +1,32 @@
+# Summary of changes for run 5b023525-f7ca-4cfa-a551-da789a67cdef
+Continued exclusively on the live Umlaufsatz proof and pushed commit `3710b1c`.
+
+### Formal progress
+- Split the polygonal-arc non-separation branch into two new imported modules:
+  - `RequestProject/SAWUmlaufArcBasics.lean`
+  - `RequestProject/SAWUmlaufArcInduction.lean`
+- Refactored `RequestProject/SAWUmlaufArcEscape.lean` to consume these modules. The import chain is now explicit:
+  `SAWUmlaufArcBasics → SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon → SAWUmlaufSignedArea → SAWUmlaufGaussBonnet → SAWFinal`.
+  Thus none of the new preparation appears as a dead branch.
+
+### Proved foundations
+- Added the polygonal-chain carrier `HexArea.chainCarrier`.
+- Proved its empty, singleton, and cons-cons decomposition formulas.
+- Proved, without `sorry`:
+  - `HexArea.PlaneArcSimple.tail`;
+  - `HexArea.chainEdges_tail_subset`;
+  - closedness of the chain carrier and its compatibility form.
+- The two principal structural lemmas use only the standard permitted axioms `propext`, `Classical.choice`, and `Quot.sound`.
+
+### Sharpened remaining topology
+- Replaced the former monolithic `simpleArc_complement_isPathConnected` sorry with an explicit list-induction proof.
+- Empty and singleton chains are now discharged.
+- The exact remaining leaf is isolated as
+  `HexArea.pathConnected_compl_cons_segment`: adjoining the first segment of a simple arc does not disconnect the complement when the tail complement is path connected.
+- `simpleArc_complement_isPathConnected` is now a proved compatibility bridge to that induction theorem, and the existing quantitative escape theorem remains connected directly to the boundary-vertex escape route used by the Umlaufsatz.
+
+The new local detour lemma remains honestly marked with one `sorry`, preserving useful partial progress for the next round. The complete `SAWFinal` target builds successfully (8143 jobs), and no new axioms were introduced.
+
 # Summary of changes for run d6ace1fe-97be-462d-8fef-58a3f1f10339
 Continued exclusively on the live Umlaufsatz proof and pushed two commits (`1dbe994`, `1015d99`).
 
