@@ -1,3 +1,14 @@
+# Summary of changes for run 71826bec-892b-4ab2-ad82-98883a44914f
+Continued work exclusively on the Umlaufsatz and committed the progress in `e68ad3e`.
+
+- Added `RequestProject/SAWUmlaufArcDetour.lean`, explicitly linked into the live proof through `SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon`.
+- Proved the compact positive-clearance lemma `firstSegment_compact_clearance`, together with its set-theoretic disjointness prerequisite.
+- Factored the remaining planar argument into the precise theorem `joinedIn_compl_cons_segment_of_tail`: paths in the tail complement can be modified by finitely many local detours to avoid the newly adjoined segment.
+- Completed the surrounding assembly: `pathConnected_compl_cons_segment_of_detours`, `pathConnected_compl_cons_segment`, and the list induction are now proved from that single remaining local-detour theorem.
+- Documented an important obstruction: `PlaneArcSimple` permits adjacent collinear segments to overlap, so the tempting claim that the first edge meets the tail only at its endpoint is false. The new `FirstEdgeAttachedOnly` predicate records the stronger valid condition without introducing a false lemma; the general detour theorem correctly remains stated under `PlaneArcSimple`.
+- Preserved the unresolved geometric step as one explicit `sorry` in the new file rather than losing the partial development.
+- Verified the full project build successfully (8144 jobs). All new files are imported and part of the main build chain.
+
 # Summary of changes for run 5b023525-f7ca-4cfa-a551-da789a67cdef
 Continued exclusively on the live Umlaufsatz proof and pushed commit `3710b1c`.
 

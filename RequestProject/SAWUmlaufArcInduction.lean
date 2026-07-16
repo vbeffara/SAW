@@ -1,19 +1,22 @@
 import Mathlib
 import RequestProject.SAWUmlaufArcBasics
+import RequestProject.SAWUmlaufArcDetour
 
 /-!
 # Polygonal-arc non-separation: induction interface
 
-This is the live planar-topology leaf used by the Umlaufsatz proof.  The final
-non-separation theorem is deliberately retained with an honest `sorry`, while
-its induction interface is made explicit here so subsequent rounds can add the
-local detour construction without disturbing the polygon/ear development.
+This is the live planar-topology leaf used by the Umlaufsatz proof.  The list
+induction is complete here and delegates its sole geometric step to
+`SAWUmlaufArcDetour`, where the remaining local-detour theorem is retained as an
+honest partial theorem.  This separation lets later rounds refine the detour
+construction without disturbing the polygon/ear development.
 
-The intended induction removes the first segment of a simple arc.  By
+The induction removes the first segment of a simple arc.  By
 `PlaneArcSimple.tail`, the remaining chain is simple.  A path in its complement
-can meet the removed segment only in a compact parameter set; each such crossing
-is replaced by a small semicircular detour.  Simplicity supplies a neighbourhood
-of the relative interior of the removed segment disjoint from the tail carrier.
+can meet the removed segment only in a compact parameter set; each genuinely
+new crossing is replaced by a small semicircular detour.  Portions overlapping
+an adjacent collinear tail edge require no detour because they are already part
+of the tail carrier.
 -/
 
 open Real Complex
@@ -32,7 +35,7 @@ lemma pathConnected_compl_cons_segment
     (hsimple : PlaneArcSimple (a :: b :: L))
     (htail : IsPathConnected (chainCarrier (b :: L))ᶜ) :
     IsPathConnected (chainCarrier (a :: b :: L))ᶜ := by
-  sorry
+  exact pathConnected_compl_cons_segment_of_detours a b L hsimple htail
 
 /-- A simple finite polygonal arc does not separate the complex plane.
 
