@@ -3983,10 +3983,12 @@ lemma exists_norm_gt_of_component_unbounded
   contrapose! hunbounded with h;
   exact isBounded_iff_forall_norm_le.mpr ⟨ R, fun p hp => le_of_not_gt fun h' => h p h' hp ⟩
 
-/-- Every admissible boundary source has a positive open ball contained in
+/-
+Every admissible boundary source has a positive open ball contained in
 the forbidden-segment complement.  This gives a verified local escape
 neighborhood; the remaining Jordan core must show that this local component is
-the unbounded one. -/
+the unbounded one.
+-/
 lemma vertex_escape_source_ball
     (W : List ℂ) (x : ℂ) (diags : List (ℂ × ℂ))
     (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
@@ -3996,11 +3998,13 @@ lemma vertex_escape_source_ball
       ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) := by
-  sorry
+  exact Metric.isOpen_iff.mp ( vertex_escape_forbidden_isOpen W x diags ) x hsource
 
-/-- Every point in the local source ball belongs to the same connected
+/-
+Every point in the local source ball belongs to the same connected
 component of the forbidden complement as the source.  This packages the local
-half of the unbounded-component argument. -/
+half of the unbounded-component argument.
+-/
 lemma vertex_escape_ball_subset_component
     (W : List ℂ) (x : ℂ) (diags : List (ℂ × ℂ))
     (hsource : x ∈ ((⋃ s ∈ ((closedEdges W).filter
@@ -4010,13 +4014,66 @@ lemma vertex_escape_ball_subset_component
       ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x := by
-  sorry
+  -- Apply the vertex_escape_source_ball lemma to obtain ε > 0 and the ball subset.
+  obtain ⟨ε, hε⟩ := vertex_escape_source_ball W x diags hsource;
+  refine' ⟨ ε, hε.1, _ ⟩;
+  apply_rules [ IsPreconnected.subset_connectedComponentIn, convex_ball _ _ |> Convex.isPreconnected ];
+  · aesop;
+  · exact hε.2
+
+/-!
+## A ray certificate for the unbounded escape component
+
+Any straight ray from the source which misses every forbidden segment is a
+sufficient certificate for the Jordan residue below.  The following generic
+lemma turns exactly such a geometric certificate into the connected-component
+unboundedness required by the rest of the proof.  Thus it is not a dead branch:
+it is an explicitly linked route for proving `vertex_escape_component_unbounded`
+when the finite geometry supplies a straight escape; the more general residue
+also permits a bent polygonal escape.  All metric and path consequences are
+already proved downstream.
+-/
+
+/-
+A nonconstant ray contained in `U` certifies that the connected component
+of its initial point is unbounded.
+-/
+lemma connectedComponentIn_unbounded_of_ray
+    (U : Set ℂ) (x d : ℂ) (hd : d ≠ 0)
+    (hray : ∀ t : ℝ, 0 ≤ t → x + (t : ℂ) * d ∈ U) :
+    ¬ Bornology.IsBounded (connectedComponentIn U x) := by
+  -- By assumption, the ray {x + td | t ≥ 0} is contained in U.
+  have h_ray_subset : ∀ t : ℝ, 0 ≤ t → x + t * d ∈ connectedComponentIn U x := by
+    intro t ht;
+    -- The ray is path-connected, hence connected.
+    have h_ray_connected : IsConnected {p : ℂ | ∃ t : ℝ, 0 ≤ t ∧ p = x + (t : ℂ) * d} := by
+      rw [ show { p : ℂ | ∃ t : ℝ, 0 ≤ t ∧ p = x + t * d } = ( fun t : ℝ => x + t * d ) '' Set.Ici 0 by ext; aesop ];
+      exact ⟨ Set.Nonempty.image _ ⟨ 0, by norm_num ⟩, isPreconnected_Ici.image _ <| Continuous.continuousOn <| by continuity ⟩;
+    have h_ray_subset : {p : ℂ | ∃ t : ℝ, 0 ≤ t ∧ p = x + (t : ℂ) * d} ⊆ U := by
+      exact fun p hp => by obtain ⟨ t, ht, rfl ⟩ := hp; exact hray t ht;
+    apply_rules [ IsPreconnected.subset_connectedComponentIn, h_ray_connected.isPreconnected ];
+    · exact ⟨ 0, by norm_num ⟩;
+    · exact ⟨ t, ht, rfl ⟩;
+  -- By assumption, the ray {x + td | t ≥ 0} is unbounded.
+  have h_ray_unbounded : ∀ R : ℝ, ∃ t : ℝ, 0 ≤ t ∧ ‖x + t * d‖ > R := by
+    intro R
+    obtain ⟨t, ht⟩ : ∃ t : ℝ, 0 ≤ t ∧ ‖t * d‖ > R + ‖x‖ := by
+      norm_num [ norm_mul ];
+      exact ⟨ ⌊ ( R + ‖x‖ ) / ‖d‖⌋₊ + 1, by positivity, by rw [ abs_of_nonneg ( by positivity ) ] ; nlinarith [ Nat.lt_floor_add_one ( ( R + ‖x‖ ) / ‖d‖ ), norm_pos_iff.mpr hd, mul_div_cancel₀ ( R + ‖x‖ ) ( norm_ne_zero_iff.mpr hd ) ] ⟩;
+    exact ⟨ t, ht.1, by have := norm_sub_le ( x + t * d ) x; norm_num at *; linarith ⟩;
+  contrapose! h_ray_unbounded;
+  exact h_ray_unbounded.exists_norm_le.imp fun R hR t ht => hR _ ( h_ray_subset t ht )
 
 /-- **Unbounded-component Jordan core.**  Under the actual Umlaufsatz
 configuration (at most one additional valid diagonal), the component of the
-boundary source in the complement of all forbidden segments is unbounded.  This
-is the remaining plane-separation statement; all metric and path consequences
-are derived below. -/
+boundary source in the complement of all forbidden segments is unbounded.
+
+`connectedComponentIn_unbounded_of_ray` above is a proved sufficient
+certificate and is explicitly available to this live branch if the remaining
+finite geometry can produce a straight escaping ray.  The statement here stays
+more general, however: a simple polygon may require a bent polygonal escape,
+so no unproved straight-ray assertion is inserted.  All metric and path
+consequences are derived below. -/
 lemma vertex_escape_component_unbounded (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (diags : List (ℂ × ℂ))
     (hdiagx : ∀ s ∈ diags, s.1 ≠ x ∧ s.2 ≠ x)

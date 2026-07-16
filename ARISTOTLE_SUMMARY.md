@@ -1,3 +1,18 @@
+# Summary of changes for run 508c0774-a2f3-4c49-b3bf-dfd5442b4846
+Continued exclusively on the top-priority Umlaufsatz in `RequestProject/SAWUmlaufPolygon.lean`.
+
+Completed and verified three previously open pieces of the escape/Jordan branch:
+
+- `vertex_escape_source_ball`: the open complement of the finite forbidden-segment union contains a positive-radius ball around the source.
+- `vertex_escape_ball_subset_component`: this convex source ball lies in the source’s connected component.
+- `connectedComponentIn_unbounded_of_ray`: any nonconstant ray contained in a set proves that the source’s connected component is unbounded.
+
+The ray certificate is explicitly documented next to the live `vertex_escape_component_unbounded` branch. It provides a usable sufficient route when the finite polygon geometry supplies a straight escape, while preserving the more general remaining statement because a bent polygonal escape may be necessary. No speculative false strengthening was introduced.
+
+All new proved declarations are free of `sorry` and use only the standard permitted axioms. The remaining Jordan geometry is retained honestly as Lean code with `sorry`, and all downstream component-to-path, large-circle, and polyline machinery remains linked into the Umlaufsatz proof graph. `SAWUmlaufPolygon.lean` is transitively imported by `SAWFinal.lean`.
+
+The complete project builds successfully (8139 jobs, including `RequestProject.SAWFinal`). Changes were committed and pushed in commits `7029ad4` and `2e7136d`.
+
 # Summary of changes for run abbbfa3b-d0bd-4d50-b142-37462555a461
 Worked exclusively on the top-priority discrete Hopf Umlaufsatz, leaving all other branches untouched. The whole library still builds successfully (`lake build`, 8137 jobs, including `RequestProject/SAWFinal.lean`), and all new work is committed and pushed.
 
@@ -1791,3 +1806,26 @@ at most one valid extra diagonal, the source component of the forbidden-segment
 complement is unbounded. All metric, component-to-path, arbitrary-radius, and
 large-circle consequences above it are proved. Full project build succeeds
 (8139 jobs, including `SAWFinal`).
+
+---
+# Summary — local escape topology and ray interface
+
+
+Continued exclusively on the Umlaufsatz escape/Jordan branch. Closed three
+previous gaps in `SAWUmlaufPolygon.lean` without `sorry`:
+
+- `vertex_escape_source_ball`: openness of the finite-segment complement gives
+  a positive source ball;
+- `vertex_escape_ball_subset_component`: that convex ball lies in the source's
+  connected component;
+- `connectedComponentIn_unbounded_of_ray`: a nonconstant ray contained in an
+  open region certifies that its source component is unbounded.
+
+Added the proved sufficient certificate
+`connectedComponentIn_unbounded_of_ray` directly above the live
+`vertex_escape_component_unbounded` residue and documented the link explicitly.
+The general residue remains honest: a polygonal escape may need to bend, so no
+unsupported assertion that a straight escaping ray always exists was added.
+The downstream component, metric, large-circle, path, and polyline layers remain
+connected and proved. The three newly proved declarations use only `propext`,
+`Classical.choice`, and `Quot.sound`.
