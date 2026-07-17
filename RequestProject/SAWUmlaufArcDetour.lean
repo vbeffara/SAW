@@ -78,13 +78,87 @@ lemma firstSegment_compact_clearance
   obtain ⟨ ε, hε₁, hε₂ ⟩ := this; use ε; simp_all +decide [ Set.ext_iff, edist_dist ] ;
   exact fun z hz x hx₁ hx₂ => not_lt_of_ge ( le_of_lt ( hε₂ z hz x hx₂ ) ) ( by simpa [ dist_comm, nndist_comm ] using hx₁ )
 
+/-!
+## Compact exhaustion of the genuinely new part of the first edge
+
+The local detour cannot use all of `[a,b] \ {b}` as one compact set.  Instead we
+exhaust it by the closed sets of points at distance at least `δ` from the
+attachment endpoint.  These are compact, and under `FirstEdgeAttachedOnly` each
+has a uniform tail-clearance by `firstSegment_compact_clearance`.  This is the
+precise compactness package needed when the eventual path replacement chooses
+finitely many crossing neighbourhoods.  The declarations are consumed directly
+by `joinedIn_compl_cons_segment_of_tail` below, so this is preparation for the
+main Umlaufsatz rather than a detached topology branch.
+-/
+
+/-- The compact portion of `[a,b]` staying at least `δ` away from `b`. -/
+def firstSegmentAway (a b : ℂ) (δ : ℝ) : Set ℂ :=
+  segment ℝ a b ∩ {z | δ ≤ dist z b}
+
+lemma isCompact_firstSegmentAway (a b : ℂ) (δ : ℝ) :
+    IsCompact (firstSegmentAway a b δ) := by
+  refine' IsCompact.inter_right _ _;
+  · convert ( isCompact_Icc.image ( show Continuous fun x : ℝ => a + x • ( b - a ) from by continuity ) ) using 1 ; ext ; simp +decide [ segment_eq_image ];
+    convert Iff.rfl using 4 ; ring;
+  · exact isClosed_le continuous_const ( continuous_id.dist continuous_const )
+
+lemma firstSegmentAway_subset (a b : ℂ) (δ : ℝ) :
+    firstSegmentAway a b δ ⊆ segment ℝ a b := by
+  exact Set.inter_subset_left
+
+lemma terminal_not_mem_firstSegmentAway (a b : ℂ) {δ : ℝ} (hδ : 0 < δ) :
+    b ∉ firstSegmentAway a b δ := by
+  exact fun h => hδ.not_ge <| by simpa using h.2;
+
+/-- Every positive-distance truncation of the new edge has one uniform
+clearance radius from the old tail. -/
+lemma firstSegmentAway_uniform_clearance
+    (a b : ℂ) (L : List ℂ) {δ : ℝ} (hδ : 0 < δ)
+    (hattach : FirstEdgeAttachedOnly a b L) :
+    ∃ ε : ℝ, 0 < ε ∧ ∀ z ∈ firstSegmentAway a b δ,
+      Metric.ball z ε ∩ chainCarrier (b :: L) = ∅ := by
+  exact firstSegment_compact_clearance a b L (firstSegmentAway a b δ)
+    (isCompact_firstSegmentAway a b δ) hattach
+    (firstSegmentAway_subset a b δ)
+    (terminal_not_mem_firstSegmentAway a b hδ)
+
+/-
+Every point of the first edge other than its terminal endpoint occurs in a
+positive-distance compact truncation.  This links the compact exhaustion above
+to the whole local-detour problem.
+-/
+lemma mem_firstSegmentAway_of_mem_ne
+    (a b z : ℂ) (hz : z ∈ segment ℝ a b) (hzb : z ≠ b) :
+    ∃ δ : ℝ, 0 < δ ∧ z ∈ firstSegmentAway a b δ := by
+  refine' ⟨ dist z b, dist_pos.mpr hzb, _, _ ⟩ <;> simp_all +decide [ dist_eq_norm ]
+
+/-
+Smaller distance thresholds give larger compact truncations.
+-/
+lemma firstSegmentAway_anti {a b : ℂ} {δ η : ℝ} (hδη : δ ≤ η) :
+    firstSegmentAway a b η ⊆ firstSegmentAway a b δ := by
+  exact fun x hx => ⟨ hx.1, le_trans hδη hx.2 ⟩
+
+/-
+The genuinely new part of the first edge is exactly the union of its
+positive-distance compact truncations.  This is the exhaustion identity used to
+pass from pointwise clearance to the finite subcover in the detour theorem.
+-/
+lemma iUnion_firstSegmentAway_pos (a b : ℂ) :
+    ⋃ (δ : ℝ) (_ : 0 < δ), firstSegmentAway a b δ = segment ℝ a b \ ({b} : Set ℂ) := by
+  -- To prove equality of sets, we show each set is a subset of the other.
+  apply Set.ext
+  intro z
+  simp [firstSegmentAway];
+  exact fun hz => ⟨ fun ⟨ x, hx₁, hx₂ ⟩ => by rintro rfl; norm_num at hx₂; linarith, fun hz' => ⟨ dist z b, dist_pos.mpr hz', le_rfl ⟩ ⟩
+
 /-- **Finite local-detour theorem.**  Any two points avoiding a simple arc's
 whole carrier can be joined while avoiding the whole carrier, provided the tail
 complement is path connected.  The intended proof starts with a path in the
 tail complement, separates portions of `[a,b]` already contained in the tail,
-uses compactness of the parameter interval to isolate finitely many crossings
-of the remaining portions, and replaces those crossings inside clearance discs
-by semicircular arcs. -/
+uses the compact exhaustion and uniform-clearance package immediately above to
+isolate finitely many crossings of the genuinely new portions, and replaces
+those crossings inside clearance discs by semicircular arcs. -/
 lemma joinedIn_compl_cons_segment_of_tail
     (a b : ℂ) (L : List ℂ)
     (hsimple : PlaneArcSimple (a :: b :: L))

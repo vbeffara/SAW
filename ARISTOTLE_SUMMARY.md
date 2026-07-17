@@ -1,3 +1,16 @@
+# Summary of changes for run 2832f0c4-a8cd-46eb-90a8-34b13c861dc6
+Continued exclusively on the Umlaufsatz’s live simple-arc/Jordan escape route.
+
+Added a proved compact-exhaustion package in `RequestProject/SAWUmlaufArcDetour.lean`:
+- `firstSegmentAway` for truncating the new segment away from its attachment endpoint;
+- compactness, containment, and endpoint-exclusion lemmas;
+- uniform positive clearance from the old arc tail on every truncation;
+- nesting and an exact union identity showing the positive-distance truncations exhaust `[a,b] \ {b}`.
+
+These declarations are explicitly linked to the remaining finite local-detour theorem, which feeds `SAWUmlaufArcInduction` → `SAWUmlaufArcEscape` → `SAWUmlaufPolygon` and ultimately the main Umlaufsatz. The difficult finite semicircular crossing-replacement theorem remains honestly represented by `sorry`; no speculative false claim was introduced.
+
+Updated `ARISTOTLE_SUMMARY.md` and `PROOF_STATUS.md` with the new progress and remaining residue. The full `RequestProject.SAWFinal` target builds successfully, and the new proved results use only the permitted standard axioms. Changes were committed and pushed in commit `88944f5`.
+
 # Summary of changes for run 71826bec-892b-4ab2-ad82-98883a44914f
 Continued work exclusively on the Umlaufsatz and committed the progress in `e68ad3e`.
 
@@ -1934,3 +1947,29 @@ unsupported assertion that a straight escaping ray always exists was added.
 The downstream component, metric, large-circle, path, and polyline layers remain
 connected and proved. The three newly proved declarations use only `propext`,
 `Classical.choice`, and `Quot.sound`.
+
+---
+# Summary — compact exhaustion for the Umlaufsatz arc detour
+
+Continued exclusively on the live Umlaufsatz arc-complement route. The main
+local-detour theorem was attempted directly but remains the genuine planar
+crossing-replacement residue. Rather than discard the partial development,
+`SAWUmlaufArcDetour.lean` now contains a proved compact exhaustion of the new
+first edge away from its attachment endpoint:
+
+- `firstSegmentAway` defines the distance-truncated segment;
+- `isCompact_firstSegmentAway`, `firstSegmentAway_subset`, and
+  `terminal_not_mem_firstSegmentAway` establish the compactness inputs;
+- `firstSegmentAway_uniform_clearance` applies the existing compact/tail
+  separation theorem to give one positive clearance radius on each truncation;
+- `mem_firstSegmentAway_of_mem_ne`, `firstSegmentAway_anti`, and
+  `iUnion_firstSegmentAway_pos` prove that these nested compact sets exhaust
+  exactly `[a,b] \ {b}`.
+
+The file explicitly links this package to
+`joinedIn_compl_cons_segment_of_tail`; that theorem feeds the simple-arc
+non-separation induction, then the boundary-vertex escape theorem, and hence the
+main polygonal Umlaufsatz. The new proved declarations are axiom-clean (only
+`propext`, `Classical.choice`, and `Quot.sound`). The full imported target
+`SAWFinal` builds successfully. The direct detour theorem and eight existing
+polygon/two-ears/Jordan residues remain as honest `sorry`s.

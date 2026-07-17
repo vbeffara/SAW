@@ -2610,3 +2610,15 @@ actual proof chain now carries `diags.length ≤ 1`. All consequences of
 unboundedness are proved: arbitrary large points, path extraction in the open
 component, and large-circle continuation. The remaining Jordan leaf is exactly
 `vertex_escape_component_unbounded`.
+
+## Umlaufsatz compact arc-detour exhaustion
+
+The live simple-arc non-separation route now has the full compact exhaustion
+needed for a finite local crossing replacement. `firstSegmentAway a b δ`
+truncates the new edge a positive distance from its attachment endpoint; these
+sets are proved compact and nested, have uniform positive clearance from the
+old tail under `FirstEdgeAttachedOnly`, and their positive-δ union is exactly
+`segment ℝ a b \ {b}`. This package is imported through
+`SAWUmlaufArcInduction` → `SAWUmlaufArcEscape` → `SAWUmlaufPolygon` and is
+explicitly documented as preparation for `joinedIn_compl_cons_segment_of_tail`.
+The remaining leaf is the finite semicircular path-detour construction itself.
