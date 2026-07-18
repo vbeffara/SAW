@@ -2622,3 +2622,16 @@ old tail under `FirstEdgeAttachedOnly`, and their positive-δ union is exactly
 `SAWUmlaufArcInduction` → `SAWUmlaufArcEscape` → `SAWUmlaufPolygon` and is
 explicitly documented as preparation for `joinedIn_compl_cons_segment_of_tail`.
 The remaining leaf is the finite semicircular path-detour construction itself.
+
+## Umlaufsatz compact crossing package
+
+`SAWUmlaufArcCrossings.lean` is now an explicitly imported part of the live
+`SAWUmlaufArcDetour → SAWUmlaufArcInduction → SAWUmlaufArcEscape →
+SAWUmlaufPolygon` chain.  It proves that a candidate path image, its segment
+crossing-time set, and its crossing-point set are compact.  More importantly,
+`path_uniform_clearance_from_tail` gives one positive clearance radius between
+the whole old path and the closed tail, and
+`exists_finite_crossing_ball_cover` extracts finitely many crossing
+neighbourhoods at any prescribed scale.  These are the compactness/finite-cover
+inputs for the remaining semicircular crossing-replacement construction in
+`joinedIn_compl_cons_segment_of_tail`; they are not a detached branch.

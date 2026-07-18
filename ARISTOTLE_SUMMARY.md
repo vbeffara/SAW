@@ -1,3 +1,21 @@
+# Summary of changes for run 487cb688-52b4-4f06-81e7-a2e0ee92079a
+Continued exclusively on the live Umlaufsatz simple-arc non-separation route.
+
+Added `RequestProject/SAWUmlaufArcCrossings.lean`, imported directly by `SAWUmlaufArcDetour.lean`, and therefore transitively linked through `SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon` to the main theorem.
+
+The new file proves:
+- compactness of a path image;
+- compactness of the times and points where a path meets a segment;
+- disjointness of a path carrier from a forbidden set;
+- a uniform positive clearance between an entire candidate path and the closed old polygonal tail;
+- existence of a finite family of crossing neighborhoods at any positive scale.
+
+This preserves concrete progress toward `joinedIn_compl_cons_segment_of_tail`: the compactness and finite-subcover inputs are now formalized, while the remaining finite local arc-replacement construction stays honestly represented by the existing `sorry`.
+
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to explain that this is future-use preparation on the main proof path, not a dead branch. The full `RequestProject.SAWFinal` target builds successfully. The new file is free of `sorry`, and its key theorems use only the permitted standard axioms.
+
+Committed and pushed as commits `922a7ca` and `3cd2c66`.
+
 # Summary of changes for run 2832f0c4-a8cd-46eb-90a8-34b13c861dc6
 Continued exclusively on the Umlaufsatz’s live simple-arc/Jordan escape route.
 
@@ -1973,3 +1991,27 @@ main polygonal Umlaufsatz. The new proved declarations are axiom-clean (only
 `propext`, `Classical.choice`, and `Quot.sound`). The full imported target
 `SAWFinal` builds successfully. The direct detour theorem and eight existing
 polygon/two-ears/Jordan residues remain as honest `sorry`s.
+
+---
+# Summary — compact crossing data for the Umlaufsatz detour
+
+Continued exclusively on the live simple-arc non-separation route.  Added
+`SAWUmlaufArcCrossings.lean` and imported it directly from
+`SAWUmlaufArcDetour`, so it lies on the main Umlaufsatz proof graph.
+
+The new file proves, without sorries:
+
+- compactness of the image of a path;
+- compactness of the times and image points where a path meets a fixed segment;
+- disjointness of a path carrier from a forbidden set when the path maps into
+  its complement;
+- one uniform positive metric clearance between an entire candidate path and
+  the closed old polygonal tail;
+- extraction of finitely many crossing neighbourhoods at any positive scale.
+
+This banks the compactness and finite-subcover half of the local path-detour
+argument.  The remaining geometric leaf is still
+`joinedIn_compl_cons_segment_of_tail`, where the finitely many crossings must
+be replaced by local arcs avoiding the newly adjoined segment.  The full
+`SAWFinal` target builds successfully, and the new crossing package has no
+`sorry` and uses only the permitted standard axioms.
