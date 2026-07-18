@@ -1,3 +1,38 @@
+# Summary of changes for run e45247f6-28dd-4c49-8d3e-58c07a7563ce
+Continued exclusively on the live simple-arc detour route to the Umlaufsatz.
+
+Added `RequestProject/SAWUmlaufSemicircle.lean`. It formalizes the local semicircular replacement used to bypass a crossing of the newly adjoined edge, including:
+- explicit semicircle parametrization and endpoints;
+- continuity and packaging as a Lean `Path`;
+- constant-radius and clearance-ball containment;
+- strict one-sidedness relative to the diameter direction;
+- avoidance of the entire affine diameter line;
+- a packaged `semicirclePath_local_detour` theorem for later path splicing.
+
+The new file is sorry-free and uses only permitted standard axioms. It is imported directly by `SAWUmlaufArcDetour.lean`, so it lies on the chain through `SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon` to the main Umlaufsatz rather than being a dead branch.
+
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to record this link and the remaining task: finite selection and splicing of these local replacements in `joinedIn_compl_cons_segment_of_tail`.
+
+The complete `RequestProject.SAWFinal` target builds successfully. Changes were committed and pushed as `83bdc7e`.
+
+# Summary of current Umlaufsatz round
+
+Continued exclusively on the live simple-arc detour route to the Umlaufsatz.
+
+Added `RequestProject/SAWUmlaufSemicircle.lean`, imported directly by
+`SAWUmlaufArcDetour.lean` and hence transitively by the main theorem.  It gives
+an explicit semicircular crossing replacement, packages it as a continuous
+`Path`, and proves its endpoints, fixed radius, containment in a prescribed
+clearance ball, strict one-sidedness after rotation, and avoidance of the whole
+diameter line.  The final packaged lemma `semicirclePath_local_detour` supplies
+the exact local geometric primitive needed by finite crossing splicing.
+
+The new file is sorry-free.  The remaining live residue is the finite selection
+and splicing of these local replacements in
+`joinedIn_compl_cons_segment_of_tail`.  `PROOF_STATUS.md` and the import-chain
+documentation explicitly identify the new file as future-use preparation rather
+than a dead branch.  The full `RequestProject.SAWFinal` target builds.
+
 # Summary of changes for run 487cb688-52b4-4f06-81e7-a2e0ee92079a
 Continued exclusively on the live Umlaufsatz simple-arc non-separation route.
 

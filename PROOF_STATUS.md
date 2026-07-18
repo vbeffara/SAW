@@ -2635,3 +2635,13 @@ the whole old path and the closed tail, and
 neighbourhoods at any prescribed scale.  These are the compactness/finite-cover
 inputs for the remaining semicircular crossing-replacement construction in
 `joinedIn_compl_cons_segment_of_tail`; they are not a detached branch.
+
+## Umlaufsatz semicircular local replacement
+
+`SAWUmlaufSemicircle.lean` is now imported directly by `SAWUmlaufArcDetour` and
+therefore lies on the live chain to the main Umlaufsatz.  It defines the explicit
+semicircle used to bypass one crossing, packages it as a `Path`, and proves its
+endpoint, continuity, fixed-radius, clearance-ball, and diameter-line avoidance
+properties.  Thus the local geometric replacement itself is formalized
+sorry-free; the remaining `joinedIn_compl_cons_segment_of_tail` residue is the
+finite selection and splicing of these local paths into the candidate path.

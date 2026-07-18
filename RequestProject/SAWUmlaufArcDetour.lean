@@ -1,6 +1,7 @@
 import Mathlib
 import RequestProject.SAWUmlaufArcBasics
 import RequestProject.SAWUmlaufArcCrossings
+import RequestProject.SAWUmlaufSemicircle
 
 /-!
 # Local detours for simple polygonal arcs
@@ -27,11 +28,13 @@ arc non-separation theorem:
 
 1. `SAWUmlaufArcCrossings` proves compactness of path images and crossing times,
    and isolates uniform positive clearance of the old path from the tail;
-2. a compact portion of the new edge has positive clearance from the tail;
-3. paths in the tail complement can be replaced by paths avoiding the new edge;
-4. the replacement gives path connectedness after adjoining that edge.
+2. `SAWUmlaufSemicircle` formalizes the local semicircular replacement, including
+   its clearance-ball containment and disjointness from the diameter line;
+3. a compact portion of the new edge has positive clearance from the tail;
+4. paths in the tail complement can be replaced by paths avoiding the new edge;
+5. the replacement gives path connectedness after adjoining that edge.
 
-The third item is the substantive planar detour argument.  It is retained as
+The fourth item is the substantive planar detour argument.  It is retained as
 an honest partial theorem so later rounds can refine the finite collection of
 semicircular detours without changing the downstream Umlaufsatz interfaces.
 -/
