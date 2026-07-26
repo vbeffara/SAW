@@ -1,3 +1,14 @@
+# Summary of changes for run bb8235f4-1d90-4984-8c6d-c4367c7a9f32
+Continued exclusively on the live Umlaufsatz simple-arc detour route.
+
+- Strengthened `RequestProject/SAWUmlaufSemicircle.lean` with `liftedSemicirclePath`. Unlike the centered semicircle, the translated path—including both endpoints—avoids the entire affine diameter line while remaining inside a controlled clearance ball. All new geometric lemmas are proved without `sorry`.
+- Added `RequestProject/SAWUmlaufSplice.lean`, defining one-interval path replacement and proving ambient-set preservation and carrier containment. It also introduces ordered detour interval/family structures for the finite crossing construction.
+- Imported the splice file directly from `SAWUmlaufArcDetour.lean`, explicitly placing it on the chain through arc induction and polygon topology to the main Umlaufsatz.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to document why these branches are future-use preparation rather than dead ends.
+- The remaining honest gap is still `joinedIn_compl_cons_segment_of_tail`: refine the finite crossing cover into ordered disjoint intervals with matching lifted replacement endpoints, then iterate the proved splice operation.
+- The complete `RequestProject.SAWFinal` target builds successfully. New key theorems use only permitted standard axioms.
+- Changes were committed and pushed as `ee2167e`.
+
 # Summary of changes for run e45247f6-28dd-4c49-8d3e-58c07a7563ce
 Continued exclusively on the live simple-arc detour route to the Umlaufsatz.
 
@@ -2050,3 +2061,27 @@ argument.  The remaining geometric leaf is still
 be replaced by local arcs avoiding the newly adjoined segment.  The full
 `SAWFinal` target builds successfully, and the new crossing package has no
 `sorry` and uses only the permitted standard axioms.
+
+# Current Umlaufsatz round
+
+Continued exclusively on the live simple-arc detour route to the Umlaufsatz.
+
+Strengthened `SAWUmlaufSemicircle.lean` with the translated local replacement
+`liftedSemicirclePath`.  Unlike the centred primitive, its entire image,
+including both endpoints, lies strictly off the forbidden diameter line.  The
+new sorry-free lemmas prove continuity, endpoint formulas, the `r + h`
+clearance-ball bound, strict one-sidedness, full affine-line avoidance, and the
+packaged local-detour result.
+
+Added `SAWUmlaufSplice.lean`, imported directly by `SAWUmlaufArcDetour.lean` and
+therefore transitively by the main Umlaufsatz.  It defines a one-interval path
+splice and proves sorry-free ambient-set and carrier-containment lemmas.  It
+also records the ordered finite-interval and replacement-family structures
+needed to turn the existing compact crossing cover into a finite sequence of
+splices.  This explicitly links the preparation to the remaining theorem rather
+than leaving it as a dead branch.
+
+The focused splice/detour targets build.  The sole sorry in these three live
+files remains `joinedIn_compl_cons_segment_of_tail`; its next residue is refining
+the finite crossing cover into ordered disjoint intervals with matching lifted
+replacement endpoints and iterating the proved splice operation.

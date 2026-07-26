@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SAWUmlaufArcBasics
 import RequestProject.SAWUmlaufArcCrossings
 import RequestProject.SAWUmlaufSemicircle
+import RequestProject.SAWUmlaufSplice
 
 /-!
 # Local detours for simple polygonal arcs

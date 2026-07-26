@@ -2642,6 +2642,23 @@ inputs for the remaining semicircular crossing-replacement construction in
 therefore lies on the live chain to the main Umlaufsatz.  It defines the explicit
 semicircle used to bypass one crossing, packages it as a `Path`, and proves its
 endpoint, continuity, fixed-radius, clearance-ball, and diameter-line avoidance
-properties.  Thus the local geometric replacement itself is formalized
-sorry-free; the remaining `joinedIn_compl_cons_segment_of_tail` residue is the
-finite selection and splicing of these local paths into the candidate path.
+properties.
+
+The endpoint issue in the first version is now handled explicitly: a centred
+semicircle has endpoints on its diameter and therefore only avoids the line on
+the open parameter interval.  The new `liftedSemicirclePath` translates the
+whole semicircle into one open half-plane.  Its complete image, including both
+endpoints, avoids the diameter line and remains in a controlled clearance ball.
+All of these strengthened local-detour lemmas are sorry-free.
+
+`SAWUmlaufSplice.lean` is imported directly by `SAWUmlaufArcDetour` and provides
+the next live layer: `splicePath` replaces one parameter subinterval of a path,
+`splicePath_mapsTo` proves the replacement stays in any common ambient set, and
+`splicePath_mem_old_or_replacement` gives the carrier bound.  It also records
+`OrderedDetourIntervals` and `PathDetourFamily`, the exact finite ordered data
+needed to refine the compact crossing cover.  This file is therefore explicitly
+linked future-use preparation rather than a dead branch.
+
+The remaining `joinedIn_compl_cons_segment_of_tail` residue is to refine the
+finite crossing-ball cover into disjoint ordered intervals with matching lifted
+replacement endpoints, then iterate `splicePath` over that family.

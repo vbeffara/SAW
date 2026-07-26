@@ -112,4 +112,110 @@ lemma semicirclePath_local_detour (c u : ℂ) {r ε : ℝ}
     convert HexArea.semicirclePoint_mem_ball c u hr.le hrε hu t.val;
   · intro t ht₀ ht₁; rw [ semicirclePath_apply ] ; exact HexArea.semicirclePoint_not_mem_diameterLine c u hr hu ht₀ ht₁;
 
+
+/-!
+## A closed detour which avoids the diameter line, including its endpoints
+
+The centred semicircle above necessarily has its two endpoints on the diameter
+line. It is therefore the correct primitive only for the open circular part of
+a crossing replacement. The actual replacement path must avoid the newly
+adjoined closed segment at every parameter, including `0` and `1`. We obtain
+such a path by translating the semicircle a positive distance in its normal
+direction. This is the version that finite splicing may use without an endpoint
+exception. These declarations feed `joinedIn_compl_cons_segment_of_tail` through
+the existing import chain and are not a detached branch.
+-/
+
+/-- A semicircle translated by distance `h` to the positive side of its
+diameter line. -/
+def liftedSemicirclePoint (c u : ℂ) (r h : ℝ) (t : ℝ) : ℂ :=
+  semicirclePoint c u r t + ((h : ℂ) / ‖u‖) * Complex.I * u
+
+lemma liftedSemicirclePoint_zero (c u : ℂ) (r h : ℝ) :
+    liftedSemicirclePoint c u r h 0 =
+      c + ((r : ℂ) / ‖u‖) * u + ((h : ℂ) / ‖u‖) * Complex.I * u := by
+  simp [liftedSemicirclePoint, semicirclePoint_zero]
+
+lemma liftedSemicirclePoint_one (c u : ℂ) (r h : ℝ) :
+    liftedSemicirclePoint c u r h 1 =
+      c - ((r : ℂ) / ‖u‖) * u + ((h : ℂ) / ‖u‖) * Complex.I * u := by
+  simp [liftedSemicirclePoint, semicirclePoint_one]
+
+lemma continuous_liftedSemicirclePoint (c u : ℂ) (r h : ℝ) :
+    Continuous (fun t : ℝ => liftedSemicirclePoint c u r h t) := by
+  exact (continuous_semicirclePoint c u r).add continuous_const
+
+/-- The translated semicircle as a path. Unlike `semicirclePath`, both endpoints
+are already strictly off the forbidden diameter line. -/
+def liftedSemicirclePath (c u : ℂ) (r h : ℝ) :
+    Path
+      (c + ((r : ℂ) / ‖u‖) * u + ((h : ℂ) / ‖u‖) * Complex.I * u)
+      (c - ((r : ℂ) / ‖u‖) * u + ((h : ℂ) / ‖u‖) * Complex.I * u) :=
+  ⟨⟨fun t => liftedSemicirclePoint c u r h t,
+      (continuous_liftedSemicirclePoint c u r h).comp continuous_subtype_val⟩,
+    liftedSemicirclePoint_zero c u r h,
+    liftedSemicirclePoint_one c u r h⟩
+
+lemma liftedSemicirclePath_apply (c u : ℂ) (r h : ℝ)
+    (t : unitInterval) :
+    liftedSemicirclePath c u r h t = liftedSemicirclePoint c u r h t := rfl
+
+/-
+The translated semicircle stays in the closed ball of radius `r + h` about
+its original centre.
+-/
+lemma dist_liftedSemicirclePoint_center_le (c u : ℂ) {r h : ℝ}
+    (hr : 0 ≤ r) (hh : 0 ≤ h) (hu : u ≠ 0) (t : ℝ) :
+    dist (liftedSemicirclePoint c u r h t) c ≤ r + h := by
+  convert dist_triangle _ ( semicirclePoint c u r t ) c |> le_trans <| ?_ using 1;
+  convert add_comm ( h : ℝ ) r ▸ add_le_add ( show Dist.dist ( ( h : ℂ ) / ‖u‖ * Complex.I * u ) 0 ≤ h from ?_ ) ( show Dist.dist ( semicirclePoint c u r t ) c ≤ r from ?_ ) using 1;
+  · unfold liftedSemicirclePoint; norm_num;
+  · norm_num [ abs_of_nonneg hh, abs_of_nonneg hr, hu ];
+  · exact le_of_eq ( dist_semicirclePoint_center c u hr hu t )
+
+/-
+Every point of a positively translated semicircle lies strictly on the
+positive side of the original diameter line, including both endpoints.
+-/
+lemma liftedSemicirclePoint_rotated_im_pos (c u : ℂ) {r h t : ℝ}
+    (hr : 0 ≤ r) (hh : 0 < h) (hu : u ≠ 0)
+    (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    0 < (((liftedSemicirclePoint c u r h t - c) * star u).im) := by
+  simp +decide [liftedSemicirclePoint];
+  unfold semicirclePoint; norm_num [ Complex.normSq, Complex.norm_def ] ; ring_nf ;
+  norm_cast ; ring_nf;
+  by_cases hu_re : u.re = 0 <;> by_cases hu_im : u.im = 0 <;> simp_all +decide [ sq ];
+  · exact hu ( Complex.ext hu_re hu_im );
+  · field_simp;
+    nlinarith [ show 0 < u.im ^ 2 by positivity, show 0 ≤ r * u.im ^ 2 by positivity, show Real.sin ( Real.pi * t ) ≥ 0 by exact Real.sin_nonneg_of_nonneg_of_le_pi ( by positivity ) ( by nlinarith [ Real.pi_pos ] ) ];
+  · exact add_pos_of_nonneg_of_pos ( mul_nonneg ( mul_nonneg ( mul_nonneg hr ( mul_self_nonneg _ ) ) ( inv_nonneg.mpr ( Real.sqrt_nonneg _ ) ) ) ( Real.sin_nonneg_of_nonneg_of_le_pi ( by positivity ) ( by nlinarith [ Real.pi_pos ] ) ) ) ( mul_pos ( mul_pos ( mul_self_pos.mpr hu_re ) ( inv_pos.mpr ( Real.sqrt_pos.mpr ( mul_self_pos.mpr hu_re ) ) ) ) hh );
+  · field_simp;
+    nlinarith [ mul_self_pos.2 hu_re, mul_self_pos.2 hu_im, mul_nonneg hr ( sq_nonneg u.re ), mul_nonneg hr ( sq_nonneg u.im ), mul_pos hh ( mul_self_pos.2 hu_re ), mul_pos hh ( mul_self_pos.2 hu_im ), Real.sin_nonneg_of_nonneg_of_le_pi ( mul_nonneg Real.pi_pos.le ht0 ) ( by nlinarith [ Real.pi_pos ] ) ]
+
+lemma liftedSemicirclePoint_not_mem_diameterLine (c u : ℂ) {r h t : ℝ}
+    (hr : 0 ≤ r) (hh : 0 < h) (hu : u ≠ 0)
+    (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    liftedSemicirclePoint c u r h t ∉
+      {z : ℂ | ∃ s : ℝ, z = c + s • u} := by
+  simp +zetaDelta at *;
+  intro x hx; have := liftedSemicirclePoint_rotated_im_pos c u hr hh hu ht0 ht1; simp_all +decide [ Complex.ext_iff ] ;
+  linarith
+
+/-
+Packaged closed local detour. If `r + h < ε`, its entire image lies in the
+clearance ball and avoids not merely the new segment but its affine carrier
+line.
+-/
+lemma liftedSemicirclePath_local_detour (c u : ℂ) {r h ε : ℝ}
+    (hr : 0 ≤ r) (hh : 0 < h) (hrhε : r + h < ε) (hu : u ≠ 0) :
+    (∀ t : unitInterval,
+      liftedSemicirclePath c u r h t ∈ Metric.ball c ε) ∧
+    (∀ t : unitInterval,
+      liftedSemicirclePath c u r h t ∉
+        {z : ℂ | ∃ s : ℝ, z = c + s • u}) := by
+  refine' ⟨ _, _ ⟩;
+  · exact fun t => mem_ball_iff_norm.mpr ( lt_of_le_of_lt ( dist_liftedSemicirclePoint_center_le c u hr hh.le hu t ) hrhε );
+  · intro t;
+    convert liftedSemicirclePoint_not_mem_diameterLine c u hr hh hu t.2.1 t.2.2 using 1
+
 end HexArea
