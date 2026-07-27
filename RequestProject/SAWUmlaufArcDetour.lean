@@ -3,6 +3,8 @@ import RequestProject.SAWUmlaufArcBasics
 import RequestProject.SAWUmlaufArcCrossings
 import RequestProject.SAWUmlaufSemicircle
 import RequestProject.SAWUmlaufSplice
+import RequestProject.SAWUmlaufSpliceMany
+import RequestProject.SAWUmlaufDetourConstruction
 
 /-!
 # Local detours for simple polygonal arcs
@@ -172,7 +174,15 @@ lemma joinedIn_compl_cons_segment_of_tail
     (x y : ℂ) (hx : x ∈ (chainCarrier (a :: b :: L))ᶜ)
     (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
     JoinedIn (chainCarrier (a :: b :: L))ᶜ x y := by
-  sorry
+  have hxTail : x ∈ (chainCarrier (b :: L))ᶜ := by
+    intro hx'
+    exact hx (by rw [chainCarrier_cons_cons]; exact Or.inr hx')
+  have hyTail : y ∈ (chainCarrier (b :: L))ᶜ := by
+    intro hy'
+    exact hy (by rw [chainCarrier_cons_cons]; exact Or.inr hy')
+  obtain ⟨γ, hγ⟩ := htail.joinedIn x hxTail y hyTail
+  obtain ⟨P, hP⟩ := exists_avoiding_detourPlan a b L hsimple γ hγ hx hy
+  exact DetourPlan.joinedIn_of_detourPlan P hP
 
 /-- Adjoining the first edge of a simple polygonal arc preserves path
 connectedness of the complement.  This packages the local-detour theorem in the

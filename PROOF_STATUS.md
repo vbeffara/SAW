@@ -2662,3 +2662,22 @@ linked future-use preparation rather than a dead branch.
 The remaining `joinedIn_compl_cons_segment_of_tail` residue is to refine the
 finite crossing-ball cover into disjoint ordered intervals with matching lifted
 replacement endpoints, then iterate `splicePath` over that family.
+
+## Umlaufsatz finite detour assembly factored
+
+`SAWUmlaufSpliceMany.lean` is now imported on the live
+`SAWUmlaufArcDetour → SAWUmlaufArcInduction → SAWUmlaufArcEscape →
+SAWUmlaufPolygon` chain.  It defines a dependent `DetourPlan` which retains
+original subpaths and inserts endpoint-matched local replacements without
+losing the original parameter labels.  Its realization, ambient-set invariant,
+and conversion to `JoinedIn` are fully proved.
+
+The former monolithic sorry in `joinedIn_compl_cons_segment_of_tail` has been
+closed.  That theorem now obtains a path in the old-tail complement, invokes the
+new geometric constructor, and realizes its finite detour plan.  The single
+remaining local gap has moved into the explicitly imported
+`SAWUmlaufDetourConstruction.lean` as `exists_avoiding_detourPlan`: refine the
+compact crossing cover into ordered crossing intervals, retain the safe pieces,
+and insert local semicircular replacements.  This new partial file is directly
+consumed by `SAWUmlaufArcDetour`, so it is future-use preparation rather than a
+dead branch.

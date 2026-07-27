@@ -1,3 +1,34 @@
+# Summary of changes for run 39428b26-dc26-46e4-8085-05fa29d98454
+Continued exclusively on the live Umlaufsatz proof route and pushed commit `9dd7b20`.
+
+- Added `RequestProject/SAWUmlaufSpliceMany.lean`, defining dependent finite detour plans that retain original path pieces and insert endpoint-matched replacements.
+- Proved realization of these plans, preservation of the target ambient set, and conversion of a valid plan into `JoinedIn`. These proofs use only permitted standard axioms.
+- Added `RequestProject/SAWUmlaufDetourConstruction.lean` to preserve the remaining geometric construction as an explicit partial Lean theorem.
+- Closed the former monolithic `sorry` in `joinedIn_compl_cons_segment_of_tail`. It now obtains a path in the old-tail complement, invokes the finite geometric detour constructor, and realizes the resulting plan.
+- Sharpened the remaining gap to `exists_avoiding_detourPlan`: refine the compact crossing cover into ordered crossing intervals, retain safe path pieces, and insert the already formalized semicircular replacements.
+- Explicitly imported the new construction through `SAWUmlaufArcDetour`, so it lies on the chain through arc induction and polygon topology to the main Umlaufsatz rather than being a dead branch.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to record the connection and next task.
+- Verified that the complete `RequestProject.SAWFinal` target builds successfully. The new partial geometric theorem remains honestly marked with one `sorry`.
+
+# Summary of current Umlaufsatz round
+
+Continued exclusively on the live simple-arc detour route to the Umlaufsatz.
+
+- Added `RequestProject/SAWUmlaufSpliceMany.lean`, defining dependent finite
+  detour plans, their endpoint-correct realization, an ambient-set invariant,
+  and a proved conversion to `JoinedIn`.
+- Added `RequestProject/SAWUmlaufDetourConstruction.lean` for the remaining
+  geometric finite-cover refinement.  It is imported directly by
+  `SAWUmlaufArcDetour`, so the partial development is explicitly linked through
+  arc induction and polygon topology to the main Umlaufsatz.
+- Closed the old monolithic sorry in
+  `joinedIn_compl_cons_segment_of_tail`: it now selects a path in the tail
+  complement, consumes an avoiding detour plan, and realizes that plan.
+- The remaining honest local gap is now the sharper theorem
+  `exists_avoiding_detourPlan`, which must order crossing intervals and insert
+  the already formalized semicircular replacements.
+- The complete `RequestProject.SAWFinal` target builds successfully.
+
 # Summary of changes for run bb8235f4-1d90-4984-8c6d-c4367c7a9f32
 Continued exclusively on the live Umlaufsatz simple-arc detour route.
 
