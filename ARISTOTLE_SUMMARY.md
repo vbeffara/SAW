@@ -1,3 +1,39 @@
+# Summary of changes for run 158cf060-f3ae-4d20-96dd-338a9745315f
+Continued exclusively on the live Umlaufsatz proof route and pushed commits `3f900b6` and `107aa18`.
+
+- Added `RequestProject/SAWUmlaufOrderedDetours.lean`, defining ordered finite detour schedules with explicit parameter ordering and separate avoidance obligations for the new edge and old tail.
+- Proved schedule erasure to the existing dependent `DetourPlan`, inheritance of old-tail avoidance by retained subpaths, conversion to `DetourPlan.MapsTo`, and final `JoinedIn` assembly.
+- Proved terminal empty-schedule cases, including the fully-overlapped new-edge case required because adjacent collinear edges may overlap.
+- Refactored `exists_avoiding_detourPlan` into a proved compatibility theorem. The remaining geometric gap is now the sharper `exists_avoiding_orderedDetourSchedule`, preserved as one honest `sorry`; it must select and order finitely many crossing intervals and construct local replacements.
+- Imported the new file through `SAWUmlaufDetourConstruction`, explicitly connecting it through arc detours, arc induction, arc escape, polygon topology, and the main Umlaufsatz.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` while preserving prior progress records.
+- Verified that `RequestProject.SAWFinal` builds successfully. The newly proved core schedule theorems use only standard permitted axioms.
+
+# Current Umlaufsatz round
+
+Continued exclusively on the live Umlaufsatz proof route.
+
+- Added `RequestProject/SAWUmlaufOrderedDetours.lean`, defining an ordered
+  finite detour schedule which records exactly the remaining geometric
+  obligations for crossing replacement.
+- Proved the full conversion from such a schedule to the existing dependent
+  `DetourPlan`, its complement-of-union `MapsTo` invariant, and the final
+  `JoinedIn` path assembly.
+- Proved terminal empty-schedule cases, including the fully-overlapped new-edge
+  case needed because `PlaneArcSimple` permits adjacent collinear overlap.
+- Refactored `exists_avoiding_detourPlan` into a proved compatibility result.
+  The remaining partial geometric statement is now the sharper
+  `exists_avoiding_orderedDetourSchedule`, which must select and order finitely
+  many crossing intervals and supply their local replacements.
+- Imported the new file through `SAWUmlaufDetourConstruction`; it is therefore
+  explicitly connected through `SAWUmlaufArcDetour`, arc induction, arc escape,
+  polygon topology, and the main Umlaufsatz rather than being a dead branch.
+- Updated `PROOF_STATUS.md` and verified that the complete
+  `RequestProject.SAWFinal` target builds successfully.  The remaining
+  geometric theorem is intentionally preserved as one honest `sorry`.
+
+---
+
 # Summary of changes for run 39428b26-dc26-46e4-8085-05fa29d98454
 Continued exclusively on the live Umlaufsatz proof route and pushed commit `9dd7b20`.
 

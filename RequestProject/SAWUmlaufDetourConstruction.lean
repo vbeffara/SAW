@@ -3,6 +3,7 @@ import RequestProject.SAWUmlaufArcBasics
 import RequestProject.SAWUmlaufArcCrossings
 import RequestProject.SAWUmlaufSemicircle
 import RequestProject.SAWUmlaufSpliceMany
+import RequestProject.SAWUmlaufOrderedDetours
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -18,10 +19,12 @@ Given a path avoiding the old polygonal tail, the crossing package supplies a
 compact set of times at which it meets the newly adjoined segment and uniform
 clearance from the tail.  One refines a finite crossing cover into ordered
 components, retains the old path between those components, and inserts local
-semicircular detours.  The output is a `DetourPlan` whose `MapsTo` witness says
-exactly that every retained and inserted piece avoids the enlarged carrier.
-`DetourPlan.realizeFromSource` then performs all dependent endpoint
-concatenations without changing the original parameter labels.
+semicircular detours.  The geometric output is now an
+`OrderedDetourSchedule`: retained pieces need only be checked against the new
+edge, while replacements are checked against both the new edge and old tail.
+`OrderedDetourSchedule.erase_mapsTo_compl_union` turns this into the lower-level
+`DetourPlan.MapsTo` invariant, and `DetourPlan.realizeFromSource` performs all
+dependent endpoint concatenations without changing the original labels.
 
 There is one geometric complication which this statement intentionally keeps:
 `PlaneArcSimple` permits overlap between adjacent collinear edges.  Components
@@ -36,17 +39,32 @@ noncomputable section
 
 namespace HexArea
 
-/-- **Remaining finite geometric construction.**  A path in the complement of
-the old tail, whose endpoints avoid the enlarged carrier, admits a finite
-ordered detour plan all of whose retained and replacement pieces avoid the
-enlarged carrier.
+/-- **Remaining finite geometric construction, ordered form.**  A path in the
+complement of the old tail, whose endpoints avoid the enlarged carrier, admits
+an ordered schedule.  The schedule records only the genuinely geometric local
+obligations: retained path pieces avoid the new segment, while inserted pieces
+avoid both the new segment and the old tail.
 
 The intended construction uses `path_uniform_clearance_from_tail` and
 `exists_finite_crossing_ball_cover`, chooses finitely many ordered crossing
 intervals, and uses `semicirclePath_local_detour` (or its lifted variant on a
 closed local piece) for the replacements.  The theorem is kept as an honest
 `sorry` because selecting and ordering those intervals is the remaining planar
-geometry, while all downstream assembly is now formalized. -/
+geometry.  All conversion and dependent concatenation after this output are
+proved. -/
+lemma exists_avoiding_orderedDetourSchedule
+    (a b : ℂ) (L : List ℂ)
+    (hsimple : PlaneArcSimple (a :: b :: L))
+    {x y : ℂ} (γ : Path x y)
+    (hγtail : ∀ q, γ q ∈ (chainCarrier (b :: L))ᶜ)
+    (hx : x ∈ (chainCarrier (a :: b :: L))ᶜ)
+    (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
+    Nonempty (OrderedDetourSchedule γ (segment ℝ a b)
+      (chainCarrier (b :: L)) 0) := by
+  sorry
+
+/-- Compatibility output consumed by the existing arc-detour theorem.  This is
+now a proved conversion from the sharper ordered geometric interface above. -/
 lemma exists_avoiding_detourPlan
     (a b : ℂ) (L : List ℂ)
     (hsimple : PlaneArcSimple (a :: b :: L))
@@ -56,6 +74,10 @@ lemma exists_avoiding_detourPlan
     (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
     ∃ P : DetourPlan γ 0,
       DetourPlan.MapsTo (chainCarrier (a :: b :: L))ᶜ P := by
-  sorry
+  obtain ⟨S⟩ :=
+    exists_avoiding_orderedDetourSchedule a b L hsimple γ hγtail hx hy
+  refine ⟨S.erase, ?_⟩
+  rw [chainCarrier_cons_cons]
+  exact OrderedDetourSchedule.erase_mapsTo_compl_union hγtail S
 
 end HexArea

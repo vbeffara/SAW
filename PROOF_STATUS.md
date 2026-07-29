@@ -1,5 +1,23 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (current round): ordered finite-detour interface formalized and
+> linked.**  Added `RequestProject/SAWUmlaufOrderedDetours.lean` on the live
+> arc-nonseparation chain.  Its `OrderedDetourSchedule` records ordered crossing
+> intervals and separates the actual geometric obligations: retained pieces
+> avoid the new edge, while inserted pieces avoid both the new edge and old
+> tail.  Proved erasure to `DetourPlan`, inheritance of old-tail avoidance by
+> subpaths, conversion to `DetourPlan.MapsTo`, and final `JoinedIn` assembly.
+> Also proved empty-schedule branches, including the fully-overlapped edge case
+> permitted by adjacent collinear edges.  Refactored
+> `exists_avoiding_detourPlan` into a proved compatibility theorem; its only
+> remaining geometric input is the sharper honest partial theorem
+> `exists_avoiding_orderedDetourSchedule`.  The new file is imported by
+> `SAWUmlaufDetourConstruction`, hence by `SAWUmlaufArcDetour →
+> SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon` and the main
+> Umlaufsatz.  The complete `SAWFinal` target builds.
+>
+> ---
+
 > **Umlaufsatz (latest round): shared escape core extracted + soundness fix.**
 > Added `vertex_escape_walk_core` in `RequestProject/SAWUmlaufPolygon.lean`: the
 > single genuine polygon-Jordan complement path-connectivity residue shared by
