@@ -1,3 +1,32 @@
+# Summary of changes for run 99755615-e06d-4b50-9abb-3d05aad1b18b
+Continued exclusively on the live Umlaufsatz finite-detour route.
+
+- Added `RequestProject/SAWUmlaufCrossingBounds.lean` and imported it directly from `SAWUmlaufDetourConstruction`, so the new work is explicitly linked through arc detours, arc induction, polygon topology, and the main theorem.
+- Proved that path endpoints avoiding the new segment are excluded from its crossing-time set.
+- Proved via compactness that all crossing times lie between two parameters strictly inside `(0,1)`, including the empty-crossing case.
+- Proved the zero-crossing ordered schedule and the terminal one-replacement-block schedule constructor.
+- The new file contains no `sorry` or `admit`; its key theorems use only permitted standard axioms.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to explain how this preparation feeds the main proof and identify the remaining local geometric construction.
+- Verified that the full `RequestProject.SAWFinal` target builds successfully.
+- Committed and pushed all changes.
+
+# Current Umlaufsatz round
+
+Continued exclusively on the live finite-detour construction for the Umlaufsatz.
+
+- Added `RequestProject/SAWUmlaufCrossingBounds.lean` and imported it directly
+  through `SAWUmlaufDetourConstruction`, explicitly linking it to the main proof.
+- Proved that path endpoints avoiding the new segment are not crossing times.
+- Proved by compactness that all segment-crossing times lie between two
+  parameters strictly inside `(0,1)`, including the empty-crossing case.
+- Proved the zero-crossing ordered schedule and the terminal single-block
+  schedule constructor.
+- The new file is sorry-free and the complete `RequestProject.SAWFinal` target
+  builds. The remaining geometric gap is the finite construction of the local
+  replacement blocks in `exists_avoiding_orderedDetourSchedule`.
+
+---
+
 # Summary of changes for run 158cf060-f3ae-4d20-96dd-338a9745315f
 Continued exclusively on the live Umlaufsatz proof route and pushed commits `3f900b6` and `107aa18`.
 

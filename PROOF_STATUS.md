@@ -2699,3 +2699,16 @@ compact crossing cover into ordered crossing intervals, retain the safe pieces,
 and insert local semicircular replacements.  This new partial file is directly
 consumed by `SAWUmlaufArcDetour`, so it is future-use preparation rather than a
 dead branch.
+
+## Umlaufsatz crossing-time bounds and terminal schedules
+
+`SAWUmlaufCrossingBounds.lean` is now imported directly by
+`SAWUmlaufDetourConstruction`, so it lies on the live route through arc detours,
+arc induction, polygon topology, and the main Umlaufsatz.  It is not a detached
+branch.  The file is completely sorry-free.  It proves that segment-crossing
+times exclude the endpoint parameters and, by compactness, lie in one closed
+parameter window strictly inside `(0,1)`.  It also closes the no-crossing
+schedule and the one-replacement-block schedule assembly cases.  The remaining
+local gap is still `exists_avoiding_orderedDetourSchedule`: construct finitely
+many replacement blocks (or one suitable block) and discharge their geometric
+avoidance obligations.

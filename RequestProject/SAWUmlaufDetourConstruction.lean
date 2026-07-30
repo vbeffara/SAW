@@ -4,6 +4,7 @@ import RequestProject.SAWUmlaufArcCrossings
 import RequestProject.SAWUmlaufSemicircle
 import RequestProject.SAWUmlaufSpliceMany
 import RequestProject.SAWUmlaufOrderedDetours
+import RequestProject.SAWUmlaufCrossingBounds
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -25,6 +26,10 @@ edge, while replacements are checked against both the new edge and old tail.
 `OrderedDetourSchedule.erase_mapsTo_compl_union` turns this into the lower-level
 `DetourPlan.MapsTo` invariant, and `DetourPlan.realizeFromSource` performs all
 dependent endpoint concatenations without changing the original labels.
+
+`SAWUmlaufCrossingBounds` is directly imported here and supplies the endpoint
+separation and zero-crossing cases needed by the ordered construction.  It is
+therefore linked preparation for this theorem, not a detached branch.
 
 There is one geometric complication which this statement intentionally keeps:
 `PlaneArcSimple` permits overlap between adjacent collinear edges.  Components
