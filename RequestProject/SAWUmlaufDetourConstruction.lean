@@ -5,6 +5,7 @@ import RequestProject.SAWUmlaufSemicircle
 import RequestProject.SAWUmlaufSpliceMany
 import RequestProject.SAWUmlaufOrderedDetours
 import RequestProject.SAWUmlaufCrossingBounds
+import RequestProject.SAWUmlaufCrossingIntervals
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -28,8 +29,12 @@ edge, while replacements are checked against both the new edge and old tail.
 dependent endpoint concatenations without changing the original labels.
 
 `SAWUmlaufCrossingBounds` is directly imported here and supplies the endpoint
-separation and zero-crossing cases needed by the ordered construction.  It is
-therefore linked preparation for this theorem, not a detached branch.
+separation and zero-crossing cases needed by the ordered construction.
+`SAWUmlaufCrossingIntervals` converts those strict inner bounds into the exact
+safe-prefix and safe-suffix certificates used by an ordered schedule, and
+packages the final one-block assembly once a local replacement has been built.
+Both files are therefore linked preparation for this theorem, not detached
+branches.
 
 There is one geometric complication which this statement intentionally keeps:
 `PlaneArcSimple` permits overlap between adjacent collinear edges.  Components
@@ -44,19 +49,35 @@ noncomputable section
 
 namespace HexArea
 
-/-- **Remaining finite geometric construction, ordered form.**  A path in the
-complement of the old tail, whose endpoints avoid the enlarged carrier, admits
-an ordered schedule.  The schedule records only the genuinely geometric local
-obligations: retained path pieces avoid the new segment, while inserted pieces
-avoid both the new segment and the old tail.
+/-- **Remaining local geometric replacement.**  All crossings may be enclosed
+between two interior parameters; the unresolved planar construction is a path
+between those boundary values which avoids both the new edge and the old tail.
+The retained prefix and suffix are handled separately, and already proved, in
+`SAWUmlaufCrossingIntervals`.
 
-The intended construction uses `path_uniform_clearance_from_tail` and
-`exists_finite_crossing_ball_cover`, chooses finitely many ordered crossing
-intervals, and uses `semicirclePath_local_detour` (or its lifted variant on a
-closed local piece) for the replacements.  The theorem is kept as an honest
-`sorry` because selecting and ordering those intervals is the remaining planar
-geometry.  All conversion and dependent concatenation after this output are
-proved. -/
+The intended proof refines `exists_finite_crossing_ball_cover` into ordered
+local intervals and realizes the finitely many lifted semicircle detours.  It is
+kept as an honest partial theorem so that the exact geometric output survives
+future rounds and remains connected to the main Umlaufsatz. -/
+lemma exists_inner_avoiding_replacement
+    (a b : ℂ) (L : List ℂ)
+    (hsimple : PlaneArcSimple (a :: b :: L))
+    {x y : ℂ} (γ : Path x y)
+    (hγtail : ∀ q, γ q ∈ (chainCarrier (b :: L))ᶜ)
+    (hx : x ∈ (chainCarrier (a :: b :: L))ᶜ)
+    (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
+    ∃ left right : unitInterval,
+      (0 : unitInterval) < left ∧ left ≤ right ∧ right < (1 : unitInterval) ∧
+      (∀ t ∈ pathHitTimes γ (segment ℝ a b), left < t ∧ t < right) ∧
+      ∃ replacement : Path (γ left) (γ right),
+        (∀ q, replacement q ∉ segment ℝ a b) ∧
+        (∀ q, replacement q ∉ chainCarrier (b :: L)) := by
+  sorry
+
+/-- **Finite geometric construction, ordered form.**  A path in the complement
+of the old tail, whose endpoints avoid the enlarged carrier, admits an ordered
+schedule.  The bookkeeping and retained-piece obligations are now discharged:
+this theorem is a proved assembly from `exists_inner_avoiding_replacement`. -/
 lemma exists_avoiding_orderedDetourSchedule
     (a b : ℂ) (L : List ℂ)
     (hsimple : PlaneArcSimple (a :: b :: L))
@@ -66,7 +87,12 @@ lemma exists_avoiding_orderedDetourSchedule
     (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
     Nonempty (OrderedDetourSchedule γ (segment ℝ a b)
       (chainCarrier (b :: L)) 0) := by
-  sorry
+  obtain ⟨left, right, hleft, hlr, hright, hinner,
+      replacement, hreplNew, hreplTail⟩ :=
+    exists_inner_avoiding_replacement a b L hsimple γ hγtail hx hy
+  exact orderedDetourSchedule_of_inner_replacement γ
+    (segment ℝ a b) (chainCarrier (b :: L)) left right
+    hleft.le hlr hright.le hinner replacement hreplNew hreplTail
 
 /-- Compatibility output consumed by the existing arc-detour theorem.  This is
 now a proved conversion from the sharper ordered geometric interface above. -/

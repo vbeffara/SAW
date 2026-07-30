@@ -1,3 +1,40 @@
+# Summary of changes for run 6a82e971-7caa-4345-827d-29f9501457ae
+Continued exclusively on the live finite-detour route to the Umlaufsatz and preserved the remaining work as an explicit Lean theorem.
+
+- Added `RequestProject/SAWUmlaufCrossingIntervals.lean` and imported it from `SAWUmlaufDetourConstruction`, linking it through arc detours, arc induction, arc escape, and polygon topology to the main theorem.
+- Proved that ordered subpath parameters remain in their closed parameter interval.
+- Proved that a hit-time-free interval yields a subpath avoiding the specified set.
+- Proved that strict inner bounds on every crossing time make both the retained prefix and suffix avoid the new segment.
+- Proved the complete one-block `OrderedDetourSchedule` assembly from a replacement path avoiding the new edge and old tail.
+- Sharpened the previous schedule-level gap to `exists_inner_avoiding_replacement`. The remaining `sorry` now represents only the genuinely geometric construction of that local replacement; all retained-piece and schedule bookkeeping is proved.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to document that the new branch is linked preparation rather than dead code.
+- Verified that `RequestProject.SAWFinal` builds successfully. The new crossing-interval file is free of `sorry`/`admit`, and its principal assembly theorem uses only permitted standard axioms.
+- Committed and pushed all changes.
+
+# Current Umlaufsatz round: safe crossing intervals and local replacement interface
+
+Continued exclusively on the live finite-detour route to the Umlaufsatz.
+
+- Added `RequestProject/SAWUmlaufCrossingIntervals.lean` and imported it directly
+  from `SAWUmlaufDetourConstruction`, so it is connected through arc detours,
+  arc induction, arc escape, and polygon topology to the main theorem.
+- Proved that ordered subpath parameters stay in their closed interval, and
+  hence a hit-time-free parameter interval yields a subpath avoiding the set.
+- Proved that strict inner bounds for every crossing time make both the retained
+  prefix and retained suffix avoid the new segment.
+- Proved the final one-block `OrderedDetourSchedule` assembly from a local path
+  joining the two inner boundary values while avoiding the new edge and old
+  tail.
+- Refactored the former schedule-level gap into the sharper partial theorem
+  `exists_inner_avoiding_replacement`.  The only remaining gap on this layer is
+  now the genuinely geometric construction of that local replacement; all
+  retained-piece and schedule bookkeeping is proved.
+- The new crossing-interval file is sorry-free, its main assembly theorem uses
+  only permitted standard axioms, and the full `RequestProject.SAWFinal` target
+  builds successfully.
+
+---
+
 # Summary of changes for run 99755615-e06d-4b50-9abb-3d05aad1b18b
 Continued exclusively on the live Umlaufsatz finite-detour route.
 

@@ -1,5 +1,9 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (current round): safe retained intervals proved and the remaining gap sharpened to one local replacement.**  Added `RequestProject/SAWUmlaufCrossingIntervals.lean` on the live finite-detour chain and imported it directly from `SAWUmlaufDetourConstruction`.  Proved that the affine parameter of an ordered subpath stays in its parameter interval, that a hit-time-free interval gives an avoiding subpath, and that strict inner bounds on all crossing times make both the retained prefix and suffix avoid the new edge.  Also proved the complete one-block `OrderedDetourSchedule` assembly from any replacement joining the two inner boundary values and avoiding the new edge and old tail.  Refactored the prior schedule-level `sorry` into the sharper `exists_inner_avoiding_replacement`: only construction of that local avoiding path remains open; all schedule bookkeeping and retained-path obligations are now proved.  The new file is explicitly linked through `SAWUmlaufDetourConstruction → SAWUmlaufArcDetour → SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon` to the main Umlaufsatz.  `RequestProject.SAWFinal` builds successfully; the new crossing-interval file has no `sorry` or `admit`, and its main assembly theorem uses only permitted standard axioms.
+>
+> ---
+>
 > **Umlaufsatz (current round): ordered finite-detour interface formalized and
 > linked.**  Added `RequestProject/SAWUmlaufOrderedDetours.lean` on the live
 > arc-nonseparation chain.  Its `OrderedDetourSchedule` records ordered crossing
