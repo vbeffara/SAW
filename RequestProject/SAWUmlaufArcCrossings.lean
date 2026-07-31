@@ -114,4 +114,60 @@ lemma exists_finite_crossing_ball_cover
   rcases Metric.uniformContinuous_iff.mp h_uniform_cont ε hε with ⟨ δ, hδ, hδε ⟩;
   exact Exists.elim ( h_finite_subcover h_compact δ hδ ) fun T hT => ⟨ T, fun t ht => by rcases Set.mem_iUnion₂.mp ( hT ht ) with ⟨ u, hu, hu' ⟩ ; exact Set.mem_iUnion₂.mpr ⟨ u, hu, hδε hu' ⟩ ⟩
 
+/-- A finite crossing-ball cover may be chosen with every centre itself a
+crossing time.  This strengthened form matters in the local detour construction:
+its centres therefore lie on the new segment, rather than being arbitrary
+nearby parameters introduced by a compactness cover. -/
+lemma exists_finite_crossing_ball_cover_centered
+    {x y : ℂ} (γ : Path x y) (a b : ℂ) {ε : ℝ} (hε : 0 < ε) :
+    ∃ T : Finset unitInterval,
+      (∀ t ∈ T, t ∈ pathHitTimes γ (segment ℝ a b)) ∧
+      pathHitTimes γ (segment ℝ a b) ⊆
+        ⋃ t ∈ T, γ ⁻¹' Metric.ball (γ t) ε := by
+  let K := pathHitTimes γ (segment ℝ a b)
+  have hK : IsCompact K := isCompact_pathHitTimes_segment γ a b
+  obtain ⟨T, hTK, hcover⟩ := hK.elim_nhds_subcover
+    (fun t => γ ⁻¹' Metric.ball (γ t) ε)
+    (fun t _ => (γ.continuous.tendsto t).eventually
+      (Metric.ball_mem_nhds (γ t) hε))
+  refine ⟨T, hTK, hcover⟩
+
+/-- Uniform tail clearance and compactness can be packaged as a finite cover
+whose centres are actual new-edge crossings and whose every covering ball is
+disjoint from the old tail. -/
+lemma exists_finite_crossing_cover_disjoint_tail
+    {x y : ℂ} (γ : Path x y) (a b : ℂ) (oldTailVertices : List ℂ)
+    (hγtail : ∀ q, γ q ∈ (chainCarrier oldTailVertices)ᶜ) :
+    ∃ ε : ℝ, 0 < ε ∧ ∃ T : Finset unitInterval,
+      (∀ t ∈ T, t ∈ pathHitTimes γ (segment ℝ a b)) ∧
+      pathHitTimes γ (segment ℝ a b) ⊆
+        ⋃ t ∈ T, γ ⁻¹' Metric.ball (γ t) ε ∧
+      ∀ t ∈ T,
+        Metric.ball (γ t) ε ∩ chainCarrier oldTailVertices = ∅ := by
+  obtain ⟨ε, hε, hclear⟩ :=
+    path_uniform_clearance_from_tail γ oldTailVertices hγtail
+  obtain ⟨T, hcentres, hcover⟩ :=
+    exists_finite_crossing_ball_cover_centered γ a b hε
+  exact ⟨ε, hε, T, hcentres, hcover, fun t _ => hclear t⟩
+
+/-- Every centre in the preceding finite cover is geometrically located on the
+new edge and outside the old tail.  This is the exact pointwise input for
+placing a translated semicircle in its clearance ball. -/
+lemma finite_crossing_cover_centres_on_new_off_tail
+    {x y : ℂ} (γ : Path x y) (a b : ℂ) (oldTailVertices : List ℂ)
+    (hγtail : ∀ q, γ q ∈ (chainCarrier oldTailVertices)ᶜ) :
+    ∃ ε : ℝ, 0 < ε ∧ ∃ T : Finset unitInterval,
+      pathHitTimes γ (segment ℝ a b) ⊆
+        ⋃ t ∈ T, γ ⁻¹' Metric.ball (γ t) ε ∧
+      ∀ t ∈ T,
+        γ t ∈ segment ℝ a b ∧
+        γ t ∉ chainCarrier oldTailVertices ∧
+        Metric.ball (γ t) ε ∩ chainCarrier oldTailVertices = ∅ := by
+  obtain ⟨ε, hε, T, hcentres, hcover, hclear⟩ :=
+    exists_finite_crossing_cover_disjoint_tail
+      γ a b oldTailVertices hγtail
+  refine ⟨ε, hε, T, hcover, ?_⟩
+  intro t ht
+  exact ⟨hcentres t ht, hγtail t, hclear t ht⟩
+
 end HexArea

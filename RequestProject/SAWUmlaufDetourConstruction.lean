@@ -6,6 +6,7 @@ import RequestProject.SAWUmlaufSpliceMany
 import RequestProject.SAWUmlaufOrderedDetours
 import RequestProject.SAWUmlaufCrossingBounds
 import RequestProject.SAWUmlaufCrossingIntervals
+import RequestProject.SAWUmlaufLocalDetour
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -34,7 +35,10 @@ separation and zero-crossing cases needed by the ordered construction.
 safe-prefix and safe-suffix certificates used by an ordered schedule, and
 packages the final one-block assembly once a local replacement has been built.
 Both files are therefore linked preparation for this theorem, not detached
-branches.
+branches.  `SAWUmlaufLocalDetour` packages the translated-semicircle primitive
+into simultaneous avoidance of the new closed segment and of an old tail with
+a clearance ball; the remaining construction must select and connect finitely
+many instances of that primitive.
 
 There is one geometric complication which this statement intentionally keeps:
 `PlaneArcSimple` permits overlap between adjacent collinear edges.  Components

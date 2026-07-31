@@ -23,6 +23,39 @@ noncomputable section
 
 namespace HexArea
 
+/-- If the old path avoids `oldTail`, then every hit on the newly forbidden
+set occurs in its genuinely new part, outside `oldTail`.  This is the precise
+set-theoretic reduction needed for adjacent collinear overlap. -/
+lemma pathHitTimes_eq_diff_of_avoids
+    {x y : ℂ} (γ : Path x y) (newEdge oldTail : Set ℂ)
+    (hγtail : ∀ q, γ q ∉ oldTail) :
+    pathHitTimes γ newEdge = pathHitTimes γ (newEdge \ oldTail) := by
+  ext q
+  simp only [pathHitTimes, Set.mem_preimage, Set.mem_diff]
+  constructor
+  · intro hq
+    exact ⟨hq, hγtail q⟩
+  · exact fun hq => hq.1
+
+/-- In particular, the old path has no parameter at which it simultaneously
+meets the new edge and old tail. -/
+lemma pathHitTimes_inter_eq_empty_of_avoids
+    {x y : ℂ} (γ : Path x y) (newEdge oldTail : Set ℂ)
+    (hγtail : ∀ q, γ q ∉ oldTail) :
+    pathHitTimes γ (newEdge ∩ oldTail) = ∅ := by
+  ext q
+  simp [pathHitTimes, hγtail q]
+
+/-- Crossing-time containment can therefore be proved using only the genuinely
+new portion of an edge; no detour is required over an overlapping old-tail
+portion. -/
+lemma pathHitTimes_subset_diff_of_avoids
+    {x y : ℂ} (γ : Path x y) (newEdge oldTail : Set ℂ)
+    (hγtail : ∀ q, γ q ∉ oldTail) :
+    pathHitTimes γ newEdge ⊆ γ ⁻¹' (newEdge \ oldTail) := by
+  rw [pathHitTimes_eq_diff_of_avoids γ newEdge oldTail hγtail]
+  exact Set.Subset.rfl
+
 /-- The affine parameter used by `Path.subpath s t` lies between `s` and `t`
 when the endpoints are ordered. -/
 lemma subpathAux_mem_Icc (s t q : unitInterval) (hst : s ≤ t) :

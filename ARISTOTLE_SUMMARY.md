@@ -1,3 +1,31 @@
+# Summary of changes for run 638cbfea-60fd-4b9f-8429-ea3aae4b965d
+Continued exclusively on the live Umlaufsatz proof route and pushed five commits of formal progress.
+
+- Added `RequestProject/SAWUmlaufLocalDetour.lean`, imported by `SAWUmlaufDetourConstruction` and therefore linked through arc induction, arc escape, polygon topology, and the main theorem.
+- Formalized straight affine connector paths, their segment and clearance-ball containment, and avoidance of forbidden sets.
+- Proved avoidance is preserved by path concatenation and packaged the three-piece connected detour consisting of two straight connectors and a translated semicircle.
+- Proved translated semicircles avoid the new closed segment—including endpoints—and simultaneously avoid an old tail when placed in a clearance ball.
+- Proved suitable positive detour radii always exist within any positive clearance radius.
+- Strengthened the finite crossing cover so every centre is an actual crossing point, lies on the new edge, lies outside the old tail, and has a uniformly tail-disjoint covering ball.
+- Proved crossing times are exactly crossings of `newEdge \ oldTail`, explicitly handling adjacent collinear overlap without assuming the first edge meets the tail only at its endpoint.
+- Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` to document how all new preparation feeds the main theorem.
+
+The remaining honest gap is `exists_inner_avoiding_replacement`: finite selection, ordering, and attachment of the now-formalized local detour bricks. The full `RequestProject.SAWFinal` target builds successfully. All newly added files are free of `sorry`/`admit`, and the principal new detour theorem uses only permitted standard axioms.
+
+# Current Umlaufsatz round: connected local detour primitive
+
+Continued exclusively on the live finite-detour route to the Umlaufsatz.
+
+- Added `RequestProject/SAWUmlaufLocalDetour.lean` and imported it directly from `SAWUmlaufDetourConstruction`, linking every new declaration through arc detours, arc induction, arc escape, and polygon topology to the main theorem.
+- Defined a straight affine connector path and proved its image lies in the corresponding segment, stays in a clearance ball when its endpoints do, and avoids any set disjoint from that ball.
+- Proved avoidance is preserved by path concatenation and packaged a three-piece connected detour (left connector, translated semicircle, right connector).
+- Proved a translated semicircle avoids any subset of its diameter line, specialized this to the new closed segment, and simultaneously proved old-tail avoidance from a clearance ball.
+- Strengthened the compact crossing cover so every finite-cover centre is itself an actual crossing, and packaged it with one uniform old-tail clearance radius, making every selected crossing ball tail-disjoint.
+- Proved crossing-time reduction to the genuinely new edge portion `newEdge \ oldTail`, explicitly handling adjacent collinear overlap without a false endpoint-only hypothesis.
+- Proved the complete connected local detour avoidance theorem.  The remaining partial theorem `exists_inner_avoiding_replacement` is now documented as finite selection and ordering of these proved local bricks, with adjacent-edge overlap still handled honestly.
+
+---
+
 # Summary of changes for run 6a82e971-7caa-4345-827d-29f9501457ae
 Continued exclusively on the live finite-detour route to the Umlaufsatz and preserved the remaining work as an explicit Lean theorem.
 
