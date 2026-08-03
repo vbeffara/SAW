@@ -2741,3 +2741,26 @@ The global residue is preserved explicitly as
 `exists_ordered_covering_attachments` and `exists_inner_avoiding_replacement`:
 select finitely many ordered same-side blocks covering every crossing and fold
 their replacements into the existing ordered schedule.
+
+## Umlaufsatz attachment schedules and odd-crossing correction
+
+Continued exclusively on the live finite-detour route.  Added
+`SAWUmlaufAttachmentSchedule.lean`, directly imported by the detour constructor.
+It defines a left-to-right geometric attachment schedule, proves that its blocks
+are ordered, folds every schedule into the existing `OrderedDetourSchedule`,
+and proves the zero-crossing, one-covering-block, retained-gap/list conversion,
+and ordered-cover-to-schedule bookkeeping.  These results are all connected
+through `SAWUmlaufDetourConstruction → SAWUmlaufArcDetour →
+SAWUmlaufArcInduction → SAWUmlaufArcEscape → SAWUmlaufPolygon`.
+
+Corrected an over-strong intermediate selector: same-side blocks cannot cover a
+single transverse crossing, because the path values on its two sides have
+opposite signed side coordinates.  The false selector was commented out with a
+counterexample explanation rather than retained as an admitted theorem.  Added
+`SAWUmlaufEndpointEscape.lean` on the live import chain, recording the exact
+exceptional block needed for odd crossing parity: route around the free endpoint
+of the newly adjoined edge inside a ball disjoint from the old tail.  The main
+finite constructor is now honestly isolated as merging same-side crossing
+packets with at most one endpoint-escape packet.  The full `SAWFinal` target
+builds successfully; the endpoint replacement and global selection remain as
+explicit partial theorems.

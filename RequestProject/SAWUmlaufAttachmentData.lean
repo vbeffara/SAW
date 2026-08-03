@@ -70,22 +70,19 @@ def AttachmentsCoverHitTimes {x y : ℂ} {γ : Path x y} {a b : ℂ}
   ∀ t ∈ pathHitTimes γ (segment ℝ a b),
     ∃ A ∈ blocks, A.left < t ∧ t < A.right
 
-/-- **Remaining finite-selection interface.**  Compactness and uniform tail
-clearance should produce finitely many ordered same-side attachment blocks
-covering all crossings.  This statement is intentionally retained with a
-`sorry`: it is the precise next global residue after the now-formalized local
-geometry, and is directly imported by the theorem it will complete. -/
-lemma exists_ordered_covering_attachments
-    (a b : ℂ) (L : List ℂ)
-    (hsimple : PlaneArcSimple (a :: b :: L))
-    {x y : ℂ} (γ : Path x y)
-    (hγtail : ∀ q, γ q ∈ (chainCarrier (b :: L))ᶜ)
-    (hx : x ∈ (chainCarrier (a :: b :: L))ᶜ)
-    (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
-    ∃ ε : ℝ, 0 < ε ∧
-      ∃ blocks : List
-        (CrossingAttachment γ a b (chainCarrier (b :: L)) ε),
-        AttachmentsOrdered blocks ∧ AttachmentsCoverHitTimes blocks := by
-  sorry
+/-
+The following tempting finite-selection statement was used in an earlier
+partial route, but it is not valid for arbitrary endpoint sides and is therefore
+kept commented out rather than admitted.  For example, a path crossing a
+horizontal segment once from its negative side to its positive side has an odd
+side change.  Disjoint blocks whose two attachment values are always on the
+same side cannot cover that sole crossing.  The local same-side construction is
+still valid and useful for even crossing packets, but the global selector also
+needs one endpoint-escape block which may join opposite sides by going around
+an endpoint of the new segment.
+
+lemma exists_ordered_covering_attachments ... := by
+  -- FALSE without an endpoint-escape alternative.
+-/
 
 end HexArea

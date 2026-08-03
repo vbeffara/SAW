@@ -1,3 +1,19 @@
+# Summary of changes for run 2391c78d-c985-4dd1-8b98-afc574bf64ca
+Continued exclusively on the live Umlaufsatz finite-detour proof and pushed all work.
+
+Implemented `RequestProject/SAWUmlaufAttachmentSchedule.lean`, directly linked into the main proof chain. It now proves:
+- ordering of selected crossing blocks;
+- conversion of retained-gap data into a geometric schedule;
+- zero-crossing and single-covering-block cases;
+- conversion of ordered covering blocks into a schedule;
+- folding geometric schedules into the existing `OrderedDetourSchedule` and path-realization machinery.
+
+I also corrected an over-strong intermediate claim: same-side attachment blocks cannot cover a lone transverse crossing, since its boundary values lie on opposite sides. The invalid claim was removed and retained only as a commented counterexample explanation.
+
+Added `RequestProject/SAWUmlaufEndpointEscape.lean`, imported on the live route, to preserve the missing valid odd-crossing construction: an exceptional replacement routed around the free endpoint inside a ball disjoint from the old tail. The remaining local endpoint replacement and the global merge of same-side packets with at most one endpoint-escape packet remain explicit `sorry`s.
+
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md`. The complete `SAWFinal` target builds successfully (8158 jobs). The newly proved attachment-schedule bridge theorems use only the permitted standard axioms.
+
 # Summary of changes for run 553df888-8c81-41b5-82d0-28ae1f475900
 Continued exclusively on the live Umlaufsatz finite-detour route and pushed all work.
 
@@ -2286,3 +2302,22 @@ The focused splice/detour targets build.  The sole sorry in these three live
 files remains `joinedIn_compl_cons_segment_of_tail`; its next residue is refining
 the finite crossing cover into ordered disjoint intervals with matching lifted
 replacement endpoints and iterating the proved splice operation.
+
+---
+# Summary — attachment schedule layer and odd-crossing endpoint escape
+
+Continued only the main Umlaufsatz finite-detour proof. Added the live imported
+module `SAWUmlaufAttachmentSchedule.lean`, which formalizes the finite
+left-to-right schedule between geometric crossing blocks and the existing path
+realization machinery. Its proved results establish block ordering, retained-gap
+list conversion, zero- and one-block terminal cases, ordered-cover conversion,
+and the fold into `OrderedDetourSchedule`.
+
+An earlier proposed global same-side selector was identified as false for one
+transverse crossing: opposite sides cannot be enclosed by a same-side block.
+That declaration was removed and preserved only as a commented counterexample
+explanation. Added the directly imported `SAWUmlaufEndpointEscape.lean` to state
+the missing valid odd-parity alternative—one exceptional local route around the
+free endpoint inside a tail-clearance ball. The remaining finite constructor is
+now an honest combination of same-side packets and at most one endpoint-escape
+packet. Full `SAWFinal` builds successfully.
