@@ -7,6 +7,9 @@ import RequestProject.SAWUmlaufOrderedDetours
 import RequestProject.SAWUmlaufCrossingBounds
 import RequestProject.SAWUmlaufCrossingIntervals
 import RequestProject.SAWUmlaufLocalDetour
+import RequestProject.SAWUmlaufHalfPlaneDetour
+import RequestProject.SAWUmlaufSideCrossings
+import RequestProject.SAWUmlaufAttachmentData
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -37,8 +40,16 @@ packages the final one-block assembly once a local replacement has been built.
 Both files are therefore linked preparation for this theorem, not detached
 branches.  `SAWUmlaufLocalDetour` packages the translated-semicircle primitive
 into simultaneous avoidance of the new closed segment and of an old tail with
-a clearance ball; the remaining construction must select and connect finitely
-many instances of that primitive.
+a clearance ball. `SAWUmlaufHalfPlaneDetour` proves the convex half-plane
+attachment layer and packages a complete connected local replacement from two
+same-side values in one clearance ball. `SAWUmlaufSideCrossings` develops the
+continuous side-coordinate and parameter-neighborhood interface needed to
+select attachment intervals and records both positive- and negative-side local
+replacement outputs. `SAWUmlaufAttachmentData` records the exact finite
+same-side blocks, their ordering, and their crossing-cover condition, so this
+preparation is explicitly consumed rather than left detached. The remaining
+construction must produce those finitely many blocks and fold their local
+replacements into the existing ordered schedule.
 
 There is one geometric complication which this statement intentionally keeps:
 `PlaneArcSimple` permits overlap between adjacent collinear edges.  Components

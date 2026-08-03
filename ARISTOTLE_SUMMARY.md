@@ -1,3 +1,43 @@
+# Summary of changes for run 553df888-8c81-41b5-82d0-28ae1f475900
+Continued exclusively on the live Umlaufsatz finite-detour route and pushed all work.
+
+### New linked Lean files
+- `RequestProject/SAWUmlaufHalfPlaneDetour.lean`
+  - Defines the signed normal coordinate and positive detour half-plane.
+  - Proves its affine behavior along straight connectors.
+  - Proves same-side connectors remain in the half-plane and avoid the edge’s carrier line.
+  - Establishes translated-semicircle endpoint-side facts.
+  - Packages a complete local path replacement inside a tail-clearance ball.
+- `RequestProject/SAWUmlaufSideCrossings.lean`
+  - Proves continuity and direction-reversal properties of the side coordinate.
+  - Characterizes the edge carrier line as its zero set.
+  - Extracts explicit parameter intervals whose path images lie in crossing balls.
+  - Proves both positive- and negative-side local replacement theorems.
+- `RequestProject/SAWUmlaufAttachmentData.lean`
+  - Records ordered crossing attachment blocks with their interval, ball, side, edge-incidence, and tail-clearance data.
+  - Defines ordering and crossing-cover invariants.
+  - Proves every valid attachment block yields an endpoint-correct path avoiding both the new edge and old tail.
+
+All three files are imported by `SAWUmlaufDetourConstruction`, explicitly linking them through arc induction and polygon topology to the main Umlaufsatz rather than leaving detached branches.
+
+The remaining global work is preserved as typed Lean statements with `sorry`: construct finitely many ordered same-side attachment blocks covering all crossing times (`exists_ordered_covering_attachments`), then fold them into the existing schedule to prove `exists_inner_avoiding_replacement`.
+
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md`. The complete `RequestProject.SAWFinal` target builds successfully. The proved attachment-record replacement theorem uses only standard permitted axioms.
+
+# Current Umlaufsatz round: half-plane attachment and finite selection
+
+Continued exclusively on the live Umlaufsatz finite-detour construction.
+
+- Added and linked `SAWUmlaufHalfPlaneDetour.lean`, formalizing signed-side affine connectors and complete clearance-ball local replacements.
+- Added and linked `SAWUmlaufSideCrossings.lean`, formalizing side-coordinate continuity, direction reversal, crossing-ball parameter intervals, and both side-specific replacement interfaces.
+- Added and linked `SAWUmlaufAttachmentData.lean`, preserving the exact ordered finite attachment data needed by the remaining global constructor.
+- Proved that every valid attachment record yields an endpoint-correct path avoiding both the new edge and old tail.
+- Preserved the remaining finite selection and schedule assembly as explicit Lean theorems with sorries rather than discarding speculative-but-typed progress.
+
+The full `RequestProject.SAWFinal` import target builds.  The remaining live geometric residue is finite ordered same-side selection covering all crossing times, followed by folding those blocks into the already formalized schedule.
+
+---
+
 # Summary of changes for run 638cbfea-60fd-4b9f-8429-ea3aae4b965d
 Continued exclusively on the live Umlaufsatz proof route and pushed five commits of formal progress.
 

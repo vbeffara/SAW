@@ -2720,3 +2720,24 @@ schedule and the one-replacement-block schedule assembly cases.  The remaining
 local gap is still `exists_avoiding_orderedDetourSchedule`: construct finitely
 many replacement blocks (or one suitable block) and discharge their geometric
 avoidance obligations.
+
+## Umlaufsatz half-plane attachment and finite-selection interface
+
+Continued exclusively on the live finite-detour route.  The new
+`SAWUmlaufHalfPlaneDetour.lean` is imported by `SAWUmlaufDetourConstruction`
+and proves the signed-side affine identity, convex same-side attachment,
+disjointness from the edge carrier line, translated-semicircle endpoint side
+facts, and a complete clearance-ball local replacement.  The new
+`SAWUmlaufSideCrossings.lean` is likewise directly imported and develops the
+continuous signed side coordinate, direction reversal, explicit parameter
+intervals mapped into crossing balls, and positive/negative local replacement
+interfaces.  Thus these are linked preparations for the main Umlaufsatz rather
+than dead branches.
+
+`SAWUmlaufAttachmentData.lean` records ordered crossing attachment blocks with
+all ball, side, and clearance data and is imported directly by the remaining
+constructor.  Each such block now yields an endpoint-correct local replacement.
+The global residue is preserved explicitly as
+`exists_ordered_covering_attachments` and `exists_inner_avoiding_replacement`:
+select finitely many ordered same-side blocks covering every crossing and fold
+their replacements into the existing ordered schedule.
