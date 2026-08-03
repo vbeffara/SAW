@@ -2764,3 +2764,21 @@ finite constructor is now honestly isolated as merging same-side crossing
 packets with at most one endpoint-escape packet.  The full `SAWFinal` target
 builds successfully; the endpoint replacement and global selection remain as
 explicit partial theorems.
+
+## Umlaufsatz endpoint escape completed and linked
+
+Continued exclusively on the live finite-detour route.  The exceptional
+odd-crossing local geometry in `SAWUmlaufEndpointEscape.lean` is now completely
+proved without `sorry`: an explicit backpoint is chosen behind the free endpoint
+inside the tail-clearance ball, each opposite-side attachment is connected to
+it by a straight path, the connectors meet the edge carrier only at that
+backpoint, and their concatenation avoids both the new segment and the old tail.
+Consequently `EndpointEscapeAttachment.exists_replacement` is closed.
+
+Added `SAWUmlaufMixedSchedule.lean`, imported directly by
+`SAWUmlaufDetourConstruction`.  It combines ordinary same-side crossing blocks
+and endpoint-escape blocks in a single ordered schedule and proves the fold to
+`OrderedDetourSchedule`.  This explicitly consumes the endpoint branch on the
+main route rather than leaving it as detached preparation.  The remaining
+finite-selection residue is choosing and ordering the mixed blocks from compact
+crossing data.

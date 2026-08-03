@@ -1,3 +1,17 @@
+# Summary of changes for run 39127ce5-d73f-4185-9222-b7d0fc78982d
+Continued exclusively on the main Umlaufsatz finite-detour proof and pushed all changes.
+
+Completed `RequestProject/SAWUmlaufEndpointEscape.lean` without any remaining `sorry`:
+- defined an explicit backpoint behind the free endpoint of the new edge;
+- proved it lies inside the tail-clearance ball and outside the new segment;
+- proved straight connectors to that backpoint avoid the segment;
+- concatenated the connectors into a path avoiding both the new edge and the old tail;
+- closed `EndpointEscapeAttachment.exists_replacement`.
+
+Added `RequestProject/SAWUmlaufMixedSchedule.lean`. It unifies ordinary same-side crossing attachments with the exceptional endpoint-escape attachment and proves that a mixed geometric schedule folds into the existing `OrderedDetourSchedule`. The file is imported directly by `SAWUmlaufDetourConstruction`, explicitly placing this work on the live chain to the Umlaufsatz rather than leaving it as a dead branch.
+
+Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md`. The full project build succeeds. The completed endpoint replacement uses only the permitted standard axioms. The remaining local gap is the finite selection and ordering of mixed attachment blocks from the compact crossing data.
+
 # Summary of changes for run 2391c78d-c985-4dd1-8b98-afc574bf64ca
 Continued exclusively on the live Umlaufsatz finite-detour proof and pushed all work.
 
@@ -2321,3 +2335,18 @@ the missing valid odd-parity alternative—one exceptional local route around th
 free endpoint inside a tail-clearance ball. The remaining finite constructor is
 now an honest combination of same-side packets and at most one endpoint-escape
 packet. Full `SAWFinal` builds successfully.
+
+---
+# Summary — completed endpoint escape and mixed schedule
+
+Continued only the main Umlaufsatz finite-detour proof.  Completed the formerly
+partial odd-crossing endpoint escape using an explicit backpoint behind the free
+endpoint and two straight connectors inside the old-tail clearance ball.  The
+full endpoint replacement theorem is now sorry-free and axiom-clean.
+
+Added and directly imported `SAWUmlaufMixedSchedule.lean`.  It unifies the
+same-side and exceptional endpoint blocks and proves that every such geometric
+schedule folds into the existing ordered detour realization.  Thus the endpoint
+construction is now explicitly linked into the live proof chain.  The project
+build succeeds; the outstanding local residue is finite selection of the mixed
+blocks.

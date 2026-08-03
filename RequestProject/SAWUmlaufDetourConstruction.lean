@@ -12,6 +12,7 @@ import RequestProject.SAWUmlaufSideCrossings
 import RequestProject.SAWUmlaufAttachmentData
 import RequestProject.SAWUmlaufAttachmentSchedule
 import RequestProject.SAWUmlaufEndpointEscape
+import RequestProject.SAWUmlaufMixedSchedule
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
