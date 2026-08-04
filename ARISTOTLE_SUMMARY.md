@@ -1,3 +1,19 @@
+# Summary of changes for run 3e85f912-df9a-4c05-8f11-4eed8ac8f697
+Continued exclusively on the live finite-detour route to the Umlaufsatz and pushed all work.
+
+Added `RequestProject/SAWUmlaufMixedSelection.lean`, directly imported by `SAWUmlaufDetourConstruction`. It proves:
+- construction of a mixed detour schedule from retained-gap data;
+- conversion of any ordered mixed cover of all hit times into a schedule;
+- the complete zero-crossing branch.
+
+The previous `exists_attachmentDetourSchedule` gap was replaced by a proved consumer of this mixed-selection layer. The remaining finite-selection problem is now isolated as the single honest partial theorem `exists_finite_ordered_mixed_cover_of_nonempty`.
+
+Added `RequestProject/SAWUmlaufEndpointCorridor.lean` and consumed it through a new `endpointCorridor` constructor in `MixedDetourAttachment`. Its replacement theorem is fully proved: two tail-free corridor legs are concatenated with the previously proved backpoint escape near the endpoint, while avoiding both the new edge and old tail. This handles the fact that boundaries of a transverse crossing packet need not already lie in one endpoint-clearance ball.
+
+All new files are imported on the live chain to the main theorem, and the documentation explicitly records their role. The remaining selector also documents the adjacent-collinear-overlap complication: the nominal endpoint `a` may already lie in the old tail, so the proof must work with the genuinely new edge component rather than assume endpoint clearance.
+
+`RequestProject.SAWFinal` builds successfully. The newly completed mixed scheduling, zero-hit branch, and endpoint-corridor replacement are sorry-free and use only the permitted standard axioms. Updated `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` with the current proof boundary.
+
 # Summary of changes for run 39127ce5-d73f-4185-9222-b7d0fc78982d
 Continued exclusively on the main Umlaufsatz finite-detour proof and pushed all changes.
 
@@ -2350,3 +2366,29 @@ schedule folds into the existing ordered detour realization.  Thus the endpoint
 construction is now explicitly linked into the live proof chain.  The project
 build succeeds; the outstanding local residue is finite selection of the mixed
 blocks.
+
+---
+# Summary — mixed finite-selection and endpoint-corridor layer
+
+Continued exclusively on the live finite-detour route to the Umlaufsatz.
+Added `SAWUmlaufMixedSelection.lean`, imported directly by
+`SAWUmlaufDetourConstruction`, and proved the complete combinatorial bridge:
+an ordered list of mixed same-side/endpoint blocks covering all hit times has
+safe retained gaps and folds into `MixedDetourSchedule`.  The zero-crossing
+selector is also proved.  The former `exists_attachmentDetourSchedule` sorry is
+replaced by a proved consumer of the now-isolated positive-crossing selector.
+
+Added `SAWUmlaufEndpointCorridor.lean` and imported/consumed it through
+`SAWUmlaufMixedSchedule`.  It records the honest three-piece exceptional
+geometry (tail-free side corridor, local backpoint escape near the free
+endpoint, return corridor), and its replacement theorem is fully proved and
+axiom-clean.  This avoids the false assumption that arbitrary transverse
+crossing boundaries already lie in one endpoint ball.
+
+All new files are imported on the live chain.  `SAWFinal` builds successfully.
+The mixed scheduling, zero-hit branch, and corridor replacement use only the
+permitted standard axioms.  The unique remaining residue in this finite-detour
+layer is `exists_finite_ordered_mixed_cover_of_nonempty`, with an explicit note
+about adjacent collinear overlap: `a` may lie in the old tail, so selection must
+work with the genuinely new edge component rather than assuming endpoint
+clearance.

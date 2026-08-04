@@ -2782,3 +2782,15 @@ and endpoint-escape blocks in a single ordered schedule and proves the fold to
 main route rather than leaving it as detached preparation.  The remaining
 finite-selection residue is choosing and ordering the mixed blocks from compact
 crossing data.
+
+> **Umlaufsatz (current round): mixed finite scheduling and endpoint corridor
+> completed and linked.** Added `SAWUmlaufMixedSelection.lean` on the direct
+> `DetourConstruction → ArcDetour → ArcInduction → ArcEscape → Polygon` chain.
+> Proved list-to-schedule construction, the ordered-cover retained-gap theorem,
+> and the zero-crossing selector. Added `SAWUmlaufEndpointCorridor.lean` and
+> consumed its new constructor in `MixedDetourAttachment`; the three-piece
+> corridor/backpoint/corridor replacement is proved sorry-free. The previous
+> detour-construction sorry is now a proved consumer. The sole remaining finite
+> selector is `exists_finite_ordered_mixed_cover_of_nonempty`; its statement
+> explicitly preserves the adjacent-collinear-overlap case where the nominal
+> free endpoint may already lie in the old tail. Full `SAWFinal` builds.

@@ -1,6 +1,7 @@
 import Mathlib
 import RequestProject.SAWUmlaufAttachmentSchedule
 import RequestProject.SAWUmlaufEndpointEscape
+import RequestProject.SAWUmlaufEndpointCorridor
 
 /-!
 # Mixed same-side and endpoint-escape schedules for the Umlaufsatz
@@ -26,6 +27,7 @@ inductive MixedDetourAttachment {x y : ℂ} (γ : Path x y) (a b : ℂ)
     (oldTail : Set ℂ) (ε : ℝ)
   | sameSide (A : CrossingAttachment γ a b oldTail ε)
   | endpointEscape (A : EndpointEscapeAttachment γ a b oldTail)
+  | endpointCorridor (A : EndpointCorridorAttachment γ a b oldTail)
 
 namespace MixedDetourAttachment
 
@@ -34,12 +36,14 @@ def left {x y : ℂ} {γ : Path x y} {a b : ℂ} {oldTail : Set ℂ} {ε : ℝ} 
     MixedDetourAttachment γ a b oldTail ε → unitInterval
   | .sameSide A => A.left
   | .endpointEscape A => A.left
+  | .endpointCorridor A => A.left
 
 /-- Right parameter endpoint of a mixed block. -/
 def right {x y : ℂ} {γ : Path x y} {a b : ℂ} {oldTail : Set ℂ} {ε : ℝ} :
     MixedDetourAttachment γ a b oldTail ε → unitInterval
   | .sameSide A => A.right
   | .endpointEscape A => A.right
+  | .endpointCorridor A => A.right
 
 /-- Every mixed block is ordered from left to right. -/
 lemma left_le_right {x y : ℂ} {γ : Path x y} {a b : ℂ}
@@ -48,6 +52,7 @@ lemma left_le_right {x y : ℂ} {γ : Path x y} {a b : ℂ}
   cases A with
   | sameSide A => exact le_trans A.left_le_center A.center_le_right
   | endpointEscape A => exact A.left_le_right
+  | endpointCorridor A => exact A.left_le_right
 
 /-- Both local geometric constructions expose exactly the replacement interface
 required by an ordered schedule. -/
@@ -60,6 +65,7 @@ lemma exists_replacement {x y : ℂ} {γ : Path x y} {a b : ℂ}
   cases A with
   | sameSide A => exact A.exists_replacement hab hε
   | endpointEscape A => exact A.exists_replacement hab
+  | endpointCorridor A => exact A.exists_replacement hab
 
 end MixedDetourAttachment
 

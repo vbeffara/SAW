@@ -13,6 +13,7 @@ import RequestProject.SAWUmlaufAttachmentData
 import RequestProject.SAWUmlaufAttachmentSchedule
 import RequestProject.SAWUmlaufEndpointEscape
 import RequestProject.SAWUmlaufMixedSchedule
+import RequestProject.SAWUmlaufMixedSelection
 
 /-!
 # Geometric construction of the finite Umlaufsatz detour plan
@@ -81,7 +82,7 @@ may span several crossings before returning to one side.
 
 The output is consumed immediately below, so this partial theorem is on the
 live route to the Umlaufsatz. -/
-lemma exists_attachmentDetourSchedule
+lemma exists_mixedDetourSchedule
     (a b : ℂ) (L : List ℂ)
     (hsimple : PlaneArcSimple (a :: b :: L))
     {x y : ℂ} (γ : Path x y)
@@ -89,13 +90,17 @@ lemma exists_attachmentDetourSchedule
     (hx : x ∈ (chainCarrier (a :: b :: L))ᶜ)
     (hy : y ∈ (chainCarrier (a :: b :: L))ᶜ) :
     ∃ ε : ℝ, 0 < ε ∧
-      Nonempty (AttachmentDetourSchedule γ a b
+      Nonempty (MixedDetourSchedule γ a b
         (chainCarrier (b :: L)) ε 0) := by
   -- The same-side blocks formalized in `SAWUmlaufAttachmentData` handle even
-  -- packets of crossings.  An odd packet requires an additional local route
-  -- around an endpoint of `[a,b]`; constructing that endpoint-escape block and
-  -- merging it with the same-side blocks is the remaining geometric residue.
-  sorry
+  -- packets of crossings.  An odd packet uses the proved endpoint-escape local
+  -- route.  `SAWUmlaufMixedSelection` proves all ordering, retained-gap, and
+  -- schedule-folding bookkeeping for a mixed list, so the sole residue here is
+  -- the geometric extraction of a finite ordered mixed cover.
+  obtain ⟨ε, hε, blocks, hordered, hcover⟩ :=
+    exists_finite_ordered_mixed_cover a b L hsimple γ hγtail hx hy
+  obtain ⟨S⟩ := exists_mixedSchedule_of_ordered_covering blocks hordered hcover
+  exact ⟨ε, hε, ⟨S⟩⟩
 
 /-- **Finite geometric construction, ordered form.**  A path in the complement
 of the old tail, whose endpoints avoid the enlarged carrier, admits an ordered
@@ -112,7 +117,7 @@ lemma exists_avoiding_orderedDetourSchedule
     Nonempty (OrderedDetourSchedule γ (segment ℝ a b)
       (chainCarrier (b :: L)) 0) := by
   obtain ⟨ε, hε, hS⟩ :=
-    exists_attachmentDetourSchedule a b L hsimple γ hγtail hx hy
+    exists_mixedDetourSchedule a b L hsimple γ hγtail hx hy
   obtain ⟨S⟩ := hS
   exact S.toOrderedDetourSchedule hsimple.head_ne_of_cons_cons hε
 
