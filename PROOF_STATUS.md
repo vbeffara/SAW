@@ -1,5 +1,93 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): SOUNDNESS FIX in the chord branch, plus a new
+> reduction of its Jordan residue.**
+>
+> ### 1. A false hypothesis shape was found and fixed
+>
+> Nine lemmas of the chord-splitting branch in `RequestProject/SAWUmlaufPolygon.lean`
+> described the cut `W[0]–W[k]` **only** by the edge-disjointness hypothesis
+>
+> ```
+> hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+>           Disjoint (segment ℝ u v) (segment ℝ e.1 e.2)
+> ```
+>
+> That hypothesis does **not** force the chord to run through the *inside* of the
+> polygon.  For a **dart** (non-convex quadrilateral) every edge is incident to
+> one of the two chord endpoints, so `hdiag` holds *vacuously* for the exterior
+> chord, and the reflex vertex then lies strictly inside the triangle cut off by
+> that chord.  Consequently the following statements were FALSE as stated:
+> `chord_ear_empty_other` (which was "proved" from two `sorry`ed lemmas!),
+> `chord_ear_other_ptWind_zero`, `vertex_escape_walk_core`,
+> `vertex_escape_joinedIn_arbitrarily_far(_one_diag)` and their companions.
+>
+> The counterexample is now a formal artifact: `RequestProject/SAWUmlaufDartCounterexample.lean`
+> (imported by `RequestProject.SAWFinal`) instantiates the dart
+> `q = -2, x = -i, p = 2, r = -4i`, cut at `k = 2`, and derives a contradiction
+> from each of the three hypothesis shapes
+> (`chord_ear_empty_other_general_false`, `chord_ear_other_ptWind_zero_general_false`
+> via `HexArea.ptWind_triangle_ne_zero`, and `vertex_escape_walk_core_general_false`
+> via `HexArea.ptWind_zero_of_walk_to_not_hull`).  **That file is `sorry`-free:**
+> all three disproofs are fully verified and depend only on
+> `propext, Classical.choice, Quot.sound`.
+>
+> **The fix.**  A new predicate `InteriorChord W u v` (in `SAWUmlaufPolygon.lean`)
+> records the missing diagonal-validity data:
+>
+> ```
+> ∃ pu nu, W.head? = some u ∧ W.getLast? = some pu ∧ W[1]? = some nu ∧
+>   (∀ y ∈ W, ∀ z ∈ W, ∀ t ∈ W, ¬ inTriangleStrict y z t u) ∧   -- u is extreme
+>   inTriangleStrict pu u nu v                                   -- v inside the corner
+> ```
+>
+> i.e. the chord *enters the polygon at its rooted endpoint* `u`.  It was threaded
+> through the whole branch (`vertex_escape_joinedIn_arbitrarily_far_one_diag`,
+> `…_arbitrarily_far`, `…_connected_reaches`, `…_component_unbounded`,
+> `…_reaches_norm_gt`, `…_joinedIn_large`, `…_joinedIn`, `vertex_escape_walk_core`,
+> `clipped_ear_escape_walk`, `chord_ear_other_escape_walk`, `clipped_ear_ptWind_zero`,
+> `chord_ear_inner_ptWind_ne_zero`, `chord_ear_other_ptWind_zero`,
+> `chord_ear_empty_other`, `chord_ear_lift`, `chord_ear_lift_forbidden`,
+> `interior_lift_via_piece`) and is **discharged at the sole call site**,
+> Meisters' interior branch `meisters_reduction_interior2`, where `u = b` is the
+> extreme corner apex (`hbconv` + rotation transport) and `v = w` lies strictly
+> inside the corner triangle `a, b, c` (`hwin`).  The whole project still builds.
+>
+> ### 2. New reduction: the other-piece winding needs only ONE witness
+>
+> New file `RequestProject/SAWUmlaufChordArcWind.lean` (sorry-free, imported by
+> `SAWUmlaufPolygon`): `HexArea.SegAvoids`, `isChain_of_forall_mem`,
+> `ptWind_eq_head_of_isChain`, `ptWind_const_of_isChain`,
+> `ptWind_zero_of_isChain_witness`, `ptWind_zero_of_isChain_hull_witness`.
+>
+> In `SAWUmlaufPolygon.lean` these are consumed by the new bricks
+> `isChain_closedEdges_self`, `chordPiece_step_segAvoids`,
+> `chordPiece_other_arc_chain` and `chord_ear_other_ptWind_zero_of_witness`:
+> the vertices of `W` off the piece `P` are joined consecutively by `W`-edges
+> which — by `chordPiece_cycleEdge_or_diag`, `PolygonSimple W` and `hdiag` — are
+> disjoint from **every** cycle edge of `P`.  Hence `ptWind · P` is constant on
+> that whole set, and `chord_ear_other_ptWind_zero` now splits into
+> * CASE 1 (**proved, no Jordan content**): some vertex of the other piece lies
+>   outside `convexHull P`; one witness propagates winding `0` to all of them;
+> * CASE 2 (the genuine residue): *every* vertex of the other piece lies inside
+>   `convexHull P` — only then is the escape walk needed.
+>
+> ### 3. Remaining Umlaufsatz `sorry`s
+>
+> Seven live ones, unchanged in substance, all in `SAWUmlaufPolygon.lean`:
+> `empty_branch_boundary_lift` (two spike subcases),
+> `vertex_escape_joinedIn_arbitrarily_far_one_diag` (the escape leaf, now with the
+> corrected `InteriorChord` hypothesis), `clipped_ear_escape_walk`,
+> `chord_ear_lift`, `interior_lift_via_piece` (triangle/flat residual),
+> `empty_branch_bad_lift`.  Everything added this round
+> (`SAWUmlaufChordArcWind`, `isChain_closedEdges_self`, the four chord-piece
+> membership lemmas, `chordPiece_step_segAvoids`, `chordPiece_other_arc_chain`,
+> `chord_ear_other_ptWind_zero_of_witness`, and the whole dart counterexample) is
+> `sorry`-free.
+>
+> ---
+
+
 > **Umlaufsatz (CURRENT round): the entire arc non-separation branch is now
 > PROVED, sorry-free.**  `HexArea.simpleArc_complement_isPathConnected` and
 > `HexArea.simpleArc_joinedIn_arbitrarily_far` (in

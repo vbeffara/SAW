@@ -164,6 +164,10 @@ import RequestProject.SAWMainNew
 -- Hex path helpers (preparation for IsTrail → IsPath fix)
 import RequestProject.SAWHexPathHelpers
 
+-- Soundness audit of the Umlaufsatz chord branch (dart counterexample):
+-- "disjoint from non-incident edges" does not make a chord an interior diagonal.
+import RequestProject.SAWUmlaufDartCounterexample
+
 open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section

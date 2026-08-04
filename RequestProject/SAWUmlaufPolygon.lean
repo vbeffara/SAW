@@ -73,6 +73,7 @@ import RequestProject.SAWUmlaufPolyConn
 import RequestProject.SAWUmlaufHullExterior
 import RequestProject.SAWUmlaufComponentEscape
 import RequestProject.SAWUmlaufArcEscape
+import RequestProject.SAWUmlaufChordArcWind
 
 open Real Complex ComplexConjugate
 
@@ -4164,6 +4165,33 @@ lemma vertex_escape_joinedIn_arbitrarily_far_no_diag
   rw [← hedge] at hsource ⊢
   exact HexArea.simpleArc_joinedIn_arbitrarily_far A hA x hsource
 
+/-- **Interior chord at a rooted endpoint** (the missing diagonal-validity
+hypothesis).  The chord `u–v` of the cyclically-rooted polygon `W` (`u = W[0]`)
+*enters the polygon* at `u`: the endpoint `u` is an extreme vertex of `W` (no
+triangle spanned by vertices of `W` contains `u` strictly, so the interior angle
+at `u` is convex), and the far endpoint `v` lies strictly inside the corner
+triangle `(pu, u, nu)` spanned by `u` and its two cyclic neighbours.  Together
+with the edge-disjointness hypothesis `hdiag` this pins the chord down to a
+genuine *interior* diagonal.
+
+**Why this is needed (soundness).**  Edge-disjointness alone is NOT enough.  For
+a dart (non-convex quadrilateral) every edge is incident to one of the two chord
+endpoints, so the disjointness hypothesis holds vacuously for the *exterior*
+chord, and the reflex vertex of the dart then lies strictly inside the triangle
+cut off by that chord.  This is formalized in
+`RequestProject.SAWUmlaufDartCounterexample`, which disproves the
+edge-disjointness-only forms of `chord_ear_empty_other`,
+`chord_ear_other_ptWind_zero` and `vertex_escape_walk_core`.
+
+Both clauses are available at the sole call site (Meisters' interior branch
+`meisters_reduction_interior2`): there `u = b` is the extreme corner apex
+(`hbconv`) and `v = w` lies strictly inside the corner triangle `a, b, c`
+(`hwin`). -/
+def InteriorChord (W : List ℂ) (u v : ℂ) : Prop :=
+  ∃ pu nu : ℂ, W.head? = some u ∧ W.getLast? = some pu ∧ W[1]? = some nu ∧
+    (∀ y ∈ W, ∀ z ∈ W, ∀ t ∈ W, ¬ HexArea.inTriangleStrict y z t u) ∧
+    HexArea.inTriangleStrict pu u nu v
+
 /-- **Boundary-to-exterior routing with one valid diagonal.**  This is the
 second geometric leaf.  The diagonal misses the source and every nonincident
 polygon edge, so the exterior boundary germ can be chosen on its exterior side
@@ -4178,7 +4206,8 @@ lemma vertex_escape_joinedIn_arbitrarily_far_one_diag
         segment ℝ s.1 s.2)ᶜ))
     (hdiag : ∀ e ∈ closedEdges W,
         d.1 ≠ e.1 → d.1 ≠ e.2 → d.2 ≠ e.1 → d.2 ≠ e.2 →
-        Disjoint (segment ℝ d.1 d.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ d.1 d.2) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W d.1 d.2) :
     ∀ R : ℝ, ∃ y : ℂ, R < ‖y‖ ∧
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ [d]),
@@ -4207,7 +4236,8 @@ lemma vertex_escape_joinedIn_arbitrarily_far
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ∀ R : ℝ, ∃ y : ℂ, R < ‖y‖ ∧
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
@@ -4218,7 +4248,7 @@ lemma vertex_escape_joinedIn_arbitrarily_far
       vertex_escape_joinedIn_arbitrarily_far_no_diag W hsimple x hxW (by simpa using hsource)
   · simpa using vertex_escape_joinedIn_arbitrarily_far_one_diag W hsimple x hxW d
       (hdiagx d (by simp)) (hdiagavoid d (by simp)) hsource
-      (fun e he => hdiags d (by simp) e he)
+      (fun e he => hdiags d (by simp) e he) (hdiagint d (by simp))
 
 /-- **Finite polygonal escape certificate (proved from the path leaf).**
 For every radius, obtain a connected avoiding set containing the boundary
@@ -4236,7 +4266,8 @@ lemma vertex_escape_connected_reaches (W : List ℂ) (hsimple : PolygonSimple W)
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ∀ R : ℝ, ∃ C : Set ℂ,
       IsConnected C ∧ x ∈ C ∧
       C ⊆ ((⋃ s ∈ ((closedEdges W).filter
@@ -4245,7 +4276,7 @@ lemma vertex_escape_connected_reaches (W : List ℂ) (hsimple : PolygonSimple W)
       ∃ y ∈ C, R < ‖y‖ := by
   apply HexArea.connected_reaches_of_joinedIn
   exact vertex_escape_joinedIn_arbitrarily_far W hsimple x hxW diags hdiagx
-    hdiagcard hdiagavoid hsource hdiags
+    hdiagcard hdiagavoid hsource hdiags hdiagint
 
 /-- **Unbounded-component Jordan core.**  Under the actual Umlaufsatz
 configuration (at most one additional valid diagonal), the component of the
@@ -4266,14 +4297,15 @@ lemma vertex_escape_component_unbounded (W : List ℂ) (hsimple : PolygonSimple 
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ¬ Bornology.IsBounded (connectedComponentIn
       ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x) := by
   apply HexArea.connectedComponentIn_unbounded_of_connected_reaches
   exact vertex_escape_connected_reaches W hsimple x hxW diags hdiagx hdiagcard
-    hdiagavoid hsource hdiags
+    hdiagavoid hsource hdiags hdiagint
 
 /-
 **Local unbounded-escape core.**  From the boundary source, the
@@ -4298,6 +4330,7 @@ lemma vertex_escape_reaches_norm_gt (W : List ℂ) (hsimple : PolygonSimple W)
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
         Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2)
     (R : ℝ) (hR : 0 < R)
     (hS : ∀ s ∈ ((closedEdges W).filter
         (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
@@ -4306,7 +4339,7 @@ lemma vertex_escape_reaches_norm_gt (W : List ℂ) (hsimple : PolygonSimple W)
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x p := by
-  obtain ⟨ p, hp ⟩ := exists_norm_gt_of_component_unbounded ( ( ⋃ s ∈ List.filter ( fun e => decide ( e.1 ≠ x ) && decide ( e.2 ≠ x ) ) ( closedEdges W ) ++ diags, segment ℝ s.1 s.2 ) ᶜ ) x ( vertex_escape_component_unbounded W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags ) R;
+  obtain ⟨ p, hp ⟩ := exists_norm_gt_of_component_unbounded ( ( ⋃ s ∈ List.filter ( fun e => decide ( e.1 ≠ x ) && decide ( e.2 ≠ x ) ) ( closedEdges W ) ++ diags, segment ℝ s.1 s.2 ) ᶜ ) x ( vertex_escape_component_unbounded W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags hdiagint ) R;
   refine' ⟨ p, hp.1, _ ⟩;
   have h_connected : IsOpen (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) ∧ IsConnected (connectedComponentIn (⋃ s ∈ List.filter (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) (closedEdges W) ++ diags, segment ℝ s.1 s.2)ᶜ x) := by
     apply And.intro;
@@ -4336,7 +4369,8 @@ lemma vertex_escape_joinedIn_large (W : List ℂ) (hsimple : PolygonSimple W)
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ∃ (R : ℝ) (q : ℂ), 0 < R ∧
       q ∉ convexHull ℝ (W.toFinset : Set ℂ) ∧ R < ‖q‖ ∧
       (∀ s ∈ ((closedEdges W).filter
@@ -4356,7 +4390,7 @@ lemma vertex_escape_joinedIn_large (W : List ℂ) (hsimple : PolygonSimple W)
   have hqcompl : q ∈ (⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ :=
     HexArea.mem_compl_iUnion_segments_of_norm_gt S R q hS hqR
   obtain ⟨p, hpR, hxp⟩ := vertex_escape_reaches_norm_gt W hsimple x hxW diags
-    hdiagx hdiagcard hdiagavoid hsource hdiags R hR hS
+    hdiagx hdiagcard hdiagavoid hsource hdiags hdiagint R hR hS
   have hxq : JoinedIn (⋃ s ∈ S, segment ℝ s.1 s.2)ᶜ x q :=
     vertex_escape_joinedIn_of_reaches_norm_gt S R hR hS hxp hpR hqR
   exact ⟨R, q, hR, hq, hqR, hS, hqcompl, hxq⟩
@@ -4383,13 +4417,14 @@ lemma vertex_escape_joinedIn (W : List ℂ) (hsimple : PolygonSimple W)
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ∃ q : ℂ, q ∉ convexHull ℝ (W.toFinset : Set ℂ) ∧
       JoinedIn ((⋃ s ∈ ((closedEdges W).filter
           (fun e => decide (e.1 ≠ x) && decide (e.2 ≠ x)) ++ diags),
           segment ℝ s.1 s.2)ᶜ) x q := by
   obtain ⟨R, q, hR, hq, hqR, hsegments, hqcompl, hjoin⟩ :=
-    vertex_escape_joinedIn_large W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags
+    vertex_escape_joinedIn_large W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags hdiagint
   exact ⟨q, hq, hjoin⟩
 
 lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
@@ -4402,7 +4437,8 @@ lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
         segment ℝ s.1 s.2)ᶜ))
     (hdiags : ∀ s ∈ diags, ∀ e ∈ closedEdges W,
         s.1 ≠ e.1 → s.1 ≠ e.2 → s.2 ≠ e.1 → s.2 ≠ e.2 →
-        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2)) :
+        Disjoint (segment ℝ s.1 s.2) (segment ℝ e.1 e.2))
+    (hdiagint : ∀ s ∈ diags, InteriorChord W s.1 s.2) :
     ∃ zs : List ℂ,
       List.IsChain (fun a b =>
           (∀ e ∈ closedEdges W, e.1 ≠ x → e.2 ≠ x →
@@ -4411,7 +4447,7 @@ lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
       (zs.getLastD x) ∉ convexHull ℝ (W.toFinset : Set ℂ) := by
   classical
   obtain ⟨q, hq, hjoin⟩ :=
-    vertex_escape_joinedIn W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags
+    vertex_escape_joinedIn W hsimple x hxW diags hdiagx hdiagcard hdiagavoid hsource hdiags hdiagint
   obtain ⟨zs, hchain, hlast⟩ :=
     HexArea.exists_escape_polyline_of_joinedIn _ x q _ hq hjoin
   refine ⟨zs, ?_, hlast⟩
@@ -4446,6 +4482,7 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
@@ -4667,6 +4704,7 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (h4 : 4 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P)
@@ -4739,6 +4777,7 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (h4 : 4 ≤ W.length)
           exact other_piece_vertex_not_on_valid_diagonal W h4 hsimple hnd k hk1 hk u v hu hv
             hdiag P hP x hxW hxP))
       (by intro s hs; simp only [List.mem_singleton] at hs; subst hs; exact hdiag)
+      (by intro s hs; simp only [List.mem_singleton] at hs; subst hs; exact hint)
     exact ⟨zs, hch.imp (fun a b hab => ⟨hab.1, hab.2 (u, v) (by simp)⟩), hl⟩
   exact ⟨zs, hchain,
     HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast⟩
@@ -4748,6 +4787,7 @@ lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
@@ -4766,7 +4806,7 @@ lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : �
   -- walk-invariance tool `HexArea.ptWind_zero_of_walk_to_not_hull`.
   by_cases hx : x ∈ convexHull ℝ ((a' :: c' :: tlP).toFinset : Set ℂ)
   · obtain ⟨zs, hchain, hy⟩ := clipped_ear_escape_walk W hsimple k hk1 hk u v hu hv
-      hdiag P hPsimple hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin hx
+      hdiag hint P hPsimple hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin hx
     exact HexArea.ptWind_zero_of_walk_to_not_hull (a' :: c' :: tlP) x zs hchain hy
   · exact HexArea.ptWind_zero_of_not_mem_convexHull x (a' :: c' :: tlP) hx
 
@@ -4775,6 +4815,7 @@ lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) 
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
@@ -4793,11 +4834,201 @@ lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) 
     have hside := HexArea.inTriangleStrict_diag_side a' b' c' x hin
     rw [hzero] at hside; simp at hside
   rw [HexArea.ptWind_ear_split x a' b' c' P s tlP hrotP hac hin,
-    clipped_ear_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple hP
+    clipped_ear_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag hint P hPsimple hP
       a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin]
   simp only [zero_add, ne_eq]
   intro hcontra
   split_ifs at hcontra <;> nlinarith [Real.pi_pos]
+
+/-! ### The other piece's vertices form a `ptWind`-constant arc
+
+The vertices of `W` that are **not** vertices of the chord piece `P` are the
+interior vertices of the other piece's arc.  Consecutive such vertices are joined
+by `W`-edges whose endpoints both avoid `P`, so (by
+`chordPiece_cycleEdge_or_diag`, `PolygonSimple W` and the diagonal hypothesis)
+those edges are disjoint from *every* cycle edge of `P`.  Hence, by the winding
+invariance bricks of `RequestProject.SAWUmlaufChordArcWind`, the function
+`ptWind · P` is **constant** on the whole set `{x ∈ W | x ∉ P}`.
+
+Consequence (`chord_ear_other_ptWind_zero_of_witness`): the point-in-polygon
+residue "`ptWind x P = 0` for every vertex `x` of the other piece" only needs
+**one** witness vertex with vanishing winding — for instance any such vertex
+lying outside `convexHull P`, which is free by
+`HexArea.ptWind_zero_of_not_mem_convexHull`.  This is a strict reduction of the
+Jordan content of this branch and is the intended attack surface for the
+remaining escape leaf `vertex_escape_joinedIn_arbitrarily_far_one_diag`.
+-/
+
+/-- Consecutive entries of a vertex list are closed cyclic edges of it. -/
+lemma isChain_closedEdges_self (W : List ℂ) :
+    List.IsChain (fun a b => (a, b) ∈ closedEdges W) W := by
+  rw [List.isChain_iff_getElem]
+  intro i hi
+  have hlen : (closedEdges W).length = W.length := by simp [closedEdges]
+  rw [List.mem_iff_getElem]
+  refine ⟨i, by omega, ?_⟩
+  have hi' : i < W.length := by omega
+  have h1 : (closedEdges W)[i]'(by omega) = (W[i], (W.rotate 1)[i]'(by simpa using hi')) := by
+    simp [closedEdges, List.getElem_zip]
+  rw [h1]
+  have hmod : (i + 1) % W.length = i + 1 := Nat.mod_eq_of_lt hi
+  have h2 : (W.rotate 1)[i]'(by simpa using hi') = W[(i + 1) % W.length]'(by omega) := by
+    rw [List.getElem_rotate]
+  rw [h2]
+  congr 1
+  · simp [hmod]
+
+/-- Vertices of `W` off the left piece are exactly the entries after index `k`. -/
+lemma mem_drop_of_not_mem_chordLeft (W : List ℂ) (k : ℕ) (x : ℂ)
+    (hx : x ∈ W) (hxP : x ∉ HexArea.chordLeft W k) : x ∈ W.drop (k + 1) := by
+  rw [HexArea.chordLeft] at hxP
+  have h0 := List.take_append_drop (k + 1) W
+  rw [← h0] at hx
+  rcases List.mem_append.mp hx with h | h
+  · exact absurd h hxP
+  · exact h
+
+lemma not_mem_chordLeft_of_mem_drop (W : List ℂ) (hnd : W.Nodup) (k : ℕ) (y : ℂ)
+    (hy : y ∈ W.drop (k + 1)) : y ∈ W ∧ y ∉ HexArea.chordLeft W k := by
+  refine ⟨List.mem_of_mem_drop hy, ?_⟩
+  intro hmem
+  rw [HexArea.chordLeft] at hmem
+  have hdisj := hnd
+  rw [← List.take_append_drop (k + 1) W] at hdisj
+  exact (List.disjoint_of_nodup_append hdisj) hmem hy
+
+/-- Vertices of `W` off the right piece are exactly the entries strictly between
+index `0` and index `k`. -/
+lemma mem_take_drop_of_not_mem_chordRight (W : List ℂ) (k : ℕ) (x : ℂ)
+    (hx : x ∈ W) (hxP : x ∉ HexArea.chordRight W k) : x ∈ (W.take k).drop 1 := by
+  rw [HexArea.chordRight] at hxP
+  have hxtake : x ∈ W.take k := by
+    have h0 := List.take_append_drop k W
+    rw [← h0] at hx
+    rcases List.mem_append.mp hx with h | h
+    · exact h
+    · exact absurd (List.mem_append.mpr (Or.inl h)) hxP
+  have hx1 : x ∉ W.take 1 := fun h => hxP (List.mem_append.mpr (Or.inr h))
+  rcases Nat.eq_zero_or_pos k with rfl | hk
+  · simp at hxtake
+  · have h1 : (W.take k).take 1 = W.take 1 := by
+      rw [List.take_take]; congr 1; omega
+    have h2 := List.take_append_drop 1 (W.take k)
+    rw [h1] at h2
+    rw [← h2] at hxtake
+    rcases List.mem_append.mp hxtake with h | h
+    · exact absurd h hx1
+    · exact h
+
+lemma not_mem_chordRight_of_mem_take_drop (W : List ℂ) (hnd : W.Nodup) (k : ℕ) (y : ℂ)
+    (hy : y ∈ (W.take k).drop 1) : y ∈ W ∧ y ∉ HexArea.chordRight W k := by
+  have hytake : y ∈ W.take k := List.mem_of_mem_drop hy
+  refine ⟨List.mem_of_mem_take hytake, ?_⟩
+  intro hmem
+  rw [HexArea.chordRight] at hmem
+  rcases List.mem_append.mp hmem with h | h
+  · have hdisj := hnd
+    rw [← List.take_append_drop k W] at hdisj
+    exact (List.disjoint_of_nodup_append hdisj) hytake h
+  · have hndk : (W.take k).Nodup := hnd.take
+    have h1 : y ∈ (W.take k).take 1 := by
+      rcases Nat.eq_zero_or_pos k with rfl | hk
+      · simp at hytake
+      · rwa [List.take_take, Nat.min_eq_left (by omega : 1 ≤ k)]
+    have hdisj := hndk
+    rw [← List.take_append_drop 1 (W.take k)] at hdisj
+    exact (List.disjoint_of_nodup_append hdisj) h1 hy
+
+/-- A `W`-edge whose two endpoints both avoid the piece `P` is disjoint from
+every cycle edge of `P` (the `W`-edges of `P` by simplicity, the cut diagonal by
+`hdiag`). -/
+lemma chordPiece_step_segAvoids (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (huP : u ∈ P) (hvP : v ∈ P)
+    (a b : ℂ) (hab : (a, b) ∈ closedEdges W) (ha : a ∉ P) (hb : b ∉ P) :
+    HexArea.SegAvoids P a b := by
+  intro e he
+  obtain ⟨⟨he1P, he2P⟩, hcase⟩ :=
+    chordPiece_cycleEdge_or_diag W k hk1 hk u v hu hv P hP e he
+  rcases hcase with hWe | hseg
+  · exact hsimple.2 (a, b) hab e hWe
+      (by intro h; have h' : a = e.1 := h; rw [h'] at ha; exact ha he1P)
+      (by intro h; have h' : a = e.2 := h; rw [h'] at ha; exact ha he2P)
+      (by intro h; have h' : b = e.1 := h; rw [h'] at hb; exact hb he1P)
+      (by intro h; have h' : b = e.2 := h; rw [h'] at hb; exact hb he2P)
+  · rw [hseg]
+    exact (hdiag (a, b) hab
+      (by intro h; have h' : u = a := h; rw [← h'] at ha; exact ha huP)
+      (by intro h; have h' : u = b := h; rw [← h'] at hb; exact hb huP)
+      (by intro h; have h' : v = a := h; rw [← h'] at ha; exact ha hvP)
+      (by intro h; have h' : v = b := h; rw [← h'] at hb; exact hb hvP)).symm
+
+/-- **The other piece's vertices form an edge-avoiding chain.**  There is a list
+`ys` containing exactly the vertices of `W` off `P`, whose consecutive segments
+are disjoint from every cycle edge of `P`. -/
+lemma chordPiece_other_arc_chain (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (huP : u ∈ P) (hvP : v ∈ P) :
+    ∃ ys : List ℂ,
+      List.IsChain (HexArea.SegAvoids P) ys ∧
+      (∀ x : ℂ, x ∈ W → x ∉ P → x ∈ ys) ∧
+      (∀ y ∈ ys, y ∈ W ∧ y ∉ P) := by
+  classical
+  have hnd : W.Nodup := hsimple.1
+  have hstep : ∀ a b : ℂ, (a, b) ∈ closedEdges W → a ∉ P → b ∉ P →
+      HexArea.SegAvoids P a b := fun a b hab ha hb =>
+    chordPiece_step_segAvoids W hsimple k hk1 hk u v hu hv hdiag P hP huP hvP a b hab ha hb
+  rcases hP with hPL | hPR
+  · refine ⟨W.drop (k + 1), ?_, ?_, ?_⟩
+    · refine HexArea.isChain_of_forall_mem _ _ _
+        ((isChain_closedEdges_self W).infix (List.drop_suffix (k + 1) W).isInfix) ?_
+      intro a ha b hb hab
+      exact hstep a b hab (hPL ▸ (not_mem_chordLeft_of_mem_drop W hnd k a ha).2)
+        (hPL ▸ (not_mem_chordLeft_of_mem_drop W hnd k b hb).2)
+    · intro x hx hxP
+      exact mem_drop_of_not_mem_chordLeft W k x hx (hPL ▸ hxP)
+    · intro y hy
+      have := not_mem_chordLeft_of_mem_drop W hnd k y hy
+      exact ⟨this.1, hPL ▸ this.2⟩
+  · refine ⟨(W.take k).drop 1, ?_, ?_, ?_⟩
+    · refine HexArea.isChain_of_forall_mem _ _ _
+        ((isChain_closedEdges_self W).infix
+          (((List.drop_suffix 1 (W.take k)).isInfix).trans
+            (List.take_prefix k W).isInfix)) ?_
+      intro a ha b hb hab
+      exact hstep a b hab (hPR ▸ (not_mem_chordRight_of_mem_take_drop W hnd k a ha).2)
+        (hPR ▸ (not_mem_chordRight_of_mem_take_drop W hnd k b hb).2)
+    · intro x hx hxP
+      exact mem_take_drop_of_not_mem_chordRight W k x hx (hPR ▸ hxP)
+    · intro y hy
+      have := not_mem_chordRight_of_mem_take_drop W hnd k y hy
+      exact ⟨this.1, hPR ▸ this.2⟩
+
+/-- **One witness suffices for the other-piece winding.**  Given one vertex `y0`
+of `W` off `P` with `ptWind y0 P = 0`, *every* vertex of `W` off `P` has
+vanishing winding around `P`. -/
+lemma chord_ear_other_ptWind_zero_of_witness (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (huP : u ∈ P) (hvP : v ∈ P)
+    (y0 : ℂ) (hy0W : y0 ∈ W) (hy0P : y0 ∉ P) (hy0 : HexArea.ptWind y0 P = 0)
+    (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
+    HexArea.ptWind x P = 0 := by
+  obtain ⟨ys, hchain, hmem, _⟩ :=
+    chordPiece_other_arc_chain W hsimple k hk1 hk u v hu hv hdiag P hP huP hvP
+  exact HexArea.ptWind_zero_of_isChain_witness P ys hchain y0 (hmem y0 hy0W hy0P) hy0
+    x (hmem x hxW hxP)
 
 /-- **Point-in-polygon, outside direction (winding 0).**  Under the same setup
     as `chord_ear_empty_other`, the winding number of the piece `P` around a
@@ -4816,6 +5047,7 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
@@ -4837,11 +5069,34 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W)
     omega
   have h4 : 4 ≤ W.length :=
     HexArea.chordPiece_omits_vertex_length_four W k hk1 hk P hP hP3 x hxW hxP
-  by_cases hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)
-  · obtain ⟨zs, hchain, hy⟩ := chord_ear_other_escape_walk W h4 hsimple hnd k hk1 hk u v hu hv
-      hdiag P hPsimple hP x hxW hxP hx
-    exact HexArea.ptWind_zero_of_walk_to_not_hull P x zs hchain hy
-  · exact HexArea.ptWind_zero_of_not_mem_convexHull x P hx
+  -- The cut endpoints are vertices of the piece.
+  have hkW : k < W.length := by omega
+  have hWne : W ≠ [] := by rintro rfl; simp at hu
+  have hWhead : W.head? = some u := by rw [List.head?_eq_getElem?]; exact hu
+  have huP : u ∈ P := by
+    rcases hP with h | h <;> subst h
+    · exact List.mem_of_mem_head? (by rw [HexArea.chordLeft_head]; exact hWhead)
+    · exact List.mem_of_mem_getLast?
+        (by rw [HexArea.chordRight_getLast W k hWne hkW]; exact hWhead)
+  have hvP : v ∈ P := by
+    rcases hP with h | h <;> subst h
+    · exact List.mem_of_mem_getLast? (by rw [HexArea.chordLeft_getLast W k hkW]; exact hv)
+    · exact List.mem_of_mem_head? (by rw [HexArea.chordRight_head W k hkW]; exact hv)
+  -- CASE 1 (no Jordan content): some vertex of the other piece already lies
+  -- outside `convexHull P`.  By the arc-constancy brick
+  -- `chord_ear_other_ptWind_zero_of_witness` that single witness propagates the
+  -- vanishing winding to every vertex of the other piece.
+  by_cases hwit : ∃ y : ℂ, y ∈ W ∧ y ∉ P ∧ y ∉ convexHull ℝ (P.toFinset : Set ℂ)
+  · obtain ⟨y0, hy0W, hy0P, hy0hull⟩ := hwit
+    exact chord_ear_other_ptWind_zero_of_witness W hsimple k hk1 hk u v hu hv hdiag P hP
+      huP hvP y0 hy0W hy0P (HexArea.ptWind_zero_of_not_mem_convexHull y0 P hy0hull) x hxW hxP
+  -- CASE 2 (the genuine residue): every vertex of the other piece lies inside
+  -- `convexHull P`, so an escaping edge-avoiding walk must be produced.
+  · by_cases hx : x ∈ convexHull ℝ (P.toFinset : Set ℂ)
+    · obtain ⟨zs, hchain, hy⟩ := chord_ear_other_escape_walk W h4 hsimple hnd k hk1 hk u v hu hv
+        hdiag hint P hPsimple hP x hxW hxP hx
+      exact HexArea.ptWind_zero_of_walk_to_not_hull P x zs hchain hy
+    · exact HexArea.ptWind_zero_of_not_mem_convexHull x P hx
 
 lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
     (hnd : polyCycNondeg W) (k : ℕ)
@@ -4849,6 +5104,7 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hPsimple : PolygonSimple P)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
@@ -4859,9 +5115,9 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
     ¬ HexArea.inTriangleStrict a' b' c' x := by
   intro hin
-  exact chord_ear_inner_ptWind_ne_zero W hsimple k hk1 hk u v hu hv hdiag P hPsimple
+  exact chord_ear_inner_ptWind_ne_zero W hsimple k hk1 hk u v hu hv hdiag hint P hPsimple
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin
-    (chord_ear_other_ptWind_zero W hsimple hnd k hk1 hk u v hu hv hdiag P hPsimple
+    (chord_ear_other_ptWind_zero W hsimple hnd k hk1 hk u v hu hv hdiag hint P hPsimple
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP)
 
 /-
@@ -5137,6 +5393,7 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNo
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (hPcyc : EmptyCornerData2 P u v) :
     ∃ (r' : ℕ) (a' b' c' p' q' : ℂ) (tl : List ℂ),
@@ -5207,6 +5464,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P Q : List ℂ)
     (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
            (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
@@ -5230,7 +5488,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
   -- The V-ear from the (still open) chord ear lift.
   obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
       hpl', hql', hempty', hdiag', horient'⟩ :=
-    chord_ear_lift V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag P
+    chord_ear_lift V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag hint P
       (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
   -- `b'` is a vertex of `V`.
   have hb'W : b' ∈ W := by
@@ -5280,6 +5538,7 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
     (P Q : List ℂ)
     (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
            (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
@@ -5303,7 +5562,7 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     have hPcyc : EmptyCornerData2 P u v := by
       obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hPvu
       exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8, h9, h10⟩
-    exact chord_ear_lift_forbidden V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag P Q hPQ
+    exact chord_ear_lift_forbidden V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag hint P Q hPQ
       hPcyc z1 z2 hz1 hz2
   · -- Residual: the forced recursion piece is a triangle or flat at the seam.
     sorry
@@ -5402,6 +5661,21 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     apply hdiag0 e _ hb1 hb2 hw1 hw2
     rw [← hrot1] at he
     exact (mem_closedEdges_rotate (a :: b :: c :: rest) 1 e).mp he
+  -- The cut `b–w` is an INTERIOR chord: `b` is the extreme corner apex
+  -- (`hbconv`, transported along the rotation) and `w` lies strictly inside the
+  -- corner triangle `a, b, c` (`hwin`).  This is exactly the diagonal-validity
+  -- data that mere edge-disjointness fails to provide (see the dart
+  -- counterexample in `RequestProject.SAWUmlaufDartCounterexample`).
+  have hmemW : ∀ y : ℂ, y ∈ (b :: c :: rest ++ [a]) → y ∈ V := by
+    intro y hy
+    rw [← hW] at hy
+    exact List.mem_rotate.mp hy
+  have hint : InteriorChord (b :: c :: rest ++ [a]) b w := by
+    refine ⟨a, c, by simp, ?_, by simp, ?_, hwin⟩
+    · show (b :: c :: rest ++ [a]).getLast? = some a
+      rw [show b :: c :: rest ++ [a] = (b :: c :: rest) ++ [a] by simp, List.getLast?_concat]
+    intro y hy z hz t ht
+    exact hbconv y z t (hmemW y hy) (hmemW z hz) (hmemW t ht)
   -- Symmetry of the cyclic-edge predicate (for the cut edge orientation).
   have symmCyc : ∀ (L : List ℂ), IsCycEdge L w b → IsCycEdge L b w := by
     intro L h; rcases h with h | h; exacts [Or.inr h, Or.inl h]
@@ -5410,13 +5684,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
     by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
     · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
-        hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
     · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
       · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
-          hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
           IH2 z1 z1 (Or.inl hzR) (Or.inl hzR)
@@ -5428,7 +5702,7 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
           · exact hzL h
           · exact hzR h
         exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
-          hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
           IH2 z1 z1 (Or.inr hz1V) (Or.inr hz1V)
@@ -5438,13 +5712,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with hInL | hInR
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
       exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
-        hkW b w hu hwk hdiag (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
       exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
-        hkW b w hu hwk hdiag (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+        hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
         (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
         IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
