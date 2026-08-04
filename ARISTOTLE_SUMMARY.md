@@ -1,3 +1,79 @@
+# Summary of changes for run 20880c04-a59b-4c3e-adbd-a5108307f2a1
+This round worked exclusively on the Umlaufsatz and closed its largest remaining gap.
+
+## Main result: the simple-arc non-separation branch is now fully proved
+
+`HexArea.simpleArc_complement_isPathConnected` and `HexArea.simpleArc_joinedIn_arbitrarily_far` (in `RequestProject/SAWUmlaufArcEscape.lean`) now depend only on `propext`, `Classical.choice`, `Quot.sound` — no `sorry`. The same holds for the whole chain feeding them: `exists_avoiding_orderedDetourSchedule`, `exists_avoiding_detourPlan` and `joinedIn_compl_cons_segment_of_tail`. This branch had been open for several rounds; its last residue was the finite selection of detour blocks (`exists_finite_ordered_mixed_cover_of_nonempty`), which is now proved.
+
+## How it was closed: the corridor construction
+
+Earlier rounds tried to cover the crossing set by many small "same-side" blocks, which runs into a parity obstruction (a single transverse crossing has its two boundary values on opposite sides of the new edge). This round replaced that by a *corridor*: a thin open rectangle around the new edge, extending slightly past the free endpoint `a`. Because `corridor \ edge` is path connected — one walks around `a` — a **single** block absorbs all crossings and no side or parity condition is needed.
+
+Five new files, all imported on the live route to the main theorem:
+
+- `RequestProject/SAWUmlaufEdgeCoords.lean` — affine coordinates `z = a + (α + βi)u` adapted to the edge (`edgeParam`, `edgeNormal`, `edgePt`): affineness, continuity, inversion, the coordinate description of the closed edge, and the open convex `corridorSet`.
+- `RequestProject/SAWUmlaufCorridorPath.lean` — the topological core: an explicit three-leg polyline proving `corridor \ edge` is path connected; plus half-corridor convexity bricks recorded as preparation for the remaining polygon-Jordan gaps.
+- `RequestProject/SAWUmlaufCorridorBlock.lean` — `CorridorAttachment` and its replacement path.
+- `RequestProject/SAWUmlaufEdgeTailConvex.lean` — the old tail meets the new edge in a convex set (only the adjacent tail edge can meet it at all), which is what makes the adjacent-collinear-overlap case work without any false clearance assumption.
+- `RequestProject/SAWUmlaufCorridorSelect.lean` — the geometric selection: deepest crossing parameter, tail-freeness of the initial edge piece, compactness giving a tail-free corridor, and continuity placing the two block boundaries just outside the crossing window.
+
+`MixedDetourAttachment` gained a `corridor` constructor, so the previously formalized same-side, endpoint-escape and endpoint-corridor blocks stay part of the live API rather than becoming dead branches. All new files are `sorry`-free.
+
+## Remaining work
+
+Seven `sorry`s in six declarations, all now confined to `RequestProject/SAWUmlaufPolygon.lean` and all genuine polygon-Jordan / two-ears content. `PROOF_STATUS.md` records each one with the analysis done this round, including why the new arc machinery does **not** apply to `vertex_escape_joinedIn_arbitrarily_far_one_diag`: a chord joins two points of the arc and so creates a cycle, whereas the arc-extension theorem covers only a new edge with a free endpoint; a polygon Jordan statement (via the existing `ptWind` machinery) is the natural next step. An automated attempt on that lemma did not converge and was stopped.
+
+`PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` are updated; the full project builds (8166 jobs) and everything is committed and pushed.
+
+# Summary of changes for the current run
+
+**The whole simple-arc non-separation branch of the Umlaufsatz is now proved,
+sorry-free.**  `HexArea.simpleArc_complement_isPathConnected` and
+`HexArea.simpleArc_joinedIn_arbitrarily_far` use only the permitted standard
+axioms.  This removes the largest analytic gap that had been open for several
+rounds; the remaining Umlaufsatz work is entirely inside
+`RequestProject/SAWUmlaufPolygon.lean`.
+
+### What closed the gap: the corridor construction
+
+Earlier rounds tried to cover the compact crossing set of the old path by many
+small "same-side" blocks; that forces a parity obstruction, because a single
+transverse crossing has its two boundary values on opposite sides of the new
+edge.  This round replaced that scheme by a single **corridor** block.
+
+New files, all imported on the live chain
+`SAWUmlaufDetourConstruction → SAWUmlaufArcDetour → SAWUmlaufArcInduction →
+SAWUmlaufArcEscape → SAWUmlaufPolygon`:
+
+- `RequestProject/SAWUmlaufEdgeCoords.lean` — affine coordinates adapted to the
+  new edge (`edgeParam`, `edgeNormal`, `edgePt`), their affineness, continuity
+  and inversion; the coordinate description of the closed edge; the open convex
+  corridor rectangle `corridorSet`.
+- `RequestProject/SAWUmlaufCorridorPath.lean` — the key topological fact:
+  `corridor \ edge` is path connected, realized by an explicit polyline that
+  walks around the free endpoint `a`.
+- `RequestProject/SAWUmlaufCorridorBlock.lean` — `CorridorAttachment` and its
+  replacement path; unlike the older blocks it imposes no side/parity condition.
+- `RequestProject/SAWUmlaufEdgeTailConvex.lean` — the old tail meets the new
+  edge in a convex set, since only the adjacent tail edge can meet it.
+- `RequestProject/SAWUmlaufCorridorSelect.lean` — the geometric selection
+  producing the single corridor block covering all crossings.
+
+`MixedDetourAttachment` gained a `corridor` constructor, so the previously
+formalized same-side, endpoint-escape and endpoint-corridor blocks remain part
+of the live API rather than becoming dead branches.
+
+### Remaining Umlaufsatz work
+
+Seven `sorry`s in six declarations of `SAWUmlaufPolygon.lean`, all genuine
+polygon-Jordan / two-ears content; `PROOF_STATUS.md` records each one together
+with the analysis done this round (in particular why the new arc machinery does
+not apply to `vertex_escape_joinedIn_arbitrarily_far_one_diag`: a chord joins
+two points of the arc and therefore creates a cycle, whereas the arc extension
+theorem covers only a new edge with a free endpoint).
+
+The full `RequestProject.SAWFinal` target builds.
+
 # Summary of changes for run 3e85f912-df9a-4c05-8f11-4eed8ac8f697
 Continued exclusively on the live finite-detour route to the Umlaufsatz and pushed all work.
 

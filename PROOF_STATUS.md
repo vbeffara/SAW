@@ -1,5 +1,67 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): the entire arc non-separation branch is now
+> PROVED, sorry-free.**  `HexArea.simpleArc_complement_isPathConnected` and
+> `HexArea.simpleArc_joinedIn_arbitrarily_far` (in
+> `RequestProject/SAWUmlaufArcEscape.lean`) depend only on
+> `propext, Classical.choice, Quot.sound`.  This closes the whole
+> `SAWUmlaufDetourConstruction → SAWUmlaufArcDetour → SAWUmlaufArcInduction →
+> SAWUmlaufArcEscape` chain, which had been the largest open analytic gap.
+>
+> The last residue (`exists_finite_ordered_mixed_cover_of_nonempty`) was closed
+> by a new *corridor* construction that replaces the earlier many-block
+> same-side selection.  Five new files were added, all on the live chain:
+>
+> * `SAWUmlaufEdgeCoords.lean` — affine edge coordinates `α = edgeParam`,
+>   `β = edgeNormal` with `z = a + (α + βi) u`; both are ℝ-affine and
+>   continuous, the edge `[a, a+u]` is the coordinate box `β = 0, 0 ≤ α ≤ 1`,
+>   and `corridorSet a u s₁ η = {-η < α < s₁, |β| < η}` is open and convex.
+> * `SAWUmlaufCorridorPath.lean` — **`corridor \ edge` is path connected**, by
+>   an explicit three-leg polyline to the base point `a + (-η/2) u` beyond the
+>   free endpoint `a`.  This is what kills the old parity obstruction: two
+>   boundary values on opposite sides of the edge are joined *around* `a`.
+> * `SAWUmlaufCorridorBlock.lean` — `CorridorAttachment`, a replacement block
+>   with **no** side or parity condition, and its `exists_replacement`.
+> * `SAWUmlaufEdgeTailConvex.lean` — the old tail meets the new edge in a
+>   *convex* set (only the adjacent tail edge can meet `[a,b]` at all).
+> * `SAWUmlaufCorridorSelect.lean` — the selection: `s₀` is the deepest crossing
+>   parameter; `edgeCore = [a, a+s₀u]` is tail free by convexity + the deepest
+>   crossing point being tail free; compactness gives a tail-free corridor of
+>   positive width; continuity places one parameter just before the first and
+>   one just after the last crossing.  **One** block covers every crossing.
+>
+> `MixedDetourAttachment` gained a `corridor` constructor, so the earlier
+> same-side / endpoint-escape / endpoint-corridor blocks stay in the API and on
+> the live route.
+>
+> **Remaining Umlaufsatz sorries: 7, all in `RequestProject/SAWUmlaufPolygon.lean`**
+> (6 declarations), and all are genuine polygon-Jordan / two-ears content:
+> 1. `empty_branch_boundary_lift` — two spike subcases (needs the full two-ears
+>    theorem: re-inserting the apex can flatten the seam turn);
+> 2. `vertex_escape_joinedIn_arbitrarily_far_one_diag` — escape past a polygon
+>    with one chord added.  Analysis this round: the forbidden set is a simple
+>    arc plus a chord between two of its vertices, i.e. a cycle with two tails;
+>    its complement has two components and the content is exactly that the
+>    source vertex is *not* enclosed by the cycle.  The new arc machinery does
+>    **not** apply, because a chord joins two points of the arc and therefore
+>    creates a cycle — the arc-extension theorem only covers a new edge with a
+>    free endpoint.  A polygon Jordan curve statement (e.g. via the existing
+>    `ptWind` machinery in `SAWUmlaufPtWindJordan` / `SAWUmlaufExterior`) is the
+>    natural next step;
+> 3. `clipped_ear_escape_walk` — same content with two extra segments (the chord
+>    and the ear base of the *piece*, which need not be a valid `W`-diagonal);
+> 4. `chord_ear_lift` — seam-corner / neighbour identification;
+> 5. `interior_lift_via_piece` — residual where the recursion piece is a triangle
+>    (`P.length = 3`, so `EmptyCornerData2 P` is unavailable and a direct
+>    `V`-ear must be built from the triangle `u, t, v`) or is flat at the cut
+>    seam (`¬ polyCycNondeg P`, so the flat seam vertex must first be removed);
+> 6. `empty_branch_bad_lift`.
+>
+> The whole project builds (`RequestProject.SAWFinal`, 8164 jobs).
+>
+> ---
+
+
 > **Umlaufsatz (current round): connected translated-semicircle local detours formalized and linked.**  Added `RequestProject/SAWUmlaufLocalDetour.lean` and imported it directly from `SAWUmlaufDetourConstruction`, so it lies on the live chain through arc detours, arc induction, arc escape, polygon topology, and the main theorem.  Proved the first edge of a simple arc is nondegenerate; segment containment in its affine diameter line; straight connector path construction and ball/forbidden-set control; avoidance preservation under path concatenation; simultaneous new-edge/old-tail avoidance for a translated semicircle in a clearance ball; and the final three-piece connected detour with straight endpoint connectors.  Strengthened the finite compactness cover so all centres are actual crossing times and packaged it with uniform tail clearance, ensuring every selected crossing ball is disjoint from the old tail.  Also proved that crossing times for a path avoiding the old tail are exactly crossings of `newEdge \ oldTail`, explicitly isolating the genuinely new portion in the overlap case.  This closes the local analytic and path-concatenation layer.  The remaining `exists_inner_avoiding_replacement` gap is now explicitly only the finite geometric selection and ordering of these local detours (including overlapping adjacent edges).
 >
 > ---

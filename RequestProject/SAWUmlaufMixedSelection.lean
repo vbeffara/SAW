@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SAWUmlaufMixedSchedule
 import RequestProject.SAWUmlaufCrossingIntervals
 import RequestProject.SAWUmlaufEndpointCorridor
+import RequestProject.SAWUmlaufCorridorSelect
 
 /-!
 # Finite selection interface for mixed Umlaufsatz detours
@@ -146,15 +147,16 @@ lemma exists_finite_ordered_mixed_cover_of_no_hits
     rw [hno] at ht
     exact False.elim (Set.notMem_empty t ht)
 
-/-- **Positive-crossing geometric selector.**  This is the unique remaining
-finite-selection residue.  Isolating nonemptiness prevents the easy zero-hit
-case from being repeatedly reconstructed in later rounds.
+/-- **Positive-crossing geometric selector.**  Proved by the corridor
+construction of `SAWUmlaufCorridorSelect`: a single corridor block covers every
+crossing at once, because the corridor overhangs the free endpoint `a` and so
+`corridor \ edge` is path connected.  This removes the parity obstruction that
+blocked the earlier same-side selection.
 
-A subtle adjacent-overlap case remains intentional: `a` itself can lie in the
-old tail, because `PlaneArcSimple` permits adjacent collinear overlap.  In that
-case one must not assert a clearance ball about `a`; the selected packets must
-instead use same-side blocks or a corridor around the endpoint of the genuinely
-new component. -/
+The adjacent-overlap case is handled honestly: no clearance ball around `a` is
+asserted.  Instead the corridor is built around the initial piece
+`[a, a + s₀ (b-a)]` reaching the deepest crossing, which is tail free because
+the tail meets `[a,b]` in a convex set containing `b`. -/
 lemma exists_finite_ordered_mixed_cover_of_nonempty
     (a b : ℂ) (L : List ℂ)
     (hsimple : PlaneArcSimple (a :: b :: L))
@@ -168,7 +170,11 @@ lemma exists_finite_ordered_mixed_cover_of_nonempty
           (chainCarrier (b :: L)) ε),
         MixedAttachmentsOrdered blocks ∧
         MixedAttachmentsCoverHitTimes blocks := by
-  sorry
+  obtain ⟨A, hA⟩ :=
+    exists_corridorAttachment_covering a b L hsimple γ hγtail hx hy hhit
+  refine ⟨1, one_pos, [MixedDetourAttachment.corridor A], List.pairwise_singleton _ _, ?_⟩
+  intro t ht
+  exact ⟨MixedDetourAttachment.corridor A, List.mem_singleton_self _, hA t ht⟩
 
 /-- **Remaining geometric selector.**  The compact crossing set admits a finite
 left-to-right cover by ordinary same-side packets and endpoint-escape packets.
