@@ -1,5 +1,61 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): the false ear invariant is REPAIRED and the
+> Meisters chain is back on the live route; four `sorry`s closed, the remaining
+> Jordan content isolated in two statements.**
+>
+> ### 1. The repair
+>
+> `EmptyCornerData` / `EmptyCornerData2` no longer carry the two clip-corner
+> clauses `cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0` (refuted by
+> the pentagon of `RequestProject.SAWUmlaufFlatClipCounterexample`), and the whole
+> chain `SAWUmlaufPolyBase → PolyChord → PolyLift → PolyEscape → PolyMeisters`
+> was restated accordingly.  The statements that are genuinely false
+> (`exists_empty_convex_ear(_avoiding)`, `exists_front_ear_core`,
+> `exists_front_ear`, `exists_ear_rotation`, `exists_ear_clip`) are commented out
+> verbatim with an explanation and replaced by weak forms; the ones that survive
+> in a special situation are kept as `..._strong` (`meisters_reduction_quad_strong`,
+> the predicate `EmptyCornerData2Strong` for the quadrilateral base case).
+>
+> **`exists_front_ear_weak` is no longer a `sorry`** — it is
+> `exists_empty_convex_ear_weak`, the top of the repaired chain — so the live
+> route to `polygon_umlaufsatz` again runs through the whole development.
+>
+> ### 2. Closed by the repair
+>
+> * `empty_branch_boundary_lift`: both spike subcases vanish;
+>   `SAWUmlaufPolyLift` is now `sorry`-free.
+> * `chord_ear_lift`: **proved** from `chord_lift_ear_rotation` (list surgery),
+>   `chord_ear_empty_other` (the proved Jordan keystone) and the two isolated
+>   inputs below.
+> * `interior_lift_via_piece`: the triangle-piece case is proved via
+>   `chord_triangle_piece_package`.
+>
+> ### 3. New file `RequestProject/SAWUmlaufChordLiftAux.lean` (on the live route)
+>
+> Proved: `chord_lift_ear_rotation`, `chord_triangle_piece_empty` (a triangle
+> chord piece contains no vertex of the other piece — `ptWind_triangle` versus
+> the corner escape), `chord_triangle_piece_package`, `orient_transfer_of_split`.
+> `sorry`: `chord_lift_other_not_on_diagonal`, `chord_piece_orient`.
+>
+> ### 4. The five remaining Umlaufsatz `sorry`s
+>
+> * `chord_piece_orient` — each chord piece carries the orientation of the whole
+>   polygon (`SAWUmlaufChordLiftAux`);
+> * `chord_lift_other_not_on_diagonal` — a vertex of the other piece is not on
+>   the closed ear diagonal (`SAWUmlaufChordLiftAux`);
+> * `clipped_ear_escape_walk` — the escape underneath `chord_ear_empty_other`
+>   (`SAWUmlaufPolyEscape`);
+> * `interior_lift_via_piece` — the flat-seam piece must be normalised by
+>   flat-vertex deletion before recursing (`SAWUmlaufPolyMeisters`);
+> * `empty_branch_bad_lift` — the bad-diagonal subcase of the empty branch
+>   (`SAWUmlaufPolyMeisters`).
+>
+> `vertex_escape_joinedIn_arbitrarily_far_one_diag` (`SAWUmlaufPolyEscape`)
+> remains banked preparation for `clipped_ear_escape_walk` and is not consumed.
+>
+> ---
+
 > **Umlaufsatz (CURRENT round): the ear-existence invariant of the whole
 > development was found to be FALSE, disproved formally, and REPLACED; the live
 > route to the planar Umlaufsatz now rests on a single honest `sorry`.**

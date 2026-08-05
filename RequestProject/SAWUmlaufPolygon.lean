@@ -590,6 +590,21 @@ lemma ear_local_turning_identity (a b c p q : ℂ) (rest : List ℂ)
     hndtri hempty hdiag
   linarith [hcat]
 
+/-! ### The superseded STRONG ear-clip interface (false as stated, retained)
+
+The four declarations `exists_front_ear_core`, `exists_front_ear`,
+`exists_ear_rotation`, `exists_ear_clip` below all demand that clipping the ear
+leave a *cyclically non-degenerate* polygon.  The simple, non-degenerate pentagon
+`0, i, 1+i, 2+2i, 2+i` of `RequestProject.SAWUmlaufFlatClipCounterexample`
+refutes that (`flat_clip_no_empty_convex_ear`): each of its ears leaves a flat
+vertex behind.  They are therefore commented out — retained verbatim as a record
+of the superseded interface — and replaced by the weak route
+`exists_front_ear_weak` → `exists_shorter_reduction` → `polygon_ear_reduction`
+below, which deletes the flat vertices of the clip afterwards using the
+normalisation of `RequestProject.SAWUmlaufFlatRemoval`.
+-/
+
+/-
 /-- **The ear-existence core of the planar Umlaufsatz (geometric-data form,
     emptiness variant).**  Identical to `exists_front_ear` below, except that the
     diagonal-disjointness clause is replaced by the more primitive *emptiness*
@@ -825,6 +840,9 @@ lemma exists_ear_clip (V : List ℂ) (hlen : 4 ≤ V.length)
       rw [← hrot]; exact (shoelace2_rotate V r).symm
     rw [hV]; exact harea'
 
+
+-/
+
 /-! ## The corrected ear-existence interface
 
 `RequestProject.SAWUmlaufFlatClipCounterexample` disproves the ear-existence
@@ -864,10 +882,13 @@ requirement that the clipped cycle `a :: c :: rest` be `polyCycNondeg`; that is
 exactly what the pentagon of `SAWUmlaufFlatClipCounterexample` refutes, and it is
 recovered downstream by deleting the flat vertices of the clip.
 
-**Status: `sorry`.**  This is the Jordan-curve-theorem-level ear existence
-(Meisters' two-ears theorem in its one-ear corollary).  NOT a dead branch: it is
-the target of the whole `SAWUmlaufPoly*` Meisters development, which currently
-proves the *stronger, false* form and must be restated in this weak form. -/
+**Status: reduced to the Meisters development.**  This is now *derived* from
+`exists_empty_convex_ear_weak` (`RequestProject.SAWUmlaufPolyMeisters`), the top
+of the corrected (weak) Meisters two-ears chain, which is proved by strong
+induction on the vertex count and currently rests on the four remaining
+Jordan-content `sorry`s of that chain (`chord_ear_lift`,
+`interior_lift_via_piece`, `empty_branch_bad_lift`, `clipped_ear_escape_walk`).
+-/
 lemma exists_front_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
@@ -876,8 +897,8 @@ lemma exists_front_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
-  sorry
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :=
+  exists_empty_convex_ear_weak V hlen hsimple hnd
 
 /-- **A simple closed polygon with at least four vertices has non-zero signed
 area.**

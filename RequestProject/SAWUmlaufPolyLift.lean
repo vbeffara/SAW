@@ -18,45 +18,29 @@ noncomputable section
 
 set_option maxHeartbeats 4000000
 
-/-- **Empty-branch lift — the BOUNDARY subcase (genuine remaining gap).**  Same
-    hypotheses as `empty_branch_good_lift`, used to discharge the residual case
-    where the ear returned by the induction hypothesis on the clip `a :: c ::
-    rest` is *adjacent* to the `a–c` junction (its tail does not decompose as
-    `s ++ a :: c :: t` with the junction interior).  In that boundary case
-    re-inserting the apex `b` turns a clip neighbour of the ear into `b`, so the
-    lifted clip-turn `cross (c - b) (·)` can vanish (the genuine two-ears
-    subtlety): the ear may fail the `EmptyCornerData2` clip-turn clause and a
-    different ear (or a finer induction invariant forcing the returned ear into
-    the interior arc) is required.
+/-- **Empty-branch lift — the BOUNDARY subcase (now PROVED).**  Same hypotheses
+    as `empty_branch_good_lift`, used to discharge the residual case where the
+    ear returned by the induction hypothesis on the clip `a :: c :: rest` is
+    *adjacent* to the `a–c` junction (its tail does not decompose as
+    `s ++ a :: c :: t` with the junction interior).
 
-    **Status: `sorry`.**  This is the isolated genuine Jordan-content gap of the
-    empty branch; the *interior* subcase is fully proved (via
-    `empty_branch_interior_lift`) and dispatched here from
-    `empty_branch_good_lift`.  Recorded, isolated partial progress — NOT a dead
-    branch.
+    The combinatorial seam split `boundary_seam_split` shows that under
+    `hnotint` the returned ear sits at one of exactly two seam positions —
+    Case A (`c' = a`, `rest'.head? = some c`) or Case B (`a' = c`,
+    `rest'.getLast? = some a`) — and in each case it lifts to a genuine
+    consecutive triple of `V` (Case A: `(a', b', a)`; Case B: `(c, b', c')`) by
+    re-inserting the apex `b` at the junction.
 
-    PROGRESS / BANKED: the combinatorial seam split is now sorry-free as
-    `boundary_seam_split` (just above): under `hnotint` the returned ear sits at
-    one of exactly two seam positions — Case A (`c' = a`, `rest'.head? = some c`)
-    or Case B (`a' = c`, `rest'.getLast? = some a`).  In each case the ear lifts
-    to a genuine consecutive triple of `V` (Case A: `(a', b', a)`; Case B:
-    `(c, b', c')`) by inserting the apex `b` at the junction.
-
-    PRECISE REMAINING OBSTRUCTION (recorded for the next round): exactly ONE of
-    the two `EmptyCornerData2` clip-turns survives directly (it equals `hpt'`
-    resp. `hqt'`); the OTHER clip-turn becomes an *apex turn* —
-    `cross (a - a') (b - a)` in Case A, `cross (c - b) (c' - c)` in Case B —
-    because re-inserting `b` makes the apex the cyclic neighbour of the ear
-    diagonal.  This apex turn can genuinely VANISH: e.g. in Case A if `a` lies
-    strictly between `a'` and `b` on a common line (a "spike" configuration),
-    which is forbidden by NEITHER `hbseg` (it only excludes `b` lying on an open
-    segment between two vertices — here it is `a` that lies between `a'` and `b`)
-    NOR `polyCycNondeg` (which only constrains *consecutive* triples, and
-    `a', a, b` are not consecutive).  Hence the natural ear may fail the
-    clip-turn clause and a DIFFERENT ear must be selected — i.e. closing this
-    branch requires the full two-ears theorem (or a strengthened induction
-    invariant forcing the returned ear off the junction).  This is the
-    irreducible Jordan-curve-level residue. -/
+    **History.**  While `EmptyCornerData2` still demanded that the *clip corners*
+    of the lifted ear be non-flat, this lemma had two irreducible `sorry`s: one
+    of the two clip turns becomes an *apex turn* (`cross (a - a') (b - a)` in
+    Case A, `cross (c - b) (c' - c)` in Case B) which can genuinely vanish in a
+    "spike" configuration.  That demand is exactly what the pentagon of
+    `RequestProject.SAWUmlaufFlatClipCounterexample` refutes; since
+    `EmptyCornerData2` was corrected to its weak (true) form, the spike subcases
+    are no longer obstructions and the branch is closed unconditionally by
+    `boundary_lift_caseA_nonspike` / `boundary_lift_caseB_nonspike` (whose
+    non-spike hypotheses were dropped for the same reason). -/
 lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
@@ -80,8 +64,6 @@ lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     (hrot' : (a :: c :: rest).rotate r' = a' :: b' :: c' :: rest')
     (hb'a : b' ≠ a) (hb'c : b' ≠ c)
     (hp'M : rest'.getLast? = some p') (hq'M : rest'.head? = some q')
-    (hpt' : HexArea.cross (a' - p') (c' - a') ≠ 0)
-    (hqt' : HexArea.cross (c' - a') (q' - c') ≠ 0)
     (hempty' : ∀ x ∈ rest', ¬ HexArea.inTriangleStrict a' b' c' x)
     (hdiag' : ∀ x ∈ rest', x ∉ segment ℝ a' c')
     (horient' : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
@@ -138,27 +120,16 @@ lemma empty_branch_boundary_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     subst c'
     obtain ⟨rest'', rfl⟩ : ∃ rest'', rest' = c :: rest'' :=
       List.head?_eq_some_iff.mp hcA2
-    by_cases hturnA : HexArea.cross (a - a') (b - a) ≠ 0
-    · -- Non-spike: assemble the ear `(a', b', a)` directly.
-      exact boundary_lift_caseA_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbconv hbseg
-        horient hzrest a' b' p' rest'' r' hrot' hb'rest ha'V hb'V ha'b hp'M hpt' hempty' hdiag'
-        horient' hturnA
-    · -- **Spike subcase A** (`cross (a - a') (b - a) = 0`): the genuine
-      -- two-ears residue — re-inserting `b` flattens the apex turn, so a
-      -- different ear must be chosen.  Isolated remaining gap.
-      sorry
+    exact boundary_lift_caseA_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbconv hbseg
+      horient hzrest a' b' p' rest'' r' hrot' hb'rest ha'V hb'V ha'b hp'M hempty' hdiag'
+      horient'
   · -- **Case B** : `a' = c`, `rest'.getLast? = some a`.
     subst a'
     obtain ⟨s', rfl⟩ : ∃ s', rest' = s' ++ [a] :=
       List.getLast?_eq_some_iff.mp hcB2
-    by_cases hturnB : HexArea.cross (c - b) (c' - c) ≠ 0
-    · -- Non-spike: assemble the ear `(c, b', c')` directly.
-      exact boundary_lift_caseB_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbc hbconv hbseg
-        horient hzrest b' c' q' s' r' hrot' hb'rest hc'V hb'V hc'b hq'M hqt' hempty' hdiag'
-        horient' hturnB
-    · -- **Spike subcase B** (`cross (c - b) (c' - c) = 0`): the genuine
-      -- two-ears residue (mirror of spike A).  Isolated remaining gap.
-      sorry
+    exact boundary_lift_caseB_nonspike V z1 z2 a b c rest r hrot hac hanr hba hbc hbconv hbseg
+      horient hzrest b' c' q' s' r' hrot' hb'rest hc'V hb'V hc'b hq'M hempty' hdiag'
+      horient'
 
 /-- **Empty-branch lift — the "good diagonal" subcase (PROVED modulo the boundary
     subcase).**
@@ -224,7 +195,7 @@ lemma empty_branch_good_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     grind
   have hadjM : IsCycEdge (a :: c :: rest) a c := by
     unfold IsCycEdge; simp +decide [ closedEdges ] ;
-  obtain ⟨r', a', b', c', p'M, q'M, rest', hrot', hb'a, hb'c, hp'M, hq'M, hpt', hqt', hempty', hdiag', horient'⟩ := IH2 (a :: c :: rest) (by simp; omega) hMlen hMs hMn a c (Or.inr hadjM);
+  obtain ⟨r', a', b', c', p'M, q'M, rest', hrot', hb'a, hb'c, hp'M, hq'M, hempty', hdiag', horient'⟩ := IH2 (a :: c :: rest) (by simp; omega) hMlen hMs hMn a c (Or.inr hadjM);
   obtain ⟨ha'M, hb'M, hc'M, hrest'M⟩ := rotate_cons3_mem (a :: c :: rest) a' b' c' rest' r' hrot';
   obtain ⟨hb'rest, ha'V, hb'V, hc'V⟩ : b' ∈ rest ∧ a' ∈ V ∧ b' ∈ V ∧ c' ∈ V := by
     replace hrot := congr_arg List.toFinset hrot; rw [ Finset.ext_iff ] at hrot; have := hrot a; have := hrot b; have := hrot c; have := hrot b'; have := hrot c'; simp_all +decide [ Finset.mem_insert, Finset.mem_singleton ] ;
@@ -242,8 +213,8 @@ lemma empty_branch_good_lift (V : List ℂ) (hlen : 5 ≤ V.length)
   generalize_proofs at *; (
   by_cases hnotint : ∃ s t, rest' = s ++ a :: c :: t;
   · obtain ⟨ s, t, rfl ⟩ := hnotint;
-    apply empty_branch_interior_lift V z1 z2 a b c rest r hrot hac hanr hbconv hbseg horient hABCne hzrest a' b' c' p'M q'M s t r' hrot' hb'rest ha'V hb'V hc'V ha'b hc'b hA'ne hp'M hq'M hpt' hqt' hempty' hdiag' horient';
-  · exact empty_branch_boundary_lift V ( by omega ) hsimple hnd z1 z2 hadj IH2 r a b c rest p q hrot hbmem hbconv hbseg hp hq hpl hql hempty hdiag horient hbf a' b' c' p'M q'M rest' r' hrot' hb'a hb'c hp'M hq'M hpt' hqt' hempty' hdiag' horient' hnotint)
+    apply empty_branch_interior_lift V z1 z2 a b c rest r hrot hac hanr hbconv hbseg horient hABCne hzrest a' b' c' p'M q'M s t r' hrot' hb'rest ha'V hb'V hc'V ha'b hc'b hA'ne hp'M hq'M hempty' hdiag' horient';
+  · exact empty_branch_boundary_lift V ( by omega ) hsimple hnd z1 z2 hadj IH2 r a b c rest p q hrot hbmem hbconv hbseg hp hq hpl hql hempty hdiag horient hbf a' b' c' p'M q'M rest' r' hrot' hb'a hb'c hp'M hq'M hempty' hdiag' horient' hnotint)
 
 /-- **Edge-forbidden selection (pure finite logic).**  If `x ≠ y` and the
     *ordered* pair `(x, y)` and its reverse `(y, x)` are both absent from the
@@ -294,7 +265,7 @@ lemma quad_ear_at_b (a b c d z1 z2 : ℂ)
     (hda : HexArea.cross (a - d) (b - a) ≠ 0)
     (H : HexArea.cross (c - a) (b - a) * HexArea.cross (c - a) (d - a) < 0)
     (hbz1 : b ≠ z1) (hbz2 : b ≠ z2) :
-    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+    EmptyCornerData2Strong [a, b, c, d] z1 z2 := by
   refine' ⟨ 0, a, b, c, d, d, [ d ], _, _, _, _, _ ⟩ <;> norm_num;
   · assumption;
   · assumption;
@@ -322,7 +293,7 @@ lemma quad_ear_at_d (a b c d z1 z2 : ℂ)
     (hda : HexArea.cross (a - d) (b - a) ≠ 0)
     (H : HexArea.cross (c - a) (b - a) * HexArea.cross (c - a) (d - a) < 0)
     (hdz1 : d ≠ z1) (hdz2 : d ≠ z2) :
-    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+    EmptyCornerData2Strong [a, b, c, d] z1 z2 := by
   refine' ⟨ 2, c, d, a, b, b, [ b ], _, _, _, _, _ ⟩ <;> norm_num at *;
   · assumption;
   · assumption;
@@ -351,8 +322,8 @@ lemma quad_ear_at_c (a b c d z1 z2 : ℂ)
     (hda : HexArea.cross (a - d) (b - a) ≠ 0)
     (H : HexArea.cross (d - b) (a - b) * HexArea.cross (d - b) (c - b) < 0)
     (hcz1 : c ≠ z1) (hcz2 : c ≠ z2) :
-    EmptyCornerData2 [a, b, c, d] z1 z2 := by
-  refine' ⟨ 1, b, c, d, a, a, [ a ], _, _, _, _, _ ⟩ <;> simp_all +decide [ EmptyCornerData2 ];
+    EmptyCornerData2Strong [a, b, c, d] z1 z2 := by
+  refine' ⟨ 1, b, c, d, a, a, [ a ], _, _, _, _, _ ⟩ <;> simp_all +decide [ EmptyCornerData2Strong ];
   refine' ⟨ _, _, _, _, _ ⟩;
   · unfold HexArea.cross at *; simp_all +decide [ Complex.ext_iff ] ;
     grind +qlia;
@@ -379,7 +350,7 @@ lemma quad_ear_at_a (a b c d z1 z2 : ℂ)
     (hda : HexArea.cross (a - d) (b - a) ≠ 0)
     (H : HexArea.cross (d - b) (a - b) * HexArea.cross (d - b) (c - b) < 0)
     (haz1 : a ≠ z1) (haz2 : a ≠ z2) :
-    EmptyCornerData2 [a, b, c, d] z1 z2 := by
+    EmptyCornerData2Strong [a, b, c, d] z1 z2 := by
   use 3, d, a, b, c, c, [c];
   simp_all +decide [ HexArea.cross, HexArea.shoelace2, HexArea.inTriangleStrict ];
   refine' ⟨ _, _, _, _, _ ⟩;
@@ -446,13 +417,13 @@ lemma meisters_reduction_quad2 (V : List ℂ) (h4 : V.length = 4)
   · -- `a–c` interior: ears at `b` and `d`.
     rcases forbidden_avoids_one [a, b, c, d] b d z1 z2 hbd hbd1 hbd2 hadj with
       ⟨h1, h2⟩ | ⟨h1, h2⟩
-    · exact quad_ear_at_b a b c d z1 z2 hab hbc hcd hda H h1 h2
-    · exact quad_ear_at_d a b c d z1 z2 hab hbc hcd hda H h1 h2
+    · exact EmptyCornerData2_of_strong _ _ _ (quad_ear_at_b a b c d z1 z2 hab hbc hcd hda H h1 h2)
+    · exact EmptyCornerData2_of_strong _ _ _ (quad_ear_at_d a b c d z1 z2 hab hbc hcd hda H h1 h2)
   · -- `b–d` interior: ears at `a` and `c`.
     rcases forbidden_avoids_one [a, b, c, d] a c z1 z2 hac hac1 hac2 hadj with
       ⟨h1, h2⟩ | ⟨h1, h2⟩
-    · exact quad_ear_at_a a b c d z1 z2 hab hbc hcd hda H h1 h2
-    · exact quad_ear_at_c a b c d z1 z2 hab hbc hcd hda H h1 h2
+    · exact EmptyCornerData2_of_strong _ _ _ (quad_ear_at_a a b c d z1 z2 hab hbc hcd hda H h1 h2)
+    · exact EmptyCornerData2_of_strong _ _ _ (quad_ear_at_c a b c d z1 z2 hab hbc hcd hda H h1 h2)
 
 /-
 **Interior-split simplicity brick.**  Under the interior-branch hypotheses
@@ -480,8 +451,7 @@ lemma interior_split_simple (a b c w : ℂ) (rest : List ℂ)
       PolygonSimple (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∧
       PolygonSimple (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
   -- Write `rest` as `s ++ w :: t`, and set `k := 2 + s.length`.
-  obtain ⟨s, t, hrest⟩ : ∃ s t, rest = s ++ w :: t := by
-    exact?
+  obtain ⟨s, t, hrest⟩ : ∃ s t, rest = s ++ w :: t := List.append_of_mem hwrest
   set k := 2 + s.length with hk_def;
   refine' ⟨ k, _, _, _, _, _ ⟩;
   · exact Nat.le_add_right _ _;

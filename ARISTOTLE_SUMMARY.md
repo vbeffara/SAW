@@ -1,3 +1,117 @@
+# Summary of changes for run f4e65384-5a96-409e-a9f5-d1138e6b159a
+This round worked exclusively on the Umlaufsatz, as requested. The project builds (`RequestProject.SAWFinal`, 8179 jobs) and all work is committed and pushed.
+
+**1. Repaired the false ear invariant and put the Meisters chain back on the live route.**
+The previous round had formally disproved the invariant the whole ear-existence development was stating (the pentagon `0, i, 1+i, 2+2i, 2+i` of `RequestProject/SAWUmlaufFlatClipCounterexample.lean` shows that clipping an ear of a simple, non-degenerate polygon may leave a flat vertex). I carried out the correction: `EmptyCornerData` / `EmptyCornerData2` no longer demand the two clip-corner clauses, and the entire chain `SAWUmlaufPolyBase → PolyChord → PolyLift → PolyEscape → PolyMeisters` was restated accordingly (~20 sites). Statements that are genuinely false (`exists_empty_convex_ear(_avoiding)`, `exists_front_ear_core`, `exists_front_ear`, `exists_ear_rotation`, `exists_ear_clip`) are kept verbatim but commented out with an explanation and replaced by weak forms; statements that remain true in a special situation are kept as `..._strong` (`meisters_reduction_quad_strong`, the new predicate `EmptyCornerData2Strong` used by the quadrilateral base case, and refuted in general by the new `flat_clip_EmptyCornerData2Strong_false`).
+
+Consequence: **`exists_front_ear_weak` — the sole ear-existence input of the planar Umlaufsatz — is no longer a `sorry`.** It is now derived from `exists_empty_convex_ear_weak`, the top of the repaired chain, so the route to `polygon_umlaufsatz` again runs through the whole development.
+
+**2. Sorries closed.**
+- `empty_branch_boundary_lift`: both "spike" subcases disappear with the corrected invariant; `RequestProject/SAWUmlaufPolyLift.lean` is now entirely `sorry`-free.
+- `chord_ear_lift` (the chord-split ear lift): **proved**, from the banked list surgery, the proved keystone `chord_ear_empty_other`, and two isolated geometric inputs.
+- `interior_lift_via_piece`: the triangle-piece case of its residual is now proved.
+
+**3. New file `RequestProject/SAWUmlaufChordLiftAux.lean`** (imported by `SAWUmlaufPolyMeisters`, hence on the live route), containing the proved `chord_lift_ear_rotation`, `chord_triangle_piece_empty` (a triangle chord piece contains no vertex of the other piece — winding `±2π` versus the corner escape's `0`), `chord_triangle_piece_package`, `orient_transfer_of_split`, and the two remaining geometric gaps stated in minimal form: `chord_lift_other_not_on_diagonal` and `chord_piece_orient`.
+
+**4. Remaining Umlaufsatz `sorry`s (5 live, 1 banked)**, each documented in `PROOF_STATUS.md` and in its docstring: `chord_piece_orient`, `chord_lift_other_not_on_diagonal`, `clipped_ear_escape_walk`, the flat-seam residual of `interior_lift_via_piece`, and `empty_branch_bad_lift`; plus `vertex_escape_joinedIn_arbitrarily_far_one_diag`, which is explicitly marked as banked preparation and is not consumed. Every file except the documented duplicate `RequestProject/SAWVertexRelation.lean` is reachable from `RequestProject.SAWFinal`. I also replaced the three leftover `exact?` calls in the Umlauf chain with the proof terms they found.
+
+`PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` record all of the above, including exactly what each remaining gap needs.
+
+# Summary of changes for the current run
+
+This round worked exclusively on the Umlaufsatz.  It **repaired the Meisters
+ear-existence chain** (which the previous round had shown to be stating a *false*
+invariant), **re-connected it to the live route**, and, on the back of the
+repair, **closed four of the previous `sorry`s outright** and reduced the
+remaining Jordan content to two sharply stated geometric facts.
+
+## 1. The invariant repair (the task the previous round left)
+
+`EmptyCornerData` / `EmptyCornerData2` (`RequestProject/SAWUmlaufPolyBase.lean`)
+no longer demand the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`
+(equivalently: that clipping the ear leave a cyclically non-degenerate polygon).
+Those clauses are refuted by the pentagon `0, i, 1+i, 2+2i, 2+i` of
+`RequestProject/SAWUmlaufFlatClipCounterexample.lean`.  The whole chain
+`SAWUmlaufPolyBase → PolyChord → PolyLift → PolyEscape → PolyMeisters` was
+restated accordingly (about twenty tuple sites), and:
+
+* the two *strong* statements that remain true in their special situations are
+  kept: `meisters_reduction_quad_strong` (quadrilaterals, where all vertex
+  triples are cyclically consecutive) and the new predicate
+  `EmptyCornerData2Strong` with `EmptyCornerData2_of_strong`, through which the
+  four finite proofs `quad_ear_at_a/b/c/d` still feed
+  `meisters_reduction_quad2`;
+* the declarations that are false as stated (`exists_empty_convex_ear_avoiding`,
+  `exists_empty_convex_ear`, `exists_front_ear_core`, `exists_front_ear`,
+  `exists_ear_rotation`, `exists_ear_clip`) are commented out verbatim, with an
+  explanation, and replaced by weak forms
+  (`exists_empty_convex_ear_avoiding_weak`, `exists_empty_convex_ear_weak`);
+* in the counterexample file the two disproofs that referred to the *old*
+  definitions are replaced by `flat_clip_EmptyCornerData2Strong_false`, which
+  refutes exactly the strong predicate (the self-contained
+  `flat_clip_no_ear_data` and `flat_clip_no_empty_convex_ear` are unchanged).
+
+**`exists_front_ear_weak` — the sole ear-existence input of the planar
+Umlaufsatz — is no longer a `sorry`:** it is now literally
+`exists_empty_convex_ear_weak`, i.e. the top of the repaired Meisters chain.
+So the live route to `polygon_umlaufsatz` again runs through the whole
+development instead of stopping at an axiom-like gap.
+
+## 2. Sorries closed by the repair
+
+* `empty_branch_boundary_lift` (`SAWUmlaufPolyLift`) — **both spike subcases are
+  gone**: they existed only because the lifted ear had to keep a non-flat clip
+  corner.  `boundary_lift_caseA_nonspike` / `boundary_lift_caseB_nonspike`
+  (`SAWUmlaufPolyChord`) lost their non-spike hypotheses and now close the branch
+  unconditionally.  `SAWUmlaufPolyLift` is now completely `sorry`-free.
+* `chord_ear_lift` (`SAWUmlaufPolyMeisters`) — **proved**.  Its seam residue
+  disappeared with the clip-corner clauses; the rest is now assembled from the
+  banked list surgery (`chordLeft/chordRight_interior_ear_extract`, packaged as
+  the new `chord_lift_ear_rotation`), the proved Jordan keystone
+  `chord_ear_empty_other`, and two isolated geometric inputs (below).
+* `interior_lift_via_piece` (`SAWUmlaufPolyMeisters`) — the **triangle-piece**
+  case of its residual is proved, via the new `chord_triangle_piece_package`.
+
+## 3. New file `RequestProject/SAWUmlaufChordLiftAux.lean`
+
+Imported by `SAWUmlaufPolyMeisters`, hence on the live route.  It contains
+
+* `chord_lift_ear_rotation` (proved) — an ear of a chord piece whose tip avoids
+  both cut endpoints is a cyclically consecutive triple of the whole polygon;
+* `chord_triangle_piece_empty` (proved) — if a chord piece is a *triangle*, no
+  vertex of the other piece is strictly inside it (`HexArea.ptWind_triangle`
+  gives `±2π`, the corner escape `chord_ear_other_ptWind_zero` gives `0`);
+* `chord_triangle_piece_package` (proved, modulo `chord_piece_orient`) — the full
+  `V`-ear package for a triangle piece, in both the left (`k = 2`) and right
+  (`k = W.length - 2`) configurations;
+* `orient_transfer_of_split` (proved) — the arithmetic of the orientation
+  transfer across a chord split;
+* **the two remaining geometric `sorry`s**, each stated in the minimal form its
+  consumer needs: `chord_lift_other_not_on_diagonal` (a vertex of the other piece
+  does not lie on the closed ear diagonal) and `chord_piece_orient` (both chord
+  pieces carry the orientation of the whole polygon).
+
+## 4. Status
+
+`RequestProject.SAWFinal` builds (8177 jobs).  The Umlaufsatz now has five
+`sorry`s, in five declarations, one of which is banked preparation:
+
+| declaration | file | content |
+|---|---|---|
+| `chord_piece_orient` | `SAWUmlaufChordLiftAux` | a chord piece has the orientation of the whole polygon |
+| `chord_lift_other_not_on_diagonal` | `SAWUmlaufChordLiftAux` | other-piece vertices avoid the closed ear diagonal |
+| `clipped_ear_escape_walk` | `SAWUmlaufPolyEscape` | the escape underlying `chord_ear_empty_other` |
+| `interior_lift_via_piece` | `SAWUmlaufPolyMeisters` | flat-seam piece: normalise before recursing |
+| `empty_branch_bad_lift` | `SAWUmlaufPolyMeisters` | the bad-diagonal subcase of the empty branch |
+| (`vertex_escape_joinedIn_arbitrarily_far_one_diag`, `SAWUmlaufPolyEscape`) | | banked preparation, not consumed |
+
+Everything else on the route — the invariant, the recursion, the lifts, the
+quadrilateral base case, the flat-vertex normalisation, the corner escape — is
+`sorry`-free.  All files except the documented duplicate
+`RequestProject/SAWVertexRelation.lean` are reachable from
+`RequestProject.SAWFinal`.
+
 # Summary of changes for run 21ae13bf-620f-4d42-8d61-9f35b62b75c1
 This round worked exclusively on the Umlaufsatz, as requested. It uncovered — and formally disproved — a **false invariant at the heart of the ear-existence chain**, built the machinery that repairs it, and rewired the live route so that the planar Umlaufsatz now rests on a *single* honest `sorry`. `RequestProject.SAWFinal` builds (8178 jobs) and every new result except that one lemma is `sorry`-free.
 

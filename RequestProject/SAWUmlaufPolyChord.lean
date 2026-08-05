@@ -917,12 +917,10 @@ lemma boundary_lift_caseA_nonspike (V : List ℂ) (z1 z2 : ℂ)
     (hrot' : (a :: c :: rest).rotate r' = a' :: b' :: a :: c :: rest'')
     (hb'rest : b' ∈ rest) (ha'V : a' ∈ V) (hb'V : b' ∈ V) (ha'b : b ≠ a')
     (hp' : (c :: rest'').getLast? = some p')
-    (hpt' : HexArea.cross (a' - p') (a - a') ≠ 0)
     (hempty' : ∀ x ∈ (c :: rest''), ¬ HexArea.inTriangleStrict a' b' a x)
     (hdiag' : ∀ x ∈ (c :: rest''), x ∉ segment ℝ a' a)
     (horient' : ((0:ℝ) < HexArea.shoelace2 [a', b', a]
-        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: a :: c :: rest'')))
-    (hturnA : HexArea.cross (a - a') (b - a) ≠ 0) :
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: a :: c :: rest''))) :
     EmptyCornerData2 V z1 z2 := by
   -- Apply `clip_ear_lift_general` to get the required rotation.
   obtain ⟨r'', hr''⟩ : ∃ r'', (a :: b :: c :: rest).rotate r'' = a' :: b' :: a :: b :: c :: rest'' := by
@@ -938,8 +936,9 @@ lemma boundary_lift_caseA_nonspike (V : List ℂ) (z1 z2 : ℂ)
     · have hshoelace : HexArea.shoelace2 (a' :: a :: b :: c :: rest'') = HexArea.shoelace2 (a' :: a :: c :: rest'') + HexArea.shoelace2 [a, b, c] := by
         convert shoelace2_insert_mid [ a' ] rest'' a b c using 1;
       have hshoelace : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 (a' :: a :: c :: rest'') + HexArea.shoelace2 [a', b', a] := by
-        have hshoelace : HexArea.shoelace2 (a :: c :: rest) = HexArea.shoelace2 ((a :: c :: rest).rotate r') := by
-          exact?;
+        have hshoelace : HexArea.shoelace2 (a :: c :: rest)
+            = HexArea.shoelace2 ((a :: c :: rest).rotate r') :=
+          (shoelace2_rotate (a :: c :: rest) r').symm
         rw [hshoelace, hrot'];
         convert shoelace2_insert_mid [ a' ] ( c :: rest'' ) a' b' a using 1; all_goals simp +decide [ HexArea.shoelace2 ];
       grind
@@ -1001,12 +1000,10 @@ lemma boundary_lift_caseB_nonspike (V : List ℂ) (z1 z2 : ℂ)
     (hrot' : (a :: c :: rest).rotate r' = c :: b' :: c' :: (s' ++ [a]))
     (hb'rest : b' ∈ rest) (hc'V : c' ∈ V) (hb'V : b' ∈ V) (hb'c : b ≠ c')
     (hq' : (s' ++ [a]).head? = some q')
-    (hqt' : HexArea.cross (c' - c) (q' - c') ≠ 0)
     (hempty' : ∀ x ∈ (s' ++ [a]), ¬ HexArea.inTriangleStrict c b' c' x)
     (hdiag' : ∀ x ∈ (s' ++ [a]), x ∉ segment ℝ c c')
     (horient' : ((0:ℝ) < HexArea.shoelace2 [c, b', c']
-        ↔ (0:ℝ) < HexArea.shoelace2 (c :: c' :: (s' ++ [a]))))
-    (hturnB : HexArea.cross (c - b) (c' - c) ≠ 0) :
+        ↔ (0:ℝ) < HexArea.shoelace2 (c :: c' :: (s' ++ [a])))) :
     EmptyCornerData2 V z1 z2 := by
   obtain ⟨ ρ, hρ ⟩ := clip_ear_lift_seamB a b c c' b' rest s' r' hac hanr hrot';
   refine' ⟨ r + ρ, c, b', c', b, q', s' ++ [ a, b ], _, _, _, _, _ ⟩ <;> simp_all +decide [ List.rotate_rotate ];

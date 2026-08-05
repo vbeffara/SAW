@@ -799,8 +799,8 @@ lemma third_vertex_incident_edge_or_between
         intro H; have := ‹Function.Injective W.get› ( show W.get ⟨ n, by linarith ⟩ = W.get ⟨ ( m + 1 ) % W.length, by linarith ⟩ from by aesop ) ; simp_all +decide [ Fin.ext_iff ] ;
         have := Nat.mod_add_div ( m + 1 + 1 ) W.length; simp_all +decide [ Nat.mod_eq_of_lt ] ;
         nlinarith [ show ( m + 1 + 1 : ℕ ) / W.length = 0 by nlinarith ];
-      have h_consecutive : ∃ r tl, W.rotate r = [p, x, q] ++ tl := by
-        exact?;
+      have h_consecutive : ∃ r tl, W.rotate r = [p, x, q] ++ tl :=
+        HexArea.consec_edges_triple W hnd p x q hp hq hpq
       grind;
     exact Or.inr <| h_consecutive ⟨ huW, hvW, hxW, Ne.symm hxu, Ne.symm hxv ⟩
 

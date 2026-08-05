@@ -52,7 +52,9 @@ the shape of the affected declarations:
 
 * `flat_clip_no_ear_data` — the conclusion of `exists_empty_corner_avoiding`
   (with the `b ≠ z` clause dropped, so this is stronger than needed) fails;
-* `flat_clip_EmptyCornerData_false`, `flat_clip_EmptyCornerData2_false`;
+* `flat_clip_EmptyCornerData2Strong_false` — the *strong* inductive invariant
+  `EmptyCornerData2Strong` (the original `EmptyCornerData2`, before it was
+  corrected by dropping the two clip-corner clauses) fails;
 * `flat_clip_no_empty_convex_ear` — the conclusion of `exists_empty_convex_ear`
   fails.
 
@@ -163,16 +165,19 @@ theorem flat_clip_no_ear_data :
     subst hq
     exact hqc (by norm_num [HexArea.cross])
 
-/-- **Consequence: the inductive invariant `EmptyCornerData` is false for
-`badV`** — for *every* forbidden vertex `z`. -/
-theorem flat_clip_EmptyCornerData_false (z : ℂ) : ¬ EmptyCornerData badV z := by
-  rintro ⟨r, a, b, c, p, q, rest, hrot, -, hp, hq, hpa, hqc, h1, h2, horient⟩
-  exact flat_clip_no_ear_data ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hqc, h1, h2, horient⟩
-
-/-- **Consequence: the two-forbidden inductive invariant `EmptyCornerData2` is
+/-- **Consequence: the STRONG inductive invariant `EmptyCornerData2Strong` is
 false for `badV`** — for every pair of forbidden vertices, in particular for
-every cyclic edge of `badV`. -/
-theorem flat_clip_EmptyCornerData2_false (z1 z2 : ℂ) : ¬ EmptyCornerData2 badV z1 z2 := by
+every cyclic edge of `badV`.
+
+`EmptyCornerData2Strong` is the *original* form of the Meisters inductive
+invariant, i.e. `EmptyCornerData2` plus the two clip-corner clauses.  It is
+exactly this disproof that forced the correction: `EmptyCornerData` and
+`EmptyCornerData2` were subsequently *redefined* without those two clauses (and
+the whole Meisters chain restated accordingly), so the earlier disproofs
+`flat_clip_EmptyCornerData_false` / `flat_clip_EmptyCornerData2_false` of the old
+definitions no longer typecheck and are replaced by this one. -/
+theorem flat_clip_EmptyCornerData2Strong_false (z1 z2 : ℂ) :
+    ¬ EmptyCornerData2Strong badV z1 z2 := by
   rintro ⟨r, a, b, c, p, q, rest, hrot, -, -, hp, hq, hpa, hqc, h1, h2, horient⟩
   exact flat_clip_no_ear_data ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hqc, h1, h2, horient⟩
 

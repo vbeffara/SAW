@@ -1,5 +1,6 @@
 import Mathlib
 import RequestProject.SAWUmlaufPolyEscape
+import RequestProject.SAWUmlaufChordLiftAux
 
 /-!
 # `SAWUmlaufPolygon`, part `SAWUmlaufPolyMeisters`
@@ -66,89 +67,155 @@ lemma rotate_drop3_neighbours {α : Type*} (W : List α) (j : ℕ)
   simp +arith +decide [ List.getElem?_rotate, n ];
   grind +suggestions
 
-/-- **Chord ear-lift brick (THE remaining interior Jordan-curve content).**
+/-- **Chord ear-lift brick (now PROVED, modulo the two isolated geometric inputs
+    of `RequestProject.SAWUmlaufChordLiftAux`).**
     Cut the rotation `W` of a simple polygon `V` (`hW : V.rotate ρ = W`) along the
     interior diagonal `W[0]–W[k]` into the two pieces `chordLeft W k` /
     `chordRight W k`.  An ear of one piece `P` that avoids the cut edge `{u, v}`
     (where `u = W[0]`, `v = W[k]`) — packaged as `EmptyCornerData2 P u v` — lifts
     to a genuine ear of the *whole* polygon `V` whose tip `b'` is an interior
-    vertex of `P` (hence `b' ≠ u, v`).  All the `EmptyCornerData2`-shaped data of
-    the lifted triple `(a', b', c')` is produced here, INCLUDING the emptiness of
-    the lifted ear triangle against the vertices of the OTHER piece — the single
-    missing polygon-interior separation fact (a vertex of the other piece lies
-    outside `P`'s region, which contains the ear triangle).
+    vertex of `P` (hence `b' ≠ u, v`).
 
-    **Correctness fix (this round).**  The statement now carries the
-    diagonal-validity hypothesis `hdiag` (the conclusion shape of
-    `interior_chord_is_diagonal`, available at every call site).  Without it the
-    generic form was *false*: a crossing (non-diagonal) cut can place a vertex of
-    the OTHER piece strictly inside an ear triangle of `P`, contradicting the
-    emptiness clause.  With `hdiag` the other-piece emptiness is supplied by the
-    isolated Jordan keystone `chord_ear_empty_other` (above), so the statement is
-    now sound.
+    The proof has four ingredients:
 
-    **Status: `sorry`.**  This is the isolated point-in-polygon / Jordan-curve
-    separation brick, absent from Mathlib and from the project; it is the shared
-    geometric residue of the interior (`meisters_reduction_interior2`) and
-    bad-diagonal (`empty_branch_bad_lift`) split branches.  Everything else in
-    those branches (piece selection via `forbidden_lands_in_chord`, the `IH2`
-    recursion, and the `b' ≠ z1, z2` bookkeeping) is a combinatorial assembly
-    around this brick.  NOT a dead branch — preparation consumed by the two split
-    branches below. -/
+    * the **list surgery** `chord_lift_ear_rotation` (proved): the ear triple of
+      the piece consists of three cyclically consecutive vertices of `W`;
+    * the far-vertex clauses over the lifted tail `tl` split into the vertices of
+      `P` (handled by the ear data of `P` itself) and the vertices of the OTHER
+      piece, handled by the proved Jordan keystone `chord_ear_empty_other`
+      (emptiness) and by `chord_lift_other_not_on_diagonal` (the closed ear
+      diagonal — one of the two remaining `sorry`s);
+    * the **orientation** clause, from `chord_piece_orient` (the other remaining
+      `sorry`: both chord pieces carry the orientation of the whole polygon)
+      together with the additivity `HexArea.shoelace2_chord_split` and the pure
+      arithmetic `orient_transfer_of_split`.
+
+    **History.**  While `EmptyCornerData2` still demanded the two clip-corner
+    non-flatness clauses, this lemma had a further genuine residue at the *seam*
+    (the clip corner of a seam ear involves the other piece's neighbour, which is
+    not a consecutive `V`-corner).  Those clauses are refuted in general by
+    `RequestProject.SAWUmlaufFlatClipCounterexample` and have been dropped, so
+    the seam residue is gone. -/
 lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    (h4 : 4 ≤ V.length)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
         Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
     (hint : InteriorChord W u v)
-    (P : List ℂ) (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
+    (P : List ℂ) (hPsimple : PolygonSimple P)
+    (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (hPcyc : EmptyCornerData2 P u v) :
     ∃ (r' : ℕ) (a' b' c' p' q' : ℂ) (tl : List ℂ),
       V.rotate r' = a' :: b' :: c' :: tl ∧
       b' ∈ P ∧ b' ≠ u ∧ b' ≠ v ∧
       tl.getLast? = some p' ∧ tl.head? = some q' ∧
-      HexArea.cross (a' - p') (c' - a') ≠ 0 ∧
-      HexArea.cross (c' - a') (q' - c') ≠ 0 ∧
       (∀ x ∈ tl, ¬ HexArea.inTriangleStrict a' b' c' x) ∧
       (∀ x ∈ tl, x ∉ segment ℝ a' c') ∧
       ((0:ℝ) < HexArea.shoelace2 [a', b', c']
           ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tl)) := by
-  -- NOTE (structural state).  The statement is now SOUND: the cyclic
-  -- non-degeneracy hypothesis `hnd : polyCycNondeg V` was added (and threaded
-  -- through `chord_ear_lift_forbidden` / `interior_lift_via_piece` from the
-  -- caller `meisters_reduction_interior2`, which supplies it).  This fixes the
-  -- previously under-hypothesised seam corner: when the ear tip `b'` is adjacent
-  -- to a cut endpoint (`a' = W[0] = u`), the required V-corner turn
-  -- `cross (a' - p') (c' - a') ≠ 0` is now available from `hnd` (the genuine
-  -- V-corner at `a'`), rather than from `EmptyCornerData2 P`'s P-corner at the
-  -- closing seam edge, which is a different corner.
-  --
-  -- Progress this round: the LIST-SURGERY half is now available sorry-free as
-  -- the two proved bricks `chordLeft_interior_ear_extract` /
-  -- `chordRight_interior_ear_extract` (just above).  Applied to `hPcyc`'s
-  -- rotation `P.rotate s = a'::b'::c'::rest0` (tip `b' ≠ u, v`), they produce an
-  -- interior index `i` and the V-rotation `W.rotate (i-1) = a'::b'::c'::tl`;
-  -- composing with `hW : V.rotate ρ = W` (via `List.rotate_rotate`) gives
-  -- `V.rotate ((ρ + (i-1)) % V.length) = a'::b'::c'::tl`, with `tl` the cyclic
-  -- remainder of `W`, so `p' = tl.getLast?`, `q' = tl.head?` are the genuine
-  -- cyclic `W`-neighbours of `a'`, `c'`.
-  --
-  -- Remaining genuine content:
-  --   (a) SEAM corner non-degeneracy.  In the CLEAN case (`a' ≠ u` and
-  --       `c' ≠ v`) the clip corners `cross (a'-p') (c'-a') ≠ 0`,
-  --       `cross (c'-a') (q'-c') ≠ 0` transfer directly from `EmptyCornerData2 P`
-  --       (there `p' = pP`, `q' = qP`).  In the SEAM case (`a' = u` or `c' = v`)
-  --       the clip corner involves the OTHER piece's neighbour (e.g. the
-  --       V-predecessor `W[n-1]` of `u`), which is NOT a consecutive V-corner,
-  --       so it is supplied neither by `EmptyCornerData2 P` nor directly by
-  --       `hnd`; this is a genuine geometric residue (the clip diagonal must
-  --       make a non-flat corner against the far neighbour).
-  --   (b) other-piece emptiness/diagonal: the clause over `tl` splits into
-  --       `P`'s own vertices (from `EmptyCornerData2 P`) and the OTHER piece's
-  --       vertices (from the proved Jordan keystone `chord_ear_empty_other`,
-  --       valid under `hdiag`).
-  sorry
+  -- Basic transport of the hypotheses to `W`.
+  have hWlen : W.length = V.length := by rw [← hW]; simp
+  have hWnd : W.Nodup := by rw [← hW]; exact List.nodup_rotate.mpr hsimple.1
+  have hWsimple : PolygonSimple W := by
+    rw [← hW]; exact (PolygonSimple_rotate V ρ).mpr hsimple
+  have hWnondeg : polyCycNondeg W := by
+    rw [← hW]; exact (polyCycNondeg_rotate V ρ (by omega)).mpr hnd
+  have hW4 : 4 ≤ W.length := by omega
+  have hklt : k < W.length := by omega
+  have hu0 : W[0]! = u := by
+    have h0 : 0 < W.length := by omega
+    have : W[0]? = some (W[0]!) := by
+      rw [List.getElem?_eq_getElem h0]
+      simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem h0]
+    rw [hu] at this; exact (Option.some.injEq _ _ ▸ this).symm
+  have hvk : W[k]! = v := by
+    have : W[k]? = some (W[k]!) := by
+      rw [List.getElem?_eq_getElem hklt]
+      simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hklt]
+    rw [hv] at this; exact (Option.some.injEq _ _ ▸ this).symm
+  -- The ear of the piece.
+  obtain ⟨s, a', b', c', p0, q0, rest0, hrotP, hb'u, hb'v, hp0, hq0, hemptyP,
+    hdiagP, horientP⟩ := hPcyc
+  -- List surgery: the ear triple is a consecutive triple of `W`.
+  obtain ⟨j, tl, hrotW⟩ :=
+    chord_lift_ear_rotation W k hk1 hk hWnd P hP s a' b' c' rest0 hrotP
+      (by rw [hu0]; exact hb'u) (by rw [hvk]; exact hb'v)
+  have hrotV : V.rotate (ρ + j) = a' :: b' :: c' :: tl := by
+    rw [← List.rotate_rotate, hW]; exact hrotW
+  -- Lengths: the lifted tail is nonempty.
+  have htllen : tl.length + 3 = W.length := by
+    have := congrArg List.length hrotW; simp at this; omega
+  obtain ⟨p', hp'⟩ : ∃ p', tl.getLast? = some p' := by
+    cases hr : tl.getLast? with
+    | none => exfalso; rw [List.getLast?_eq_none_iff] at hr; subst hr; simp at htllen; omega
+    | some p' => exact ⟨p', rfl⟩
+  obtain ⟨q', hq'⟩ : ∃ q', tl.head? = some q' := by
+    cases hr : tl.head? with
+    | none => exfalso; rw [List.head?_eq_none_iff] at hr; subst hr; simp at htllen; omega
+    | some q' => exact ⟨q', rfl⟩
+  -- The tip is a vertex of the piece.
+  have hb'P : b' ∈ P := by
+    have : b' ∈ P.rotate s := by rw [hrotP]; simp
+    exact (List.mem_rotate).mp this
+  -- Membership bookkeeping for the lifted tail.
+  have hWrotnd : (a' :: b' :: c' :: tl).Nodup := by
+    rw [← hrotW]; exact List.nodup_rotate.mpr hWnd
+  have htlW : ∀ x ∈ tl, x ∈ W := by
+    intro x hx
+    have : x ∈ W.rotate j := by rw [hrotW]; simp [hx]
+    exact (List.mem_rotate).mp this
+  have htlne : ∀ x ∈ tl, x ≠ a' ∧ x ≠ b' ∧ x ≠ c' := by
+    intro x hx
+    simp only [List.nodup_cons, List.mem_cons] at hWrotnd
+    refine ⟨fun h => hWrotnd.1 (by simp [← h, hx]), fun h => hWrotnd.2.1 (by simp [← h, hx]),
+      fun h => hWrotnd.2.2.1 (by simp [← h, hx])⟩
+  have htlP : ∀ x ∈ tl, x ∈ P → x ∈ rest0 := by
+    intro x hx hxP
+    have hxrot : x ∈ P.rotate s := (List.mem_rotate).mpr hxP
+    rw [hrotP] at hxrot
+    obtain ⟨h1, h2, h3⟩ := htlne x hx
+    simp only [List.mem_cons] at hxrot
+    tauto
+  refine ⟨ρ + j, a', b', c', p', q', tl, hrotV, hb'P, hb'u, hb'v, hp', hq', ?_, ?_, ?_⟩
+  · -- Emptiness of the lifted ear triangle.
+    intro x hx
+    by_cases hxP : x ∈ P
+    · exact hemptyP x (htlP x hx hxP)
+    · exact chord_ear_empty_other W hWsimple hWnondeg k hk1 hk u v hu hv hdiag hint
+        P hPsimple hP a' b' c' s rest0 hrotP hemptyP horientP x (htlW x hx) hxP
+  · -- No far vertex on the closed ear diagonal.
+    intro x hx
+    by_cases hxP : x ∈ P
+    · exact hdiagP x (htlP x hx hxP)
+    · exact chord_lift_other_not_on_diagonal W hW4 hWsimple hWnondeg k hk1 hk u v hu hv
+        hdiag hint P hPsimple hP a' b' c' s rest0 hrotP hemptyP hdiagP x (htlW x hx) hxP
+  · -- Orientation transfer.
+    have hclipP : HexArea.shoelace2 P
+        = HexArea.shoelace2 (a' :: c' :: rest0) + HexArea.shoelace2 [a', b', c'] := by
+      have h1 : HexArea.shoelace2 (P.rotate s) = HexArea.shoelace2 P :=
+        shoelace2_rotate P s
+      rw [← h1, hrotP]
+      exact shoelace2_clip_second a' b' c' rest0
+    have hclipW : HexArea.shoelace2 W
+        = HexArea.shoelace2 (a' :: c' :: tl) + HexArea.shoelace2 [a', b', c'] := by
+      have h1 : HexArea.shoelace2 (W.rotate j) = HexArea.shoelace2 W :=
+        shoelace2_rotate W j
+      rw [← h1, hrotW]
+      exact shoelace2_clip_second a' b' c' tl
+    have hsplit := HexArea.shoelace2_chord_split W k hk1 hklt
+    obtain ⟨hL, hR⟩ := chord_piece_orient W hW4 hWsimple hWnondeg k hk1 hk u v hu hv hdiag hint
+    have hkey : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 W - HexArea.shoelace2 [a', b', c']) := by
+      rcases hP with rfl | rfl
+      · exact orient_transfer_of_split _ _ (HexArea.shoelace2 (HexArea.chordRight W k)) _
+          hsplit hL hR (by rw [horientP]; constructor <;> intro h <;> linarith [hclipP])
+      · refine orient_transfer_of_split _ _ (HexArea.shoelace2 (HexArea.chordLeft W k)) _
+          (by linarith [hsplit]) hR hL
+          (by rw [horientP]; constructor <;> intro h <;> linarith [hclipP])
+    rw [hkey]
+    constructor <;> intro h <;> linarith [hclipW]
 
 /-- **Forbidden-pair ear lift across a valid chord cut (mechanical bookkeeping
     around `chord_ear_lift`).**  Cut the rotation `W = V.rotate ρ` of a simple
@@ -162,42 +229,40 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNo
 
     This is the shared, reusable combinatorial assembly of the two diagonal-split
     branches (`meisters_reduction_interior2`, `empty_branch_bad_lift`): it wires
-    together `chord_ear_lift` (the genuine Jordan brick, still a `sorry`) with the
-    tip-avoidance lemma `chord_tip_ne_other`.  It contains no new geometric
-    content of its own — the only remaining Jordan gap it depends on is inside
-    `chord_ear_lift`.  NOT a dead branch. -/
-lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    together `chord_ear_lift` with the tip-avoidance lemma `chord_tip_ne_other`.
+    It contains no new geometric content of its own — the only remaining Jordan
+    gaps it depends on are the two inputs of `chord_ear_lift`
+    (`chord_lift_other_not_on_diagonal`, `chord_piece_orient`).  NOT a dead branch. -/
+lemma chord_package_forbidden (V : List ℂ)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
-    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length) (hWnd : W.Nodup)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
-    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
-        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
-    (hint : InteriorChord W u v)
     (P Q : List ℂ)
     (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
            (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
-    (hPcyc : EmptyCornerData2 P u v)
+    (r' : ℕ) (a' b' c' p' q' : ℂ) (tl : List ℂ)
+    (hrot' : V.rotate r' = a' :: b' :: c' :: tl)
+    (hb'P : b' ∈ P) (hb'u : b' ≠ u) (hb'v : b' ≠ v)
+    (hp' : tl.getLast? = some p') (hq' : tl.head? = some q')
+    (hempty' : ∀ x ∈ tl, ¬ HexArea.inTriangleStrict a' b' c' x)
+    (hdiag' : ∀ x ∈ tl, x ∉ segment ℝ a' c')
+    (horient' : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tl)))
     (z1 z2 : ℂ)
     (hz1 : z1 ∈ Q ∨ z1 ∉ V) (hz2 : z2 ∈ Q ∨ z2 ∉ V) :
     EmptyCornerData2 V z1 z2 := by
-  -- Combinatorial side facts about `W`.
-  have hWsimple : PolygonSimple W := hW ▸ (PolygonSimple_rotate V ρ).mpr hsimple
-  have hWnd : W.Nodup := hWsimple.1
   have hklt : k < W.length := by omega
   have hWlen : 0 < W.length := by omega
   have hu0 : W[0]! = u := by
     have : W[0]? = some (W[0]!) := by
-      rw [List.getElem?_eq_getElem hWlen]; simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hWlen]
+      rw [List.getElem?_eq_getElem hWlen]
+      simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hWlen]
     rw [hu] at this; exact (Option.some.injEq _ _ ▸ this).symm
   have hvk : W[k]! = v := by
     have : W[k]? = some (W[k]!) := by
-      rw [List.getElem?_eq_getElem hklt]; simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hklt]
+      rw [List.getElem?_eq_getElem hklt]
+      simp [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hklt]
     rw [hv] at this; exact (Option.some.injEq _ _ ▸ this).symm
-  -- The V-ear from the (still open) chord ear lift.
-  obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
-      hpl', hql', hempty', hdiag', horient'⟩ :=
-    chord_ear_lift V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag hint P
-      (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
   -- `b'` is a vertex of `V`.
   have hb'W : b' ∈ W := by
     rcases hPQ with ⟨rfl, _⟩ | ⟨rfl, _⟩
@@ -215,7 +280,34 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
       · exact Or.inr ⟨hPr ▸ hb'P, hQl ▸ hzQ⟩
     · exact fun h => hzV (h ▸ hb'V)
   exact ⟨r', a', b', c', p', q', tl, hrot', key z1 hz1, key z2 hz2, hp', hq',
-    hpl', hql', hempty', hdiag', horient'⟩
+    hempty', hdiag', horient'⟩
+
+/-- **Forbidden-pair ear lift across a valid chord cut.**  `chord_ear_lift`
+    followed by the tip bookkeeping `chord_package_forbidden`. -/
+lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    (h4 : 4 ≤ V.length)
+    (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
+    (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
+    (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2))
+    (hint : InteriorChord W u v)
+    (P Q : List ℂ)
+    (hPQ : (P = HexArea.chordLeft W k ∧ Q = HexArea.chordRight W k) ∨
+           (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
+    (hPsimple : PolygonSimple P)
+    (hPcyc : EmptyCornerData2 P u v)
+    (z1 z2 : ℂ)
+    (hz1 : z1 ∈ Q ∨ z1 ∉ V) (hz2 : z2 ∈ Q ∨ z2 ∉ V) :
+    EmptyCornerData2 V z1 z2 := by
+  have hWsimple : PolygonSimple W := hW ▸ (PolygonSimple_rotate V ρ).mpr hsimple
+  obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
+      hempty', hdiag', horient'⟩ :=
+    chord_ear_lift V hsimple hnd h4 W ρ hW k hk1 hk u v hu hv hdiag hint P hPsimple
+      (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
+  exact chord_package_forbidden V W ρ hW k hk1 hk hWsimple.1 u v hu hv P Q hPQ
+    r' a' b' c' p' q' tl hrot' hb'P hb'u hb'v hp' hq' hempty' hdiag' horient'
+    z1 z2 hz1 hz2
 
 /-- **Interior-split lift through the recursion piece (main path proved,
     triangle/flat residual isolated).**  Cut `W = V.rotate ρ` along the valid
@@ -231,14 +323,17 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
     This is the generic Meisters recursion path and is proved here (modulo the
     Jordan brick `chord_ear_lift` inside `chord_ear_lift_forbidden`).
 
-    **Status: main path proved; single `sorry` for the residual.**  The residual
-    is the (genuine, isolated) case where the forced recursion piece `P` is a
-    triangle (length 3, so `EmptyCornerData2 P` is not available and a direct
-    `V`-ear must be built) or is flat at the cut seam (not `polyCycNondeg`, so the
-    flat-cut-vertex must be removed via `PolygonSimple_remove_flat_mid` /
-    `cross_pred_corner_remove_flat` / `cross_succ_corner_remove_flat` before
-    recursing).  This is a TRUE statement; the residual is unproven, not false.
-    Consumes `chord_ear_lift_forbidden`; NOT a dead branch. -/
+    **Status: main path and triangle piece proved; single `sorry` for the flat
+    residual.**  The *triangle* piece (length 3, where `EmptyCornerData2 P` is
+    unavailable and a `V`-ear must be built directly) is now discharged by
+    `chord_triangle_piece_package`.  What remains is the case where the forced
+    recursion piece has at least four vertices but is flat at the cut seam (not
+    `polyCycNondeg`), so the flat cut vertex must be removed via
+    `PolygonSimple_remove_flat_mid` / `cross_pred_corner_remove_flat` /
+    `cross_succ_corner_remove_flat` (or the normalisation of
+    `RequestProject.SAWUmlaufFlatRemoval`) before recursing, and the returned ear
+    lifted back across the deletion.  This is a TRUE statement; the residual is
+    unproven, not false.  NOT a dead branch. -/
 lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
     (hVlen : 4 ≤ V.length)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
@@ -268,12 +363,32 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     have hPvu : EmptyCornerData2 P v u :=
       IH2 P hPlen hP4 hPsimple hPnd v u (Or.inr hcut')
     have hPcyc : EmptyCornerData2 P u v := by
-      obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hPvu
-      exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8, h9, h10⟩
-    exact chord_ear_lift_forbidden V hsimple hnd W ρ hW k hk1 hk u v hu hv hdiag hint P Q hPQ
-      hPcyc z1 z2 hz1 hz2
-  · -- Residual: the forced recursion piece is a triangle or flat at the seam.
-    sorry
+      obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8⟩ := hPvu
+      exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8⟩
+    exact chord_ear_lift_forbidden V hsimple hnd hVlen W ρ hW k hk1 hk u v hu hv hdiag hint
+      P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
+  · -- The piece is a triangle, or has ≥ 4 vertices but a flat cyclic corner.
+    by_cases hP3 : P.length = 3
+    · -- **Triangle piece (proved).**  The single vertex cut off by the chord is
+      -- itself an ear of `V`; the package is built by
+      -- `chord_triangle_piece_package` and lifted by `chord_package_forbidden`.
+      have hWsimple : PolygonSimple W := hW ▸ (PolygonSimple_rotate V ρ).mpr hsimple
+      have hWnd : polyCycNondeg W := hW ▸ (polyCycNondeg_rotate V ρ (by omega)).mpr hnd
+      have hWlen : W.length = V.length := by rw [← hW]; simp
+      obtain ⟨j, a', b', c', p', q', tl, hrotW, hb'P, hb'u, hb'v, hp', hq',
+          hempty', hdiag', horient'⟩ :=
+        chord_triangle_piece_package W (by omega) hWsimple hWnd k hk1 hk u v hu hv hdiag hint
+          P (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hP3
+      have hrotV : V.rotate (ρ + j) = a' :: b' :: c' :: tl := by
+        rw [← List.rotate_rotate, hW]; exact hrotW
+      exact chord_package_forbidden V W ρ hW k hk1 hk hWsimple.1 u v hu hv P Q hPQ
+        (ρ + j) a' b' c' p' q' tl hrotV hb'P hb'u hb'v hp' hq' hempty' hdiag' horient'
+        z1 z2 hz1 hz2
+    · -- **Residual: the piece has ≥ 4 vertices but a flat cyclic corner at the
+      -- cut seam.**  It must be normalised by flat-vertex deletion
+      -- (`RequestProject.SAWUmlaufFlatRemoval`) before `IH2` can be applied, and
+      -- the returned ear lifted back across the deletions.
+      sorry
 
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
@@ -527,8 +642,6 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
     -- `EmptyCornerData2` directly.
     obtain ⟨⟨hbz1, hbz2⟩, hpl, hql, hdiag, horient⟩ := hclean
     exact ⟨r, a, b, c, p, q, rest, hrot, hbz1, hbz2, hp, hq,
-      HexArea.clip_turn_at_a_ne_zero a c p hpl,
-      HexArea.clip_turn_at_c_ne_zero a c q hql,
       hcase, hdiag, horient⟩
   · -- **Non-clean case.**  Split on whether the clip diagonal `a–c` is itself
     -- *clean* (neighbours `p, q` off the line, no far vertex on the closed
@@ -624,29 +737,96 @@ lemma exists_empty_corner_avoiding_aux :
   exact EmptyCornerData_of_two V z
     (exists_empty_corner_avoiding_aux2 n V hn hlen hsimple hnd z z (Or.inl rfl))
 
-/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
-The declaration below demands that clipping the ear leave a *cyclically
-non-degenerate* polygon (equivalently the two clip-corner clauses
-`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
-non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
-ears leaves a flat vertex behind.  It is retained as preparation: restating it in
-the *weak* form (both clauses dropped) turns it into a true statement, and the
-weak form of the top of this chain is `exists_front_ear_weak`
-(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
-together with the flat-vertex normalisation of
-`RequestProject.SAWUmlaufFlatRemoval`. -/
+/-- **The Meisters empty-corner search, in its corrected (weak) form.**  A
+simple, cyclically non-degenerate polygon with at least four vertices, together
+with any forbidden vertex `z`, has a rotation `a :: b :: c :: rest` whose middle
+vertex `b ≠ z` spans an *empty* corner: no far vertex lies strictly inside the
+corner triangle or on the closed clip diagonal `[a, c]`, and the ear triangle
+shares the orientation of the clip.
 
+**History.**  A previous form of this statement additionally demanded the two
+clip-corner clauses `cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`
+(equivalently: the clip stays cyclically non-degenerate).  That is refuted by the
+pentagon `0, i, 1+i, 2+2i, 2+i` of
+`RequestProject.SAWUmlaufFlatClipCounterexample` — see `flat_clip_no_ear_data`
+there — so those clauses were dropped from `EmptyCornerData`/`EmptyCornerData2`
+and from this chain; the flat vertices a clip creates are deleted afterwards by
+`RequestProject.SAWUmlaufFlatRemoval`. -/
 lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
       rest.getLast? = some p ∧ rest.head? = some q ∧
-      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :=
   exists_empty_corner_avoiding_aux V.length V rfl hlen hsimple hnd z
+
+/-! ### The top of the chain, in the corrected (weak) form
+
+The two declarations `exists_empty_convex_ear_avoiding` and
+`exists_empty_convex_ear` are **false as stated** — they demand
+`polyCycNondeg (a :: c :: rest)`, i.e. that clipping the ear leave a cyclically
+non-degenerate polygon, which the pentagon `0, i, 1+i, 2+2i, 2+i` of
+`RequestProject.SAWUmlaufFlatClipCounterexample` refutes (see
+`flat_clip_no_empty_convex_ear` there).  They are therefore commented out below
+(kept verbatim as a record of the superseded interface), and replaced by the
+weak forms `exists_empty_convex_ear_avoiding_weak` / `exists_empty_convex_ear_weak`
+which drop that clause together with the two edge non-degeneracies `a - p ≠ 0`,
+`q - c ≠ 0` that were derived from it.  The clip's flat vertices are removed
+downstream by `RequestProject.SAWUmlaufFlatRemoval`.
+-/
+
+/-- **The empty-convex-ear existence core, forbidden-vertex form (corrected).**
+A simple, cyclically non-degenerate polygon with at least four vertices, and any
+forbidden vertex `z`, has a rotation `a :: b :: c :: rest` whose middle vertex
+`b ≠ z` is an *ear*: the corner is non-flat, no far vertex lies strictly inside
+the corner triangle or on the closed clip diagonal `[a, c]`, and the ear triangle
+has the orientation of the clip.
+
+**Why the forbidden vertex `z`.**  The bare one-ear statement is not amenable to
+the split-and-recurse induction: splitting along an interior diagonal `d` yields
+two strictly shorter simple sub-polygons, but the single ear handed back by a
+one-ear induction hypothesis may have its tip at an endpoint of `d`, in which
+case it is *not* an ear of the original polygon.  The forbidden-vertex form is
+the inductive packaging of Meisters' two-ears theorem that repairs this. -/
+lemma exists_empty_convex_ear_avoiding_weak (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
+    ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, -, -, hempty, hdiag, horient⟩ :=
+    exists_empty_corner_avoiding V hlen hsimple hnd z
+  exact ⟨r, a, b, c, rest, hrot, hbz,
+    polyCycNondeg_rotate_head V a b c rest r (by omega) hnd hrot,
+    hempty, hdiag, horient⟩
+
+/-- **The empty-convex-ear existence core (one-ear corollary, corrected form).**
+Derived from `exists_empty_convex_ear_avoiding_weak` by instantiating the
+forbidden vertex arbitrarily.  This is exactly the statement
+`exists_front_ear_weak` of `RequestProject.SAWUmlaufPolygon`, the sole
+ear-existence input of the planar Umlaufsatz. -/
+lemma exists_empty_convex_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
+    ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧
+      HexArea.cross (b - a) (c - b) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+  obtain ⟨r, a, b, c, rest, hrot, -, hndtri, hempty, hdiag, horient⟩ :=
+    exists_empty_convex_ear_avoiding_weak V hlen hsimple hnd 0
+  exact ⟨r, a, b, c, rest, hrot, hndtri, hempty, hdiag, horient⟩
+
+/- ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`,
+`flat_clip_no_empty_convex_ear`.**  Superseded by the two weak forms above;
+retained verbatim, commented out, as a record of the old interface.
 
 /-- **The empty-convex-ear existence core, in the inductively-correct
     "forbidden-vertex" form (the genuine Meisters TWO-ears content).**  A
@@ -760,5 +940,6 @@ lemma exists_empty_convex_ear (V : List ℂ) (hlen : 4 ≤ V.length)
     exists_empty_convex_ear_avoiding V hlen hsimple hnd 0
   exact ⟨r, a, b, c, p, q, rest, hrot, hp, hq, hpa, hab, hbc, hcq, hca, hndtri,
     hempty, hdiag, hndclip, htri⟩
+-/
 
 end

@@ -1139,7 +1139,6 @@ def EmptyCornerData (V : List ℂ) (z : ℂ) : Prop :=
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
       rest.getLast? = some p ∧ rest.head? = some q ∧
-      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
@@ -1184,20 +1183,48 @@ def EmptyCornerData2 (V : List ℂ) (z1 z2 : ℂ) : Prop :=
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧ b ≠ z1 ∧ b ≠ z2 ∧
       rest.getLast? = some p ∧ rest.head? = some q ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
+
+/-- **The STRONG empty-corner package** — `EmptyCornerData2` together with the
+    two clip-corner clauses `cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c)
+    ≠ 0`, i.e. with the extra demand that clipping the ear leave a cyclically
+    non-degenerate polygon.
+
+    This is the form the Meisters development originally used, and it is **not**
+    available in general: the simple, non-degenerate pentagon
+    `0, i, 1+i, 2+2i, 2+i` of `RequestProject.SAWUmlaufFlatClipCounterexample`
+    has genuine ears but every clip of one leaves a flat vertex.  It is retained
+    because it *is* available in special situations — notably for a
+    **quadrilateral**, all of whose vertex triples are cyclically consecutive and
+    hence non-degenerate — where the finite proofs `quad_ear_at_a/b/c/d` produce
+    it directly.  `EmptyCornerData2_of_strong` forgets the two extra clauses. -/
+def EmptyCornerData2Strong (V : List ℂ) (z1 z2 : ℂ) : Prop :=
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z1 ∧ b ≠ z2 ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
       HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
       (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
 
+/-- Forgetting the two clip-corner clauses. -/
+lemma EmptyCornerData2_of_strong (V : List ℂ) (z1 z2 : ℂ)
+    (h : EmptyCornerData2Strong V z1 z2) : EmptyCornerData2 V z1 z2 := by
+  obtain ⟨r, a, b, c, p, q, rest, hrot, h1, h2, hp, hq, -, -, hempty, hdiag,
+    horient⟩ := h
+  exact ⟨r, a, b, c, p, q, rest, hrot, h1, h2, hp, hq, hempty, hdiag, horient⟩
+
 /-- The single-forbidden `EmptyCornerData` is the diagonal case `z1 = z2` of the
     two-forbidden predicate. -/
 lemma EmptyCornerData_of_two (V : List ℂ) (z : ℂ) (h : EmptyCornerData2 V z z) :
     EmptyCornerData V z := by
-  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, _, hp, hq, hpa, hqc, hempty, hdiag,
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, _, hp, hq, hempty, hdiag,
       horient⟩ := h
-  exact ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hpa, hqc, hempty, hdiag,
-    horient⟩
+  exact ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hempty, hdiag, horient⟩
 
 /-
 **Meisters Step 1 (the convex extreme-vertex setup), proved sorry-free.**
@@ -1428,9 +1455,16 @@ lemma quad_diagonal_interior (a b c d : ℂ)
     finite branches; it documents the geometry and is preparation for future
     reuse.
 -/
-lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
+lemma meisters_reduction_quad_strong (V : List ℂ) (h4 : V.length = 4)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
-    EmptyCornerData V z := by
+    ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
+      V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
+      rest.getLast? = some p ∧ rest.head? = some q ∧
+      HexArea.cross (a - p) (c - a) ≠ 0 ∧ HexArea.cross (c - a) (q - c) ≠ 0 ∧
+      (∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) ∧
+      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
+      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | ⟨ d, _ | V ⟩ ⟩ ⟩ ⟩ ) <;> simp_all +decide;
   -- Extract the four consecutive-triple non-degeneracies from `hnd`.
   obtain ⟨hab, hbc, hcd, hda⟩ : HexArea.cross (b - a) (c - b) ≠ 0 ∧ HexArea.cross (c - b) (d - c) ≠ 0 ∧ HexArea.cross (d - c) (a - d) ≠ 0 ∧ HexArea.cross (a - d) (b - a) ≠ 0 := by
@@ -1489,6 +1523,19 @@ lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
       · unfold HexArea.shoelace2; simp +decide [ HexArea.cross ] ;
         constructor <;> intro <;> nlinarith
 
+/-- **The quadrilateral base case, in the (weak) `EmptyCornerData` packaging.**
+    Immediate from `meisters_reduction_quad_strong` by dropping the two
+    clip-corner clauses (which `EmptyCornerData` no longer demands, since they
+    are not available in general — see
+    `RequestProject.SAWUmlaufFlatClipCounterexample`; for a *quadrilateral* they
+    do hold, which is why the strong form above is still provable). -/
+lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
+    EmptyCornerData V z := by
+  obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, -, -, hempty, hdiag,
+    horient⟩ := meisters_reduction_quad_strong V h4 hsimple hnd z
+  exact ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hempty, hdiag, horient⟩
+
 /- **The geometric reduction step of the Meisters two-ears search (the single
     remaining open core, now carrying the strong-induction hypothesis).**
     Given the simple, non-degenerate polygon `V` (`≥ 4` vertices), a forbidden
@@ -1527,17 +1574,12 @@ lemma meisters_reduction_quad (V : List ℂ) (h4 : V.length = 4)
 lemma empty_ear_direct (V : List ℂ) (z : ℂ) (r : ℕ) (a b c : ℂ) (rest : List ℂ)
     (p q : ℂ) (hrot : V.rotate r = a :: b :: c :: rest) (hbz : b ≠ z)
     (hp : rest.getLast? = some p) (hq : rest.head? = some q)
-    (hpline : HexArea.cross (c - a) (p - a) ≠ 0)
-    (hqline : HexArea.cross (c - a) (q - a) ≠ 0)
     (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
     (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
     (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))) :
     EmptyCornerData V z :=
-  ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq,
-    HexArea.clip_turn_at_a_ne_zero a c p hpline,
-    HexArea.clip_turn_at_c_ne_zero a c q hqline,
-    hempty, hdiag, horient⟩
+  ⟨r, a, b, c, p, q, rest, hrot, hbz, hp, hq, hempty, hdiag, horient⟩
 
 /-- **Clip preservation of simplicity and non-degeneracy (reusable brick).**
     When the convex corner `a, b, c` of a simple, cyclically non-degenerate
@@ -1757,8 +1799,6 @@ lemma empty_branch_interior_lift (V : List ℂ) (z1 z2 : ℂ)
     (hA'ne : HexArea.cross (b' - a') (c' - b') ≠ 0)
     (hp' : (s ++ a :: c :: t).getLast? = some p')
     (hq' : (s ++ a :: c :: t).head? = some q')
-    (hpt' : HexArea.cross (a' - p') (c' - a') ≠ 0)
-    (hqt' : HexArea.cross (c' - a') (q' - c') ≠ 0)
     (hempty' : ∀ x ∈ (s ++ a :: c :: t), ¬ HexArea.inTriangleStrict a' b' c' x)
     (hdiag' : ∀ x ∈ (s ++ a :: c :: t), x ∉ segment ℝ a' c')
     (horient' : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
