@@ -1103,6 +1103,18 @@ lemma ear_data_of_empty_corner (a b c p q : ℂ) (rest : List ℂ)
     (`cross (a-p) (c-a) ≠ 0`, `cross (c-a) (q-c) ≠ 0`), and whose ear triangle
     shares the clip orientation.
 
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
+
     This is the *geometric heart* of the discrete Umlaufsatz — the Meisters
     "two-ears" theorem in its inductive forbidden-vertex packaging — and is the
     only remaining `sorry` in the whole Umlaufsatz chain.  Intended route:
@@ -1145,6 +1157,18 @@ def EmptyCornerData (V : List ℂ) (z : ℂ) : Prop :=
     within this predicate. -/
 def IsCycEdge (V : List ℂ) (x y : ℂ) : Prop :=
     (x, y) ∈ closedEdges V ∨ (y, x) ∈ closedEdges V
+
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
 
 /-- **The TWO-forbidden-vertex empty-corner predicate (the sound inductive
     invariant).**  Identical to `EmptyCornerData` but the empty-ear tip `b`

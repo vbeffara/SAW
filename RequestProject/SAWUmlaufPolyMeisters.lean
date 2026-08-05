@@ -586,6 +586,18 @@ lemma meisters_reduction2 (V : List ℂ) (hlen : 4 ≤ V.length)
     exact meisters_reduction_empty2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
       rest hrot hbmem hbconv hbseg hcase
 
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
+
 /-- **Strong-induction wrapper (sorry-free), two-forbidden form.**  Discharges
     the induction hypothesis of `meisters_reduction2` by strong induction on the
     polygon length, leaving the genuine geometric content concentrated in the
@@ -611,6 +623,18 @@ lemma exists_empty_corner_avoiding_aux :
   intro n V hn hlen hsimple hnd z
   exact EmptyCornerData_of_two V z
     (exists_empty_corner_avoiding_aux2 n V hn hlen hsimple hnd z z (Or.inl rfl))
+
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
 
 lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
@@ -650,6 +674,18 @@ lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
     survives as an ear of the whole polygon.  Deriving the one-ear corollary is
     then trivial (instantiate `z` arbitrarily).
 
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
+
     This is the irreducible Jordan-curve-theorem-level core (absent from
     Mathlib).  Intended route: strong induction on `V.length`.  Choose the
     extreme (leftmost-lowest) convex vertex via `HexArea.exists_lex_min_mem` /
@@ -688,6 +724,18 @@ lemma exists_empty_convex_ear_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
       horient
   exact ⟨r, a, b, c, p, q, rest, hrot, hbz, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10,
     h11, h12⟩
+
+/-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
+The declaration below demands that clipping the ear leave a *cyclically
+non-degenerate* polygon (equivalently the two clip-corner clauses
+`cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0`).  The simple,
+non-degenerate pentagon `0, i, 1+i, 2+2i, 2+i` refutes that: every one of its
+ears leaves a flat vertex behind.  It is retained as preparation: restating it in
+the *weak* form (both clauses dropped) turns it into a true statement, and the
+weak form of the top of this chain is `exists_front_ear_weak`
+(`RequestProject.SAWUmlaufPolygon`), which is what the live route now uses,
+together with the flat-vertex normalisation of
+`RequestProject.SAWUmlaufFlatRemoval`. -/
 
 /-- **The empty-convex-ear existence core (one-ear corollary).**  A simple,
     non-degenerate polygon with at least four vertices has a cyclic rotation

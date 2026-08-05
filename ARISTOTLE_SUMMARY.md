@@ -1,3 +1,65 @@
+# Summary of changes for run 21ae13bf-620f-4d42-8d61-9f35b62b75c1
+This round worked exclusively on the Umlaufsatz, as requested. It uncovered — and formally disproved — a **false invariant at the heart of the ear-existence chain**, built the machinery that repairs it, and rewired the live route so that the planar Umlaufsatz now rests on a *single* honest `sorry`. `RequestProject.SAWFinal` builds (8178 jobs) and every new result except that one lemma is `sorry`-free.
+
+**1. A machine-checked counterexample (new file `RequestProject/SAWUmlaufFlatClipCounterexample.lean`, `sorry`-free).**
+The pentagon `badV = [0, i, 1+i, 2+2i, 2+i]` is simple (`badV_simple`) and cyclically non-degenerate (`badV_nondeg`), yet **clipping any of its ears leaves three collinear consecutive vertices**. Consequently the statements the whole Meisters development was aiming at — `exists_empty_corner_avoiding`, `exists_empty_convex_ear`, `exists_ear_clip`, and the inductive invariants `EmptyCornerData` / `EmptyCornerData2`, all of which demand that the clip stay `polyCycNondeg` (equivalently the two clip-corner clauses `cross (a-p) (c-a) ≠ 0`, `cross (c-a) (q-c) ≠ 0`) — are **false**. Four formal disproofs are given (`flat_clip_no_ear_data`, `flat_clip_EmptyCornerData_false`, `flat_clip_EmptyCornerData2_false`, `flat_clip_no_empty_convex_ear`), each depending only on `propext`, `Classical.choice`, `Quot.sound`.
+
+**2. The repair: flat-vertex removal (new file `RequestProject/SAWUmlaufFlatRemoval.lean`, `sorry`-free).**
+Deleting a vertex lying strictly between its two neighbours preserves the turning exactly (`flat_turning_identity`, `polyCycWind_remove_flat_second`), the signed area exactly (`shoelace2_remove_flat_second`) and simplicity (`PolygonSimple_remove_flat_second`). Further: in a simple polygon a degenerate cyclic corner is always of this flat kind and never a spike (`flat_between_of_cross_zero`); a cyclically degenerate polygon has a flat corner at the front of some rotation (`exists_flat_cyclic_corner`, with `polyNondeg_of_getElem` and the index bricks); repeated deletion normalises a simple polygon to a simple, *non-degenerate* one with the same turning and area (`exists_nondeg_normalization`, and the hull-invariant variant `exists_normalization_hull`); and a simple polygon with at least four vertices is not contained in a line (`not_collinear_of_simple`, `no_degenerate_normalization`).
+
+**3. The rewired live route (`RequestProject/SAWUmlaufPolygon.lean`).**
+`exists_front_ear_weak` states the corrected, true ear-existence fact (the classical Meisters ear, with the two clip-corner clauses dropped) and is the **only remaining `sorry` on the route to the planar Umlaufsatz**. Proved on top of it: `clip_triangle_nondeg`, `area_ne_zero_of_ear`, `simple_polygon_area_ne_zero` (a simple polygon with ≥ 4 vertices has non-zero signed area) and `exists_shorter_reduction` (clip an ear, then delete the flat vertices the clip created). `polygon_ear_reduction` is now derived from the latter — its first clause weakened from `V'.length = V.length - 1` to `V'.length < V.length` — so `polygon_umlaufsatz` and everything downstream are unchanged. All supporting bricks (`ear_local_turning_identity`, `PolygonSimple_clip`, `diag_disjoint_of_empty_corner`, `polyCycWind_clip_eq_of_identity`, `shoelace2_orient_clip`, `polyWind_triangle`, the normalisation) were checked to depend only on `propext`, `Classical.choice`, `Quot.sound`.
+
+**4. Status of the Meisters development.** `SAWUmlaufPolyBase/Chord/Lift/Escape/Meisters` prove the strong (false) form and are therefore no longer consumed by the live route. They are **not** dead: they are the intended proof of `exists_front_ear_weak`, and the repair is mechanical — drop the two clip-corner clauses from `EmptyCornerData`, `EmptyCornerData2` and from the `∃`-packages of the lift lemmas (~15 tuple sites; a trial edit showed several brittle automated proofs in `SAWUmlaufPolyBase` will need re-tuning, so it was left as the next task rather than half-done). Every refuted declaration now carries a `⚠ FALSE AS STATED` marker pointing at the counterexample and at the weak replacement, and their seven pre-existing `sorry`s are unchanged.
+
+`PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` record all of the above, including exactly what the next round should port and why.
+
+
+# Summary of changes for the current run
+
+This round worked exclusively on the Umlaufsatz.  It found — and formally
+disproved — a **false invariant at the heart of the ear-existence chain**, built
+the machinery that repairs it, and rewired the live route so that the planar
+Umlaufsatz now rests on a *single* honest `sorry`.
+
+**1. The counterexample (new, `sorry`-free).**
+`RequestProject/SAWUmlaufFlatClipCounterexample.lean`: the pentagon
+`0, i, 1+i, 2+2i, 2+i` is simple and cyclically non-degenerate, yet clipping any
+of its ears leaves three collinear consecutive vertices.  Hence
+`exists_empty_corner_avoiding`, `exists_empty_convex_ear`, `exists_ear_clip` and
+the inductive invariants `EmptyCornerData`, `EmptyCornerData2` — which all demand
+that the clip stay `polyCycNondeg` — are **false**.  Four formal disproofs
+(`flat_clip_no_ear_data`, `flat_clip_EmptyCornerData_false`,
+`flat_clip_EmptyCornerData2_false`, `flat_clip_no_empty_convex_ear`) are proved
+from `badV_simple` / `badV_nondeg` and depend only on `propext`,
+`Classical.choice`, `Quot.sound`.
+
+**2. The repair (new, `sorry`-free).**
+`RequestProject/SAWUmlaufFlatRemoval.lean` develops flat-vertex deletion: the
+turning identity at a flat vertex, exact preservation of turning and signed area,
+preservation of simplicity, the fact that a degenerate corner of a simple polygon
+is always flat (never a spike), the search for a flat corner, and the resulting
+normalisation `exists_nondeg_normalization` / `exists_normalization_hull`.  It
+also proves `not_collinear_of_simple`: a simple polygon with at least four
+vertices is not contained in a line.
+
+**3. The rewired route.**  In `RequestProject/SAWUmlaufPolygon.lean`:
+`exists_front_ear_weak` (the corrected, *true* ear-existence statement — the only
+`sorry` on the route), the proved bricks `clip_triangle_nondeg`,
+`area_ne_zero_of_ear`, `simple_polygon_area_ne_zero` (a simple polygon with ≥ 4
+vertices has non-zero area) and `exists_shorter_reduction` (clip an ear, then
+delete the flat vertices).  `polygon_ear_reduction` is derived from the latter,
+so `polygon_umlaufsatz` and all downstream results are unchanged.
+
+**4. Status.**  `RequestProject.SAWFinal` builds (8178 jobs).  Everything added
+this round is `sorry`-free except `exists_front_ear_weak`.  The Meisters
+development (`SAWUmlaufPolyBase/Chord/Lift/Escape/Meisters`) is retained as the
+intended proof of `exists_front_ear_weak`; each of its refuted statements now
+carries a `⚠ FALSE AS STATED` marker explaining the mechanical restatement
+(dropping the two clip-corner clauses) that makes it true again.  All new files
+are imported on the route to the main theorem, and all work is committed and
+pushed.
+
 # Summary of changes for run 25829045-cfe3-4df4-b24f-2f9a336db5d8
 This round worked only on the Umlaufsatz, and closed one of its two remaining winding-number gaps with an elementary, fully machine-checked construction.
 

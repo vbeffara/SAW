@@ -167,6 +167,7 @@ import RequestProject.SAWHexPathHelpers
 -- Soundness audit of the Umlaufsatz chord branch (dart counterexample):
 -- "disjoint from non-incident edges" does not make a chord an interior diagonal.
 import RequestProject.SAWUmlaufDartCounterexample
+import RequestProject.SAWUmlaufFlatClipCounterexample
 
 open Real Complex ComplexConjugate Filter Topology
 

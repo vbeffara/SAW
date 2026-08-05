@@ -1,5 +1,84 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): the ear-existence invariant of the whole
+> development was found to be FALSE, disproved formally, and REPLACED; the live
+> route to the planar Umlaufsatz now rests on a single honest `sorry`.**
+>
+> ### 1. The counterexample (`RequestProject/SAWUmlaufFlatClipCounterexample.lean`, `sorry`-free)
+>
+> The pentagon `badV = [0, i, 1+i, 2+2i, 2+i]` is a simple (`badV_simple`),
+> cyclically non-degenerate (`badV_nondeg`) polygon, and **no** rotation of it
+> satisfies the ear data demanded by `exists_empty_corner_avoiding` /
+> `exists_empty_convex_ear` / `EmptyCornerData` / `EmptyCornerData2` /
+> `exists_ear_clip`: `flat_clip_no_ear_data`,
+> `flat_clip_EmptyCornerData_false`, `flat_clip_EmptyCornerData2_false`,
+> `flat_clip_no_empty_convex_ear`.  All four disproofs depend only on
+> `propext, Classical.choice, Quot.sound`.
+>
+> The reason is structural, not accidental: those statements require the *clip*
+> `a :: c :: rest` to be `polyCycNondeg`, i.e. both clip corners
+> `cross (a - p) (c - a) ≠ 0`, `cross (c - a) (q - c) ≠ 0` to survive.  The
+> pentagon has genuine ears (at `i`, at `2+2i` and at `2+i`), but clipping *any*
+> of them leaves three collinear consecutive vertices.  So the "clip corners stay
+> non-flat" clauses can never be part of a true ear-existence statement.
+>
+> ### 2. The repair: flat-vertex removal (`RequestProject/SAWUmlaufFlatRemoval.lean`, `sorry`-free)
+>
+> A vertex `b` between its neighbours (`b = a + s (c - a)`, `0 < s < 1`) can be
+> deleted from a closed polygon:
+>
+> * `flat_turning_identity`, `polyCycWind_remove_flat_second` — the turning is
+>   *unchanged* (the turn at `b` is `0`, the turns at `a` and `c` merge);
+> * `shoelace2_remove_flat_second` — the signed area is unchanged;
+> * `PolygonSimple_remove_flat_second` — simplicity is preserved;
+> * `flat_between_of_cross_zero` — in a *simple* polygon (≥ 4 vertices) a
+>   degenerate cyclic corner is always of this flat kind, never a spike;
+> * `exists_flat_cyclic_corner` (with `polyNondeg_of_getElem`,
+>   `getElem_append_take_two`, `getElem_rotate_bang`) — a cyclically degenerate
+>   polygon has a flat corner at the front of some rotation;
+> * `exists_nondeg_normalization` — **normalisation**: a simple polygon with
+>   non-zero area becomes simple *and* `polyCycNondeg`, with the same turning and
+>   the same area, by repeated deletion;
+> * `exists_normalization_hull` — the same with the invariant that every original
+>   vertex lies in the convex hull of the surviving ones, and with the only
+>   possible failure (a degenerate triangle) reported explicitly;
+> * `not_collinear_of_simple`, `no_degenerate_normalization` — a simple polygon
+>   with ≥ 4 vertices is not contained in a line, so that failure cannot occur.
+>
+> ### 3. The rewired live route (`RequestProject/SAWUmlaufPolygon.lean`)
+>
+> * `exists_front_ear_weak` (**the single remaining `sorry` of the Umlaufsatz
+>   route**) — the classical Meisters ear: a rotation `a :: b :: c :: rest` with
+>   a non-flat corner, an empty corner triangle, no vertex on the closed diagonal
+>   `[a, c]`, and matching orientation.  The two clip-corner clauses are gone.
+> * `clip_triangle_nondeg` (proved) — the clip of a quadrilateral at an ear is a
+>   non-degenerate triangle.
+> * `area_ne_zero_of_ear`, `simple_polygon_area_ne_zero` (proved) — a simple
+>   polygon with ≥ 4 vertices has non-zero signed area.
+> * `exists_shorter_reduction` (proved) — clip an ear, then normalise: a strictly
+>   shorter simple, non-degenerate polygon with the *same* turning and the *same*
+>   orientation.
+> * `polygon_ear_reduction` is now derived from it (its first clause weakened
+>   from `V'.length = V.length - 1` to `V'.length < V.length`), so
+>   `polygon_umlaufsatz_take` / `polygon_umlaufsatz` and everything downstream are
+>   unchanged and now depend on `exists_front_ear_weak` alone.
+>
+> ### 4. What this means for the Meisters development
+>
+> `SAWUmlaufPolyBase/Chord/Lift/Escape/Meisters` prove the *strong* (false) form.
+> They are **not** dead: they are the intended proof of `exists_front_ear_weak`,
+> and the repair is mechanical — drop the two clip-corner clauses from
+> `EmptyCornerData`, `EmptyCornerData2` and from the `∃`-packages of the lift
+> lemmas (about 15 tuple sites), after which the branch statements become true
+> again.  Every affected declaration now carries a `⚠ FALSE AS STATED` marker
+> pointing at the counterexample.  Their seven `sorry`s
+> (`empty_branch_boundary_lift` ×2, `vertex_escape_joinedIn_arbitrarily_far_one_diag`,
+> `clipped_ear_escape_walk`, `chord_ear_lift`, `interior_lift_via_piece`,
+> `empty_branch_bad_lift`) are unchanged and are *not* on the live route at the
+> moment.
+>
+> ---
+
 > **Umlaufsatz (CURRENT round): the chord branch's "outside ⟹ winding `0`"
 > direction is now PROVED, by an elementary *corner escape* — no Jordan-curve
 > input.  The 7000-line Umlaufsatz file was also split into six chained parts.**
