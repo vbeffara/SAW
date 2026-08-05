@@ -1,6 +1,108 @@
 # Proof Status: μ = √(2+√2)
 
-> **Umlaufsatz (CURRENT round): SOUNDNESS FIX in the chord branch, plus a new
+> **Umlaufsatz (CURRENT round): the chord branch's "outside ⟹ winding `0`"
+> direction is now PROVED, by an elementary *corner escape* — no Jordan-curve
+> input.  The 7000-line Umlaufsatz file was also split into six chained parts.**
+>
+> ### 1. The corner escape
+>
+> New `sorry`-free files, all on the live route to the main theorem:
+>
+> * `RequestProject/SAWUmlaufCornerEscapeAux.lean` — the real pairing
+>   `HexArea.cdot d w = (w * conj d).re`, the closed convex `HexArea.cornerCone
+>   u n₁ n₂` spanned by two directions at an apex, their basic properties, a
+>   uniform positive lower bound over the vertices of a list, and two
+>   ingredients used to instantiate the escape:
+>   `exists_dir_of_lexMin` (a lexicographically minimal vertex is *strictly*
+>   extreme: a single tilted direction `1 + ε i` separates it from all others)
+>   and `not_mem_cornerCone_of_inTriangleStrict(')` (if `v` is strictly inside
+>   the corner triangle `(p, u, n)`, then `p ∉ cornerCone u n v` and
+>   `n ∉ cornerCone u v p`).
+> * `RequestProject/SAWUmlaufCornerEscape.lean` — the escape theorem
+>   `HexArea.ptWind_zero_of_extreme_corner`:
+>
+>   > Let `P` be a closed polygon, `u` a vertex of `P` that is strictly extreme
+>   > for a direction `d`, let the two cycle edges of `P` at `u` lie in the
+>   > convex cone `cornerCone u n₁ n₂`, let `x₀` be seen from `u` in a direction
+>   > *outside* that cone, and let `[u, x₀]` meet the polygon only at `u`.  Then
+>   > `ptWind x₀ P = 0`.
+>
+>   The proof is explicit: slide from `x₀` along `[u, x₀]` to a point `z` with
+>   `cdot d (z - u) < h` (`h` = minimum over the other vertices), then run the
+>   straight ray from `z` in direction `-((n₁ - u) + (n₂ - u))`.  Along the ray
+>   `cdot d (· - u)` strictly decreases, so the ray misses every edge with both
+>   endpoints `≠ u` (those stay at level `≥ h`) and misses the two edges at `u`
+>   (a meeting point would exhibit `x₀ - u` inside the cone).  Far out, the whole
+>   polygon lies in an open half plane, so the winding vanishes
+>   (`ptWind_eq_zero_of_halfplane`) and is transported back by
+>   `ptWind_eq_of_segment_avoids`.
+> * `RequestProject/SAWUmlaufChordCorner.lean` — the chord-branch instantiation:
+>   the `cycleEdges = closedEdges` bridge, the characterisation of the cycle
+>   edges incident to the head of a `Nodup` polygon, the packaged
+>   `ptWind_zero_of_corner_head`, and the main result
+>   `chordPiece_other_neighbour_ptWind_zero`: for a cut `W[0]–W[k]` that is an
+>   `InteriorChord`, the cyclic neighbour of `u = W[0]` lying in the **other**
+>   chord piece has winding `0` about the piece `P`.
+>
+> `InteriorChord` now records the strict-extremality *direction* at the rooted
+> endpoint (discharged at the call site from lex-minimality of the Meisters
+> apex, via `exists_lexmin_mid_rotation`, which was extended accordingly).
+>
+> ### 2. Consequence
+>
+> `chord_ear_other_ptWind_zero` (previously an escape-walk residue with a live
+> `sorry` underneath) is now **proved** from the corner escape plus the already
+> proved arc-constancy brick `chord_ear_other_ptWind_zero_of_witness`, and its
+> statement was pruned to its minimal hypotheses.  The escape-walk chain
+> (`vertex_escape_joinedIn_arbitrarily_far_one_diag`, `vertex_escape_walk_core`,
+> `chord_ear_other_escape_walk` and the simple-arc non-separation development
+> beneath them) is consequently no longer consumed by the live route; it is
+> **retained as preparation** for `clipped_ear_escape_walk`, the one escape
+> residue the corner escape does not cover (its forbidden set also contains the
+> ear base `a'–c'` of the piece, which is not an edge of `W`).  This is recorded
+> in the docstring of `vertex_escape_joinedIn_arbitrarily_far_one_diag`.
+>
+> ### 3. File split
+>
+> `RequestProject/SAWUmlaufPolygon.lean` (6980 lines) was split into six chained
+> parts — `SAWUmlaufPolyBase → SAWUmlaufPolyChord → SAWUmlaufPolyLift →
+> SAWUmlaufPolyEscape → SAWUmlaufPolyMeisters → SAWUmlaufPolygon` — the last of
+> which keeps the old module name, so all downstream imports are unchanged.
+> Three brittle automated proofs that no longer elaborated after the split were
+> repaired by hand (explicit `List.getElem_rotate` / `List.getElem_append`
+> index computations instead of `grind +suggestions`).
+>
+> ### 4. Remaining Umlaufsatz `sorry`s (7, in 6 declarations)
+>
+> * `empty_branch_boundary_lift` (`SAWUmlaufPolyLift`) — the two spike subcases
+>   (re-inserting the apex can flatten the seam turn: needs the full two-ears
+>   theorem or a strengthened induction invariant);
+> * `vertex_escape_joinedIn_arbitrarily_far_one_diag` (`SAWUmlaufPolyEscape`) —
+>   banked preparation, see §2;
+> * `clipped_ear_escape_walk` (`SAWUmlaufPolyEscape`) — the genuine remaining
+>   Jordan content: an escape from a point strictly inside an empty ear triangle
+>   of the piece, avoiding also the ear base.  Equivalently: a point strictly
+>   inside an empty convex ear of a simple polygon has winding `±2π`.  The
+>   *triangle* case of the piece is now discharged outright by the new
+>   `HexArea.ptWind_pair_zero` (clipping the ear of a triangle leaves the
+>   degenerate pair `[a', c']`, which never winds), so only pieces with at least
+>   four vertices remain;
+> * `chord_ear_lift`, `interior_lift_via_piece`, `empty_branch_bad_lift`
+>   (`SAWUmlaufPolyMeisters`) — the seam-corner/list-surgery lift, the
+>   triangle/flat-seam residual of the recursion, and the bad-diagonal subcase.
+>
+> ---
+
+> **Note on `RequestProject/SAWVertexRelation.lean`.**  This is the only file of
+> the project not reachable from `RequestProject.SAWFinal`.  It is a superseded
+> duplicate of part of `SAWObservableDef` (both declare `trueNeighbors`, so the
+> two cannot be imported together); it belongs to the parafermionic-observable
+> half of the development, not to the Umlaufsatz, and was left untouched this
+> round.
+>
+> ---
+
+> **Umlaufsatz (previous round): SOUNDNESS FIX in the chord branch, plus a new
 > reduction of its Jordan residue.**
 >
 > ### 1. A false hypothesis shape was found and fixed

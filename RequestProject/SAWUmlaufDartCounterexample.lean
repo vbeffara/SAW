@@ -172,7 +172,7 @@ inside the corner triangle `(r, q, x)` at the rooted endpoint `q = -2`.  So the
 strengthened chord branch of `RequestProject.SAWUmlaufPolygon` genuinely excludes
 this configuration. -/
 theorem dart_chord_not_interiorChord : ¬ InteriorChord dartW (-2) 2 := by
-  rintro ⟨pu, nu, hhead, hlast, hnu, hext, hcone⟩
+  rintro ⟨pu, nu, hhead, hlast, hnu, hext, hdir, hcone⟩
   have hpu : pu = -4 * Complex.I := by
     have : dartW.getLast? = some (-4 * Complex.I) := by simp [dartW]
     rw [this] at hlast

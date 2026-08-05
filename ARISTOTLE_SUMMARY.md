@@ -1,3 +1,84 @@
+# Summary of changes for run 25829045-cfe3-4df4-b24f-2f9a336db5d8
+This round worked only on the Umlaufsatz, and closed one of its two remaining winding-number gaps with an elementary, fully machine-checked construction.
+
+**1. New: the corner escape (all `sorry`-free).**
+- `RequestProject/SAWUmlaufCornerEscapeAux.lean` — the real pairing `HexArea.cdot d w = (w * conj d).re`, the closed convex cone `HexArea.cornerCone u n₁ n₂` at an apex and its convexity, a uniform positive lower bound of `cdot d (· - u)` over the vertices of a list, `ptWind_pair_zero` (a two-vertex cycle never winds), `exists_dir_of_lexMin` (a lexicographically minimal vertex is *strictly* extreme: one tilted direction `1 + ε i` separates it from all the others) and `not_mem_cornerCone_of_inTriangleStrict(')`.
+- `RequestProject/SAWUmlaufCornerEscape.lean` — `HexArea.ptWind_zero_of_extreme_corner`: if `u` is a strictly extreme vertex of a closed polygon `P` for a direction `d`, the two cycle edges of `P` at `u` lie in the cone spanned by `n₁ - u`, `n₂ - u`, the point `x₀` is seen from `u` in a direction outside that cone, and `[u, x₀]` meets the polygon only at `u`, then `ptWind x₀ P = 0`. The proof is explicit: slide from `x₀` to a point `z` near `u` below the level of all other vertices, then follow the straight ray from `z` in direction `-((n₁ - u) + (n₂ - u))`, along which the linear functional strictly decreases; far out the polygon lies in an open half plane.
+- `RequestProject/SAWUmlaufChordCorner.lean` — the `cycleEdges = closedEdges` bridge, the characterisation of the cycle edges incident to the head of a `Nodup` polygon, and `chordPiece_other_neighbour_ptWind_zero`: for a valid interior chord cut `W[0]–W[k]`, the cyclic neighbour of `u = W[0]` in the *other* chord piece has winding `0` about the piece.
+
+**2. Consequence.** `chord_ear_other_ptWind_zero` — previously an escape-walk residue resting on a live `sorry` — is now proved and pruned to minimal hypotheses; the "outside ⟹ winding `0`" half of the chord branch needs no Jordan-curve input at all. `InteriorChord` now carries the strict-extremality direction at its rooted endpoint, discharged at the sole call site from lex-minimality of the Meisters apex. The escape-walk chain and the simple-arc non-separation development beneath it are no longer on the live route; they are retained and explicitly documented (in the docstring of `vertex_escape_joinedIn_arbitrarily_far_one_diag`) as preparation for `clipped_ear_escape_walk`, the one escape residue the corner escape does not cover. In addition, the triangle case of that residue is now discharged outright via `ptWind_pair_zero`, so only pieces with at least four vertices remain.
+
+**3. Refactor.** The 6980-line `RequestProject/SAWUmlaufPolygon.lean` was split into six chained files `SAWUmlaufPolyBase → SAWUmlaufPolyChord → SAWUmlaufPolyLift → SAWUmlaufPolyEscape → SAWUmlaufPolyMeisters → SAWUmlaufPolygon`; the last keeps the old module name so downstream imports are unchanged. Three brittle automated proofs that stopped elaborating after the split were repaired with explicit index computations.
+
+**Status.** `RequestProject.SAWFinal` builds (8174 jobs). Everything added this round is `sorry`-free and uses only `propext`, `Classical.choice`, `Quot.sound`. Seven Umlaufsatz `sorry`s remain, in six declarations: the two spike subcases of `empty_branch_boundary_lift`, `vertex_escape_joinedIn_arbitrarily_far_one_diag` (banked preparation), `clipped_ear_escape_walk` (the genuine remaining Jordan content — a point strictly inside an empty convex ear of a simple polygon has winding `±2π`), and `chord_ear_lift`, `interior_lift_via_piece`, `empty_branch_bad_lift`. `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` record each one and what it now needs; all new files are imported on the route to the main theorem, and all work is committed and pushed.
+
+# Summary of changes for the current run
+
+This round worked exclusively on the Umlaufsatz and closed the "outside ⟹
+winding `0`" half of the chord-splitting branch, **without any Jordan-curve
+input**, by an elementary explicit construction.
+
+## 1. The corner escape (new, `sorry`-free)
+
+`RequestProject/SAWUmlaufCornerEscapeAux.lean` and
+`RequestProject/SAWUmlaufCornerEscape.lean` prove
+
+> **`HexArea.ptWind_zero_of_extreme_corner`.**  Let `P` be a closed polygon and
+> `u` a vertex which is *strictly extreme* for a direction `d`
+> (`0 < cdot d (y - u)` for every other vertex `y`).  Suppose the two cycle
+> edges of `P` at `u` lie in the convex cone spanned by `n₁ - u` and `n₂ - u`,
+> the point `x₀` is seen from `u` in a direction outside that cone, and the
+> segment `[u, x₀]` meets the polygon only at `u`.  Then `ptWind x₀ P = 0`.
+
+The proof is completely explicit: slide from `x₀` towards `u` to a point `z`
+below the level `h` of all other vertices, then follow the straight ray from `z`
+in the direction `-((n₁ - u) + (n₂ - u))`.  That ray strictly decreases the
+linear functional, so it misses every edge away from `u` and (by the cone
+condition) the two edges at `u`; far out the polygon lies in an open half plane,
+so the winding is `0` there, and it is transported back along the ray and the
+initial segment.
+
+Supporting `sorry`-free ingredients: the pairing `HexArea.cdot`, the convex
+`HexArea.cornerCone`, a uniform positive bound over a vertex list,
+`exists_dir_of_lexMin` (a lex-minimal vertex is strictly extreme, via the tilted
+direction `1 + ε i`) and `not_mem_cornerCone_of_inTriangleStrict(')`.
+
+## 2. Instantiation in the chord branch (new, `sorry`-free)
+
+`RequestProject/SAWUmlaufChordCorner.lean` supplies the `cycleEdges`/`closedEdges`
+bridge, the cycle edges incident to the head of a `Nodup` polygon, and
+
+> **`chordPiece_other_neighbour_ptWind_zero`.**  For an `InteriorChord` cut
+> `W[0]–W[k]` of a simple polygon, the cyclic neighbour of `u = W[0]` belonging
+> to the *other* chord piece has winding `0` about the piece `P`.
+
+`InteriorChord` now carries the strict-extremality direction at its rooted
+endpoint; it is discharged at the sole call site from lex-minimality of the
+Meisters apex (`exists_lexmin_mid_rotation` was extended accordingly).
+
+Consequently `chord_ear_other_ptWind_zero` is **proved** (it was an escape-walk
+residue resting on a live `sorry`), and its hypotheses were pruned.  The whole
+escape-walk chain is no longer on the live route; it is kept and explicitly
+documented as preparation for `clipped_ear_escape_walk`, the remaining escape
+residue (its forbidden set also contains the piece's ear base, which is not an
+edge of `W`).
+
+## 3. File split
+
+`RequestProject/SAWUmlaufPolygon.lean` (6980 lines) is now six chained files
+`SAWUmlaufPolyBase → SAWUmlaufPolyChord → SAWUmlaufPolyLift →
+SAWUmlaufPolyEscape → SAWUmlaufPolyMeisters → SAWUmlaufPolygon`; the last keeps
+the old module name so downstream imports are unchanged.  Three brittle
+automated proofs that stopped elaborating after the split were repaired with
+explicit index computations.
+
+## 4. Status
+
+`RequestProject.SAWFinal` builds (8174 jobs).  Everything added this round is
+`sorry`-free and depends only on `propext`, `Classical.choice`, `Quot.sound`.
+Seven Umlaufsatz `sorry`s remain, in six declarations; `PROOF_STATUS.md` lists
+them and what each one now needs.
+
 # Summary of changes for run 5c8df62a-9661-4112-9ce2-5348cca806e0
 This round worked exclusively on the Umlaufsatz, and it turned up — and fixed — a soundness bug in the chord-splitting branch, with a fully machine-checked counterexample.
 
