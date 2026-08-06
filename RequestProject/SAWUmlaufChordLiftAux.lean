@@ -1,5 +1,7 @@
 import Mathlib
 import RequestProject.SAWUmlaufPolyEscape
+import RequestProject.SAWUmlaufRayIndex
+import RequestProject.SAWUmlaufEarTipEscape
 
 /-!
 # `SAWUmlaufChordLiftAux` — the two geometric inputs of the chord-split ear lift
@@ -60,24 +62,26 @@ lemma chord_lift_ear_rotation (W : List ℂ) (k : ℕ) (hk1 : 1 ≤ k)
       chordRight_interior_ear_extract W k hk1 hk hWnd s a' b' c' rest0 hrotP hbu hbv
     exact ⟨i - 1, tl, hrot⟩
 
-/-- **Other-piece vertices avoid the closed ear diagonal.**
+/-- **Other-piece vertices avoid the closed ear diagonal (PROVED).**
 
 Let the chord `W[0]–W[k]` be a valid interior diagonal of the simple polygon `W`,
 splitting it into the piece `P` and the other piece, and let
 `a' :: b' :: c' :: tlP` be an ear rotation of `P` (empty corner triangle, no
-`P`-vertex on the closed diagonal `[a', c']`).  Then no vertex of `W` outside `P`
-lies on the closed segment `[a', c']` either.
+`P`-vertex on the closed diagonal `[a', c']`, coherent orientation).  Then no
+vertex of `W` outside `P` lies on the closed segment `[a', c']` either.
 
-**Status: `sorry`.**  This is the boundary companion of the proved
-`chord_ear_empty_other` (which excludes the strict *interior* of the ear
-triangle for such a vertex).  The two are proved by the same principle — a
-vertex of the other piece is *outside* the piece `P`, whereas the ear triangle of
-`P` is inside it — but the winding-number argument of
-`chord_ear_inner_ptWind_ne_zero` sees only the open triangle, so the closed
-diagonal edge needs its own (elementary) argument: if `x ∉ P` lay on `[a', c']`
-then `x` would be a vertex of `W` interior to a segment joining two vertices of
-`W`, and the two `W`-edges at `x` would have to leave the ear triangle across
-`[a', b']` or `[b', c']` — both edges of `W` — contradicting simplicity.
+Proof.  Such a vertex `x` lies off every edge of `P`
+(`chordPiece_cycleEdge_or_diag` splits the edges of `P` into edges of `W` — which
+`x` avoids by simplicity, `vertex_off_nonincident_edge` — and the cut diagonal,
+which `x` avoids by `other_piece_vertex_not_on_valid_diagonal`), and it is not an
+endpoint of the base, hence lies in its relative interior.  The midpoint of
+`[x, b']` is then strictly inside the ear triangle
+(`inTriangleStrict_base_perturb`) and the whole segment from `x` to it misses the
+boundary of `P`, so the winding numbers agree
+(`HexArea.ptWind_eq_of_segment_avoids`).  But the winding number of `P` around `x`
+vanishes (`chord_ear_other_ptWind_zero`) while it is nonzero inside the ear
+(`ear_interior_ptWind_ne_zero_of_rotation`, `RequestProject.SAWUmlaufEarTipEscape`)
+— a contradiction.
 
 NOT a dead branch: it is one of the four inputs of `chord_ear_lift`. -/
 lemma chord_lift_other_not_on_diagonal (W : List ℂ) (h4 : 4 ≤ W.length)
@@ -91,11 +95,74 @@ lemma chord_lift_other_not_on_diagonal (W : List ℂ) (h4 : 4 ≤ W.length)
     (hP : P = HexArea.chordLeft W k ∨ P = HexArea.chordRight W k)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ)
     (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hDP : HexArea.cross (b' - a') (c' - b') ≠ 0)
     (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
     (hdiagP : ∀ y ∈ tlP, y ∉ segment ℝ a' c')
+    (horientP : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
+        ↔ (0:ℝ) < HexArea.shoelace2 (a' :: c' :: tlP)))
     (x : ℂ) (hxW : x ∈ W) (hxP : x ∉ P) :
     x ∉ segment ℝ a' c' := by
-  sorry
+  intro hxseg
+  -- (1) `x` lies off every edge of the piece `P`.
+  have hxoff : ∀ e ∈ closedEdges P, x ∉ segment ℝ e.1 e.2 := by
+    intro e he
+    have he' : e ∈ HexArea.cycleEdges P := by rw [HexArea.cycleEdges_eq_closedEdges]; exact he
+    obtain ⟨⟨h1P, h2P⟩, hcase⟩ := chordPiece_cycleEdge_or_diag W k hk1 hk u v hu hv P hP e he'
+    rcases hcase with heW | hseg
+    · exact vertex_off_nonincident_edge W h4 hsimple x hxW e.1 e.2 heW
+        (fun h => hxP (h ▸ h1P)) (fun h => hxP (h ▸ h2P))
+    · rw [hseg]
+      exact other_piece_vertex_not_on_valid_diagonal W h4 hsimple hnd k hk1 hk u v hu hv hdiag
+        P hP x hxW hxP
+  -- (2) `x` lies in the *relative interior* of the ear base.
+  have ha'P : a' ∈ P := by
+    have hmem : a' ∈ P.rotate s := by rw [hrotP]; simp
+    exact (List.mem_rotate).mp hmem
+  have hc'P : c' ∈ P := by
+    have hmem : c' ∈ P.rotate s := by rw [hrotP]; simp
+    exact (List.mem_rotate).mp hmem
+  have hxa : x ≠ a' := fun h => hxP (h ▸ ha'P)
+  have hxc : x ≠ c' := fun h => hxP (h ▸ hc'P)
+  have hxopen : x ∈ openSegment ℝ a' c' := by
+    rw [← insert_endpoints_openSegment] at hxseg
+    simp only [Set.mem_insert_iff] at hxseg
+    rcases hxseg with h | h | h
+    · exact absurd h hxa
+    · exact absurd h hxc
+    · exact h
+  -- (3) Perturb `x` towards the tip: the midpoint of `[x, b']` is strictly inside.
+  set y : ℂ := ((1 - (1/2 : ℝ) : ℝ) : ℂ) * x + (((1/2 : ℝ)) : ℂ) * b' with hy
+  have hyin : HexArea.inTriangleStrict a' b' c' y :=
+    inTriangleStrict_base_perturb a' b' c' x hDP hxopen (1/2) (by norm_num) (by norm_num)
+  -- (4) The winding number of `P` is unchanged along `[x, y]`.
+  have hwind : HexArea.ptWind x P = HexArea.ptWind y P := by
+    refine HexArea.ptWind_eq_of_segment_avoids P x y ?_
+    intro e he
+    rw [HexArea.cycleEdges_eq_closedEdges] at he
+    rw [Set.disjoint_left]
+    intro w hw hwe
+    obtain ⟨u1, u2, hu1, hu2, husum, hweq⟩ := hw
+    by_cases hu2z : u2 = 0
+    · have hwx : w = x := by
+        have hu1' : u1 = 1 := by rw [hu2z] at husum; linarith
+        rw [← hweq, hu2z, hu1']; simp
+      exact hxoff e he (hwx ▸ hwe)
+    · have hu2pos : 0 < u2 := lt_of_le_of_ne hu2 (Ne.symm hu2z)
+      have hwform : w = ((1 - u2 / 2 : ℝ) : ℂ) * x + ((u2 / 2 : ℝ) : ℂ) * b' := by
+        have hu1' : u1 = 1 - u2 := by linarith
+        rw [← hweq, hy, hu1']
+        push_cast [Complex.real_smul]
+        ring
+      have hwin : HexArea.inTriangleStrict a' b' c' w := by
+        rw [hwform]
+        exact inTriangleStrict_base_perturb a' b' c' x hDP hxopen (u2 / 2) (by linarith)
+          (by linarith)
+      exact ear_interior_off_closedEdges_of_rotation P hPsimple a' b' c' s tlP hrotP hDP
+        hemptyP hdiagP w hwin e he hwe
+  -- (5) The piece does not wind around `x`, but it does wind around `y`.
+  have hzero := chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag hint P hP x hxW hxP
+  exact ear_interior_ptWind_ne_zero_of_rotation P hPsimple a' b' c' s tlP hrotP hDP hemptyP
+    hdiagP horientP y hyin (by rw [← hwind]; exact hzero)
 
 /-- **Both chord pieces carry the orientation of the whole polygon.**
 

@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SAWUmlaufPolyEscape
 import RequestProject.SAWUmlaufChordLiftAux
 import RequestProject.SAWUmlaufFlatSeamLift
+import RequestProject.SAWUmlaufJordanCore
 
 /-!
 # `SAWUmlaufPolygon`, part `SAWUmlaufPolyMeisters`
@@ -145,6 +146,9 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNo
       (by rw [hu0]; exact hb'u) (by rw [hvk]; exact hb'v)
   have hrotV : V.rotate (ρ + j) = a' :: b' :: c' :: tl := by
     rw [← List.rotate_rotate, hW]; exact hrotW
+  -- The ear tip is an interior corner of `W`, hence non-degenerate.
+  have hDP : HexArea.cross (b' - a') (c' - b') ≠ 0 :=
+    polyCycNondeg_rotate_head W a' b' c' tl j (by omega) hWnondeg hrotW
   -- Lengths: the lifted tail is nonempty.
   have htllen : tl.length + 3 = W.length := by
     have := congrArg List.length hrotW; simp at this; omega
@@ -184,14 +188,15 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNo
     intro x hx
     by_cases hxP : x ∈ P
     · exact hemptyP x (htlP x hx hxP)
-    · exact chord_ear_empty_other W hWsimple hWnondeg k hk1 hk u v hu hv hdiag hint
-        P hPsimple hP a' b' c' s rest0 hrotP hemptyP horientP x (htlW x hx) hxP
+    · exact chord_ear_empty_other_jordan W hWsimple k hk1 hk u v hu hv hdiag hint
+        P hPsimple hP a' b' c' s rest0 hrotP hDP hemptyP hdiagP horientP x (htlW x hx) hxP
   · -- No far vertex on the closed ear diagonal.
     intro x hx
     by_cases hxP : x ∈ P
     · exact hdiagP x (htlP x hx hxP)
     · exact chord_lift_other_not_on_diagonal W hW4 hWsimple hWnondeg k hk1 hk u v hu hv
-        hdiag hint P hPsimple hP a' b' c' s rest0 hrotP hemptyP hdiagP x (htlW x hx) hxP
+        hdiag hint P hPsimple hP a' b' c' s rest0 hrotP hDP hemptyP hdiagP horientP x
+        (htlW x hx) hxP
   · -- Orientation transfer.
     have hclipP : HexArea.shoelace2 P
         = HexArea.shoelace2 (a' :: c' :: rest0) + HexArea.shoelace2 [a', b', c'] := by

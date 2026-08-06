@@ -624,6 +624,21 @@ lemma vertex_escape_walk_core (W : List ℂ) (hsimple : PolygonSimple W)
   · intro s hs
     exact hab s (by rw [List.mem_append]; right; exact hs)
 
+/- **DEAD BRANCH (superseded).**  The block below is the *old* route to the
+Jordan-separation keystone `chord_ear_empty_other`, which reduced it to an
+escaping edge-avoiding walk out of the clipped polygon.  That route needed the
+residual hull-interior escape `clipped_ear_escape_walk`, whose hypotheses are in
+fact contradictory in the shape stated, so it could not be discharged.
+
+The live route now goes through `chord_ear_empty_other_jordan`
+(`RequestProject.SAWUmlaufJordanCore`), which derives the keystone from the
+point-in-polygon dichotomy `polygon_ptWind_dichotomy` plus the winding-number
+jump across an edge.  `chord_ear_lift`
+(`RequestProject.SAWUmlaufPolyMeisters`) calls that version, so the block below
+is no longer referenced anywhere; it is commented out rather than deleted, to
+keep the record of the abandoned route.
+-/
+/-
 /-- **Escaping edge-avoiding walk out of the clipped polygon (hull-interior
     residue).**  Same setup as `clipped_ear_ptWind_zero`: `x` lies strictly inside
     the empty convex ear `(a', b', c')` of the chord piece `P`, and (the residual
@@ -731,6 +746,7 @@ lemma clipped_ear_escape_walk (W : List ℂ) (hsimple : PolygonSimple W) (k : �
     HexArea.not_mem_convexHull_sub (a' :: c' :: tlP) P hcl_sub _
       (HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast)⟩
 
+-/
 /-
 **Escaping edge-avoiding walk out of the piece `P` (hull-interior residue).**
     Same setup as `chord_ear_other_ptWind_zero`: `x` is a vertex of the OTHER
@@ -951,6 +967,21 @@ lemma chord_ear_other_escape_walk (W : List ℂ) (h4 : 4 ≤ W.length)
   exact ⟨zs, hchain,
     HexArea.not_mem_convexHull_chordPiece_of_not_mem W k P hP _ hlast⟩
 
+/- **DEAD BRANCH (superseded).**  The block below is the *old* route to the
+Jordan-separation keystone `chord_ear_empty_other`, which reduced it to an
+escaping edge-avoiding walk out of the clipped polygon.  That route needed the
+residual hull-interior escape `clipped_ear_escape_walk`, whose hypotheses are in
+fact contradictory in the shape stated, so it could not be discharged.
+
+The live route now goes through `chord_ear_empty_other_jordan`
+(`RequestProject.SAWUmlaufJordanCore`), which derives the keystone from the
+point-in-polygon dichotomy `polygon_ptWind_dichotomy` plus the winding-number
+jump across an edge.  `chord_ear_lift`
+(`RequestProject.SAWUmlaufPolyMeisters`) calls that version, so the block below
+is no longer referenced anywhere; it is commented out rather than deleted, to
+keep the record of the abandoned route.
+-/
+/-
 lemma clipped_ear_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -1022,6 +1053,7 @@ lemma chord_ear_inner_ptWind_ne_zero (W : List ℂ) (hsimple : PolygonSimple W) 
   intro hcontra
   split_ifs at hcontra <;> nlinarith [Real.pi_pos]
 
+-/
 /-! ### The other piece's vertices form a `ptWind`-constant arc
 
 The vertices of `W` that are **not** vertices of the chord piece `P` are the
@@ -1257,6 +1289,21 @@ lemma chord_ear_other_ptWind_zero (W : List ℂ) (hsimple : PolygonSimple W) (k 
   exact chord_ear_other_ptWind_zero_of_witness W hsimple k hk1 hk u v hu hv hdiag P hP
     huP hvP y0 hy0W hy0P hy0 x hxW hxP
 
+/- **DEAD BRANCH (superseded).**  The block below is the *old* route to the
+Jordan-separation keystone `chord_ear_empty_other`, which reduced it to an
+escaping edge-avoiding walk out of the clipped polygon.  That route needed the
+residual hull-interior escape `clipped_ear_escape_walk`, whose hypotheses are in
+fact contradictory in the shape stated, so it could not be discharged.
+
+The live route now goes through `chord_ear_empty_other_jordan`
+(`RequestProject.SAWUmlaufJordanCore`), which derives the keystone from the
+point-in-polygon dichotomy `polygon_ptWind_dichotomy` plus the winding-number
+jump across an edge.  `chord_ear_lift`
+(`RequestProject.SAWUmlaufPolyMeisters`) calls that version, so the block below
+is no longer referenced anywhere; it is commented out rather than deleted, to
+keep the record of the abandoned route.
+-/
+/-
 lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
     (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
@@ -1278,6 +1325,7 @@ lemma chord_ear_empty_other (W : List ℂ) (hsimple : PolygonSimple W)
       hP a' b' c' s tlP hrotP hemptyP horientP x hxW hxP hin
     (chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag hint P hP x hxW hxP)
 
+-/
 /-
 **List-surgery brick for `chord_ear_lift` (chordLeft case).**
     An ear rotation of the left chord piece `chordLeft W k = W.take (k+1)` whose
