@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SAWUmlaufPolyEscape
 import RequestProject.SAWUmlaufRayIndex
 import RequestProject.SAWUmlaufEarTipEscape
+import RequestProject.SAWUmlaufJordanStep
 
 /-!
 # `SAWUmlaufChordLiftAux` — the two geometric inputs of the chord-split ear lift
@@ -84,7 +85,8 @@ vanishes (`chord_ear_other_ptWind_zero`) while it is nonzero inside the ear
 — a contradiction.
 
 NOT a dead branch: it is one of the four inputs of `chord_ear_lift`. -/
-lemma chord_lift_other_not_on_diagonal (W : List ℂ) (h4 : 4 ≤ W.length)
+lemma chord_lift_other_not_on_diagonal (N : ℕ) (hN : DichBelow N)
+    (W : List ℂ) (h4 : 4 ≤ W.length) (hWN : W.length ≤ N)
     (hsimple : PolygonSimple W) (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -161,8 +163,14 @@ lemma chord_lift_other_not_on_diagonal (W : List ℂ) (h4 : 4 ≤ W.length)
         hemptyP hdiagP w hwin e he hwe
   -- (5) The piece does not wind around `x`, but it does wind around `y`.
   have hzero := chord_ear_other_ptWind_zero W hsimple k hk1 hk u v hu hv hdiag hint P hP x hxW hxP
-  exact ear_interior_ptWind_ne_zero_of_rotation P hPsimple a' b' c' s tlP hrotP hDP hemptyP
-    hdiagP horientP y hyin (by rw [← hwind]; exact hzero)
+  have hPN : P.length ≤ N := by
+    have : P.length ≤ W.length := by
+      rcases hP with rfl | rfl
+      · rw [HexArea.chordLeft_length W k hk]; omega
+      · rw [HexArea.chordRight_length W k (by omega)]; omega
+    omega
+  exact ear_interior_ptWind_ne_zero_of_rotation_below N hN P hPN hPsimple a' b' c' s tlP
+    hrotP hDP hemptyP hdiagP horientP y hyin (by rw [← hwind]; exact hzero)
 
 /-- **Both chord pieces carry the orientation of the whole polygon.**
 

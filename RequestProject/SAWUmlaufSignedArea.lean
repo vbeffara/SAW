@@ -60,7 +60,7 @@ downstream of it — `exists_front_ear`, `exists_ear_clip`,
 import Mathlib
 import RequestProject.SAWUmlaufHexagon
 import RequestProject.SAWUmlaufEmbed
-import RequestProject.SAWUmlaufPolygon
+import RequestProject.SAWUmlaufJordanInduction
 
 open Real Complex ComplexConjugate
 
@@ -109,7 +109,7 @@ lemma hex_signed_turn_eq_six_sign_shoelace (L : List HexVertex)
   have hsimple' : PolygonSimple (hexEmbeddedPolygon L) :=
     hexEmbeddedPolygon_polygonSimple L hL h_trail h_closed h_simple
   have hnd' := hexEmbeddedPolygon_polyNondeg L hL h_trail h_closed h_simple
-  have hum := polygon_umlaufsatz (hexEmbeddedPolygon L) hlen3 hsimple' hnd'
+  have hum := polygon_umlaufsatz_final (hexEmbeddedPolygon L) hlen3 hsimple' hnd'
   have hglue := polyWind_hexEmbedded_cyclic L hL h_closed
   -- Combine: `hexWalkWinding L + closure = 2π · sign(area)`.
   rw [hglue] at hum

@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SAWUmlaufEarClearance
 import RequestProject.SAWUmlaufPtWindJordan
 import RequestProject.SAWUmlaufExterior
+import RequestProject.SAWUmlaufJordanDichotomy
 
 /-!
 # `SAWUmlaufEarTipEscape` — the ear tip is outside the clipped polygon
@@ -271,19 +272,25 @@ lemma ptWind_clip_eq_tip (L : List ℂ) (h4 : 4 ≤ L.length) (hsimple : Polygon
 
 /-! ## 5. The keystone -/
 
-/-- **The ear region lies outside the clipped polygon (keystone, `sorry`).**
+/-- **The ear region lies outside the clipped polygon (keystone, PROVED).**
 
 For a simple polygon `L` with an empty, coherently oriented ear `a, b, c`
 (`hor`), the winding number of the clipped cycle `a :: c :: rest` around any point
 strictly inside the ear triangle vanishes.
 
-**Status: `sorry`.**  This is the single remaining plane-topology input of the
-polygonal Umlaufsatz.  It replaces the strictly stronger point-in-polygon
-dichotomy `polygon_ptWind_dichotomy` that the previous route used.  By
-`ptWind_clip_eq_tip` it is equivalent to `ptWind b (a :: c :: rest) = 0`: *the ear
-tip escapes the clipped polygon*.  It is proved below in the convex-position case
-(`ear_interior_clip_ptWind_zero_of_tip_not_hull`), which is exactly the case the
-Meisters search realises at the lex-minimal vertex; the general case needs the
+**Status: proved** from the point-in-polygon dichotomy
+(`polygon_ptWind_dichotomy`, `RequestProject.SAWUmlaufJordanDichotomy` — now the
+single remaining plane-topology input of the development).  Indeed the winding
+number of `L` itself around such a point is `2π · sign (shoelace2 L)`
+(`ear_interior_ptWind_eq`), while the ear triangle contributes exactly the same
+amount by the ear coherence `hor` and `HexArea.ptWind_triangle`; the ear split
+`HexArea.ptWind_ear_split` then leaves nothing for the clip.
+
+By `ptWind_clip_eq_tip` the statement is equivalent to
+`ptWind b (a :: c :: rest) = 0`: *the ear tip escapes the clipped polygon*.  It is
+also proved unconditionally in the convex-position case
+(`ear_interior_clip_ptWind_zero_of_tip_not_hull`), which is the case the Meisters
+search realises at the lex-minimal vertex; the general case genuinely needs the
 orientation hypothesis `hor` (see the module docstring: for an exterior ear of a
 dart the statement is false). -/
 theorem ear_interior_clip_ptWind_zero (L : List ℂ) (h4 : 4 ≤ L.length)
@@ -295,7 +302,24 @@ theorem ear_interior_clip_ptWind_zero (L : List ℂ) (h4 : 4 ≤ L.length)
     (hor : (0 < HexArea.shoelace2 [a, b, c] ↔ 0 < HexArea.shoelace2 L))
     (x : ℂ) (hin : HexArea.inTriangleStrict a b c x) :
     HexArea.ptWind x (a :: c :: rest) = 0 := by
-  sorry
+  -- a strict interior point of the ear triangle is off the ear base
+  have hac : x ∉ segment ℝ a c := by
+    intro hmem
+    have h0 : HexArea.cross (a - c) (x - c) = 0 := by
+      have := HexArea.cross_combo_segment a c x hmem
+      have hrw : HexArea.cross (a - c) (x - c) = - HexArea.cross (c - a) (x - a) := by
+        simp only [HexArea.cross, Complex.sub_re, Complex.sub_im]; ring
+      rw [hrw, this]; ring
+    rcases hin with ⟨_, _, h3⟩ | ⟨_, _, h3⟩ <;> rw [h0] at h3 <;> exact absurd h3 (by norm_num)
+  have hsplit := HexArea.ptWind_ear_split x a b c L ρ rest hrot hac hin
+  have hval := ear_interior_ptWind_eq L h4 hsimple ρ a b c rest hrot hD hempty hdiag hor x hin
+  have hif : (if (0:ℝ) < HexArea.shoelace2 [a, b, c] then (1:ℝ) else -1)
+      = (if (0:ℝ) < HexArea.shoelace2 L then (1:ℝ) else -1) := by
+    by_cases h : (0:ℝ) < HexArea.shoelace2 [a, b, c]
+    · rw [if_pos h, if_pos (hor.mp h)]
+    · rw [if_neg h, if_neg (fun hh => h (hor.mpr hh))]
+  rw [hval, hif] at hsplit
+  linarith
 
 /-- **The keystone in convex position (PROVED).**  If the ear tip `b` is not in
 the convex hull of the clipped polygon's vertices — the situation at a strictly

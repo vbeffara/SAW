@@ -98,8 +98,9 @@ lemma rotate_drop3_neighbours {α : Type*} (W : List α) (j : ℕ)
     not a consecutive `V`-corner).  Those clauses are refuted in general by
     `RequestProject.SAWUmlaufFlatClipCounterexample` and have been dropped, so
     the seam residue is gone. -/
-lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
-    (h4 : 4 ≤ V.length)
+lemma chord_ear_lift (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    (h4 : 4 ≤ V.length) (hVN : V.length ≤ N)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -188,15 +189,15 @@ lemma chord_ear_lift (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNo
     intro x hx
     by_cases hxP : x ∈ P
     · exact hemptyP x (htlP x hx hxP)
-    · exact chord_ear_empty_other_jordan W hWsimple k hk1 hk u v hu hv hdiag hint
+    · exact chord_ear_empty_other_jordan N hN W hWsimple (by omega) k hk1 hk u v hu hv hdiag hint
         P hPsimple hP a' b' c' s rest0 hrotP hDP hemptyP hdiagP horientP x (htlW x hx) hxP
   · -- No far vertex on the closed ear diagonal.
     intro x hx
     by_cases hxP : x ∈ P
     · exact hdiagP x (htlP x hx hxP)
-    · exact chord_lift_other_not_on_diagonal W hW4 hWsimple hWnondeg k hk1 hk u v hu hv
-        hdiag hint P hPsimple hP a' b' c' s rest0 hrotP hDP hemptyP hdiagP horientP x
-        (htlW x hx) hxP
+    · exact chord_lift_other_not_on_diagonal N hN W hW4 (by omega) hWsimple hWnondeg k hk1 hk
+        u v hu hv hdiag hint P hPsimple hP a' b' c' s rest0 hrotP hDP hemptyP hdiagP
+        horientP x (htlW x hx) hxP
   · -- Orientation transfer.
     have hclipP : HexArea.shoelace2 P
         = HexArea.shoelace2 (a' :: c' :: rest0) + HexArea.shoelace2 [a', b', c'] := by
@@ -290,8 +291,9 @@ lemma chord_package_forbidden (V : List ℂ)
 
 /-- **Forbidden-pair ear lift across a valid chord cut.**  `chord_ear_lift`
     followed by the tip bookkeeping `chord_package_forbidden`. -/
-lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
-    (h4 : 4 ≤ V.length)
+lemma chord_ear_lift_forbidden (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    (h4 : 4 ≤ V.length) (hVN : V.length ≤ N)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -309,7 +311,7 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
   have hWsimple : PolygonSimple W := hW ▸ (PolygonSimple_rotate V ρ).mpr hsimple
   obtain ⟨r', a', b', c', p', q', tl, hrot', hb'P, hb'u, hb'v, hp', hq',
       hempty', hdiag', horient'⟩ :=
-    chord_ear_lift V hsimple hnd h4 W ρ hW k hk1 hk u v hu hv hdiag hint P hPsimple
+    chord_ear_lift N hN V hsimple hnd h4 hVN W ρ hW k hk1 hk u v hu hv hdiag hint P hPsimple
       (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hPcyc
   exact chord_package_forbidden V W ρ hW k hk1 hk hWsimple.1 u v hu hv P Q hPQ
     r' a' b' c' p' q' tl hrot' hb'P hb'u hb'v hp' hq' hempty' hdiag' horient'
@@ -340,8 +342,9 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
     is lifted back across the deletion.  Its input `FlatSeamData P u v` is the
     hypothesis `hflatseam`, supplied at the call sites by the proved
     `interior_flat_seam_data`. -/
-lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
-    (hVlen : 4 ≤ V.length)
+lemma interior_lift_via_piece (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
+    (hVlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -372,8 +375,8 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     have hPcyc : EmptyCornerData2 P u v := by
       obtain ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h2, h3, h4, h5, h6, h7, h8⟩ := hPvu
       exact ⟨r0, a0, b0, c0, p0, q0, rest0, h1, h3, h2, h4, h5, h6, h7, h8⟩
-    exact chord_ear_lift_forbidden V hsimple hnd hVlen W ρ hW k hk1 hk u v hu hv hdiag hint
-      P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
+    exact chord_ear_lift_forbidden N hN V hsimple hnd hVlen hVN W ρ hW k hk1 hk u v hu hv
+      hdiag hint P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
   · -- The piece is a triangle, or has ≥ 4 vertices but a flat cyclic corner.
     by_cases hP3 : P.length = 3
     · -- **Triangle piece (proved).**  The single vertex cut off by the chord is
@@ -427,8 +430,8 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
       have hPcyc : EmptyCornerData2 P u v :=
         flatSeam_EmptyCornerData2_of_data P hPsimple hP4 u v (hflatseam hP4 hPnd)
           (fun M hM h4M hMs hMnd w1 w2 hw => IH2 M (by omega) h4M hMs hMnd w1 w2 hw)
-      exact chord_ear_lift_forbidden V hsimple hnd hVlen W ρ hW k hk1 hk u v hu hv hdiag hint
-        P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
+      exact chord_ear_lift_forbidden N hN V hsimple hnd hVlen hVN W ρ hW k hk1 hk u v hu hv
+        hdiag hint P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
 
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
@@ -474,7 +477,8 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     `flatSeam_EmptyCornerData2_of_data` (the lift), both in
     `RequestProject.SAWUmlaufFlatSeamLift`; they are handed to
     `interior_lift_via_piece` as its `hflatseam` argument below. -/
-lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
@@ -562,13 +566,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
   rcases hadj with rfl | hcyc
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
     by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
-    · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+    · exact interior_lift_via_piece N hN V hsimple hnd hlen hVN (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         hfsdR IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
     · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
-      · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      · exact interior_lift_via_piece N hN V hsimple hnd hlen hVN (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -580,7 +584,7 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
           rcases HexArea.mem_chord_cover (b :: c :: rest ++ [a]) k hkW hmemW with h | h
           · exact hzL h
           · exact hzR h
-        exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+        exact interior_lift_via_piece N hN V hsimple hnd hlen hVN (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -590,13 +594,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
       hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
     rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with hInL | hInR
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
-      exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece N hN V hsimple hnd hlen hVN (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
         hfsdR IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
-      exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
+      exact interior_lift_via_piece N hN V hsimple hnd hlen hVN (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
         (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
@@ -730,7 +734,8 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
     form), now carrying the strong-induction hypothesis.**  Dispatches the
     quadrilateral base case, the lex-minimal convex-vertex setup, and the
     interior / empty dichotomy to the three branch lemmas above. -/
-lemma meisters_reduction2 (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma meisters_reduction2 (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
@@ -745,7 +750,7 @@ lemma meisters_reduction2 (V : List ℂ) (hlen : 4 ≤ V.length)
   by_cases hcase : ∃ x ∈ rest, HexArea.inTriangleStrict a b c x
   · -- **Interior branch (Meisters' diagonal split).**
     obtain ⟨w, hwrest, hwin, hwmax⟩ := exists_farthest_interior_oriented a b c rest hcase
-    exact meisters_reduction_interior2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
+    exact meisters_reduction_interior2 N hN V hlen hVN hsimple hnd z1 z2 hadj IH2 h4 r a b c
       rest hrot hbmem hbconv hbseg hbdir hcase w hwrest hwin hwmax
   · -- **Empty/diagonal branch.**
     push_neg at hcase
@@ -768,27 +773,27 @@ together with the flat-vertex normalisation of
     the induction hypothesis of `meisters_reduction2` by strong induction on the
     polygon length, leaving the genuine geometric content concentrated in the
     branch lemmas. -/
-lemma exists_empty_corner_avoiding_aux2 :
-    ∀ (n : ℕ) (V : List ℂ), V.length = n → 4 ≤ V.length →
+lemma exists_empty_corner_avoiding_aux2 (N : ℕ) (hN : DichBelow N) :
+    ∀ (n : ℕ) (V : List ℂ), V.length = n → V.length ≤ N → 4 ≤ V.length →
       PolygonSimple V → polyCycNondeg V →
       ∀ z1 z2 : ℂ, (z1 = z2 ∨ IsCycEdge V z1 z2) → EmptyCornerData2 V z1 z2 := by
   intro n
   induction n using Nat.strong_induction_on with
   | _ n IH =>
-    intro V hn hlen hsimple hnd z1 z2 hadj
-    refine meisters_reduction2 V hlen hsimple hnd z1 z2 hadj ?_
+    intro V hn hVN hlen hsimple hnd z1 z2 hadj
+    refine meisters_reduction2 N hN V hlen hVN hsimple hnd z1 z2 hadj ?_
     intro V' hlt h4 hs' hnd' w1 w2 hadj'
-    exact IH V'.length (by omega) V' rfl h4 hs' hnd' w1 w2 hadj'
+    exact IH V'.length (by omega) V' rfl (by omega) h4 hs' hnd' w1 w2 hadj'
 
 /-- **Strong-induction wrapper (sorry-free).**  The single-forbidden
     `EmptyCornerData` is the diagonal case of the two-forbidden
     `exists_empty_corner_avoiding_aux2`. -/
-lemma exists_empty_corner_avoiding_aux :
-    ∀ (n : ℕ) (V : List ℂ), V.length = n → 4 ≤ V.length →
+lemma exists_empty_corner_avoiding_aux (N : ℕ) (hN : DichBelow N) :
+    ∀ (n : ℕ) (V : List ℂ), V.length = n → V.length ≤ N → 4 ≤ V.length →
       PolygonSimple V → polyCycNondeg V → ∀ z : ℂ, EmptyCornerData V z := by
-  intro n V hn hlen hsimple hnd z
+  intro n V hn hVN hlen hsimple hnd z
   exact EmptyCornerData_of_two V z
-    (exists_empty_corner_avoiding_aux2 n V hn hlen hsimple hnd z z (Or.inl rfl))
+    (exists_empty_corner_avoiding_aux2 N hN n V hn hVN hlen hsimple hnd z z (Or.inl rfl))
 
 /-- **The Meisters empty-corner search, in its corrected (weak) form.**  A
 simple, cyclically non-degenerate polygon with at least four vertices, together
@@ -805,7 +810,8 @@ pentagon `0, i, 1+i, 2+2i, 2+i` of
 there — so those clauses were dropped from `EmptyCornerData`/`EmptyCornerData2`
 and from this chain; the flat vertices a clip creates are deleted afterwards by
 `RequestProject.SAWUmlaufFlatRemoval`. -/
-lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma exists_empty_corner_avoiding (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
     ∃ (r : ℕ) (a b c p q : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
@@ -814,7 +820,7 @@ lemma exists_empty_corner_avoiding (V : List ℂ) (hlen : 4 ≤ V.length)
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :=
-  exists_empty_corner_avoiding_aux V.length V rfl hlen hsimple hnd z
+  exists_empty_corner_avoiding_aux N hN V.length V rfl hVN hlen hsimple hnd z
 
 /-! ### The top of the chain, in the corrected (weak) form
 
@@ -844,7 +850,8 @@ two strictly shorter simple sub-polygons, but the single ear handed back by a
 one-ear induction hypothesis may have its tip at an endpoint of `d`, in which
 case it is *not* an ear of the original polygon.  The forbidden-vertex form is
 the inductive packaging of Meisters' two-ears theorem that repairs this. -/
-lemma exists_empty_convex_ear_avoiding_weak (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma exists_empty_convex_ear_avoiding_weak (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z : ℂ) :
     ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧ b ≠ z ∧
@@ -854,7 +861,7 @@ lemma exists_empty_convex_ear_avoiding_weak (V : List ℂ) (hlen : 4 ≤ V.lengt
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   obtain ⟨r, a, b, c, p, q, rest, hrot, hbz, -, -, hempty, hdiag, horient⟩ :=
-    exists_empty_corner_avoiding V hlen hsimple hnd z
+    exists_empty_corner_avoiding N hN V hlen hVN hsimple hnd z
   exact ⟨r, a, b, c, rest, hrot, hbz,
     polyCycNondeg_rotate_head V a b c rest r (by omega) hnd hrot,
     hempty, hdiag, horient⟩
@@ -864,7 +871,8 @@ Derived from `exists_empty_convex_ear_avoiding_weak` by instantiating the
 forbidden vertex arbitrarily.  This is exactly the statement
 `exists_front_ear_weak` of `RequestProject.SAWUmlaufPolygon`, the sole
 ear-existence input of the planar Umlaufsatz. -/
-lemma exists_empty_convex_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma exists_empty_convex_ear_weak (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧
@@ -874,7 +882,7 @@ lemma exists_empty_convex_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
   obtain ⟨r, a, b, c, rest, hrot, -, hndtri, hempty, hdiag, horient⟩ :=
-    exists_empty_convex_ear_avoiding_weak V hlen hsimple hnd 0
+    exists_empty_convex_ear_avoiding_weak N hN V hlen hVN hsimple hnd 0
   exact ⟨r, a, b, c, rest, hrot, hndtri, hempty, hdiag, horient⟩
 
 /- ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`,

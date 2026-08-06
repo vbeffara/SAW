@@ -894,16 +894,15 @@ of the tail is outside the closed triangle, hence off `[c, a]`
 contradicting `simple_vertex_not_on_far_edge`; and `p = c` together with `q = a`
 is impossible because the cyclic successor of `c` is the head of `rest`. -/
 lemma ear_base_collinear_case (L : List ℂ) (h4 : 4 ≤ L.length)
-    (hsimple : PolygonSimple L) (hndL : polyCycNondeg L)
+    (hsimple : PolygonSimple L)
     (ρ : ℕ) (a b c : ℂ) (rest : List ℂ) (hrot : L.rotate ρ = a :: b :: c :: rest)
+    (hD : HexArea.cross (b - a) (c - b) ≠ 0)
     (hempty : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
     (hdiag : ∀ x ∈ rest, x ∉ segment ℝ a c)
     (p q : ℂ) (hpq : (p, q) ∈ closedEdges L) (hbp : b ≠ p) (hbq : b ≠ q)
     (hp3 : HexArea.cross (a - c) (p - c) = 0) (hq3 : HexArea.cross (a - c) (q - c) = 0)
     (v : ℂ) (hv : v ∈ openSegment ℝ p q) (hvac : v ∈ segment ℝ a c) : False := by
   have hNodup : L.Nodup := hsimple.1
-  have hD : HexArea.cross (b - a) (c - b) ≠ 0 :=
-    polyCycNondeg_rotate_head L a b c rest ρ (by omega) hndL hrot
   have hrotNodup : (a :: b :: c :: rest).Nodup := hrot ▸ (List.nodup_rotate.mpr hNodup)
   have hac : a ≠ c := by simp at hrotNodup; tauto
   have hanr : a ∉ rest := by simp at hrotNodup; tauto
@@ -1139,7 +1138,7 @@ lemma ear_edge_interior_not_base (L : List ℂ) (h4 : 4 ≤ L.length)
       (1 - u) * HexArea.cross (a - c) (p - c) + u * HexArea.cross (a - c) (q - c) = 0 := by
     rw [← HexArea.cross_affine, ← hvC]; exact hf3v
   by_cases hboth : HexArea.cross (a - c) (p - c) = 0 ∧ HexArea.cross (a - c) (q - c) = 0
-  · exact absurd (ear_base_collinear_case L h4 hsimple hndL ρ a b c rest hrot hempty hdiag
+  · exact absurd (ear_base_collinear_case L h4 hsimple ρ a b c rest hrot hD hempty hdiag
       p q hpq hbp hbq hboth.1 hboth.2 v hv hvac) not_false
   · obtain ⟨w, hw, hgw⟩ : ∃ w : ℂ, (w = p ∨ w = q) ∧
         0 < HexArea.cross (a - c) (w - c) * HexArea.cross (b - a) (c - b) := by

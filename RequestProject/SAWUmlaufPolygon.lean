@@ -889,7 +889,8 @@ induction on the vertex count and currently rests on the four remaining
 Jordan-content `sorry`s of that chain (`chord_ear_lift`,
 `interior_lift_via_piece`, `empty_branch_bad_lift`, `clipped_ear_escape_walk`).
 -/
-lemma exists_front_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma exists_front_ear_weak (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ (r : ℕ) (a b c : ℂ) (rest : List ℂ),
       V.rotate r = a :: b :: c :: rest ∧
@@ -898,7 +899,7 @@ lemma exists_front_ear_weak (V : List ℂ) (hlen : 4 ≤ V.length)
       (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
       ((0:ℝ) < HexArea.shoelace2 [a, b, c]
           ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) :=
-  exists_empty_convex_ear_weak V hlen hsimple hnd
+  exists_empty_convex_ear_weak N hN V hlen hVN hsimple hnd
 
 /-- **A simple closed polygon with at least four vertices has non-zero signed
 area.**
@@ -915,11 +916,12 @@ and the second edge at `n₂` then meets that non-incident edge.
 
 NOT a dead branch — consumed by `exists_shorter_reduction` below (to know that
 the clip can be normalised). -/
-lemma area_ne_zero_of_ear (V : List ℂ) (h4 : 4 ≤ V.length)
+lemma area_ne_zero_of_ear (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (h4 : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     HexArea.shoelace2 V ≠ 0 := by
   obtain ⟨r, a, b, c, rest, hrot, hndtri, hempty, hdiag, horient⟩ :=
-    exists_front_ear_weak V h4 hsimple hnd
+    exists_front_ear_weak N hN V h4 hVN hsimple hnd
   have hWarea : HexArea.shoelace2 (a :: b :: c :: rest) = HexArea.shoelace2 V := by
     rw [← hrot]; exact shoelace2_rotate V r
   have hsplit : HexArea.shoelace2 (a :: b :: c :: rest)
@@ -945,7 +947,8 @@ longer non-degenerate simple polygon, whose area is non-zero by
 `area_ne_zero_of_ear` — or it gets stuck at a degenerate triangle, which by
 `no_degenerate_normalization` would force all vertices onto a line and contradict
 simplicity. -/
-lemma simple_polygon_area_ne_zero (V : List ℂ) (h4 : 4 ≤ V.length)
+lemma simple_polygon_area_ne_zero (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (h4 : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) :
     HexArea.shoelace2 V ≠ 0 := by
   intro harea
@@ -960,7 +963,7 @@ lemma simple_polygon_area_ne_zero (V : List ℂ) (h4 : 4 ≤ V.length)
         | [x, y, z], _ => exact ⟨x, y, z, rfl⟩
       rw [shoelace2_triple_eq_cross] at hz
       exact hnd.1 hz
-    · exact area_ne_zero_of_ear V' (by omega) hV'simple hnd hz
+    · exact area_ne_zero_of_ear N hN V' (by omega) (by omega) hV'simple hnd hz
   · exact no_degenerate_normalization V h4 hsimple V' hV'simple hlen3 hz hhull
 
 /-- All three cyclic corners of a triangle have the same cross product, so one
@@ -1054,14 +1057,15 @@ shorter* simple, cyclically non-degenerate polygon with the **same** total
 turning and the **same** orientation: clip an ear (`exists_front_ear_weak`) and
 then delete the flat vertices the clip may have created
 (`exists_nondeg_normalization`). -/
-lemma exists_shorter_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma exists_shorter_reduction (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) :
     ∃ V' : List ℂ, 3 ≤ V'.length ∧ V'.length < V.length ∧
       PolygonSimple V' ∧ polyCycNondeg V' ∧
       polyCycWind V' = polyCycWind V ∧
       ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 V') := by
   obtain ⟨r, a, b, c, rest, hrot, hndtri, hempty, hdiag, horient⟩ :=
-    exists_front_ear_weak V hlen hsimple hnd
+    exists_front_ear_weak N hN V hlen hVN hsimple hnd
   have hWsimple : PolygonSimple (a :: b :: c :: rest) := by
     rw [← hrot]; exact (PolygonSimple_rotate V r).mpr hsimple
   have hWnd : polyCycNondeg (a :: b :: c :: rest) := by
@@ -1134,8 +1138,9 @@ lemma exists_shorter_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
       have hcr := clip_triangle_nondeg a b c x hWsimple hdx
       rw [shoelace2_triple_eq_cross]
       exact hcr
-    · refine simple_polygon_area_ne_zero _ ?_ hCsimple
-      simp only [List.length_cons]; omega
+    · refine simple_polygon_area_ne_zero N hN _ ?_ ?_ hCsimple
+      · simp only [List.length_cons]; omega
+      · simp only [List.length_cons] at hWlen ⊢; omega
   obtain ⟨V', hV'3, hV'le, hV'simple, hV'nd, hV'wind, hV'area⟩ :=
     exists_nondeg_normalization (a :: c :: rest) hC3 hCsimple hCarea
   refine ⟨V', hV'3, by omega, hV'simple, hV'nd, ?_, ?_⟩
@@ -1172,14 +1177,15 @@ lemma exists_shorter_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
     normalisation, the non-vanishing of the area, the base case
     `polyWind_triangle` and the strong induction `polygon_umlaufsatz_take` — is
     proved sorry-free.  Absent from Mathlib. -/
-lemma polygon_ear_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
+lemma polygon_ear_reduction (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyNondeg (V ++ V.take 2)) :
     ∃ V' : List ℂ, V'.length < V.length ∧ 3 ≤ V'.length ∧
       PolygonSimple V' ∧ polyNondeg (V' ++ V'.take 2) ∧
       polyWind (V ++ V.take 2) = polyWind (V' ++ V'.take 2) ∧
       ((0:ℝ) < HexArea.shoelace2 V ↔ (0:ℝ) < HexArea.shoelace2 V') := by
   obtain ⟨V', h3, hlt, hsimp', hnd', hwind', harea'⟩ :=
-    exists_shorter_reduction V hlen hsimple hnd
+    exists_shorter_reduction N hN V hlen hVN hsimple hnd
   exact ⟨V', hlt, h3, hsimp', hnd', hwind'.symm, harea'⟩
 
 /-
@@ -1190,25 +1196,30 @@ lemma polygon_ear_reduction (V : List ℂ) (hlen : 4 ≤ V.length)
     `polygon_ear_reduction`, which keeps both the turning and the orientation
     fixed while strictly shortening the polygon.
 -/
-lemma polygon_umlaufsatz_take (V : List ℂ) (hlen : 3 ≤ V.length)
+lemma polygon_umlaufsatz_take (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 3 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyNondeg (V ++ V.take 2)) :
     polyWind (V ++ V.take 2) =
       2 * Real.pi * (if 0 < HexArea.shoelace2 V then 1 else -1) := by
   induction' n : V.length using Nat.strong_induction_on with n ih generalizing V;
   by_cases hlen4 : 4 ≤ V.length;
-  · obtain ⟨ V', hV'₁, hV'₂, hV'₃, hV'₄, hV'₅, hV'₆ ⟩ := polygon_ear_reduction V hlen4 hsimple hnd ; specialize ih ( List.length V' ) ( by omega ) V' hV'₂ hV'₃ hV'₄ rfl ; aesop ( simp_config := { singlePass := true } ) ;
+  · obtain ⟨ V', hV'₁, hV'₂, hV'₃, hV'₄, hV'₅, hV'₆ ⟩ :=
+      polygon_ear_reduction N hN V hlen4 hVN hsimple hnd
+    specialize ih ( List.length V' ) ( by omega ) V' hV'₂ ( by omega ) hV'₃ hV'₄ rfl
+    aesop ( simp_config := { singlePass := true } ) ;
   · rcases V with ( _ | ⟨ a, _ | ⟨ b, _ | ⟨ c, _ | V ⟩ ⟩ ⟩ ) <;> norm_num at *;
     convert polyWind_triangle a b c _ using 1;
     · split_ifs <;> ring;
     · exact hnd.1
 
-lemma polygon_umlaufsatz (V : List ℂ) (hlen : 3 ≤ V.length)
+lemma polygon_umlaufsatz (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 3 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V)
     (hnd : polyNondeg (V ++ [V[0]'(by omega), V[1]'(by omega)])) :
     polyWind (V ++ [V[0]'(by omega), V[1]'(by omega)]) =
       2 * Real.pi * (if 0 < HexArea.shoelace2 V then 1 else -1) := by
   rw [closeList_eq V (by omega)] at hnd ⊢
-  exact polygon_umlaufsatz_take V hlen hsimple hnd
+  exact polygon_umlaufsatz_take N hN V hlen hVN hsimple hnd
 
 /-
 **Honeycomb edge-disjointness (remaining geometric core).**  For a simple

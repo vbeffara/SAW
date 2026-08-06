@@ -169,6 +169,11 @@ import RequestProject.SAWHexPathHelpers
 import RequestProject.SAWUmlaufDartCounterexample
 import RequestProject.SAWUmlaufFlatClipCounterexample
 
+-- The ear induction step for the point-in-polygon dichotomy: the two halves of
+-- the induction that is to discharge `polygon_ptWind_dichotomy`, the last
+-- topological gap of the Umlaufsatz.  Preparation, not yet consumed.
+import RequestProject.SAWUmlaufJordanStep
+
 open Real Complex ComplexConjugate Filter Topology
 
 noncomputable section
