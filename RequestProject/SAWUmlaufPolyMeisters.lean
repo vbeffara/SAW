@@ -1,6 +1,7 @@
 import Mathlib
 import RequestProject.SAWUmlaufPolyEscape
 import RequestProject.SAWUmlaufChordLiftAux
+import RequestProject.SAWUmlaufFlatSeamLift
 
 /-!
 # `SAWUmlaufPolygon`, part `SAWUmlaufPolyMeisters`
@@ -323,17 +324,17 @@ lemma chord_ear_lift_forbidden (V : List ℂ) (hsimple : PolygonSimple V) (hnd :
     This is the generic Meisters recursion path and is proved here (modulo the
     Jordan brick `chord_ear_lift` inside `chord_ear_lift_forbidden`).
 
-    **Status: main path and triangle piece proved; single `sorry` for the flat
-    residual.**  The *triangle* piece (length 3, where `EmptyCornerData2 P` is
-    unavailable and a `V`-ear must be built directly) is now discharged by
-    `chord_triangle_piece_package`.  What remains is the case where the forced
-    recursion piece has at least four vertices but is flat at the cut seam (not
-    `polyCycNondeg`), so the flat cut vertex must be removed via
-    `PolygonSimple_remove_flat_mid` / `cross_pred_corner_remove_flat` /
-    `cross_succ_corner_remove_flat` (or the normalisation of
-    `RequestProject.SAWUmlaufFlatRemoval`) before recursing, and the returned ear
-    lifted back across the deletion.  This is a TRUE statement; the residual is
-    unproven, not false.  NOT a dead branch. -/
+    **Status: all three cases proved** (modulo the Jordan brick `chord_ear_lift`
+    inside `chord_ear_lift_forbidden`).  The *triangle* piece (length 3, where
+    `EmptyCornerData2 P` is unavailable and a `V`-ear must be built directly) is
+    discharged by `chord_triangle_piece_package`.  The *flat-seam* case — the
+    piece has at least four vertices but a degenerate corner at the cut seam — is
+    discharged by `flatSeam_EmptyCornerData2_of_data`
+    (`RequestProject.SAWUmlaufFlatSeamLift`): the flat cut vertex is deleted, the
+    recursion runs on the deletion forbidding its seam edge, and the returned ear
+    is lifted back across the deletion.  Its input `FlatSeamData P u v` is the
+    hypothesis `hflatseam`, supplied at the call sites by the proved
+    `interior_flat_seam_data`. -/
 lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : polyCycNondeg V)
     (hVlen : 4 ≤ V.length)
     (W : List ℂ) (ρ : ℕ) (hW : V.rotate ρ = W) (k : ℕ)
@@ -347,6 +348,7 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
            (P = HexArea.chordRight W k ∧ Q = HexArea.chordLeft W k))
     (hPsimple : PolygonSimple P) (hPlen : P.length < V.length)
     (hcut : IsCycEdge P u v)
+    (hflatseam : 4 ≤ P.length → ¬ polyCycNondeg P → FlatSeamData P u v)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
         PolygonSimple V' → polyCycNondeg V' →
         ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
@@ -384,11 +386,44 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
       exact chord_package_forbidden V W ρ hW k hk1 hk hWsimple.1 u v hu hv P Q hPQ
         (ρ + j) a' b' c' p' q' tl hrotV hb'P hb'u hb'v hp' hq' hempty' hdiag' horient'
         z1 z2 hz1 hz2
-    · -- **Residual: the piece has ≥ 4 vertices but a flat cyclic corner at the
-      -- cut seam.**  It must be normalised by flat-vertex deletion
-      -- (`RequestProject.SAWUmlaufFlatRemoval`) before `IH2` can be applied, and
-      -- the returned ear lifted back across the deletions.
-      sorry
+    · -- **The piece has ≥ 4 vertices but a flat cyclic corner at the cut seam.**
+      -- Delete the flat seam vertex, recurse on the deletion (forbidding its
+      -- seam edge) and lift the returned ear back over the deleted vertex:
+      -- this is `flatSeam_EmptyCornerData2_of_data`
+      -- (`RequestProject.SAWUmlaufFlatSeamLift`).
+      -- First, the cut index is genuinely interior: `2 ≤ k ≤ W.length - 2`,
+      -- because `v` is strictly inside the corner triangle at `u`, hence is
+      -- neither of the two cyclic neighbours of `u`.
+      obtain ⟨pu, nu, hhead, hlast, hnu, -, -, htri⟩ := id hint
+      have hk2 : 2 ≤ k := by
+        rcases Nat.lt_or_ge k 2 with hlt | hge
+        · exfalso
+          have hk1' : k = 1 := by omega
+          subst hk1'
+          rw [hv] at hnu
+          exact HexArea.inTriangleStrict_ne_c pu u nu v htri (Option.some.inj hnu)
+        · exact hge
+      have hkle : k + 2 ≤ W.length := by
+        rcases Nat.lt_or_ge (k + 1) W.length with hlt | hge
+        · omega
+        · exfalso
+          have hklast : k = W.length - 1 := by omega
+          have hlv : W.getLast? = some v := by
+            rw [List.getLast?_eq_getElem?, ← hklast]; exact hv
+          rw [hlv] at hlast
+          exact HexArea.inTriangleStrict_ne_a pu u nu v htri (Option.some.inj hlast)
+      -- hence both pieces have at least three vertices
+      have hP3' : 3 ≤ P.length := by
+        rcases hPQ with ⟨hPL, -⟩ | ⟨hPR, -⟩
+        · rw [hPL, HexArea.chordLeft]; simp; omega
+        · rw [hPR, HexArea.chordRight]; simp; omega
+      have hP4 : 4 ≤ P.length := by omega
+      have hPnd : ¬ polyCycNondeg P := fun h => hcond ⟨hP4, h⟩
+      have hPcyc : EmptyCornerData2 P u v :=
+        flatSeam_EmptyCornerData2_of_data P hPsimple hP4 u v (hflatseam hP4 hPnd)
+          (fun M hM h4M hMs hMnd w1 w2 hw => IH2 M (by omega) h4M hMs hMnd w1 w2 hw)
+      exact chord_ear_lift_forbidden V hsimple hnd hVlen W ρ hW k hk1 hk u v hu hv hdiag hint
+        P Q hPQ hPsimple hPcyc z1 z2 hz1 hz2
 
 /-- **Meisters interior branch (open Jordan-curve core), two-forbidden form.**
     The convex corner `a, b, c` (with `b` the lex-minimal, hence convex, middle
@@ -404,9 +439,9 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     `{z1, z2}`.  This is the crux that the single-forbidden form could not
     express.  Consumed by `meisters_reduction2`.
 
-    **Status: `sorry`.**  Genuine Jordan-curve-theorem-level content (interior
-    diagonal split preserving `PolygonSimple`/`polyCycNondeg`, plus the ear
-    lift); absent from Mathlib.  Recorded partial progress.
+    **Status: proved**, modulo the Jordan brick `chord_ear_lift` used by
+    `interior_lift_via_piece` (interior diagonal split preserving
+    `PolygonSimple`/`polyCycNondeg`, plus the ear lift); absent from Mathlib.
 
     PROGRESS / BANKED: the *simplicity* half of the split is now fully proved,
     sorry-free, as `interior_split_simple` (just above): the two pieces
@@ -425,16 +460,15 @@ lemma interior_lift_via_piece (V : List ℂ) (hsimple : PolygonSimple V) (hnd : 
     the two seam corners is non-flat, making the corresponding chord piece
     `polyCycNondeg` via `interior_split_nondeg_left` / `interior_split_nondeg_right`.
 
-    REMAINING OBSTRUCTION (recorded for the next round): only *one* piece is
-    guaranteed non-degenerate; if the interior diagonal `b–w` is collinear with
-    one incident edge of `w` (a flat seam in the OTHER piece), and the forbidden
-    edge `{z1,z2}` happens to lie in the non-flat piece (forcing the recursion
-    onto the flat one), the flat seam vertex `w` must be removed from that piece
-    via the flat-cut-vertex removal toolkit (`PolygonSimple_remove_flat_mid`,
-    `cross_pred_corner_remove_flat`, `cross_succ_corner_remove_flat`) before the
-    `IH2` recursion.  The remaining genuine content is the ear-lift after this
-    removal (the list surgery transporting the returned sub-polygon ear back to
-    `V`), analogous to the proved `empty_branch_interior_lift`. -/
+    RESOLVED (flat seam): only *one* piece is guaranteed non-degenerate, and if
+    the forbidden edge `{z1,z2}` forces the recursion onto the flat one, the flat
+    seam vertex `w` is deleted from that piece before recursing and the returned
+    ear is lifted back over the deletion.  This is now proved, by
+    `interior_flat_seam_data` (the piece is flat exactly at `w`, and the deletion
+    is again simple and non-degenerate) together with
+    `flatSeam_EmptyCornerData2_of_data` (the lift), both in
+    `RequestProject.SAWUmlaufFlatSeamLift`; they are handed to
+    `interior_lift_via_piece` as its `hflatseam` argument below. -/
 lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
@@ -505,6 +539,20 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
   -- Symmetry of the cyclic-edge predicate (for the cut edge orientation).
   have symmCyc : ∀ (L : List ℂ), IsCycEdge L w b → IsCycEdge L b w := by
     intro L h; rcases h with h | h; exacts [Or.inr h, Or.inl h]
+  -- Flat-seam data for a degenerate piece: if a chord piece fails to be
+  -- cyclically non-degenerate it is flat exactly at the cut endpoint `w`, and
+  -- deleting `w` restores non-degeneracy (`interior_flat_seam_data`).  This is
+  -- what lets `interior_lift_via_piece` recurse on a flat piece.
+  have hndABC : polyCycNondeg (a :: b :: c :: rest) :=
+    hrot ▸ (polyCycNondeg_rotate V r (by omega)).mpr hnd
+  have hfsdL : 4 ≤ (HexArea.chordLeft (b :: c :: rest ++ [a]) k).length →
+      ¬ polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) →
+      FlatSeamData (HexArea.chordLeft (b :: c :: rest ++ [a]) k) b w :=
+    interior_flat_seam_data a b c w rest k hndABC hwin hk2 hklen hwk _ (Or.inl rfl) hLsimple
+  have hfsdR : 4 ≤ (HexArea.chordRight (b :: c :: rest ++ [a]) k).length →
+      ¬ polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) →
+      FlatSeamData (HexArea.chordRight (b :: c :: rest ++ [a]) k) b w :=
+    interior_flat_seam_data a b c w rest k hndABC hwin hk2 hklen hwk _ (Or.inr rfl) hRsimple
   -- Dispatch on the forbidden pair.
   rcases hadj with rfl | hcyc
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
@@ -513,13 +561,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
         hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
-        IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
+        hfsdR IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
     · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
       · exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
           hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
-          IH2 z1 z1 (Or.inl hzR) (Or.inl hzR)
+          hfsdL IH2 z1 z1 (Or.inl hzR) (Or.inl hzR)
       · have hz1V : z1 ∉ V := by
           intro hmem
           have hmemW : z1 ∈ (b :: c :: rest ++ [a]) := by
@@ -531,7 +579,7 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
           hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
           (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
           (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
-          IH2 z1 z1 (Or.inr hz1V) (Or.inr hz1V)
+          hfsdL IH2 z1 z1 (Or.inr hz1V) (Or.inr hz1V)
   · -- Forbidden cyclic edge `{z1,z2}`: lands in one piece; recurse on the other.
     have hcycW : IsCycEdge (b :: c :: rest ++ [a]) z1 z2 :=
       hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
@@ -541,13 +589,13 @@ lemma meisters_reduction_interior2 (V : List ℂ) (hlen : 4 ≤ V.length)
         hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
         (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
         (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
-        IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
+        hfsdR IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
     · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
       exact interior_lift_via_piece V hsimple hnd hlen (b :: c :: rest ++ [a]) (r + 1) hW k hk1
         hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
         (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
-        IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
+        hfsdL IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
 
 /-- **Empty-branch lift — the BAD-diagonal subcase (genuine remaining gap).**
     Extracted from `meisters_reduction_empty2`'s non-clean / non-good case so it

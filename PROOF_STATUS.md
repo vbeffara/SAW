@@ -1,5 +1,78 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): the flat-seam residual of the Meisters interior
+> branch is CLOSED, and with it the classical ear-clearance property of a simple
+> polygon is now proved in full.**
+>
+> ### 1. Two new files, both `sorry`-free
+>
+> * `RequestProject/SAWUmlaufTriangleClosed.lean` — the closed corner triangle
+>   and the **clearance of an empty ear**:
+>   * `HexArea.inTriangleClosed` — the closed triangle in orientation-free
+>     *scaled* form (each edge cross product times the triangle orientation), so
+>     that no orientation case split is ever needed; `inTriangleClosed_of_strict`,
+>     `inTriangleClosed_of_mem_ac`, the three side lemmas
+>     `mem_side_ab/bc/ca_of_closed` (barycentric reconstruction), the vertex
+>     lemmas, and the cyclic-rotation invariance;
+>   * `HexArea.exit_point` — the *first exit*: along a segment from a point of the
+>     closed triangle to a point outside it there is a boundary point.  Proved by
+>     the intermediate value theorem applied to the minimum of the three affine
+>     scaled cross products;
+>   * `closedEdges_succ_unique`, `closedEdges_pred_unique`, `closedEdges_ne`,
+>     `mem_of_mem_closedEdges` — cyclic successor/predecessor bookkeeping;
+>   * `ear_rest_not_closed` — no vertex of the tail lies in the *closed* ear
+>     triangle (interior by emptiness, base by the diagonal clause, the two ear
+>     sides by `simple_vertex_not_on_far_edge`);
+>   * `ear_exit_on_base` — every exit of a cyclic edge from the ear triangle lies
+>     on the base `[c, a]`: the ear sides are edges of the polygon, so simplicity
+>     excludes them unless they share an endpoint, and a shared endpoint would
+>     make a corner of the polygon degenerate;
+>   * `ear_edge_interior_not_strict` and `ear_edge_interior_not_base` (with
+>     `ear_base_collinear_case`) — **no interior point of a cyclic edge other
+>     than the two ear sides meets the closed ear triangle**.  The strict case
+>     follows because two base exits force the (affine) base coordinate to vanish
+>     at the point; the base case either perturbs into the strict interior or,
+>     when the edge is collinear with the base, puts `a` or `c` in the interior of
+>     that edge.
+> * `RequestProject/SAWUmlaufFlatSeamLift.lean` — the **flat-seam ear lift**:
+>   rotation surgery (`flatSeam_ear_index`, `flatSeam_insert_rotation`), the
+>   signed-area invariance of re-inserting the flat vertex
+>   (`flatSeam_shoelace2_insert`), the quadrilateral base case
+>   (`flatSeam_quad_ear`: a quadrilateral with a flat vertex has an ear at *each*
+>   neighbour of it), the geometric input `flatSeam_avoids_ear` (now a
+>   consequence of the clearance property), the lift `flatSeam_ear_lift`, the
+>   packaging `FlatSeamData` / `flatSeam_EmptyCornerData2_of_data`, and
+>   `interior_flat_seam_data` — a degenerate chord piece of the Meisters interior
+>   cut is flat *exactly* at the cut endpoint `w`, and deleting `w` restores
+>   `polyCycNondeg` (proved for both pieces from `interior_split_nondeg_left/right`,
+>   `flat_between_of_cross_zero`, `cross_pred/succ_corner_remove_flat`,
+>   `chordLeft/chordRight_polyCycNondeg`).
+>
+> ### 2. Consequence for the Meisters recursion
+>
+> `interior_lift_via_piece` (`SAWUmlaufPolyMeisters`) is now **`sorry`-free**: its
+> flat-seam residual is discharged by the lift above, its input supplied at the
+> four call sites in `meisters_reduction_interior2` by `interior_flat_seam_data`.
+>
+> ### 3. Remaining Umlaufsatz `sorry`s (4 live, 1 banked)
+>
+> * `chord_piece_orient` — each chord piece carries the orientation of the whole
+>   polygon (`SAWUmlaufChordLiftAux`);
+> * `chord_lift_other_not_on_diagonal` — a vertex of the other piece is not on the
+>   closed ear diagonal (`SAWUmlaufChordLiftAux`);
+> * `clipped_ear_escape_walk` — the escape underneath `chord_ear_empty_other`
+>   (`SAWUmlaufPolyEscape`);
+> * `empty_branch_bad_lift` — the bad-diagonal subcase of the empty branch
+>   (`SAWUmlaufPolyMeisters`);
+> * banked, not consumed: `vertex_escape_joinedIn_arbitrarily_far_one_diag`
+>   (`SAWUmlaufPolyEscape`), preparation for `clipped_ear_escape_walk`.
+>
+> Every file except the documented duplicate `RequestProject/SAWVertexRelation.lean`
+> is reachable from `RequestProject.SAWFinal`, which builds.
+>
+> ---
+
+
 > **Umlaufsatz (CURRENT round): the false ear invariant is REPAIRED and the
 > Meisters chain is back on the live route; four `sorry`s closed, the remaining
 > Jordan content isolated in two statements.**

@@ -1,3 +1,85 @@
+# Summary of changes for run 53d6e95b-1fa5-4226-9679-c08352aa2d1b
+This round worked exclusively on the Umlaufsatz, as requested, and closed the **flat-seam residual of the Meisters interior branch** — the last structural gap of the ear-existence recursion — by proving in full the classical **clearance property of an empty ear** of a simple polygon. The project builds (`RequestProject.SAWFinal`, 8181 jobs) and all work is committed and pushed.
+
+**Two new files, both `sorry`-free.**
+
+1. `RequestProject/SAWUmlaufTriangleClosed.lean` — the closed corner triangle and the ear-clearance property:
+   * `HexArea.inTriangleClosed`, the closed triangle in orientation-free *scaled* form (each edge cross product multiplied by the triangle orientation), with the inclusion of the strict interior and of the base, cyclic-rotation invariance, the vertex lemmas, and the three side lemmas via barycentric reconstruction;
+   * `HexArea.exit_point`, the *first exit* from the closed triangle along a segment, proved by the intermediate value theorem applied to the minimum of the three affine scaled cross products;
+   * cyclic bookkeeping (`closedEdges_succ_unique`, `closedEdges_pred_unique`, `closedEdges_ne`, `mem_of_mem_closedEdges`) and elementary segment lemmas;
+   * `ear_rest_not_closed` (no vertex of the tail lies in the *closed* ear triangle), `ear_exit_on_base` (every exit of a cyclic edge from the ear triangle lies on the base), and finally `ear_edge_interior_not_strict` and `ear_edge_interior_not_base`: **no interior point of a cyclic edge other than the two ear sides meets the closed ear triangle.**
+
+2. `RequestProject/SAWUmlaufFlatSeamLift.lean` — the flat-seam ear lift: the rotation surgery re-inserting the deleted vertex into an ear of the deletion, invariance of the clip's signed area under that re-insertion, the quadrilateral base case (a quadrilateral with a flat vertex has an ear at *each* of its neighbours), the geometric input `flatSeam_avoids_ear` (now a consequence of the clearance property), the lift itself, its packaging `FlatSeamData` / `flatSeam_EmptyCornerData2_of_data`, and `interior_flat_seam_data`: a degenerate chord piece of the Meisters interior cut is flat *exactly* at the cut endpoint, and deleting that vertex restores cyclic non-degeneracy (proved for both chord pieces).
+
+**Consequence.** `interior_lift_via_piece` in `RequestProject/SAWUmlaufPolyMeisters.lean` is now `sorry`-free: the flat-seam case is discharged by the lift, whose input is supplied at the four call sites of the interior branch by `interior_flat_seam_data`. All the new results depend only on `propext`, `Classical.choice`, `Quot.sound`.
+
+**Remaining Umlaufsatz gaps** (4 live, each with a docstring stating precisely what is missing, plus 1 explicitly banked): `chord_piece_orient` and `chord_lift_other_not_on_diagonal` (`RequestProject/SAWUmlaufChordLiftAux.lean`), `clipped_ear_escape_walk` (`RequestProject/SAWUmlaufPolyEscape.lean`), `empty_branch_bad_lift` (`RequestProject/SAWUmlaufPolyMeisters.lean`); the banked `vertex_escape_joinedIn_arbitrarily_far_one_diag` is marked as preparation for `clipped_ear_escape_walk` and is not consumed. Every file except the previously documented duplicate `RequestProject/SAWVertexRelation.lean` is reachable from `RequestProject.SAWFinal`. `PROOF_STATUS.md` and `ARISTOTLE_SUMMARY.md` record all of the above.
+
+# Summary of changes for the current run
+
+This round worked exclusively on the Umlaufsatz, as requested, and **closed the
+flat-seam residual of the Meisters interior branch** — the last *structural* gap
+of the ear-existence recursion — by proving, in full, the classical **clearance
+property of an empty ear** of a simple polygon.  The project builds
+(`RequestProject.SAWFinal`, 8181 jobs) and everything is committed and pushed.
+
+## 1. New file `RequestProject/SAWUmlaufTriangleClosed.lean` (`sorry`-free)
+
+The closed corner triangle and the clearance of an ear:
+
+* `HexArea.inTriangleClosed` — the closed triangle in orientation-free *scaled*
+  form (each edge cross product multiplied by the triangle orientation), so no
+  orientation case split is ever needed; with `inTriangleClosed_of_strict`,
+  `inTriangleClosed_of_mem_ac`, the cyclic-rotation invariance, the vertex
+  lemmas, and the three side lemmas `mem_side_ab/bc/ca_of_closed` (barycentric
+  reconstruction);
+* `HexArea.exit_point` — the *first exit*: on a segment from a point of the
+  closed triangle to a point outside it there is a boundary point.  Proved by
+  the intermediate value theorem applied to the minimum of the three affine
+  scaled cross products;
+* the cyclic bookkeeping `closedEdges_succ_unique`, `closedEdges_pred_unique`,
+  `closedEdges_ne`, `mem_of_mem_closedEdges`, and the segment lemmas
+  `cross_eq_zero_of_shared_ray`, `not_mem_segment_of_openSegment`,
+  `mem_segment_of_between`, `mem_segment_of_line_param`, `openSegment_perturb`;
+* `ear_rest_not_closed` — no vertex of the tail lies in the *closed* ear
+  triangle;
+* `ear_exit_on_base` — every exit of a cyclic edge from the ear triangle lies on
+  the base `[c, a]`;
+* `ear_edge_interior_not_strict`, `ear_edge_interior_not_base` (with
+  `ear_base_collinear_case`) — **no interior point of a cyclic edge other than
+  the two ear sides meets the closed ear triangle.**
+
+## 2. New file `RequestProject/SAWUmlaufFlatSeamLift.lean` (`sorry`-free)
+
+The flat-seam ear lift: rotation surgery (`flatSeam_ear_index`,
+`flatSeam_insert_rotation`), invariance of the clip's signed area under
+re-insertion of the flat vertex (`flatSeam_shoelace2_insert`), the quadrilateral
+base case (`flatSeam_quad_ear` — a quadrilateral with a flat vertex has an ear at
+*each* of its neighbours), the geometric input `flatSeam_avoids_ear` (a
+consequence of the clearance property above), the lift `flatSeam_ear_lift`, the
+packaging `FlatSeamData` / `flatSeam_EmptyCornerData2_of_data`, and
+`interior_flat_seam_data`: a degenerate chord piece of the Meisters interior cut
+is flat *exactly* at the cut endpoint `w`, and deleting `w` restores
+`polyCycNondeg`.
+
+## 3. Consequence
+
+`interior_lift_via_piece` (`RequestProject.SAWUmlaufPolyMeisters`) is now
+`sorry`-free — the flat-seam case is discharged by the lift, with its input
+supplied at the four call sites of `meisters_reduction_interior2` by
+`interior_flat_seam_data`.
+
+## 4. Remaining Umlaufsatz gaps (4 live, 1 banked)
+
+`chord_piece_orient` and `chord_lift_other_not_on_diagonal`
+(`SAWUmlaufChordLiftAux`), `clipped_ear_escape_walk` (`SAWUmlaufPolyEscape`),
+`empty_branch_bad_lift` (`SAWUmlaufPolyMeisters`); plus the banked
+`vertex_escape_joinedIn_arbitrarily_far_one_diag`, which is explicitly marked as
+preparation for `clipped_ear_escape_walk` and is not consumed.  Each carries a
+docstring describing precisely what remains.  Every file except the documented
+duplicate `RequestProject/SAWVertexRelation.lean` is reachable from
+`RequestProject.SAWFinal`.
+
 # Summary of changes for run f4e65384-5a96-409e-a9f5-d1138e6b159a
 This round worked exclusively on the Umlaufsatz, as requested. The project builds (`RequestProject.SAWFinal`, 8179 jobs) and all work is committed and pushed.
 
