@@ -45,8 +45,72 @@ def FreshTrail.fullSupport {T L : ℕ} {prev next : HexVertex}
     (γ : FreshTrail T L prev next) : List HexVertex :=
   γ.walk.support ++ [next]
 
-def FreshTrail.winding {T L : ℕ} {prev next : HexVertex}
+/-- The turning of the vertex list of the trail, measured from its *first*
+edge.  This is the quantity all the local extension/reversal lemmas are stated
+for; the observable uses `FreshTrail.winding`, which measures from the initial
+mid-edge `a` instead. -/
+def FreshTrail.rawWinding {T L : ℕ} {prev next : HexVertex}
     (γ : FreshTrail T L prev next) : ℝ := hexWalkWinding γ.fullSupport
+
+/-! ### Measuring the winding from the initial mid-edge `a`
+
+In Duminil-Copin & Smirnov the walk starts at the boundary mid-edge `a`, and
+the winding of a configuration is the total turning from `a` to the final
+mid-edge.  Here a configuration starts at the *vertex* `paperStart`, so the
+turning of its vertex list is measured from the first *edge* of the walk, which
+is one turn too late.  Prepending `hexOrigin` (the outside endpoint of `a`) to
+the vertex list restores the paper's normalisation, and this is what
+`FreshTrail.winding` does.
+
+The correction term is `hexHeadTurn hexOrigin`, which depends only on the first
+two vertices of the list.  Consequently every relation between the windings of
+two configurations *sharing their first edge* -- which is the case for all the
+extension and pair-involution relations -- holds verbatim for both
+normalisations. -/
+
+/-- The turn from the half-edge `x → L₀` into the first edge `L₀ → L₁`. -/
+def hexHeadTurn (x : HexVertex) : List HexVertex → ℝ
+  | v₀ :: v₁ :: _ =>
+      Complex.arg ((correctHexEmbed v₁ - correctHexEmbed v₀) /
+                   (correctHexEmbed v₀ - correctHexEmbed x))
+  | _ => 0
+
+lemma hexWalkWinding_cons_eq (x : HexVertex) (L : List HexVertex) (h : 2 ≤ L.length) :
+    hexWalkWinding (x :: L) = hexHeadTurn x L + hexWalkWinding L := by
+  match L, h with
+  | _ :: _ :: _, _ => rfl
+
+lemma hexHeadTurn_congr (x : HexVertex) {L₁ L₂ : List HexVertex}
+    (h : L₁.take 2 = L₂.take 2) : hexHeadTurn x L₁ = hexHeadTurn x L₂ := by
+  rcases L₁ with _ | ⟨a₁, _ | ⟨b₁, t₁⟩⟩ <;> rcases L₂ with _ | ⟨a₂, _ | ⟨b₂, t₂⟩⟩ <;>
+    simp_all [hexHeadTurn]
+
+/-- The winding of a configuration, measured from the initial mid-edge `a`. -/
+def FreshTrail.winding {T L : ℕ} {prev next : HexVertex}
+    (γ : FreshTrail T L prev next) : ℝ :=
+  hexWalkWinding (hexOrigin :: γ.fullSupport)
+
+lemma FreshTrail.two_le_fullSupport_length {T L : ℕ} {prev next : HexVertex}
+    (γ : FreshTrail T L prev next) : 2 ≤ γ.fullSupport.length := by
+  have h : 1 ≤ γ.walk.support.length := by
+    simpa using Nat.succ_le_succ (Nat.zero_le γ.walk.length)
+  simp only [FreshTrail.fullSupport, List.length_append, List.length_cons,
+    List.length_nil]
+  omega
+
+lemma FreshTrail.winding_eq {T L : ℕ} {prev next : HexVertex}
+    (γ : FreshTrail T L prev next) :
+    γ.winding = hexHeadTurn hexOrigin γ.fullSupport + γ.rawWinding :=
+  hexWalkWinding_cons_eq _ _ γ.two_le_fullSupport_length
+
+/-- Two configurations with the same first edge have the same correction term,
+so a relation between their raw windings transfers to their windings. -/
+lemma FreshTrail.winding_sub_eq {T L : ℕ} {p₁ n₁ p₂ n₂ : HexVertex}
+    (γ₁ : FreshTrail T L p₁ n₁) (γ₂ : FreshTrail T L p₂ n₂)
+    (h : γ₁.fullSupport.take 2 = γ₂.fullSupport.take 2) :
+    γ₂.winding - γ₁.winding = γ₂.rawWinding - γ₁.rawWinding := by
+  rw [γ₁.winding_eq, γ₂.winding_eq, hexHeadTurn_congr hexOrigin h]
+  ring
 
 def FreshTrail.weight {T L : ℕ} {prev next : HexVertex}
     (γ : FreshTrail T L prev next) : ℂ :=
@@ -113,23 +177,58 @@ lemma fin3_other_snd_ne (ji : Fin 3) : (fin3_other ji).2 ≠ ji := by
 
 /-! ## Winding relations -/
 
-theorem freshExtend_winding_k {T L : ℕ} {v : HexVertex} {ji : Fin 3}
+theorem freshExtend_rawWinding_k {T L : ℕ} {v : HexVertex} {ji : Fin 3}
     (γ : FreshTrail T L (hexNeighbors3 v ji) v)
     (h_no_v : vEdgeCount v γ.walk = 0) (hv : PaperFinStrip T L v) :
-    (freshExtend (fin3_other ji).1 γ h_no_v (fin3_other_fst_ne ji) hv).winding =
-    γ.winding - Real.pi / 3 := by
+    (freshExtend (fin3_other ji).1 γ h_no_v (fin3_other_fst_ne ji) hv).rawWinding =
+    γ.rawWinding - Real.pi / 3 := by
   convert triplet_winding_general_k v ji ⟨ _, _, _, _ ⟩ _ hv using 1;
   all_goals norm_cast;
   · exact γ.is_trail;
   · exact hexNeighbors3_adj v ji |> fun h => h.symm;
   · exact γ.in_strip
 
+theorem freshExtend_rawWinding_l {T L : ℕ} {v : HexVertex} {ji : Fin 3}
+    (γ : FreshTrail T L (hexNeighbors3 v ji) v)
+    (h_no_v : vEdgeCount v γ.walk = 0) (hv : PaperFinStrip T L v) :
+    (freshExtend (fin3_other ji).2 γ h_no_v (fin3_other_snd_ne ji) hv).rawWinding =
+    γ.rawWinding + Real.pi / 3 := by
+  convert triplet_winding_general_l v ji ⟨ γ.walk, γ.is_trail, γ.adj, γ.in_strip ⟩ h_no_v hv using 1
+
+/-- An extension appends one vertex at the end, so it has the same first edge. -/
+lemma freshExtend_fullSupport_take_two {T L : ℕ} {v : HexVertex} {ji k : Fin 3}
+    (γ : FreshTrail T L (hexNeighbors3 v ji) v)
+    (h_no_v : vEdgeCount v γ.walk = 0) (hk : k ≠ ji) (hv : PaperFinStrip T L v) :
+    γ.fullSupport.take 2
+      = (freshExtend k γ h_no_v hk hv).fullSupport.take 2 := by
+  have hsupp : (freshExtend k γ h_no_v hk hv).walk.support
+      = γ.walk.support ++ [v] := by
+    simp [freshExtend, SimpleGraph.Walk.support_append]
+  simp only [FreshTrail.fullSupport, hsupp, List.append_assoc]
+  rcases hs : γ.walk.support with _ | ⟨a, _ | ⟨b, t⟩⟩
+  · exact absurd hs (by simp)
+  · simp
+  · simp
+
+theorem freshExtend_winding_k {T L : ℕ} {v : HexVertex} {ji : Fin 3}
+    (γ : FreshTrail T L (hexNeighbors3 v ji) v)
+    (h_no_v : vEdgeCount v γ.walk = 0) (hv : PaperFinStrip T L v) :
+    (freshExtend (fin3_other ji).1 γ h_no_v (fin3_other_fst_ne ji) hv).winding =
+    γ.winding - Real.pi / 3 := by
+  have h := FreshTrail.winding_sub_eq γ _
+    (freshExtend_fullSupport_take_two γ h_no_v (fin3_other_fst_ne ji) hv)
+  rw [freshExtend_rawWinding_k γ h_no_v hv] at h
+  linarith
+
 theorem freshExtend_winding_l {T L : ℕ} {v : HexVertex} {ji : Fin 3}
     (γ : FreshTrail T L (hexNeighbors3 v ji) v)
     (h_no_v : vEdgeCount v γ.walk = 0) (hv : PaperFinStrip T L v) :
     (freshExtend (fin3_other ji).2 γ h_no_v (fin3_other_snd_ne ji) hv).winding =
     γ.winding + Real.pi / 3 := by
-  convert triplet_winding_general_l v ji ⟨ γ.walk, γ.is_trail, γ.adj, γ.in_strip ⟩ h_no_v hv using 1
+  have h := FreshTrail.winding_sub_eq γ _
+    (freshExtend_fullSupport_take_two γ h_no_v (fin3_other_snd_ne ji) hv)
+  rw [freshExtend_rawWinding_l γ h_no_v hv] at h
+  linarith
 
 /-! ## Triplet cancellation -/
 

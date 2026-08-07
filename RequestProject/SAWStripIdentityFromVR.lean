@@ -27,6 +27,7 @@ Instead, SAWDiagProof imports this file and uses B_paper_le_one_from_vr.
 
 import Mathlib
 import RequestProject.SAWPairInvolutionProof
+import RequestProject.SAWStartVertex
 
 open Real Complex ComplexConjugate Filter Topology
 
@@ -41,10 +42,9 @@ set_option maxHeartbeats 1600000
     **Status: PROVED** (modulo `pair_winding_relation`). -/
 theorem vertex_relation_at_interior (T L : ℕ) (v : HexVertex)
     (hv : PaperFinStrip T L v)
-    (hv_ne : v ≠ paperStart)
-    (h_nbrs : ∀ i : Fin 3, PaperFinStrip T L (hexNeighbors3 v i)) :
+    (hv_ne : v ≠ paperStart) :
     freshVertexSum T L v = 0 :=
-  fresh_vertex_relation T L v hv hv_ne h_nbrs
+  fresh_vertex_relation T L v hv hv_ne
 
 /-! ## Direction vectors sum to zero -/
 
@@ -76,35 +76,59 @@ require substantial combinatorial infrastructure. The key ingredients are:
 - `starting_path_unique` — only the trivial walk from a to a
 - The winding telescopes: W = d_last - d_first on the hex lattice -/
 
-/-- **Lemma 2** (Finite Strip Identity).
-    For the finite strip S_{T,L} with T ≥ 1, L ≥ 1:
-      1 = c_α · A_paper + B_paper + c_ε · E_paper -/
-lemma finite_strip_identity_from_vr (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
-    1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc := by
-  sorry
+/- **Lemma 2** (Finite Strip Identity), original formulation.
+
+    ```
+    lemma finite_strip_identity_from_vr (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+        1 = c_alpha * A_paper T L xc + B_paper T L xc + c_eps * E_paper T L xc
+    ```
+
+    This exact form is **not** what the discrete Stokes argument delivers, and
+    is very unlikely to be true as stated.  The escape term produced by the
+    boundary sum is a sum over the escape *mid-edges* leaving the strip,
+    whereas `E_paper` is a sum over the *walks* that can leave the strip.  These
+    differ: at a corner of the strip a single walk can leave through two
+    different mid-edges (e.g. a walk ending at `(-L, y, false)` with
+    `x + y = -T` leaves through both `(-L, y, true)` and `(-L, y+1, true)`),
+    and such a walk is counted by `B_paper`, not by `E_paper`, while its second
+    exit mid-edge still contributes to the boundary sum.
+
+    It is therefore replaced by `finite_strip_identity_rest` below, which keeps
+    the `α` and `β` terms exact (those *are* in bijection with `A_paper` and
+    `B_paper`) and only records non-negativity of the escape term.  This is all
+    that is used downstream, via `B_paper_le_one_from_vr`. -/
+
+/-- **Lemma 2** (Finite Strip Identity), corrected form.
+    For the finite strip S_{T,L} with T ≥ 1, L ≥ 1 there is a non-negative
+    escape contribution `Erest` with
+      `1 = c_α · A_paper + B_paper + Erest`. -/
+lemma finite_strip_identity_rest (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
+    ∃ Erest : ℝ, 0 ≤ Erest ∧
+      1 = c_alpha * A_paper T L xc + B_paper T L xc + Erest :=
+  strip_identity_nonneg_rest T L hT hL
 
 /-! ## Consequences of the finite strip identity -/
 
 /-- B_paper(T,L,xc) ≤ 1 follows immediately from the strip identity. -/
 lemma B_paper_le_one_from_vr (T L : ℕ) (hT : 1 ≤ T) (hL : 1 ≤ L) :
     B_paper T L xc ≤ 1 := by
-  have h_id := finite_strip_identity_from_vr T L hT hL
+  obtain ⟨Erest, hE, h_id⟩ := finite_strip_identity_rest T L hT hL
   have h_A := A_paper_nonneg T L xc xc_pos.le
-  have h_E := E_paper_nonneg T L xc xc_pos.le
   have h_ca := c_alpha_pos
-  have h_ce := c_eps_pos
   nlinarith
 
 /-! ## Summary
 
 This file provides:
 1. `vertex_relation_at_interior` — PROVED (from fresh_vertex_relation)
-2. `finite_strip_identity_from_vr` — SORRY (discrete Stokes + boundary eval)
+2. `finite_strip_identity_rest` — PROVED from `strip_identity_nonneg_rest`
+   in `SAWStripBoundarySum.lean`
 3. `B_paper_le_one_from_vr` — PROVED from #2
 
-The single sorry `finite_strip_identity_from_vr` represents the
-discrete Stokes argument + boundary evaluation. It is equivalent to
-`B_paper_le_one_strip` (in SAWStripIdentityCorrect.lean).
+The discrete Stokes summation itself is now proved
+(`SAWStokesSum.lean`, `SAWStripBoundarySum.lean`).  What remains are the
+four boundary-evaluation lemmas `bdry_A_eval`, `bdry_B_eval`,
+`bdry_E_re_nonneg`, `bdry_start_eval` of `SAWStripBoundarySum.lean`.
 
 ### Connection to the main theorem
 

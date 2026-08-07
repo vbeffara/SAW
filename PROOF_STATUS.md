@@ -1,5 +1,172 @@
 # Proof Status: μ = √(2+√2)
 
+> **LATEST round — the boundary evaluation of Lemma 2 is complete, and the
+> starting-vertex defect is computed.  All of Step 3 now rests on three
+> turning-number statements.**
+>
+> ### 1. The boundary evaluation is finished
+>
+> * `RequestProject/SAWBoundaryWindingBound.lean` (new).  A single geometric
+>   input, `freshTrail_boundary_winding_bound` (`|W| ≤ π` for a configuration
+>   whose final mid-edge leaves the strip), together with the telescoping law
+>   `freshTrail_winding_angle`, yields
+>   `re_mul_walkWeight` (`Re(d·e^{-iσW}x^ℓ) = ‖d‖ cos((1-σ)W) x^ℓ`),
+>   `boundary_cos_pos'` (`cos(3W/8) > 0` for `|W| ≤ π`) and hence
+>   `freshObs_dir_re_nonneg`: **every** boundary mid-edge contributes a
+>   non-negative real part.
+> * In `RequestProject/SAWStripBoundarySum.lean` the three sorries
+>   `alphaTrail_winding_bound`, `betaTrail_winding_bound` and
+>   `bdry_E_re_nonneg` are now **derived** from that single input; the file is
+>   `sorry`-free.
+>
+> ### 2. The defect of the vertex relation at `paperStart`
+>
+> `RequestProject/SAWStartVertex.lean` (new) proves
+>
+>   `paperStart_vertex_defect :
+>      freshVertexSum T L paperStart + freshObs T L paperStart hexOrigin = 1`,
+>
+> which is the paper's normalisation `F(a) = 1` in the present setting, and
+> derives `bdry_start_eval` and `strip_identity_nonneg_rest` (Lemma 2) from it.
+> Proved along the way:
+>
+> * `paperStart_out_walk_length_zero` / `freshObs_paperStart_side` — the only
+>   configuration at either inner mid-edge of `paperStart` is the empty one
+>   (a nonempty configuration returning to `paperStart` would have to use both
+>   inner edges, killing the freshness of the mid-edge);
+> * `paperStart_nil_triplet` — the two empty configurations contribute exactly
+>   `2·xc·cos(π/8) = 1`; this is the local relation of Lemma 1 with the (absent)
+>   empty configuration at `a` as its root, and it is where `xc` enters;
+> * `equivP1`, `equivP2` — the pair involution at `paperStart`: both families of
+>   remaining configurations are in length-preserving bijection with the inner
+>   trails from `n₂` to `n₁`, the second one run backwards;
+> * `paperStart_pair_term_zero` — with windings `∓4π/3` the two members of a
+>   pair contribute `+i·xc^ℓ` and `-i·xc^ℓ`, so `paperStart_pair_cancel` holds.
+>
+> Still open here: the two turning numbers `paperStart_inner_winding_one`
+> (`W = -4π/3`) and `paperStart_inner_winding_two` (`W = 4π/3`).
+>
+> ### 3. `paperStart_not_mem_pairLoop` is proved
+>
+> One of the three open statements of
+> `RequestProject/SAWPairLoopOrientation.lean` is now proved by an edge count:
+> the prefix already uses an edge at `paperStart`, so the loop cannot pass
+> through it.  The helper lemmas were factored into
+> `RequestProject/SAWVEdgeCountAux.lean` (new): `vEdgeCount_parity`,
+> `vEdgeCount_le_one_of_two_excluded`, `vEdgeCount_pos_of_mem_support_ne_start`.
+>
+> ### 4. What the main theorem now rests on
+>
+> * `hex_closed_trail_turning_number` (the discrete Umlaufsatz) and the two
+>   remaining orientation statements of `SAWPairLoopOrientation.lean`
+>   (`pairLoop_ptWind_arrive_of_start`, `pair_corner_turn_sign_of_outside`);
+> * `freshTrail_boundary_winding_bound` (`SAWBoundaryWindingBound.lean`);
+> * `paperStart_inner_winding_one` / `paperStart_inner_winding_two`
+>   (`SAWStartVertex.lean`);
+> * `infinite_strip_identity` (`SAWRecurrenceProof.lean`).
+>
+> All of these except the last are instances of the same discrete
+> turning-number/orientation theory.
+
+> **CURRENT round — the discrete Stokes summation (Step 2 of Lemma 2) is
+> COMPLETE, and the remaining critical-path gaps are now four small, local
+> boundary-evaluation statements plus one geometric orientation statement.**
+>
+> ### 1. `pair_winding_relation` is no longer a `sorry`
+>
+> `RequestProject/SAWPairCancellation.lean` now derives it from
+> `pair_winding_relation_geom`.  The geometric route is split over two files:
+>
+> * `RequestProject/SAWPairLoopWinding.lean` — builds the loop
+>   (`pairLoopList`), proves it is a *simple* closed hex trail
+>   (`pairInner_support_nodup`, from 3-regularity plus freshness), splits the
+>   winding (`pair_winding_split`, `pair_winding_split_rev`), and applies the
+>   Umlaufsatz to it (`hex_closed_loop_turning`, `pair_loop_umlauf`:
+>   `W(loop) + τ_corner = ±2π`).  **No `sorry` left in this file.**
+> * `RequestProject/SAWPairLoopOrientation.lean` (new) — the *sign*.  The local
+>   angle bookkeeping gives `τ_corner = ±π/3` (`pairCornerTurn_cases`), and
+>   `pair_loop_turning_eq` (`W(loop) = 5·τ_corner`) is now **proved** from
+>   `pair_loop_umlauf` together with the single sign statement
+>   `pair_corner_turn_sign`.  The assembly `pair_winding_relation_geom` moved
+>   here.
+>
+>   Proved here as preparation for `pair_corner_turn_sign`:
+>   * `correctHexEmbed_paperStart`, `strip_embed_re_ge_one`,
+>     `correctHexEmbed_eq_one_iff` — the strip embeds into the closed half plane
+>     `re ≥ 1` and `paperStart` is the unique hex vertex embedding to `1`;
+>   * `ptWind_eq_zero_of_left_ray` — a general leftward-ray separation criterion
+>     (a closed polygon in `re ≥ x.re`, avoiding `x`, with no edge inside the
+>     line `re = x.re`, has winding `0` around `x`).
+>
+>   Open here (3 `sorry`s, in a single chain):
+>   `pairLoop_ptWind_paperStart` → `pairLoop_ptWind_arrive_of_start` →
+>   `pair_corner_turn_sign_of_outside` → `pair_corner_turn_sign`.
+>
+> ### 2. Discrete Stokes, proved
+>
+> * `RequestProject/SAWStokesSum.lean` (new, **`sorry`-free**) —
+>   `stokes_boundary_sum`: for *any* finite set `V` of hex vertices,
+>   `∑_{v ∈ V} freshVertexSum v = ∑_{v ∈ V} ∑_{w ∈ nbr v \ V} stokesTerm v w`.
+>   The interior cancellation `stokes_innerPairs_zero` is a `Finset.sum_involution`
+>   on oriented mid-edges, using antisymmetry of the direction vector and
+>   symmetry of the observable.
+> * `RequestProject/SAWStripBoundarySum.lean` (new) — the same for the concrete
+>   strip.  Proved: `freshObs_eq_zero_of_not_strip`, `stripSum_eq_bdrySum`
+>   (the whole boundary sum equals `freshVertexSum T L paperStart`, because the
+>   vertex relation holds at every other strip vertex), the four-way split
+>   `bdry_split`, and the exact identification of the three boundary families:
+>   `startPairs_eq` / `bdry_start_sum`, `APairs_eq` / `bdry_A_sum`,
+>   `BPairs_eq` / `bdry_B_sum`.
+>
+>   Open here (4 `sorry`s, the boundary evaluation, Step 3 of Lemma 2):
+>   `bdry_A_eval`, `bdry_B_eval`, `bdry_E_re_nonneg`, `bdry_start_eval`.
+>
+> ### 3. A correction
+>
+> `finite_strip_identity_from_vr`, i.e.
+> `1 = c_α·A_paper + B_paper + c_ε·E_paper`, has been **retired**: the escape
+> term produced by the boundary sum is a sum over the escape *mid-edges*, while
+> `E_paper` is a sum over *walks*, and at a corner of the strip one walk can
+> leave through two mid-edges (and then be counted by `B_paper`, not by
+> `E_paper`).  The original statement is kept, commented out with this
+> explanation, in `RequestProject/SAWStripIdentityFromVR.lean`, and replaced by
+> `finite_strip_identity_rest`:
+> `∃ Erest ≥ 0, 1 = c_α·A_paper + B_paper + Erest`, which is what the argument
+> delivers and all that `B_paper_le_one_from_vr` (the only consumer) needs.
+>
+> `fresh_vertex_relation` also lost its unused `h_nbrs` hypothesis; it now holds
+> at *every* strip vertex other than `paperStart`, which is what the Stokes
+> summation needs.
+>
+> ### 4. Remaining `sorry`s on the critical path
+>
+> | statement | file |
+> |---|---|
+> | `pairLoop_ptWind_paperStart` | `SAWPairLoopOrientation.lean` |
+> | `pairLoop_ptWind_arrive_of_start` | `SAWPairLoopOrientation.lean` |
+> | `pair_corner_turn_sign_of_outside` | `SAWPairLoopOrientation.lean` |
+> | `bdry_A_eval`, `bdry_B_eval`, `bdry_E_re_nonneg`, `bdry_start_eval` | `SAWStripBoundarySum.lean` |
+> | `infinite_strip_identity` | `SAWRecurrenceProof.lean` |
+>
+> `infinite_strip_identity` is an honest equality (the infinite strip has no
+> escape boundary) and is *not* derivable from the finite identity above; it
+> needs the same Stokes argument run on the infinite strip.
+>
+> ### 5. Branches that look dead but are preparation
+>
+> * `strip_embed_re_ge_one`, `correctHexEmbed_eq_one_iff`,
+>   `ptWind_eq_zero_of_left_ray` (`SAWPairLoopOrientation.lean`) — the three
+>   separation inputs for `pairLoop_ptWind_paperStart`.
+> * `vertex_escape_joinedIn_arbitrarily_far_one_diag`
+>   (`SAWUmlaufPolyEscape.lean`) — banked material for a future direct treatment
+>   of `clipped_ear_escape_walk`; genuinely off the live route.
+> * `B_paper_le_one_strip` (`SAWStripIdentityCorrect.lean`) — superseded by
+>   `B_paper_le_one_from_vr`; kept because other files still reference the
+>   surrounding development.
+>
+> ---
+
+
 > **Umlaufsatz (CURRENT round): COMPLETE.  `polygon_umlaufsatz_final` and the
 > hex form `hex_signed_turn_eq_six_sign_shoelace` are `sorry`-free and depend
 > only on `propext`, `Classical.choice`, `Quot.sound`.**

@@ -11,7 +11,7 @@ This is the key infrastructure for proving `pair_winding_relation`.
 -/
 
 import Mathlib
-import RequestProject.SAWPairCancellation
+import RequestProject.SAWPairInvolDefs
 
 open Real Complex ComplexConjugate Filter Topology
 

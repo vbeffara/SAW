@@ -1,3 +1,89 @@
+# Summary of changes for the current run
+
+This round worked exclusively on the main theorem, as requested.  The project
+builds, every new file is imported, and all work is committed and pushed.
+
+## 1. `pair_winding_relation` is closed
+
+The winding relation for loop-reversed pairs — the last remaining input of
+Lemma 1 (the vertex relation) — is no longer a `sorry`.  It is derived from
+`pair_winding_relation_geom`, whose route is now:
+
+* `RequestProject/SAWPairLoopWinding.lean` — the loop `pairLoopList`, its
+  simplicity (`pairInner_support_nodup`, from 3-regularity plus freshness), the
+  winding split, and the Umlaufsatz applied to the loop
+  (`hex_closed_loop_turning`, `pair_loop_umlauf`: `W(loop) + τ = ±2π`).
+  **This file is now `sorry`-free.**
+* `RequestProject/SAWPairLoopOrientation.lean` (new) — the sign.  With
+  `pairCornerTurn_cases` (`τ = ±π/3`), the target `W(loop) = 5·τ` is *proved*
+  from `pair_loop_umlauf` and a single sign statement `pair_corner_turn_sign`.
+  The assembly `pair_winding_relation_geom` moved here.
+
+  Proved here, as preparation for that sign statement:
+  `correctHexEmbed_paperStart`, `strip_embed_re_ge_one` (the strip embeds into
+  `re ≥ 1`), `correctHexEmbed_eq_one_iff` (`paperStart` is the unique hex vertex
+  embedding to `1`), and `ptWind_eq_zero_of_left_ray`, a general leftward-ray
+  separation criterion for the winding number of a polygon around a point.
+
+  Left open, as an explicit three-step chain:
+  `pairLoop_ptWind_paperStart` → `pairLoop_ptWind_arrive_of_start` →
+  `pair_corner_turn_sign_of_outside`.
+
+## 2. The discrete Stokes summation is proved
+
+* `RequestProject/SAWStokesSum.lean` (new, **`sorry`-free**) — the abstract
+  cancellation.  `stokes_boundary_sum`: for any finite set `V` of hex vertices,
+  summing the parafermionic vertex sum over `V` leaves exactly the mid-edges
+  leaving `V`.  The interior cancellation is a `Finset.sum_involution` over
+  oriented mid-edges.
+* `RequestProject/SAWStripBoundarySum.lean` (new) — the same for the strip
+  `S_{T,L}`.  Proved: the observable vanishes on mid-edges based outside the
+  strip; `stripSum_eq_bdrySum` (the boundary sum equals the vertex sum at
+  `paperStart`, since the vertex relation holds at every other strip vertex);
+  the four-way split of the boundary into the starting mid-edge and the `α`,
+  `β`, `ε` families; and the exact identification of each family
+  (`startPairs_eq`, `APairs_eq`, `BPairs_eq`) and of its contribution
+  (`bdry_start_sum`, `bdry_A_sum`, `bdry_B_sum`).
+
+  Left open: the four boundary-evaluation statements `bdry_A_eval`,
+  `bdry_B_eval`, `bdry_E_re_nonneg`, `bdry_start_eval` (Step 3 of Lemma 2).
+
+## 3. Two corrections
+
+* `fresh_vertex_relation` carried an unused hypothesis `h_nbrs` ("all three
+  neighbours are in the strip").  It is removed: the relation holds at *every*
+  strip vertex other than `paperStart`, which is what the Stokes summation
+  needs.
+* `finite_strip_identity_from_vr`, i.e. `1 = c_α·A + B + c_ε·E`, is very
+  unlikely to be true as stated: the escape term produced by the boundary sum
+  runs over escape *mid-edges*, whereas `E_paper` runs over *walks*, and at a
+  corner of the strip one walk leaves through two mid-edges (and is then counted
+  by `B_paper`, not `E_paper`).  The statement is kept, commented out with this
+  explanation, and replaced by `finite_strip_identity_rest`:
+  `∃ Erest ≥ 0, 1 = c_α·A_paper + B_paper + Erest`.  That is what the argument
+  delivers and all that its only consumer, `B_paper_le_one_from_vr`, needs;
+  `B_paper_le_one_from_vr` is unchanged in statement and still proved.
+
+## 4. Remaining `sorry`s on the critical path
+
+Eight, in three groups: the three-step orientation chain in
+`SAWPairLoopOrientation.lean`, the four boundary-evaluation lemmas in
+`SAWStripBoundarySum.lean`, and `infinite_strip_identity` in
+`SAWRecurrenceProof.lean` (an honest equality — the infinite strip has no escape
+boundary — that needs the Stokes argument re-run on the infinite strip, and is
+*not* a consequence of the finite identity).
+
+## 5. Branches that look dead but are preparation
+
+* `strip_embed_re_ge_one`, `correctHexEmbed_eq_one_iff`,
+  `ptWind_eq_zero_of_left_ray` (`SAWPairLoopOrientation.lean`) — the separation
+  inputs for `pairLoop_ptWind_paperStart`.
+* `vertex_escape_joinedIn_arbitrarily_far_one_diag` (`SAWUmlaufPolyEscape.lean`)
+  — banked material, genuinely off the live route.
+* `B_paper_le_one_strip` (`SAWStripIdentityCorrect.lean`) — superseded by
+  `B_paper_le_one_from_vr`, kept because the surrounding development is still
+  referenced.
+
 # Summary of changes for run 0665241b-a19c-459b-8532-3b444b248ea3
 ## The Umlaufsatz is complete
 

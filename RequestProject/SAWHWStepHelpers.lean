@@ -441,11 +441,11 @@ lemma lastDCIndex_is_false'
   by_contra h_contra;
   -- By `dc_step_from_true`, since the vertex at `lastDCIndex` is TRUE, the next vertex (at `lastDCIndex + 1`) has dc ≤ -(W+1).
   have h_next_dc_le : (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).1 + (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).2.1 ≤ -(↑(W + 1) : ℤ) := by
-    have h_next_dc_le : hexGraph.Adj (p.getVert (lastDCIndex p (-↑(W + 1)) h)) (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)) := by
-      exact?;
+    have h_next_dc_le : hexGraph.Adj (p.getVert (lastDCIndex p (-↑(W + 1)) h)) (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)) :=
+      p.adj_getVert_succ h_not_last
     convert dc_step_from_true h_next_dc_le _ using 1;
     · exact Eq.symm ( lastDCIndex_dc p ( - ( W + 1 : ℤ ) ) h );
-    · exact?;
+    · simpa using h_contra
   -- By `hstrip`, since the next vertex is in support, its dc ≥ -(W+1).
   have h_next_dc_ge : (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).1 + (p.getVert (lastDCIndex p (-↑(W + 1)) h + 1)).2.1 ≥ -(↑(W + 1) : ℤ) := by
     exact hstrip _ ( SimpleGraph.Walk.getVert_mem_support _ _ ) |>.1;

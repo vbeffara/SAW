@@ -200,8 +200,7 @@ theorem freshVertexSum_pair_part_zero_proved (T L : ℕ) (v : HexVertex)
       freshVertexSum T L v = 0 -/
 theorem fresh_vertex_relation (T L : ℕ) (v : HexVertex)
     (hv : PaperFinStrip T L v)
-    (hv_ne_start : v ≠ paperStart)
-    (_h_nbrs : ∀ i : Fin 3, PaperFinStrip T L (hexNeighbors3 v i)) :
+    (hv_ne_start : v ≠ paperStart) :
     freshVertexSum T L v = 0 := by
   rw [freshVertexSum_decompose T L v hv_ne_start]
   have h1 := freshVertexSum_triplet_part_zero T L v hv hv_ne_start

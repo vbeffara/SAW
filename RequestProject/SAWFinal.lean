@@ -31,23 +31,34 @@ SAW.lean               — Core definitions, constants, algebraic identities
 
 ## Remaining sorry's
 
-The main theorem depends on two independent sorry chains:
+The main theorem depends on two independent sorry chains.
 
-**Chain A** (Z(x) < ∞ for x < xc): Three sorry's in sequence:
+**Chain A** (Z(x) < ∞ for x < xc) — all of it is now discrete
+turning-number/orientation theory:
 1. **`hex_closed_trail_turning_number`** (SAWTurningNumber.lean) — ROOT CAUSE.
    The discrete Gauss-Bonnet/Umlaufsatz: a simple closed hex trail has total
-   turning ±2π. This is the deepest unproved mathematical fact.
-2. **`pair_winding_relation`** (SAWPairCancellation.lean) — needs #1.
-   The turning number argument for loop-reversed pairs on the hex lattice.
-3. **`finite_strip_identity_from_vr`** (SAWStripIdentityFromVR.lean) — needs
-   vertex relation (from #2) + discrete Stokes argument. The Lemma 2 of the
-   paper: 1 = c_α·A + B + c_ε·E. Now connected to the main chain via
-   SAWDiagProof (which uses B_paper_le_one_from_vr).
+   turning ±2π.
+2. **`pairLoop_ptWind_arrive_of_start`** and
+   **`pair_corner_turn_sign_of_outside`** (SAWPairLoopOrientation.lean) — the
+   orientation of the loop of a pair.  (`paperStart_not_mem_pairLoop`, the
+   third statement of that chain, is now proved.)  These give
+   `pair_winding_relation` and hence the vertex relation
+   `fresh_vertex_relation`.
+3. **`freshTrail_boundary_winding_bound`** (SAWBoundaryWindingBound.lean) — a
+   configuration whose final mid-edge leaves the strip turns by at most half a
+   revolution.  This single statement now carries the whole boundary
+   evaluation: `bdry_A_eval`, `bdry_B_eval` and `bdry_E_re_nonneg` are proved
+   from it in SAWStripBoundarySum.lean.
+4. **`paperStart_inner_winding_one`** / **`paperStart_inner_winding_two`**
+   (SAWStartVertex.lean) — the turning numbers `∓4π/3` of the two members of a
+   cancelling pair at the starting vertex.  Everything else in the
+   starting-vertex computation (`paperStart_vertex_defect`, hence
+   `bdry_start_eval` and `strip_identity_nonneg_rest`, i.e. Lemma 2) is proved.
 
 **Chain B** (Z(xc) = ∞): One independent sorry:
-4. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
-   1 = c_α·A_inf + xc·B for the infinite strip. This is the L→∞ limit of #3.
-   Could be derived from #3 via monotone convergence.
+5. **`infinite_strip_identity`** (SAWRecurrenceProof.lean) — The identity
+   1 = c_α·A_inf + xc·B for the infinite strip. This is the L→∞ limit of
+   Lemma 2.
 
 **Note:** `B_paper_le_one_strip` (SAWStripIdentityCorrect.lean) is NO LONGER
 on the critical path. SAWDiagProof now uses `B_paper_le_one_from_vr` from
@@ -91,6 +102,15 @@ part of the build:
 - `SAWMainNew` — Alternative proof path via infinite_strip_identity only
 - `SAWHexPathHelpers` — Hex lattice trail → path lemmas (sorry-free,
   preparation for IsTrail → IsPath fix in FreshTrail)
+- `SAWVEdgeCountAux` — edge-count helpers at a vertex of degree three
+  (sorry-free); shared by the starting-vertex computation and the loop
+  orientation argument
+- `SAWFreshTrailPath` — fresh trails are self-avoiding walks (sorry-free)
+- `SAWWindingTelescope`, `SAWFreshWindingAngle` — the telescoping law for the
+  winding of a configuration (sorry-free)
+- `SAWBoundaryWindingBound` — the real part of a boundary contribution
+- `SAWStartVertex` — the defect of the vertex relation at the starting vertex,
+  and Lemma 2 (`strip_identity_nonneg_rest`)
 
 ## Dead branches (explicitly marked)
 
