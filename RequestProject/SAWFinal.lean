@@ -170,9 +170,16 @@ import RequestProject.SAWUmlaufDartCounterexample
 import RequestProject.SAWUmlaufFlatClipCounterexample
 
 -- The ear induction step for the point-in-polygon dichotomy: the two halves of
--- the induction that is to discharge `polygon_ptWind_dichotomy`, the last
--- topological gap of the Umlaufsatz.  Preparation, not yet consumed.
+-- the induction that discharges the dichotomy.  It is now consumed: it defines
+-- `DichBelow` and supplies `polyDichotomy_step`, from which
+-- `RequestProject.SAWUmlaufJordanInduction` derives `dichBelow_all`,
+-- `polygon_ptWind_dichotomy_final` and the unconditional Umlaufsatz
+-- `polygon_umlaufsatz_final`.
 import RequestProject.SAWUmlaufJordanStep
+
+-- Non-vacuity check for the planar Umlaufsatz: all three hypotheses of
+-- `polygon_umlaufsatz_final` are exhibited for the concrete triangle `0, 1, i`.
+import RequestProject.SAWUmlaufTriangleExample
 
 open Real Complex ComplexConjugate Filter Topology
 

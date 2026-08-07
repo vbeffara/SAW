@@ -1,5 +1,73 @@
 # Proof Status: μ = √(2+√2)
 
+> **Umlaufsatz (CURRENT round): COMPLETE.  `polygon_umlaufsatz_final` and the
+> hex form `hex_signed_turn_eq_six_sign_shoelace` are `sorry`-free and depend
+> only on `propext`, `Classical.choice`, `Quot.sound`.**
+>
+> ### 1. What closed the last gap
+>
+> The final live gap was `empty_branch_base_blocked_lift`
+> (`RequestProject/SAWUmlaufPolyMeisters.lean`): in the *empty* branch of the
+> Meisters ear search the convex apex `b` of `V.rotate r = a :: b :: c :: rest`
+> has an empty open corner triangle, but some vertex `w ∈ rest` lies on the base
+> segment `[a, c]`, so the clip `a :: c :: rest` is not simple and the clip route
+> is unavailable.  It is now proved by cutting `V` along the chord `b–w` instead,
+> mirroring `meisters_reduction_interior2`.
+>
+> Three ingredients made that possible, in this round and the two before it:
+>
+> * `RequestProject/SAWUmlaufConeStrict.lean` (`sorry`-free) — the strict corner
+>   *cone* `HexArea.inConeStrict p u n v`, which replaces `inTriangleStrict` as
+>   the third clause of `InteriorChord`.  A vertex on the open base of the corner
+>   is in the cone but not in the open triangle, which is exactly the blocked-base
+>   configuration.
+> * The interior-split bricks (`interior_split_nondeg_left/right`,
+>   `interior_split_one_nondeg`, `interior_split_simple`, `interior_split_select`,
+>   `interior_flat_seam_data*`) were generalized: they now take the two corner
+>   cross conditions `cross (b-a) (w-a) ≠ 0`, `cross (c-b) (w-b) ≠ 0` and the
+>   chord-clearance `hclear`, instead of `inTriangleStrict a b c w` and the
+>   distance-maximality `hwmax`.
+> * `RequestProject/SAWUmlaufBaseBlocked.lean` (`sorry`-free) — the blocked-base
+>   geometry: `base_vertex_cross_facts` (the three corner cross products at a
+>   point `w - a = s (c-a)`, `0 < s < 1`), `base_vertex_inConeStrict`, and
+>   `base_chord_is_diagonal`, the blocked-base analogue of
+>   `interior_chord_is_diagonal` (the chord `b–w` meets no non-incident closed
+>   edge; the maximality hypothesis is replaced by the emptiness of the open
+>   corner triangle, which is available outright here).
+>
+> Also closed earlier in this sequence:
+> `RequestProject/SAWUmlaufEmptyBranchLift.lean` (`sorry`-free) with
+> `empty_branch_boundary_lift_weak`, `empty_branch_interior_lift_flat` and
+> `empty_branch_lift_of_clip_data`.
+>
+> ### 2. The sorry'd `polygon_ptWind_dichotomy` is retired
+>
+> The point-in-polygon dichotomy used to be an unproved topological input in
+> `RequestProject/SAWUmlaufJordanDichotomy.lean`.  It is now *proved*
+> unconditionally, downstream, as `polygon_ptWind_dichotomy_final`
+> (`RequestProject/SAWUmlaufJordanInduction.lean`, from `dichBelow_all`).  The
+> upstream copy has been removed; the (already superseded) lemmas that consumed
+> it — `ear_interior_ptWind_eq`, `ear_interior_clip_ptWind_zero`,
+> `ear_interior_ptWind_ne_zero_via_clip`, `ear_interior_ptWind_ne_zero_of_rotation`,
+> `ear_interior_ptWind_ne_zero` — now take the relevant `PolyDichotomy` instance
+> as an explicit hypothesis and are `sorry`-free.
+>
+> ### 3. Remaining `sorry`s in the Umlaufsatz files
+>
+> One, and it is **not** on the live route and **not** needed by the theorem:
+> `vertex_escape_joinedIn_arbitrarily_far_one_diag`
+> (`RequestProject/SAWUmlaufPolyEscape.lean`), banked material for a future
+> direct treatment of `clipped_ear_escape_walk`.  The three other `sorry`
+> occurrences in Umlauf files sit inside `/- ... -/` comment blocks
+> (`SAWUmlaufPolygon.lean`, `SAWUmlaufJordanCore.lean`, `SAWUmlaufPolyEscape.lean`)
+> and record superseded statements.
+>
+> `sorry`s elsewhere in the project (SAW strip observable, recurrence proof, …)
+> are outside the Umlaufsatz and untouched.
+>
+> ---
+
+
 > **Umlaufsatz (CURRENT round): the flat-seam residual of the Meisters interior
 > branch is CLOSED, and with it the classical ear-clearance property of a simple
 > polygon is now proved in full.**

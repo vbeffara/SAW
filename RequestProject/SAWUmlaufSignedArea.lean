@@ -89,10 +89,10 @@ noncomputable section
     **Now proved sorry-free** by deriving it from the general planar-polygon
     Umlaufsatz `polygon_umlaufsatz` (applied to `hexEmbeddedPolygon L`) through
     the bridge `polyWind_hexEmbedded_cyclic` and the combinatorial reductions
-    `hexWalkWinding_eq_signedTurnCount` / `hex_closure_arg_eq_sign`.  The two
-    remaining irreducible topological gaps live in
-    `RequestProject.SAWUmlaufPolygon` (`polygon_umlaufsatz` and
-    `hexEmbeddedPolygon_edges_disjoint`). -/
+    `hexWalkWinding_eq_signedTurnCount` / `hex_closure_arg_eq_sign`.  The planar
+    input is now the *unconditional* `polygon_umlaufsatz_final`
+    (`RequestProject.SAWUmlaufJordanInduction`), so this lemma has no remaining
+    topological gap: it depends only on the standard axioms. -/
 lemma hex_signed_turn_eq_six_sign_shoelace (L : List HexVertex)
     (hL : 4 ≤ L.length)
     (h_trail : HexTrailList L)

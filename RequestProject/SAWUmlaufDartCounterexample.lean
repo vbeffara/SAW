@@ -168,7 +168,9 @@ lemma dart_tip_not_mem_chord : (-Complex.I) ∉ segment ℝ (-2 : ℂ) (2 : ℂ)
 
 /-- **The fix works.**  The dart's exterior chord `q–p` is *not* an
 `InteriorChord` of the dart: the far endpoint `p = 2` does not lie strictly
-inside the corner triangle `(r, q, x)` at the rooted endpoint `q = -2`.  So the
+inside the corner *cone* `(r, q, x)` at the rooted endpoint `q = -2` (its
+imaginary part would have to be a strictly negative combination of `-4` and
+`-1`, but it is `0`).  So the
 strengthened chord branch of `RequestProject.SAWUmlaufPolygon` genuinely excludes
 this configuration. -/
 theorem dart_chord_not_interiorChord : ¬ InteriorChord dartW (-2) 2 := by
@@ -182,8 +184,10 @@ theorem dart_chord_not_interiorChord : ¬ InteriorChord dartW (-2) 2 := by
     rw [this] at hnu
     exact (Option.some.injEq _ _ ▸ hnu).symm
   rw [hpu, hnu'] at hcone
-  simp [HexArea.inTriangleStrict, HexArea.cross] at hcone
-  norm_num at hcone
+  obtain ⟨hpn, α, γ, hα, hγ, hvu⟩ := hcone
+  have him := congrArg Complex.im hvu
+  simp [Complex.real_smul] at him
+  nlinarith
 
 /-! ## The three disproofs -/
 

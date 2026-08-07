@@ -1,5 +1,6 @@
 import Mathlib
 import RequestProject.SAWUmlaufCornerEscape
+import RequestProject.SAWUmlaufConeStrict
 import RequestProject.SAWUmlaufPolyChord
 
 /-!
@@ -45,8 +46,13 @@ polygon* at `u`:
   other vertex `y` of `W` (at the call site `u` is the lex-minimal vertex);
 * no triangle spanned by vertices of `W` contains `u` strictly (kept because it
   is what the dart counterexample refutes, and it is free at the call site);
-* the far endpoint `v` lies strictly inside the corner triangle `(pu, u, nu)`
-  spanned by `u` and its two cyclic neighbours.
+* the far endpoint `v` lies strictly inside the corner *cone* `(pu, u, nu)`
+  spanned by `u` and its two cyclic neighbours (`HexArea.inConeStrict`).  This is
+  the exact relaxation of the earlier clause `inTriangleStrict pu u nu v`: every
+  consumer of `InteriorChord` only ever uses the cone, and the blocked-base
+  branch of the Meisters recursion (`RequestProject.SAWUmlaufBaseBlocked`) needs
+  a chord whose far endpoint sits on the *base* of the corner triangle, which is
+  in the cone but not in the triangle's interior.
 
 **Why this is needed (soundness).**  Edge-disjointness alone is NOT enough.  For
 a dart (non-convex quadrilateral) every edge is incident to one of the two chord
@@ -57,7 +63,7 @@ def InteriorChord (W : List ℂ) (u v : ℂ) : Prop :=
   ∃ pu nu : ℂ, W.head? = some u ∧ W.getLast? = some pu ∧ W[1]? = some nu ∧
     (∀ y ∈ W, ∀ z ∈ W, ∀ t ∈ W, ¬ HexArea.inTriangleStrict y z t u) ∧
     (∃ d : ℂ, ∀ y ∈ W, y ≠ u → 0 < HexArea.cdot d (y - u)) ∧
-    HexArea.inTriangleStrict pu u nu v
+    HexArea.inConeStrict pu u nu v
 
 namespace HexArea
 
@@ -212,13 +218,13 @@ lemma InteriorChord.index_bounds (W : List ℂ) (k : ℕ)
     · interval_cases k
       · exfalso
         have : v = nu := by rw [← hvk, ← hnuk]
-        exact (HexArea.inTriangleStrict_ne_c pu u nu v hin) this
+        exact (HexArea.inConeStrict_ne_right pu u nu v hin) this
     · exact h
   · by_contra hcon
     have : v = pu := by
       rw [← hvk, ← hpuk]
       exact getElem_congr rfl (by omega) (by omega)
-    exact (HexArea.inTriangleStrict_ne_a pu u nu v hin) this
+    exact (HexArea.inConeStrict_ne_left pu u nu v hin) this
 
 
 /-! ### Elementary bricks -/
@@ -447,7 +453,7 @@ lemma chordPiece_other_neighbour_ptWind_zero
   have hvk : W[k]'(by omega) = v := by
     rw [List.getElem?_eq_getElem (by omega)] at hv
     exact (Option.some.injEq _ _ ▸ hv)
-  obtain ⟨hcpn, hcpv, hcnv⟩ := corner_cross_ne pu u nu v hin
+  obtain ⟨hcpn, hcpv, hcnv⟩ := HexArea.cone_cross_ne pu u nu v hin
   rcases hP with hPl | hPr
   · -- **Left piece**: the other piece contributes the cyclic predecessor `pu` of `u`.
     subst hPl
@@ -474,7 +480,7 @@ lemma chordPiece_other_neighbour_ptWind_zero
       ?_ hpuU ?_ ?_
     · intro y hy hyu
       exact hd y (HexArea.mem_of_mem_chordLeft W k hy) hyu
-    · exact HexArea.not_mem_cornerCone_of_inTriangleStrict pu u nu v hin
+    · exact HexArea.not_mem_cornerCone_of_inConeStrict pu u nu v hin
     · intro e he w hw hwe
       rcases HexArea.cycleEdges_at_head P hPnd u nu v hPhead hP1 hPlast (by omega) e he with
         hboth | hcase | hcase
@@ -545,7 +551,7 @@ lemma chordPiece_other_neighbour_ptWind_zero
       rcases List.mem_cons.mp hy with rfl | hy'
       · exact hu0 ▸ List.getElem_mem _
       · exact List.mem_of_mem_drop hy'
-    · exact HexArea.not_mem_cornerCone_of_inTriangleStrict' pu u nu v hin
+    · exact HexArea.not_mem_cornerCone_of_inConeStrict' pu u nu v hin
     · intro e he w hw hwe
       have heR : e ∈ HexArea.cycleEdges R := by
         rw [HexArea.cycleEdges_eq_closedEdges] at he ⊢

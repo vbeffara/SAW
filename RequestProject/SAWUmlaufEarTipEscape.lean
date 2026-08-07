@@ -278,9 +278,10 @@ For a simple polygon `L` with an empty, coherently oriented ear `a, b, c`
 (`hor`), the winding number of the clipped cycle `a :: c :: rest` around any point
 strictly inside the ear triangle vanishes.
 
-**Status: proved** from the point-in-polygon dichotomy
-(`polygon_ptWind_dichotomy`, `RequestProject.SAWUmlaufJordanDichotomy` — now the
-single remaining plane-topology input of the development).  Indeed the winding
+**Status: proved** from the point-in-polygon dichotomy for the rotated
+presentation, taken here as the hypothesis `hdich` and discharged
+unconditionally, downstream, by `polygon_ptWind_dichotomy_final`
+(`RequestProject.SAWUmlaufJordanInduction`).  Indeed the winding
 number of `L` itself around such a point is `2π · sign (shoelace2 L)`
 (`ear_interior_ptWind_eq`), while the ear triangle contributes exactly the same
 amount by the ear coherence `hor` and `HexArea.ptWind_triangle`; the ear split
@@ -296,6 +297,7 @@ dart the statement is false). -/
 theorem ear_interior_clip_ptWind_zero (L : List ℂ) (h4 : 4 ≤ L.length)
     (hsimple : PolygonSimple L)
     (ρ : ℕ) (a b c : ℂ) (rest : List ℂ) (hrot : L.rotate ρ = a :: b :: c :: rest)
+    (hdich : PolyDichotomy (a :: b :: c :: rest))
     (hD : HexArea.cross (b - a) (c - b) ≠ 0)
     (hempty : ∀ y ∈ rest, ¬ HexArea.inTriangleStrict a b c y)
     (hdiag : ∀ y ∈ rest, y ∉ segment ℝ a c)
@@ -312,7 +314,8 @@ theorem ear_interior_clip_ptWind_zero (L : List ℂ) (h4 : 4 ≤ L.length)
       rw [hrw, this]; ring
     rcases hin with ⟨_, _, h3⟩ | ⟨_, _, h3⟩ <;> rw [h0] at h3 <;> exact absurd h3 (by norm_num)
   have hsplit := HexArea.ptWind_ear_split x a b c L ρ rest hrot hac hin
-  have hval := ear_interior_ptWind_eq L h4 hsimple ρ a b c rest hrot hD hempty hdiag hor x hin
+  have hval :=
+    ear_interior_ptWind_eq L h4 hsimple ρ a b c rest hrot hdich hD hempty hdiag hor x hin
   have hif : (if (0:ℝ) < HexArea.shoelace2 [a, b, c] then (1:ℝ) else -1)
       = (if (0:ℝ) < HexArea.shoelace2 L then (1:ℝ) else -1) := by
     by_cases h : (0:ℝ) < HexArea.shoelace2 [a, b, c]
@@ -345,6 +348,7 @@ interior is nonzero** — derived from the keystone.  The ear triangle contribut
 theorem ear_interior_ptWind_ne_zero_via_clip (L : List ℂ) (h4 : 4 ≤ L.length)
     (hsimple : PolygonSimple L)
     (ρ : ℕ) (a b c : ℂ) (rest : List ℂ) (hrot : L.rotate ρ = a :: b :: c :: rest)
+    (hdich : PolyDichotomy (a :: b :: c :: rest))
     (hD : HexArea.cross (b - a) (c - b) ≠ 0)
     (hempty : ∀ y ∈ rest, ¬ HexArea.inTriangleStrict a b c y)
     (hdiag : ∀ y ∈ rest, y ∉ segment ℝ a c)
@@ -360,8 +364,8 @@ theorem ear_interior_ptWind_ne_zero_via_clip (L : List ℂ) (h4 : 4 ≤ L.length
       rw [hrw, this]; ring
     rcases hin with ⟨_, _, h3⟩ | ⟨_, _, h3⟩ <;> rw [h0] at h3 <;> exact absurd h3 (by norm_num)
   have hsplit := HexArea.ptWind_ear_split x a b c L ρ rest hrot hac hin
-  have hzero := ear_interior_clip_ptWind_zero L h4 hsimple ρ a b c rest hrot hD hempty hdiag hor
-    x hin
+  have hzero := ear_interior_clip_ptWind_zero L h4 hsimple ρ a b c rest hrot hdich hD hempty hdiag
+    hor x hin
   rw [hzero, zero_add] at hsplit
   rw [hsplit]
   have hpi : 0 < Real.pi := Real.pi_pos
@@ -379,6 +383,7 @@ case `tlP = []` (the polygon *is* the triangle) is covered by
 `HexArea.ptWind_triangle_ne_zero`. -/
 theorem ear_interior_ptWind_ne_zero_of_rotation (P : List ℂ) (hPsimple : PolygonSimple P)
     (a' b' c' : ℂ) (s : ℕ) (tlP : List ℂ) (hrotP : P.rotate s = a' :: b' :: c' :: tlP)
+    (hdich : PolyDichotomy (a' :: b' :: c' :: tlP))
     (hDP : HexArea.cross (b' - a') (c' - b') ≠ 0)
     (hemptyP : ∀ y ∈ tlP, ¬ HexArea.inTriangleStrict a' b' c' y)
     (hdiagP : ∀ y ∈ tlP, y ∉ segment ℝ a' c')
@@ -415,7 +420,7 @@ theorem ear_interior_ptWind_ne_zero_of_rotation (P : List ℂ) (hPsimple : Polyg
       push_neg at h2
       rw [hclipP] at h
       linarith
-  exact ear_interior_ptWind_ne_zero_via_clip P hP4 hPsimple s a' b' c' tlP hrotP hDP
+  exact ear_interior_ptWind_ne_zero_via_clip P hP4 hPsimple s a' b' c' tlP hrotP hdich hDP
     hemptyP hdiagP hor y hin
 
 /-! ## 8. Perturbing a point of the open ear base into the ear interior -/

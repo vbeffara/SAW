@@ -441,10 +441,8 @@ lemma interior_split_simple (a b c w : ℂ) (rest : List ℂ)
     (hsimple : PolygonSimple (a :: b :: c :: rest))
     (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
     (hwrest : w ∈ rest)
-    (hwin : HexArea.inTriangleStrict a b c w)
-    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
-        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
-          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    (hclear : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 →
+        w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2)) :
     ∃ k : ℕ, 2 ≤ k ∧ k + 2 ≤ (b :: c :: rest ++ [a]).length ∧
       (b :: c :: rest ++ [a]).head? = some b ∧
       (b :: c :: rest ++ [a])[k]? = some w ∧
@@ -458,11 +456,7 @@ lemma interior_split_simple (a b c w : ℂ) (rest : List ℂ)
   · grind;
   · rfl;
   · simp +arith +decide [ hk_def, hrest ];
-  · have hclear : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 → w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
-      convert interior_chord_is_diagonal a b c w rest hsimple hndtri hwrest hwin hwmax using 1;
-      rw [ show b :: c :: rest ++ [ a ] = ( a :: b :: c :: rest ).rotate 1 from ?_, mem_closedEdges_rotate ];
-      simp +decide [ List.rotate ];
-    refine' ⟨ _, _ ⟩;
+  · refine' ⟨ _, _ ⟩;
     · apply HexArea.chordLeft_PolygonSimple;
       any_goals tauto;
       · exact Nat.le_add_right _ _;
@@ -538,14 +532,13 @@ lemma interior_split_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ
     interior branch.  Preparation for `meisters_reduction_interior2`. -/
 lemma interior_split_nondeg_left (a b c w prev : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (hprev : (b :: c :: rest ++ [a])[k-1]? = some prev)
     (hseamL : HexArea.cross (w - prev) (b - w) ≠ 0) :
     polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) := by
-  obtain ⟨hwac, hwbc⟩ : HexArea.cross (b - a) (w - a) ≠ 0 ∧ HexArea.cross (c - b) (w - b) ≠ 0 := by
-    cases hwin <;> aesop
   apply_rules [ HexArea.chordLeft_polyCycNondeg ]
   · linarith
   · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _
@@ -562,14 +555,13 @@ lemma interior_split_nondeg_left (a b c w prev : ℂ) (rest : List ℂ) (k : ℕ
     `interior_split_nondeg`.  Preparation for `meisters_reduction_interior2`. -/
 lemma interior_split_nondeg_right (a b c w succ : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (hsucc : (b :: c :: rest ++ [a])[k+1]? = some succ)
     (hseamR : HexArea.cross (w - b) (succ - w) ≠ 0) :
     polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
-  obtain ⟨hwac, hwbc⟩ : HexArea.cross (b - a) (w - a) ≠ 0 ∧ HexArea.cross (c - b) (w - b) ≠ 0 := by
-    cases hwin <;> aesop
   apply HexArea.chordRight_polyCycNondeg (b :: c :: rest ++ [a]) k b w succ a
   any_goals omega
   · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) _
@@ -707,7 +699,8 @@ lemma polyCycNondeg_interior_corner (V : List ℂ) (k : ℕ) (prev w succ : ℂ)
 -/
 lemma interior_split_one_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w) (hbw : b ≠ w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0) (hbw : b ≠ w)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (hprev : (b :: c :: rest ++ [a])[k-1]? = some prev)
@@ -716,13 +709,13 @@ lemma interior_split_one_nondeg (a b c w prev succ : ℂ) (rest : List ℂ) (k :
     polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) := by
   by_cases hcase : HexArea.cross (w - prev) (b - w) ≠ 0;
   · refine Or.inl ?_;
-    apply interior_split_nondeg_left a b c w prev rest k hnd hwin hk2 hk hwk hprev hcase;
+    apply interior_split_nondeg_left a b c w prev rest k hnd hwac hwbc hk2 hk hwk hprev hcase;
   · have hcase2 : HexArea.cross (w - b) (succ - w) ≠ 0 := by
       contrapose! hcase; have := polyCycNondeg_interior_corner ( b :: c :: rest ++ [ a ] ) k prev w succ ?_ ?_ ?_ hprev hwk hsucc <;> simp_all +decide ;
       · exact fun h => this <| by simpa [ hcase ] using seam_flat_chain prev w b succ hbw h hcase;
       · convert polyCycNondeg_rotate1 ( a :: b :: c :: rest ) ( by simp +arith +decide ) |>.2 hnd using 1;
       · linarith;
-    exact Or.inr ( interior_split_nondeg_right a b c w succ rest k hnd hwin hk2 hk hwk hsucc hcase2 )
+    exact Or.inr ( interior_split_nondeg_right a b c w succ rest k hnd hwac hwbc hk2 hk hwk hsucc hcase2 )
 
 
 /-
@@ -745,10 +738,11 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
     (r : ℕ) (a b c : ℂ) (rest : List ℂ)
     (hrot : V.rotate r = a :: b :: c :: rest)
     (hndtri : HexArea.cross (b - a) (c - b) ≠ 0)
-    (w : ℂ) (hwrest : w ∈ rest) (hwin : HexArea.inTriangleStrict a b c w)
-    (hwmax : ∀ y ∈ rest, HexArea.inTriangleStrict a b c y →
-        HexArea.cross (c - a) (y - a) * HexArea.cross (c - a) (b - a)
-          ≤ HexArea.cross (c - a) (w - a) * HexArea.cross (c - a) (b - a)) :
+    (w : ℂ) (hwrest : w ∈ rest)
+    (hclear : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 →
+        w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2))
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0) :
     ∃ k : ℕ, 2 ≤ k ∧ k + 2 ≤ (b :: c :: rest ++ [a]).length ∧
       (b :: c :: rest ++ [a])[k]? = some w ∧
       PolygonSimple (HexArea.chordLeft (b :: c :: rest ++ [a]) k) ∧
@@ -759,16 +753,16 @@ lemma interior_split_select (V : List ℂ) (hsimple : PolygonSimple V)
        polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k)) := by
   have hW_length : (a :: b :: c :: rest).length = V.length := by
     rw [ ← hrot, List.length_rotate ];
-  have := interior_split_simple a b c w rest ?_ hndtri hwrest hwin hwmax;
+  have := interior_split_simple a b c w rest ?_ hndtri hwrest hclear;
   · obtain ⟨ k, hk₁, hk₂, hk₃, hk₄, hk₅, hk₆ ⟩ := this; use k; simp_all +decide [ List.length_append ] ;
     refine' ⟨ _, _, _ ⟩;
     · grind +suggestions;
     · rw [ HexArea.chordRight_length ] <;> norm_num <;> omega;
-    · apply interior_split_one_nondeg a b c w ( ( b :: c :: ( rest ++ [ a ] ) )[k - 1]! ) ( ( b :: c :: ( rest ++ [ a ] ) )[k + 1]! ) rest k ?_ hwin ?_ hk₁ ?_ hk₄ ?_ ?_;
+    · apply interior_split_one_nondeg a b c w ( ( b :: c :: ( rest ++ [ a ] ) )[k - 1]! ) ( ( b :: c :: ( rest ++ [ a ] ) )[k + 1]! ) rest k ?_ hwac hwbc ?_ hk₁ ?_ hk₄ ?_ ?_;
       · convert polyCycNondeg_rotate V r _ using 1;
         · aesop;
         · linarith;
-      · intro h; simp_all +decide [ HexArea.inTriangleStrict ] ;
+      · intro h; apply hwbc; rw [← h]; simp [HexArea.cross];
       · grind;
       · grind;
       · grind +splitImp;

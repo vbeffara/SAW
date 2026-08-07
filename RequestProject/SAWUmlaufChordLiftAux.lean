@@ -266,10 +266,10 @@ lemma chord_piece_orient (N : ℕ) (hN : DichBelow N) (W : List ℂ) (h4 : 4 ≤
         ↔ (0:ℝ) < HexArea.shoelace2 W) := by
   classical
   obtain ⟨pu, nu, hhead, hlast, hnu, hconv, ⟨d, hd⟩, htri⟩ := hint
-  obtain ⟨hsign1, hsign2, hXL, hXR⟩ := HexArea.corner_signs_of_inTriangleStrict pu u nu v htri
+  obtain ⟨hsign1, hsign2, hXL, hXR⟩ := HexArea.corner_signs_of_inConeStrict pu u nu v htri
   -- the chord index is genuinely interior: `2 ≤ k ≤ |W| - 2`
-  have hvnu : v ≠ nu := HexArea.inTriangleStrict_ne_c pu u nu v htri
-  have hvpu : v ≠ pu := HexArea.inTriangleStrict_ne_a pu u nu v htri
+  have hvnu : v ≠ nu := HexArea.inConeStrict_ne_right pu u nu v htri
+  have hvpu : v ≠ pu := HexArea.inConeStrict_ne_left pu u nu v htri
   have hk2 : 2 ≤ k := by
     rcases Nat.eq_or_lt_of_le hk1 with h1 | h1
     · exfalso

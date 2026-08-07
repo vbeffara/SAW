@@ -597,7 +597,8 @@ whose two seam corners are non-flat by `cross_pred_corner_remove_flat` /
 `cross_succ_corner_remove_flat`.  Hence the piece carries `FlatSeamData P b w`. -/
 lemma interior_flat_seam_data_left (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (hPsimple : PolygonSimple (HexArea.chordLeft (b :: c :: rest ++ [a]) k))
@@ -627,7 +628,7 @@ lemma interior_flat_seam_data_left (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
   -- the seam corner of the piece at `w` is the degenerate one
   have hzero : HexArea.cross (w - prev) (b - w) = 0 := by
     by_contra h
-    exact hPdeg (interior_split_nondeg_left a b c w prev rest k hnd hwin hk2 hk hwk hprev h)
+    exact hPdeg (interior_split_nondeg_left a b c w prev rest k hnd hwac hwbc hk2 hk hwk hprev h)
   have hdrop1 : (b :: c :: rest ++ [a]).drop (k-1) = prev :: (b :: c :: rest ++ [a]).drop k := by
     have h := List.drop_eq_getElem_cons (l := b :: c :: rest ++ [a]) (i := k-1) hk1lt
     rw [show k - 1 + 1 = k by omega] at h
@@ -689,10 +690,6 @@ lemma interior_flat_seam_data_left (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
       (by rw [show k - 1 + 1 = k by omega]; exact hwk)
   have hseam1 : HexArea.cross (prev - prev2) (b - prev) ≠ 0 :=
     cross_pred_corner_remove_flat prev2 prev b w hseg hcorner
-  have hwbc : HexArea.cross (c - b) (w - b) ≠ 0 := by
-    rcases hwin with ⟨_, h2, _⟩ | ⟨_, h2, _⟩
-    · exact ne_of_gt h2
-    · exact ne_of_lt h2
   have hbw : HexArea.cross (b - w) (c - b) ≠ 0 := by
     have hEq : HexArea.cross (b - w) (c - b) = HexArea.cross (c - b) (w - b) := by
       simp [HexArea.cross]; ring
@@ -715,7 +712,8 @@ endpoint `w` (its seam corner there is `(b, w, succ)`), and deleting `w` leaves
 `cross_pred_corner_remove_flat` / `cross_succ_corner_remove_flat`. -/
 lemma interior_flat_seam_data_right (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (hPsimple : PolygonSimple (HexArea.chordRight (b :: c :: rest ++ [a]) k))
@@ -745,7 +743,7 @@ lemma interior_flat_seam_data_right (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     have h := List.getElem?_eq_getElem hklt; rw [hwk] at h; exact (Option.some.inj h).symm
   have hzero : HexArea.cross (w - b) (succ - w) = 0 := by
     by_contra h
-    exact hPdeg (interior_split_nondeg_right a b c w succ rest k hnd hwin hk2 hk hwk hsucc h)
+    exact hPdeg (interior_split_nondeg_right a b c w succ rest k hnd hwac hwbc hk2 hk hwk hsucc h)
   have hdropk : (b :: c :: rest ++ [a]).drop k
       = w :: succ :: (b :: c :: rest ++ [a]).drop (k+2) := by
     have h1 := List.drop_eq_getElem_cons (l := b :: c :: rest ++ [a]) (i := k) hklt
@@ -789,14 +787,10 @@ lemma interior_flat_seam_data_right (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     exact List.getLast?_append_of_ne_nil _ (by simp)
   have hseg : w ∈ segment ℝ b succ :=
     mem_segment_of_param b succ σ (le_of_lt hσ0) (le_of_lt hσ1) w hσ
-  have hwab : HexArea.cross (b - a) (w - a) ≠ 0 := by
-    rcases hwin with ⟨h1, _, _⟩ | ⟨h1, _, _⟩
-    · exact ne_of_gt h1
-    · exact ne_of_lt h1
   have hbaw : HexArea.cross (b - a) (w - b) ≠ 0 := by
     have hEq : HexArea.cross (b - a) (w - b) = HexArea.cross (b - a) (w - a) := by
       simp [HexArea.cross]; ring
-    rw [hEq]; exact hwab
+    rw [hEq]; exact hwac
   have hseam1 : HexArea.cross (b - a) (succ - b) ≠ 0 :=
     cross_pred_corner_remove_flat a b succ w hseg hbaw
   have hcorner : HexArea.cross (succ - w) (succ2 - succ) ≠ 0 :=
@@ -825,7 +819,8 @@ at `w`, and deleting `w` restores non-degeneracy: it carries `FlatSeamData P b w
 This is the input of the flat-seam case of `interior_lift_via_piece`. -/
 lemma interior_flat_seam_data (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     (hnd : polyCycNondeg (a :: b :: c :: rest))
-    (hwin : HexArea.inTriangleStrict a b c w)
+    (hwac : HexArea.cross (b - a) (w - a) ≠ 0)
+    (hwbc : HexArea.cross (c - b) (w - b) ≠ 0)
     (hk2 : 2 ≤ k) (hk : k + 2 ≤ (b :: c :: rest ++ [a]).length)
     (hwk : (b :: c :: rest ++ [a])[k]? = some w)
     (P : List ℂ)
@@ -835,8 +830,8 @@ lemma interior_flat_seam_data (a b c w : ℂ) (rest : List ℂ) (k : ℕ)
     4 ≤ P.length → ¬ polyCycNondeg P → FlatSeamData P b w := by
   rcases hP with rfl | rfl
   · exact fun h4 hdeg =>
-      interior_flat_seam_data_left a b c w rest k hnd hwin hk2 hk hwk hPsimple h4 hdeg
+      interior_flat_seam_data_left a b c w rest k hnd hwac hwbc hk2 hk hwk hPsimple h4 hdeg
   · exact fun h4 hdeg =>
-      interior_flat_seam_data_right a b c w rest k hnd hwin hk2 hk hwk hPsimple h4 hdeg
+      interior_flat_seam_data_right a b c w rest k hnd hwac hwbc hk2 hk hwk hPsimple h4 hdeg
 
 end

@@ -5,6 +5,8 @@ import RequestProject.SAWUmlaufFlatSeamLift
 import RequestProject.SAWUmlaufJordanCore
 import RequestProject.SAWUmlaufEarOrient
 import RequestProject.SAWUmlaufFlatClipLift
+import RequestProject.SAWUmlaufEmptyBranchLift
+import RequestProject.SAWUmlaufBaseBlocked
 
 /-!
 # `SAWUmlaufPolygon`, part `SAWUmlaufPolyMeisters`
@@ -413,7 +415,7 @@ lemma interior_lift_via_piece (N : ℕ) (hN : DichBelow N)
           have hk1' : k = 1 := by omega
           subst hk1'
           rw [hv] at hnu
-          exact HexArea.inTriangleStrict_ne_c pu u nu v htri (Option.some.inj hnu)
+          exact HexArea.inConeStrict_ne_right pu u nu v htri (Option.some.inj hnu)
         · exact hge
       have hkle : k + 2 ≤ W.length := by
         rcases Nat.lt_or_ge (k + 1) W.length with hlt | hge
@@ -423,7 +425,7 @@ lemma interior_lift_via_piece (N : ℕ) (hN : DichBelow N)
           have hlv : W.getLast? = some v := by
             rw [List.getLast?_eq_getElem?, ← hklast]; exact hv
           rw [hlv] at hlast
-          exact HexArea.inTriangleStrict_ne_a pu u nu v htri (Option.some.inj hlast)
+          exact HexArea.inConeStrict_ne_left pu u nu v htri (Option.some.inj hlast)
       -- hence both pieces have at least three vertices
       have hP3' : 3 ≤ P.length := by
         rcases hPQ with ⟨hPL, -⟩ | ⟨hPR, -⟩
@@ -508,9 +510,29 @@ lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
     have hPN : polyNondeg (a :: b :: c :: (rest ++ (a :: b :: c :: rest).take 2)) := hM
     rw [polyNondeg_cons_cons_cons] at hPN
     exact hPN.1
+  -- The two corner cross products at the interior vertex `w`.
+  have hwac : HexArea.cross (b - a) (w - a) ≠ 0 := by
+    rcases hwin with ⟨h1, _, _⟩ | ⟨h1, _, _⟩
+    · exact ne_of_gt h1
+    · exact ne_of_lt h1
+  have hwbc : HexArea.cross (c - b) (w - b) ≠ 0 := by
+    rcases hwin with ⟨_, h2, _⟩ | ⟨_, h2, _⟩
+    · exact ne_of_gt h2
+    · exact ne_of_lt h2
+  have hsimpleABC0 : PolygonSimple (a :: b :: c :: rest) :=
+    hrot ▸ (PolygonSimple_rotate V r).mpr hsimple
+  have hclear : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 →
+      w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
+    intro e he hb1 hb2 hw1 hw2
+    refine interior_chord_is_diagonal a b c w rest hsimpleABC0 hndtri hwrest hwin hwmax
+      e ?_ hb1 hb2 hw1 hw2
+    have hrot1' : (a :: b :: c :: rest).rotate 1 = b :: c :: rest ++ [a] := by
+      rw [HexArea.rotate_one_cons]
+    rw [← hrot1'] at he
+    exact (mem_closedEdges_rotate (a :: b :: c :: rest) 1 e).mp he
   -- Banked recursion-ready interior split (consumes `interior_split_select`).
   obtain ⟨k, hk2, hklen, hwk, hLsimple, hRsimple, hLlt, hRlt, _hnondeg⟩ :=
-    interior_split_select V hsimple hnd r a b c rest hrot hndtri w hwrest hwin hwmax
+    interior_split_select V hsimple hnd r a b c rest hrot hndtri w hwrest hclear hwac hwbc
   -- Set up the `b`-rooted cut cycle `W = V.rotate (r+1)` and the valid diagonal `b–w`.
   have hW : V.rotate (r + 1) = b :: c :: rest ++ [a] :=
     HexArea.rotate_corner_succ V r a b c rest hrot
@@ -542,7 +564,8 @@ lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
     rw [← hW] at hy
     exact List.mem_rotate.mp hy
   have hint : InteriorChord (b :: c :: rest ++ [a]) b w := by
-    refine ⟨a, c, by simp, ?_, by simp, ?_, ?_, hwin⟩
+    refine ⟨a, c, by simp, ?_, by simp, ?_, ?_,
+      HexArea.inConeStrict_of_inTriangleStrict a b c w hwin⟩
     · show (b :: c :: rest ++ [a]).getLast? = some a
       rw [show b :: c :: rest ++ [a] = (b :: c :: rest) ++ [a] by simp, List.getLast?_concat]
     · intro y hy z hz t ht
@@ -561,11 +584,11 @@ lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
   have hfsdL : 4 ≤ (HexArea.chordLeft (b :: c :: rest ++ [a]) k).length →
       ¬ polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) →
       FlatSeamData (HexArea.chordLeft (b :: c :: rest ++ [a]) k) b w :=
-    interior_flat_seam_data a b c w rest k hndABC hwin hk2 hklen hwk _ (Or.inl rfl) hLsimple
+    interior_flat_seam_data a b c w rest k hndABC hwac hwbc hk2 hklen hwk _ (Or.inl rfl) hLsimple
   have hfsdR : 4 ≤ (HexArea.chordRight (b :: c :: rest ++ [a]) k).length →
       ¬ polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) →
       FlatSeamData (HexArea.chordRight (b :: c :: rest ++ [a]) k) b w :=
-    interior_flat_seam_data a b c w rest k hndABC hwin hk2 hklen hwk _ (Or.inr rfl) hRsimple
+    interior_flat_seam_data a b c w rest k hndABC hwac hwbc hk2 hklen hwk _ (Or.inr rfl) hRsimple
   -- Dispatch on the forbidden pair.
   rcases hadj with rfl | hcyc
   · -- Single forbidden point `z1`: recurse on a piece not containing it.
@@ -610,49 +633,12 @@ lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
         hfsdL IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
 
-/-- **Lifting an ear of the clip back to the polygon (isolated remaining gap).**
-
-    Setting: `V.rotate r = a :: b :: c :: rest`, the corner at `b` is empty
-    (`hcase`) with a clear base (`hbase`), the clip `M = a :: c :: rest` is
-    simple (`hMs`) and coherently oriented with the ear (`horient`), and the
-    apex `b` is a forbidden vertex (`hbf`) so the ear at `b` cannot be used.
-    Given a Meisters ear of the clip avoiding the clip diagonal `{a, c}`
-    (`hdata`), produce a Meisters ear of `V` avoiding `z1, z2`.
-
-    The tip `b'` of the clip ear lies in `rest`, hence avoids `a`, `c` and (by
-    `Nodup`) `b`; since `b`'s only cyclic neighbours in `V` are `a` and `c`, and
-    one of `z1, z2` is `b` while the other is `b`'s neighbour or `b` itself, the
-    tip avoids both forbidden vertices.  Re-inserting `b` between `a` and `c`
-    keeps the tip's cyclic neighbours unless the tip is adjacent to the junction,
-    and `b` stays outside the lifted ear triangle by `hbconv`.
-
-    This is exactly the lift that `empty_branch_good_lift`
-    (`RequestProject.SAWUmlaufPolyLift`) performs, sorry-free, in the special
-    case where the clip is cyclically non-degenerate; that proof reads the ear's
-    corner non-flatness `cross (b' - a') (c' - b') ≠ 0` off `polyCycNondeg M`,
-    which is unavailable here.  Carrying that clause inside `EmptyCornerData2`
-    (or re-deriving it from the flat-seam construction) is what remains.
-
-    **Status: `sorry`.**  NOT a dead branch: consumed by
-    `empty_branch_flat_clip_lift`. -/
-lemma empty_branch_lift_of_clip_data (V : List ℂ) (hlen : 5 ≤ V.length)
-    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
-    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
-    (r : ℕ) (a b c : ℂ) (rest : List ℂ) (p q : ℂ)
-    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
-    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
-        ¬ HexArea.inTriangleStrict x y w b)
-    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
-    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
-    (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
-    (hbase : ∀ x ∈ rest, x ∉ segment ℝ a c)
-    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
-    (hbf : b = z1 ∨ b = z2)
-    (hMs : PolygonSimple (a :: c :: rest))
-    (hdata : EmptyCornerData2 (a :: c :: rest) a c) :
-    EmptyCornerData2 V z1 z2 := by
-  sorry
+/-  **Lifting an ear of the clip back to the polygon.**  This lemma has been
+    PROVED and moved to `RequestProject.SAWUmlaufEmptyBranchLift`, where it is
+    stated as `empty_branch_lift_of_clip_data` with the hypotheses its proof
+    actually uses (the emptiness/base clauses of the corner `a, b, c`, the
+    neighbours `p, q` and the simplicity of the clip are not needed).  It is
+    consumed just below by `empty_branch_flat_clip_lift`. -/
 
 /-- **Empty-branch lift — the flat-clip subcase (isolated remaining gap).**
 
@@ -720,8 +706,8 @@ lemma empty_branch_flat_clip_lift (V : List ℂ) (hlen : 5 ≤ V.length)
       EmptyCornerData2 M w1 w2 := by
     intro M hM
     exact IH2 M (by omega)
-  exact empty_branch_lift_of_clip_data V hlen hsimple hnd z1 z2 hadj r a b c rest p q hrot
-    hbmem hbconv hbseg hp hq hcase hbase horient hbf hMs
+  exact empty_branch_lift_of_clip_data V hlen hsimple hnd z1 z2 hadj r a b c rest hrot
+    hbconv hbseg horient hbf
     (clip_flat_ear a b c p q rest hrest2 hp hq hMs hRnd IH)
 
 /-- **Empty-branch lift — the blocked-base subcase (isolated remaining gap).**
@@ -737,18 +723,21 @@ lemma empty_branch_flat_clip_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     a vertex), so neither the direct packaging nor `empty_branch_good_lift`
     applies.
 
-    The intended proof splits `V` along the segment `b–x` instead: because the
-    open corner triangle contains no vertex and no edge of `V` crosses it, the
-    pair `b, x` is a valid diagonal of `V`, and splitting along it produces two
-    strictly shorter simple polygons, one of which avoids `{z1, z2}`; recursion
-    via `IH2` on that piece and the chord lift (`chord_ear_lift`) then transport
-    the ear back to `V`.  The available chord machinery is phrased through
-    `InteriorChord`, which demands `inTriangleStrict pu u nu v` at the chord's
-    base vertex, and that strictness fails exactly for `x` on the base; a
-    cone-based relaxation of `InteriorChord` is the missing ingredient.
+    The proof splits `V` along the segment `b–w` instead, where `w ∈ rest` is the
+    blocking vertex: because the open corner triangle contains no vertex, the
+    pair `b, w` is a valid diagonal of `V` (`base_chord_is_diagonal` in
+    `RequestProject.SAWUmlaufBaseBlocked`), and splitting along it
+    (`interior_split_select`) produces two strictly shorter simple polygons, one
+    of which avoids `{z1, z2}`; recursion via `IH2` on that piece and the chord
+    lift (`interior_lift_via_piece`) then transport the ear back to `V`.  The
+    chord machinery is phrased through `InteriorChord`, whose third clause is the
+    strict corner *cone* `HexArea.inConeStrict` (`SAWUmlaufConeStrict`); `w` sits
+    in that cone even though it is not strictly inside the corner triangle
+    (`base_vertex_inConeStrict`).  Apart from the corner arithmetic at `w` the
+    argument is verbatim `meisters_reduction_interior2`.
 
-    **Status: `sorry`.**  NOT a dead branch: it is consumed directly by
-    `meisters_reduction_empty2`.  Recorded, isolated partial progress. -/
+    **Status: proved.**  NOT a dead branch: it is consumed directly by
+    `meisters_reduction_empty2`. -/
 lemma empty_branch_base_blocked_lift (N : ℕ) (hN : DichBelow N)
     (V : List ℂ) (hlen : 5 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
@@ -765,7 +754,129 @@ lemma empty_branch_base_blocked_lift (N : ℕ) (hN : DichBelow N)
     (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
     (hblocked : ∃ x ∈ rest, x ∈ segment ℝ a c) :
     EmptyCornerData2 V z1 z2 := by
-  sorry
+  have hsimpleABC : PolygonSimple (a :: b :: c :: rest) :=
+    hrot ▸ (PolygonSimple_rotate V r).mpr hsimple
+  have hndABC : polyCycNondeg (a :: b :: c :: rest) :=
+    hrot ▸ (polyCycNondeg_rotate V r (by omega)).mpr hnd
+  have hndtri : HexArea.cross (b - a) (c - b) ≠ 0 :=
+    polyCycNondeg_rotate_head V a b c rest r (by omega) hnd hrot
+  -- The blocking vertex `w` and its parameter `s` on the OPEN base segment.
+  obtain ⟨w, hwrest, hwseg⟩ := hblocked
+  have hnodup : (a :: b :: c :: rest).Nodup := hsimpleABC.1
+  have harest : a ∉ rest := by
+    have h := (List.nodup_cons.mp hnodup).1
+    exact fun hmem => h (by simp [hmem])
+  have hcrest : c ∉ rest := (List.nodup_cons.mp hnodup.of_cons.of_cons).1
+  obtain ⟨s, hs0, hs1, hw⟩ : ∃ s : ℝ, 0 < s ∧ s < 1 ∧ w - a = (s : ℂ) * (c - a) := by
+    obtain ⟨u, v, hu, hv, huv, hx⟩ := hwseg
+    have hkey : w - a = (v : ℂ) * (c - a) := by
+      rw [← hx]
+      have huv' : (u : ℂ) = 1 - (v : ℂ) := by
+        have : u = 1 - v := by linarith
+        rw [this]; push_cast; ring
+      push_cast [Complex.real_smul, huv']
+      ring
+    refine ⟨v, ?_, ?_, hkey⟩
+    · rcases hv.lt_or_eq with h | h
+      · exact h
+      · exact absurd (by rw [← sub_eq_zero, hkey, ← h]; simp : w = a)
+          (fun hwa => harest (hwa ▸ hwrest))
+    · rcases lt_or_eq_of_le (by linarith : v ≤ (1:ℝ)) with h | h
+      · exact h
+      · refine absurd (?_ : w = c) (fun hwc => hcrest (hwc ▸ hwrest))
+        have : w - a = c - a := by rw [hkey, h]; simp
+        linear_combination this
+  obtain ⟨hcr1, hcr2, _hcr3⟩ := base_vertex_cross_facts a b c w s hw
+  have hwac : HexArea.cross (b - a) (w - a) ≠ 0 := by
+    rw [hcr1]; exact mul_ne_zero (ne_of_gt hs0) hndtri
+  have hwbc : HexArea.cross (c - b) (w - b) ≠ 0 := by
+    rw [hcr2]; exact mul_ne_zero (ne_of_gt (by linarith : (0:ℝ) < 1 - s)) hndtri
+  have hdiag0 :=
+    base_chord_is_diagonal a b c w rest hsimpleABC hndtri hwrest s hs0 hs1 hw hcase
+  have hrot1 : (a :: b :: c :: rest).rotate 1 = b :: c :: rest ++ [a] := by
+    rw [HexArea.rotate_one_cons]
+  have hdiag : ∀ e ∈ closedEdges (b :: c :: rest ++ [a]), b ≠ e.1 → b ≠ e.2 →
+      w ≠ e.1 → w ≠ e.2 → Disjoint (segment ℝ b w) (segment ℝ e.1 e.2) := by
+    intro e he hb1 hb2 hw1 hw2
+    apply hdiag0 e _ hb1 hb2 hw1 hw2
+    rw [← hrot1] at he
+    exact (mem_closedEdges_rotate (a :: b :: c :: rest) 1 e).mp he
+  -- Recursion-ready split along the chord `b–w`.
+  obtain ⟨k, hk2, hklen, hwk, hLsimple, hRsimple, hLlt, hRlt, _hnondeg⟩ :=
+    interior_split_select V hsimple hnd r a b c rest hrot hndtri w hwrest hdiag hwac hwbc
+  have hW : V.rotate (r + 1) = b :: c :: rest ++ [a] :=
+    HexArea.rotate_corner_succ V r a b c rest hrot
+  have hk1 : 1 ≤ k := by omega
+  have hkW : k + 1 ≤ (b :: c :: rest ++ [a]).length := by omega
+  have hklt : k < (b :: c :: rest ++ [a]).length := by omega
+  have hu : (b :: c :: rest ++ [a])[0]? = some b := by simp
+  have hWhead : (b :: c :: rest ++ [a]).head? = some b := by simp
+  have hWne : (b :: c :: rest ++ [a]) ≠ [] := by simp
+  have hmemW : ∀ y : ℂ, y ∈ (b :: c :: rest ++ [a]) → y ∈ V := by
+    intro y hy
+    rw [← hW] at hy
+    exact List.mem_rotate.mp hy
+  have hint : InteriorChord (b :: c :: rest ++ [a]) b w := by
+    refine ⟨a, c, by simp, ?_, by simp, ?_, ?_,
+      base_vertex_inConeStrict a b c w s hs0 hs1 hndtri hw⟩
+    · show (b :: c :: rest ++ [a]).getLast? = some a
+      rw [show b :: c :: rest ++ [a] = (b :: c :: rest) ++ [a] by simp, List.getLast?_concat]
+    · intro y hy z hz t ht
+      exact hbconv y z t (hmemW y hy) (hmemW z hz) (hmemW t ht)
+    · obtain ⟨d, hd⟩ := hbdir
+      exact ⟨d, fun y hy hyb => hd y (hmemW y hy) hyb⟩
+  have symmCyc : ∀ (L : List ℂ), IsCycEdge L w b → IsCycEdge L b w := by
+    intro L h; rcases h with h | h; exacts [Or.inr h, Or.inl h]
+  have hfsdL : 4 ≤ (HexArea.chordLeft (b :: c :: rest ++ [a]) k).length →
+      ¬ polyCycNondeg (HexArea.chordLeft (b :: c :: rest ++ [a]) k) →
+      FlatSeamData (HexArea.chordLeft (b :: c :: rest ++ [a]) k) b w :=
+    interior_flat_seam_data a b c w rest k hndABC hwac hwbc hk2 hklen hwk _ (Or.inl rfl) hLsimple
+  have hfsdR : 4 ≤ (HexArea.chordRight (b :: c :: rest ++ [a]) k).length →
+      ¬ polyCycNondeg (HexArea.chordRight (b :: c :: rest ++ [a]) k) →
+      FlatSeamData (HexArea.chordRight (b :: c :: rest ++ [a]) k) b w :=
+    interior_flat_seam_data a b c w rest k hndABC hwac hwbc hk2 hklen hwk _ (Or.inr rfl) hRsimple
+  have hlen4 : 4 ≤ V.length := by omega
+  rcases hadj with rfl | hcyc
+  · by_cases hzL : z1 ∈ HexArea.chordLeft (b :: c :: rest ++ [a]) k
+    · exact interior_lift_via_piece N hN V hsimple hnd hlen4 hVN (b :: c :: rest ++ [a]) (r + 1)
+        hW k hk1 hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
+        (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
+        hfsdR IH2 z1 z1 (Or.inl hzL) (Or.inl hzL)
+    · by_cases hzR : z1 ∈ HexArea.chordRight (b :: c :: rest ++ [a]) k
+      · exact interior_lift_via_piece N hN V hsimple hnd hlen4 hVN (b :: c :: rest ++ [a]) (r + 1)
+          hW k hk1 hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+          (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+          hfsdL IH2 z1 z1 (Or.inl hzR) (Or.inl hzR)
+      · have hz1V : z1 ∉ V := by
+          intro hmem
+          have hmemW' : z1 ∈ (b :: c :: rest ++ [a]) := by
+            rw [← hW]; exact List.mem_rotate.mpr hmem
+          rcases HexArea.mem_chord_cover (b :: c :: rest ++ [a]) k hkW hmemW' with h | h
+          · exact hzL h
+          · exact hzR h
+        exact interior_lift_via_piece N hN V hsimple hnd hlen4 hVN (b :: c :: rest ++ [a]) (r + 1)
+          hW k hk1 hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+          (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+          (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+          hfsdL IH2 z1 z1 (Or.inr hz1V) (Or.inr hz1V)
+  · have hcycW : IsCycEdge (b :: c :: rest ++ [a]) z1 z2 :=
+      hW ▸ (HexArea.IsCycEdge_rotate V (r + 1) z1 z2).mpr hcyc
+    rcases HexArea.forbidden_lands_in_chord (b :: c :: rest ++ [a]) k z1 z2 hk1 hkW hcycW with
+      hInL | hInR
+    · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInL
+      exact interior_lift_via_piece N hN V hsimple hnd hlen4 hVN (b :: c :: rest ++ [a]) (r + 1)
+        hW k hk1 hkW b w hu hwk hdiag hint (HexArea.chordRight (b :: c :: rest ++ [a]) k)
+        (HexArea.chordLeft (b :: c :: rest ++ [a]) k) (Or.inr ⟨rfl, rfl⟩) hRsimple hRlt
+        (symmCyc _ (chordRight_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWne hWhead hwk))
+        hfsdR IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
+    · obtain ⟨hz1Q, hz2Q⟩ := HexArea.IsCycEdge_mem _ _ _ hInR
+      exact interior_lift_via_piece N hN V hsimple hnd hlen4 hVN (b :: c :: rest ++ [a]) (r + 1)
+        hW k hk1 hkW b w hu hwk hdiag hint (HexArea.chordLeft (b :: c :: rest ++ [a]) k)
+        (HexArea.chordRight (b :: c :: rest ++ [a]) k) (Or.inl ⟨rfl, rfl⟩) hLsimple hLlt
+        (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
+        hfsdL IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
 
 /-- **Meisters empty/diagonal branch, two-forbidden form.**  No vertex of
     `rest` lies in the strict interior of the convex corner `a, b, c`, and the

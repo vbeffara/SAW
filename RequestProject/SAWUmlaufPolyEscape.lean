@@ -357,8 +357,13 @@ development it rests on) is therefore **not** consumed by the live route at the
 moment.  It is retained as preparation for the one escape residue that the
 corner escape does *not* cover, `clipped_ear_escape_walk`: there the forbidden
 set additionally contains the ear base `a'–c'` of the piece, which is not an
-edge of `W`, so the corner cone at the cut endpoint no longer controls it.  That
-is the remaining Jordan-curve content of the chord branch.
+edge of `W`, so the corner cone at the cut endpoint no longer controls it.
+
+**Final status.**  The polygonal Umlaufsatz (`polygon_umlaufsatz_final`,
+`RequestProject.SAWUmlaufJordanInduction`) is now complete and does *not* depend
+on this lemma: the escape residue it was meant to cover was eliminated by the
+corner escape.  It is therefore a genuinely unused `sorry`, kept only as banked
+material for a possible future direct treatment of `clipped_ear_escape_walk`.
 -/
 lemma vertex_escape_joinedIn_arbitrarily_far_one_diag
     (W : List ℂ) (hsimple : PolygonSimple W) (x : ℂ) (hxW : x ∈ W)

@@ -90,24 +90,27 @@ def PolyDichotomy (V : List ℂ) : Prop :=
     HexArea.ptWind x V = 0 ∨
       HexArea.ptWind x V = 2 * Real.pi * (if 0 < HexArea.shoelace2 V then 1 else -1)
 
-/-- **Point-in-polygon dichotomy (Jordan curve theorem for polygons).**
+/- **Point-in-polygon dichotomy (Jordan curve theorem for polygons).**
 
 For a simple closed polygon `V` and a point `x` on no closed edge of `V`, the
-winding number of `V` around `x` is either `0` or `2π · sign (shoelace2 V)`.
+winding number of `V` around `x` is either `0` or `2π · sign (shoelace2 V)`,
+i.e. `PolyDichotomy V`.
 
-**Status: `sorry`.**  This is the single remaining plane-topology input of the
-polygonal Umlaufsatz.  The classical proof is the ear induction whose two halves
-are proved in §4 below (`keystone_of_dichotomy_clip`,
-`dichotomy_of_keystone_clip`); closing it needs the ear-existence statement at
-each vertex count, i.e. the Meisters chain restated relative to a "keystone for
-shorter polygons" hypothesis.
+**RESOLVED, and moved downstream.**  It used to be stated here as an unproved
+topological input; it is now *proved*, unconditionally, as
+`polygon_ptWind_dichotomy_final` in
+`RequestProject.SAWUmlaufJordanInduction`, by the ear induction whose two halves
+are `keystone_of_dichotomy_clip` / `dichotomy_of_keystone_clip` (§4 below)
+together with the Meisters ear existence relative to `DichBelow`.  Since that
+file is far downstream of this one, the statement cannot be restated here; the
+lemmas of this file that used it (`ear_interior_ptWind_eq`, and
+`ear_interior_clip_ptWind_zero` in `RequestProject.SAWUmlaufEarTipEscape`)
+instead take the relevant `PolyDichotomy` instance as an explicit hypothesis,
+which `polygon_ptWind_dichotomy_final` discharges.
 
-NOT a dead branch: it is the sole input of `ear_interior_ptWind_eq` below, hence
-of the keystone `ear_interior_clip_ptWind_zero` and of the whole ear-existence
-recursion. -/
-theorem polygon_ptWind_dichotomy (V : List ℂ) (h3 : 3 ≤ V.length)
-    (hsimple : PolygonSimple V) : PolyDichotomy V := by
-  sorry
+    theorem polygon_ptWind_dichotomy (V : List ℂ) (h3 : 3 ≤ V.length)
+        (hsimple : PolygonSimple V) : PolyDichotomy V
+-/
 
 /-! ## 2. Elementary geometric preparation
 
@@ -394,10 +397,16 @@ coherently oriented ear's interior is `2π · sign (shoelace2 L)`.**
 
 This is the form of the point-in-polygon statement that the Meisters recursion
 consumes; see the module docstring for the proof (jump across the ear side
-`[a, b]`, dichotomy on both sides, constancy on the open ear triangle). -/
+`[a, b]`, dichotomy on both sides, constancy on the open ear triangle).
+
+The point-in-polygon dichotomy for the rotated presentation is taken as the
+hypothesis `hdich`; it is discharged unconditionally, downstream, by
+`polygon_ptWind_dichotomy_final`
+(`RequestProject.SAWUmlaufJordanInduction`). -/
 theorem ear_interior_ptWind_eq (L : List ℂ) (h4 : 4 ≤ L.length)
     (hsimple : PolygonSimple L)
     (ρ : ℕ) (a b c : ℂ) (rest : List ℂ) (hrot : L.rotate ρ = a :: b :: c :: rest)
+    (hdich : PolyDichotomy (a :: b :: c :: rest))
     (hD : HexArea.cross (b - a) (c - b) ≠ 0)
     (hempty : ∀ y ∈ rest, ¬ HexArea.inTriangleStrict a b c y)
     (hdiag : ∀ y ∈ rest, y ∉ segment ℝ a c)
@@ -463,8 +472,8 @@ theorem ear_interior_ptWind_eq (L : List ℂ) (h4 : 4 ≤ L.length)
     hjump y z (lt_of_lt_of_le hym (min_le_left _ _)) (lt_of_lt_of_le hzm (min_le_left _ _))
       hvy hvz hcy hcz
   -- the dichotomy on both sides
-  have hdy := polygon_ptWind_dichotomy (a :: b :: c :: rest) (by omega) hMsimple y hoffy
-  have hdz := polygon_ptWind_dichotomy (a :: b :: c :: rest) (by omega) hMsimple z hoffz
+  have hdy := hdich y hoffy
+  have hdz := hdich z hoffz
   have hpi : 0 < Real.pi := Real.pi_pos
   -- the orientation of the ear is the orientation of the polygon
   have htri : HexArea.shoelace2 [a, b, c] = HexArea.cross (b - a) (c - b) :=

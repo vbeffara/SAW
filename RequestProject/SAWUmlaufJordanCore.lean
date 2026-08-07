@@ -122,14 +122,15 @@ triangle interior misses all edges (`ear_strict_interior_off_closedEdges`). -/
 theorem ear_interior_ptWind_ne_zero (L : List ℂ) (h4 : 4 ≤ L.length)
     (hsimple : PolygonSimple L)
     (ρ : ℕ) (a b c : ℂ) (rest : List ℂ) (hrot : L.rotate ρ = a :: b :: c :: rest)
+    (hdich : PolyDichotomy (a :: b :: c :: rest))
     (hD : HexArea.cross (b - a) (c - b) ≠ 0)
     (hempty : ∀ y ∈ rest, ¬ HexArea.inTriangleStrict a b c y)
     (hdiag : ∀ y ∈ rest, y ∉ segment ℝ a c)
     (hor : (0 < HexArea.shoelace2 [a, b, c] ↔ 0 < HexArea.shoelace2 L))
     (x : ℂ) (hin : HexArea.inTriangleStrict a b c x) :
     HexArea.ptWind x L ≠ 0 := by
-  exact ear_interior_ptWind_ne_zero_via_clip L h4 hsimple ρ a b c rest hrot hD hempty hdiag hor
-    x hin
+  exact ear_interior_ptWind_ne_zero_via_clip L h4 hsimple ρ a b c rest hrot hdich hD hempty hdiag
+    hor x hin
 /-! ## 4. The Jordan-separation keystone, re-derived -/
 
 /-- **`chord_ear_empty_other` from the dichotomy.**  A vertex `x` of the polygon
