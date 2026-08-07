@@ -612,6 +612,129 @@ theorem keystone_of_dichotomy_clip (a b c : ℂ) (rest : List ℂ)
         (by simp) hD hempty hdiag q hqin p.1 p.2 hpM hqp
   rw [hxw, hwzero]
 
+/-- **The ear is coherently oriented with its clip, given the keystone.**
+
+The converse direction of `keystone_of_dichotomy_clip`: if `a :: b :: c :: rest`
+is a simple polygon with an empty ear at the tip `b` whose base carries no
+vertex, if the clip `C = a :: c :: rest` satisfies the point-in-polygon
+dichotomy, and if the ear region lies *outside* `C` (`hkey`, the keystone), then
+the ear triangle and the clip have the same orientation.
+
+This is what makes the orientation clause of the Meisters ear data *free* at a
+strictly extreme tip: there the keystone is available with no orientation input
+at all (`ear_interior_clip_ptWind_zero_of_tip_not_hull`, the tip is outside the
+convex hull of the clip).
+
+The proof is the jump argument of `keystone_of_dichotomy_clip` read backwards:
+the two mirror points `y`, `z` of a generic base point differ by exactly `2π` in
+their `C`-winding, the one inside the ear has winding `0` by `hkey`, so the other
+one has winding `±2π`, and the dichotomy converts that sign into the sign of
+`shoelace2 C`; which of the two is the inner one is decided by the sign of the
+ear's own orientation. -/
+theorem clip_orient_of_keystone (a b c : ℂ) (rest : List ℂ)
+    (h4 : 4 ≤ (a :: b :: c :: rest).length)
+    (hsimple : PolygonSimple (a :: b :: c :: rest))
+    (hD : HexArea.cross (b - a) (c - b) ≠ 0)
+    (hempty : ∀ y ∈ rest, ¬ HexArea.inTriangleStrict a b c y)
+    (hdiag : ∀ y ∈ rest, y ∉ segment ℝ a c)
+    (hdich : PolyDichotomy (a :: c :: rest))
+    (hkey : ∀ x : ℂ, HexArea.inTriangleStrict a b c x →
+        HexArea.ptWind x (a :: c :: rest) = 0) :
+    (0 < HexArea.shoelace2 [a, b, c] ↔ 0 < HexArea.shoelace2 (a :: c :: rest)) := by
+  classical
+  have hnd : (a :: b :: c :: rest).Nodup := hsimple.1
+  have hsubC : List.Sublist (a :: c :: rest) (a :: b :: c :: rest) :=
+    List.cons_sublist_cons.mpr (List.sublist_cons_self b (c :: rest))
+  have hndC : (a :: c :: rest).Nodup := hsubC.nodup hnd
+  have hac : a ≠ c := by
+    intro h
+    exact (List.nodup_cons.mp hnd).1 (by simp [h])
+  -- a generic point of the ear base, lying on no edge of the polygon
+  obtain ⟨m, hmopen, hmoff⟩ :=
+    exists_base_point_off_edges a b c rest h4 hsimple hD hempty hdiag
+  have hpath : ∀ p ∈ (c :: (rest ++ [a])).zip ((c :: (rest ++ [a])).drop 1),
+      m ∉ segment ℝ p.1 p.2 := by
+    intro p hp
+    obtain ⟨hpC, hpne⟩ := mem_closedEdges_of_mem_tail_zip a c rest hndC p hp
+    rcases closedEdges_clip_cases a b c rest p hpC with rfl | hpM
+    · exact absurd ⟨rfl, rfl⟩ hpne
+    · exact hmoff p hpM
+  obtain ⟨δ, hδpos, hjump⟩ := HexArea.ptWind_jump_edge a c rest m hac hmopen hpath
+  obtain ⟨ε, hεpos, hclear⟩ := exists_clearance (closedEdges (a :: b :: c :: rest)) m hmoff
+  have hDrot : HexArea.cross (a - c) (b - a) ≠ 0 := by
+    have h : HexArea.cross (a - c) (b - a) = HexArea.cross (b - a) (c - b) := by
+      simp only [HexArea.cross, Complex.sub_re, Complex.sub_im]; ring
+    rw [h]; exact hD
+  obtain ⟨y, z, hym, hzm, hcy, hcz, hyin, hzin⟩ :=
+    exists_perturb_pair c a b m (Ne.symm hac) (by rwa [openSegment_symm] at hmopen) hDrot
+      (min δ ε) (lt_min hδpos hεpos)
+  have hoffM : ∀ w : ℂ, dist w m < min δ ε →
+      ∀ e ∈ closedEdges (a :: b :: c :: rest), w ∉ segment ℝ e.1 e.2 := by
+    intro w hw e he
+    exact hclear w (lt_of_lt_of_le hw (min_le_right _ _)) e he
+  have hnotbase : ∀ w : ℂ, HexArea.cross (a - c) (w - c) ≠ 0 → w ∉ segment ℝ a c := by
+    intro w hw hmem
+    rw [segment_symm] at hmem
+    exact hw (HexArea.cross_combo_segment c a w hmem)
+  have hoffC : ∀ w : ℂ, dist w m < min δ ε → HexArea.cross (a - c) (w - c) ≠ 0 →
+      ∀ e ∈ HexArea.cycleEdges (a :: c :: rest), w ∉ segment ℝ e.1 e.2 := by
+    intro w hw hcw e he
+    rw [HexArea.cycleEdges_eq_closedEdges] at he
+    rcases closedEdges_clip_cases a b c rest e he with rfl | heM
+    · exact hnotbase w hcw
+    · exact hoffM w hw e heM
+  have hoffCy := hoffC y hym (ne_of_gt hcy)
+  have hoffCz := hoffC z hzm (ne_of_lt hcz)
+  have hvy : ∀ v ∈ (a :: c :: rest), v ≠ y :=
+    fun v hv => HexArea.vertices_ne_of_avoids_cycleEdges _ y hoffCy v hv
+  have hvz : ∀ v ∈ (a :: c :: rest), v ≠ z :=
+    fun v hv => HexArea.vertices_ne_of_avoids_cycleEdges _ z hoffCz v hv
+  have hsign : ∀ w : ℂ, HexArea.cross (c - a) (w - a) = - HexArea.cross (a - c) (w - c) := by
+    intro w
+    simp only [HexArea.cross, Complex.sub_re, Complex.sub_im]; ring
+  have hjmp : HexArea.ptWind z (a :: c :: rest) - HexArea.ptWind y (a :: c :: rest)
+      = 2 * Real.pi := by
+    refine hjump z y (lt_of_lt_of_le hzm (min_le_left _ _)) (lt_of_lt_of_le hym (min_le_left _ _))
+      hvz hvy ?_ ?_
+    · rw [hsign z]; linarith
+    · rw [hsign y]; linarith
+  have hdy := hdich y hoffCy
+  have hdz := hdich z hoffCz
+  have hpi : 0 < Real.pi := Real.pi_pos
+  have htri : HexArea.shoelace2 [a, b, c] = HexArea.cross (b - a) (c - b) :=
+    shoelace2_triple_eq_cross a b c
+  have hrot' : HexArea.cross (a - c) (b - a) = HexArea.cross (b - a) (c - b) := by
+    simp only [HexArea.cross, Complex.sub_re, Complex.sub_im]; ring
+  rcases lt_or_gt_of_ne hD with hDneg | hDpos
+  · -- negatively oriented ear: `z` is the inner point
+    have hzear : HexArea.inTriangleStrict a b c z :=
+      (HexArea.inTriangleStrict_cyc a b c z).mp (hzin (by rw [hrot']; exact hDneg))
+    have hz0 : HexArea.ptWind z (a :: c :: rest) = 0 := hkey z hzear
+    have hy2 : HexArea.ptWind y (a :: c :: rest) = -(2 * Real.pi) := by linarith
+    have hnotpos : ¬ (0 < HexArea.shoelace2 (a :: c :: rest)) := by
+      intro hcon
+      rcases hdy with h0 | h1
+      · rw [h0] at hy2; linarith
+      · rw [if_pos hcon] at h1; rw [h1] at hy2; linarith
+    constructor
+    · intro hcon
+      rw [htri] at hcon; linarith
+    · intro hcon; exact absurd hcon hnotpos
+  · -- positively oriented ear: `y` is the inner point
+    have hyear : HexArea.inTriangleStrict a b c y :=
+      (HexArea.inTriangleStrict_cyc a b c y).mp (hyin (by rw [hrot']; exact hDpos))
+    have hy0 : HexArea.ptWind y (a :: c :: rest) = 0 := hkey y hyear
+    have hz2 : HexArea.ptWind z (a :: c :: rest) = 2 * Real.pi := by linarith
+    have hpos : 0 < HexArea.shoelace2 (a :: c :: rest) := by
+      rcases hdz with h0 | h1
+      · rw [h0] at hz2; linarith
+      · by_contra hcon
+        rw [if_neg hcon] at h1
+        rw [h1] at hz2; linarith
+    constructor
+    · intro _; exact hpos
+    · intro _; rw [htri]; exact hDpos
+
 /-! ## 5. The keystone relative to the dichotomy for shorter polygons
 
 The two step lemmas above turn the point-in-polygon dichotomy into an induction on

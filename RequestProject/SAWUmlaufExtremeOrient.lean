@@ -280,11 +280,18 @@ theorem extreme_corner_orient (N : ℕ) (hN : DichBelow N)
   -- the two mirror points
   have hpnorm : 0 < ‖p‖ := norm_pos_iff.mpr hp0
   have hmin0 : 0 < min δ₀ ε := lt_min hδ₀ hε
-  set δ : ℝ := (min δ₀ ε) / (2 * ‖p‖) with hδdef
-  have hδpos : 0 < δ := by rw [hδdef]; positivity
+  set δ : ℝ := min ((min δ₀ ε) / (2 * ‖p‖)) (h / (4 * cdot d p)) with hδdef
+  have hδpos : 0 < δ := lt_min (by positivity) (by positivity)
   have hδnorm : δ * ‖p‖ < min δ₀ ε := by
-    have hq2 : δ * ‖p‖ = (min δ₀ ε) / 2 := by rw [hδdef]; field_simp
-    rw [hq2]; linarith
+    have h1 : δ ≤ (min δ₀ ε) / (2 * ‖p‖) := min_le_left _ _
+    have h2 : δ * ‖p‖ ≤ ((min δ₀ ε) / (2 * ‖p‖)) * ‖p‖ := by nlinarith
+    have hq2 : ((min δ₀ ε) / (2 * ‖p‖)) * ‖p‖ = (min δ₀ ε) / 2 := by field_simp
+    rw [hq2] at h2; linarith
+  have hδD : δ * cdot d p ≤ h / 4 := by
+    have h1 : δ ≤ h / (4 * cdot d p) := min_le_right _ _
+    have h2 : δ * cdot d p ≤ (h / (4 * cdot d p)) * cdot d p := by nlinarith
+    have hq : (h / (4 * cdot d p)) * cdot d p = h / 4 := by field_simp
+    rw [hq] at h2; exact h2
   set win : ℂ := u + t • n + δ • p with hwindef
   set wout : ℂ := u + t • n - δ • p with hwoutdef
   have hwinu : win - u = t • n + δ • p := by rw [hwindef]; abel
@@ -305,7 +312,215 @@ theorem extreme_corner_orient (N : ℕ) (hN : DichBelow N)
     rw [hwinu, cross_comb_left, cross_eq_zero_self, ← hXdef]; ring
   have hcout' : cross (wout - u) n = -δ * X := by
     rw [hwoutu, cross_comb_left, cross_eq_zero_self, ← hXdef]; ring
-  sorry
+  -- the `p`-coordinate of the mirror points (used for the escape segment)
+  have hcpwout : cross p (wout - u) = t * X := by
+    rw [hwoutu, cross_comb_right, cross_eq_zero_self, ← hXdef]; ring
+  -- half-plane coordinates of the two mirror points
+  have hcdwin : cdot d (win - u) = t * cdot d n + δ * cdot d p := by
+    rw [hwinu, cdot_add, cdot_smul, cdot_smul]
+  have hcdwout : cdot d (wout - u) = t * cdot d n + (-δ) * cdot d p := by
+    rw [hwoutu, cdot_add, cdot_smul, cdot_smul]
+  have hwinlt : cdot d (win - u) < h := by rw [hcdwin]; linarith
+  have hwoutle : cdot d (wout - u) ≤ h / 2 := by
+    have hdp : 0 < δ * cdot d p := mul_pos hδpos hDp
+    rw [hcdwout]; linarith
+  have hwoutlt : cdot d (wout - u) < h := by linarith
+  -- neither mirror point is the corner itself
+  have hwinne : win ≠ u := by
+    intro hcon
+    have h0 : (-δ) * X = 0 := by rw [← hcin, hcon]; simp [cross]
+    rcases mul_eq_zero.mp h0 with h' | h'
+    · linarith [neg_eq_zero.mp h']
+    · exact hXne h'
+  have hwoutne : wout ≠ u := by
+    intro hcon
+    have h0 : δ * X = 0 := by rw [← hcout, hcon]; simp [cross]
+    rcases mul_eq_zero.mp h0 with h' | h'
+    · linarith
+    · exact hXne h'
+  -- no vertex of `P` is one of the mirror points
+  have hvertaway : ∀ w : ℂ, cdot d (w - u) < h → w ≠ u → ∀ v ∈ P, v ≠ w := by
+    intro w hw hwu v hv hvw
+    rcases eq_or_ne v u with rfl | hvu
+    · exact hwu hvw.symm
+    · have hb := hmin v hv hvu
+      rw [hvw] at hb; linarith
+  have hvwin : ∀ v ∈ P, v ≠ win := hvertaway win hwinlt hwinne
+  have hvwout : ∀ v ∈ P, v ≠ wout := hvertaway wout hwoutlt hwoutne
+  -- both mirror points lie off every closed edge of `P`
+  have hoffedge : ∀ w : ℂ, dist w m < ε → cross n (w - u) ≠ 0 →
+      ∀ e ∈ closedEdges P, w ∉ segment ℝ e.1 e.2 := by
+    intro w hwd hwc e he hmem
+    rw [hCE] at he
+    rcases List.mem_cons.mp he with heq | he'
+    · rw [heq] at hmem
+      simp only at hmem
+      obtain ⟨a, b, ha, hb, hab, heq2⟩ := hmem
+      have hwu2 : w - u = b • n := by
+        rw [← heq2, affine_sub a b hab u nu u, hndef]; simp
+      apply hwc
+      rw [hwu2]
+      have : cross n (b • n) = b * cross n n := by
+        simpa using cross_comb_right (0 : ℝ) b n n n
+      rw [this, cross_eq_zero_self, mul_zero]
+    · exact hclear w hwd e he' hmem
+  have hδin : dist win m < δ₀ := lt_of_lt_of_le hdin (min_le_left _ _)
+  have hδout : dist wout m < δ₀ := lt_of_lt_of_le hdout (min_le_left _ _)
+  have hεin : dist win m < ε := lt_of_lt_of_le hdin (min_le_right _ _)
+  have hεout : dist wout m < ε := lt_of_lt_of_le hdout (min_le_right _ _)
+  have hcinne : cross n (win - u) ≠ 0 := by
+    rw [hcin]
+    intro hc
+    rcases mul_eq_zero.mp hc with h' | h'
+    · linarith [neg_eq_zero.mp h']
+    · exact hXne h'
+  have hcoutne : cross n (wout - u) ≠ 0 := by
+    rw [hcout]
+    intro hc
+    rcases mul_eq_zero.mp hc with h' | h'
+    · linarith
+    · exact hXne h'
+  have hwinoff : ∀ e ∈ closedEdges P, win ∉ segment ℝ e.1 e.2 :=
+    hoffedge win hεin hcinne
+  have hwoutoff : ∀ e ∈ closedEdges P, wout ∉ segment ℝ e.1 e.2 :=
+    hoffedge wout hεout hcoutne
+  -- **the escape**: the polygon does not wind around the outer mirror point
+  have hescape : ptWind wout P = 0 := by
+    refine ptWind_zero_of_extreme_corner P u pu nu wout d hwoutne hpuP hnuP hpuu hnuu hpos
+      ?_ ?_ ?_
+    · -- every cycle edge either avoids `u` or lies in the corner cone
+      intro e he
+      rw [cycleEdges_eq_closedEdges] at he
+      rcases closedEdges_incident_head P (by omega) hnd e he with hav | heq | heq
+      · rw [hP0] at hav; exact Or.inl hav
+      · right
+        rw [heq]
+        simp only [hP0, hP1]
+        exact segment_subset_cornerCone u pu nu u nu (mem_cornerCone_self u pu nu)
+          (mem_cornerCone_right u pu nu)
+      · right
+        rw [heq]
+        simp only [hP0, hPlast]
+        exact segment_subset_cornerCone u pu nu pu u (mem_cornerCone_left u pu nu)
+          (mem_cornerCone_self u pu nu)
+    · -- the outer mirror point is outside the corner cone
+      rintro ⟨α, β, hα, hβ, hαβ⟩
+      have hcr : cross n (wout - u) = α * cross n p + β * cross n n := by
+        rw [hαβ, cross_comb_right]
+      rw [hcout, hnp, cross_eq_zero_self] at hcr
+      have hz : (α + δ) * X = 0 := by nlinarith [hcr]
+      rcases mul_eq_zero.mp hz with h' | h'
+      · linarith
+      · exact hXne h'
+    · -- the segment from `u` to the outer mirror point touches `P` only at `u`
+      intro e he w hw hwe
+      obtain ⟨s1, s2, hs1, hs2, hs12, hweq⟩ := hw
+      have hwu2 : w - u = s2 • (wout - u) := by
+        rw [← hweq, affine_sub s1 s2 hs12 u wout u]; simp
+      have hcd : cdot d (w - u) = s2 * cdot d (wout - u) := by
+        rw [hwu2, cdot_smul]
+      have hcdlt : cdot d (w - u) < h := by
+        rw [hcd]
+        nlinarith
+      rw [cycleEdges_eq_closedEdges] at he
+      rcases closedEdges_incident_head P (by omega) hnd e he with hav | heq | heq
+      · exfalso
+        rw [hP0] at hav
+        have := hedgelow e he hav.1 hav.2 w hwe
+        linarith
+      · -- `w` on the edge `u–nu`
+        rw [heq] at hwe
+        simp only [hP0, hP1] at hwe
+        obtain ⟨a, b, ha, hb, hab, heq2⟩ := hwe
+        have hwu3 : w - u = b • n := by
+          rw [← heq2, affine_sub a b hab u nu u, hndef]; simp
+        have h1 : cross n (w - u) = 0 := by
+          rw [hwu3]
+          have : cross n (b • n) = b * cross n n := by
+            simpa using cross_comb_right (0 : ℝ) b n n n
+          rw [this, cross_eq_zero_self, mul_zero]
+        have h2 : cross n (w - u) = s2 * (δ * X) := by
+          rw [hwu2]
+          have : cross n (s2 • (wout - u)) = s2 * cross n (wout - u) := by
+            simpa using cross_comb_right (0 : ℝ) s2 (wout - u) (wout - u) n
+          rw [this, hcout]
+        have hs20 : s2 = 0 := by
+          rw [h1] at h2
+          rcases mul_eq_zero.mp h2.symm with h' | h'
+          · exact h'
+          · exfalso
+            rcases mul_eq_zero.mp h' with h'' | h''
+            · linarith
+            · exact hXne h''
+        have : w = u := by
+          have : w - u = 0 := by rw [hwu2, hs20, zero_smul]
+          linear_combination (norm := ring_nf) this
+        exact this
+      · -- `w` on the edge `pu–u`
+        rw [heq] at hwe
+        simp only [hP0, hPlast] at hwe
+        obtain ⟨a, b, ha, hb, hab, heq2⟩ := hwe
+        have hwu3 : w - u = a • p := by
+          rw [← heq2, affine_sub a b hab pu u u, hpdef]; simp
+        have h1 : cross p (w - u) = 0 := by
+          rw [hwu3]
+          have : cross p (a • p) = a * cross p p := by
+            simpa using cross_comb_right (0 : ℝ) a p p p
+          rw [this, cross_eq_zero_self, mul_zero]
+        have h2 : cross p (w - u) = s2 * (t * X) := by
+          rw [hwu2]
+          have : cross p (s2 • (wout - u)) = s2 * cross p (wout - u) := by
+            simpa using cross_comb_right (0 : ℝ) s2 (wout - u) (wout - u) p
+          rw [this, hcpwout]
+        have hs20 : s2 = 0 := by
+          rw [h1] at h2
+          rcases mul_eq_zero.mp h2.symm with h' | h'
+          · exact h'
+          · exfalso
+            rcases mul_eq_zero.mp h' with h'' | h''
+            · linarith
+            · exact hXne h''
+        have : w - u = 0 := by rw [hwu2, hs20, zero_smul]
+        linear_combination (norm := ring_nf) this
+  -- **the dichotomy** at the inner mirror point
+  have hdich : PolyDichotomy P := hN P hPN h3 hsimple
+  have hdichwin := hdich win (by
+    intro e he
+    rw [cycleEdges_eq_closedEdges] at he
+    exact hwinoff e he)
+  have hpi : 0 < Real.pi := Real.pi_pos
+  rcases lt_or_gt_of_ne hXne with hXneg | hXpos
+  · -- `X < 0`: the inner mirror point is wound around positively
+    have hj := hjump win wout hδin hδout hvwin hvwout
+      (by rw [hcin]; exact mul_pos_of_neg_of_neg (by linarith) hXneg)
+      (by rw [hcout]; exact mul_neg_of_pos_of_neg hδpos hXneg)
+    rw [hescape, sub_zero] at hj
+    have hpos' : (0:ℝ) < shoelace2 P := by
+      rcases hdichwin with h0 | h0
+      · exfalso; rw [h0] at hj; linarith
+      · rw [hj] at h0
+        by_contra hcon
+        rw [if_neg hcon] at h0
+        linarith
+    rw [hUX]
+    constructor
+    · intro _; linarith
+    · intro _; exact hpos'
+  · -- `X > 0`: the inner mirror point is wound around negatively
+    have hj := hjump wout win hδout hδin hvwout hvwin
+      (by rw [hcout]; exact mul_pos hδpos hXpos)
+      (by rw [hcin]; exact mul_neg_of_neg_of_pos (by linarith) hXpos)
+    rw [hescape, zero_sub] at hj
+    have hwin2 : ptWind win P = -(2 * Real.pi) := by linarith
+    have hneg : ¬ ((0:ℝ) < shoelace2 P) := by
+      intro hcon
+      rcases hdichwin with h0 | h0
+      · rw [h0] at hwin2; linarith
+      · rw [if_pos hcon] at h0; rw [h0] at hwin2; linarith
+    rw [hUX]
+    constructor
+    · intro hcon; exact absurd hcon hneg
+    · intro hcon; linarith
 
 end HexArea
 

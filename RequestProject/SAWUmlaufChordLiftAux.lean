@@ -3,6 +3,7 @@ import RequestProject.SAWUmlaufPolyEscape
 import RequestProject.SAWUmlaufRayIndex
 import RequestProject.SAWUmlaufEarTipEscape
 import RequestProject.SAWUmlaufJordanStep
+import RequestProject.SAWUmlaufExtremeOrient
 
 /-!
 # `SAWUmlaufChordLiftAux` — the two geometric inputs of the chord-split ear lift
@@ -172,25 +173,88 @@ lemma chord_lift_other_not_on_diagonal (N : ℕ) (hN : DichBelow N)
   exact ear_interior_ptWind_ne_zero_of_rotation_below N hN P hPN hPsimple a' b' c' s tlP
     hrotP hDP hemptyP hdiagP horientP y hyin (by rw [← hwind]; exact hzero)
 
-/-- **Both chord pieces carry the orientation of the whole polygon.**
+/-- **Corner signs at a strictly interior chord endpoint (pure algebra).**  If
+`v` lies strictly inside the corner triangle `pu, u, nu` of the polygon at `u`,
+then the two corners that the chord `u–v` creates at `u` — namely `pu → u → v`
+and `v → u → nu` — turn the same way as the corner `pu → u → nu` of the polygon
+itself, and neither of them is flat.
 
-If the chord `W[0]–W[k]` is a valid interior diagonal of the simple polygon `W`,
-then the signed areas of the two pieces `chordLeft W k`, `chordRight W k` are
-both positive exactly when the signed area of `W` is (and, by
-`HexArea.shoelace2_chord_split`, they add up to it).
+The three cross products are the three sub-triangle areas of the corner
+triangle, and they add up to the area of the whole corner triangle; strict
+interiority makes all three of them have one and the same (nonzero) sign. -/
+lemma HexArea.corner_signs_of_inTriangleStrict (pu u nu v : ℂ)
+    (h : HexArea.inTriangleStrict pu u nu v) :
+    (((0:ℝ) < HexArea.cross (u - pu) (v - u))
+        ↔ ((0:ℝ) < HexArea.cross (u - pu) (nu - u))) ∧
+    (((0:ℝ) < HexArea.cross (u - v) (nu - u))
+        ↔ ((0:ℝ) < HexArea.cross (u - pu) (nu - u))) ∧
+    HexArea.cross (v - u) (nu - u) ≠ 0 ∧
+    HexArea.cross (pu - u) (v - u) ≠ 0 := by
+  have e1 : HexArea.cross (u - pu) (v - pu) = HexArea.cross (u - pu) (v - u) := by
+    simp [HexArea.cross]; ring
+  have e2 : HexArea.cross (nu - u) (v - u) = HexArea.cross (u - v) (nu - u) := by
+    simp [HexArea.cross]; ring
+  have e3 : HexArea.cross (u - pu) (v - u) + HexArea.cross (u - v) (nu - u)
+      + HexArea.cross (pu - nu) (v - nu) = HexArea.cross (u - pu) (nu - u) := by
+    simp [HexArea.cross]; ring
+  have e4 : HexArea.cross (v - u) (nu - u) = - HexArea.cross (u - v) (nu - u) := by
+    simp [HexArea.cross]; ring
+  have e5 : HexArea.cross (pu - u) (v - u) = - HexArea.cross (u - pu) (v - u) := by
+    simp [HexArea.cross]; ring
+  rcases h with ⟨h1, h2, h3⟩ | ⟨h1, h2, h3⟩
+  · rw [e1] at h1; rw [e2] at h2
+    have hs : (0:ℝ) < HexArea.cross (u - pu) (nu - u) := by linarith
+    exact ⟨⟨fun _ => hs, fun _ => h1⟩, ⟨fun _ => hs, fun _ => h2⟩,
+      by rw [e4]; linarith, by rw [e5]; linarith⟩
+  · rw [e1] at h1; rw [e2] at h2
+    have hs : HexArea.cross (u - pu) (nu - u) < 0 := by linarith
+    refine ⟨⟨fun hh => absurd hh (by linarith), fun hh => absurd hh (by linarith)⟩,
+      ⟨fun hh => absurd hh (by linarith), fun hh => absurd hh (by linarith)⟩,
+      by rw [e4]; linarith, by rw [e5]; linarith⟩
 
-**Status: `sorry`.**  Genuine plane geometry: the interior diagonal cuts the
-enclosed region into two regions traversed in the *same* rotational sense as the
-whole boundary, so no cancellation occurs.  An elementary route inside this
-development: the winding number of a point strictly inside a piece is `±1` about
-that piece and about `W` with the same sign (the machinery
-`chord_ear_inner_ptWind_ne_zero` / `chord_ear_other_ptWind_zero` computes exactly
-these), while the sign of `shoelace2` is the sign of the winding number times the
-enclosed area.
+/-- **Both chord pieces of a valid diagonal cut are simple.**  Packaging of the
+banked combinatorial bricks `HexArea.chordLeft_PolygonSimple` /
+`HexArea.chordRight_PolygonSimple` against the diagonal-validity hypothesis
+`hdiag` in the form the Meisters chain carries it. -/
+lemma chord_pieces_PolygonSimple (W : List ℂ) (hsimple : PolygonSimple W) (k : ℕ)
+    (hk2 : 2 ≤ k) (hk : k + 1 ≤ W.length) (u v : ℂ)
+    (hu : W.head? = some u) (hv : W[k]? = some v)
+    (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
+        Disjoint (segment ℝ u v) (segment ℝ e.1 e.2)) :
+    PolygonSimple (HexArea.chordLeft W k) ∧ PolygonSimple (HexArea.chordRight W k) := by
+  constructor
+  · refine HexArea.chordLeft_PolygonSimple W k u v hk2 hk hsimple hu hv ?_
+    intro e he hv1 hv2 hu1 hu2
+    rw [segment_symm]
+    refine hdiag e (HexArea.mem_closedEdges_of_mem_pathEdges W e ?_) hu1 hu2 hv1 hv2
+    exact HexArea.mem_pathEdges_take W (k + 1) e he
+  · refine HexArea.chordRight_PolygonSimple W k u v (by omega) (by omega) hsimple hu hv ?_
+    intro e he hu1 hu2 hv1 hv2
+    exact hdiag e (HexArea.pathEdges_chordRight_mem_closedEdges W k (by omega) e he)
+      hu1 hu2 hv1 hv2
 
-NOT a dead branch: it is the orientation input of `chord_ear_lift`. -/
-lemma chord_piece_orient (W : List ℂ) (h4 : 4 ≤ W.length)
-    (hsimple : PolygonSimple W) (hnd : polyCycNondeg W) (k : ℕ)
+/-- **Both chord pieces carry the orientation of the whole polygon (PROVED).**
+
+If the chord `W[0]–W[k]` is a valid interior diagonal of the simple polygon `W`
+(`hdiag` : it meets no non-incident edge; `hint` : its start `u = W[0]` is a
+strictly extreme convex corner of `W` and its end `v = W[k]` lies strictly
+inside the corner triangle at `u`), then the signed areas of the two pieces
+`chordLeft W k`, `chordRight W k` are both positive exactly when the signed area
+of `W` is (and, by `HexArea.shoelace2_chord_split`, they add up to it).
+
+Proof.  The corner `u` is strictly extreme for `W`, hence also for either piece,
+and the chord `u–v` splits the corner `pu → u → nu` into the two corners
+`pu → u → v` and `v → u → nu`, which by `HexArea.corner_signs_of_inTriangleStrict`
+turn the same way.  Reading the orientation of each piece off at `u` with
+`HexArea.extreme_corner_orient` therefore gives both pieces the sign of the
+corner `pu → u → nu`; the additivity of `shoelace2` then transfers that common
+sign to `W`.
+
+Because the orientation is read off through the point-in-polygon dichotomy, the
+statement is relative to `DichBelow N` for an `N` bounding `W.length`; the two
+pieces are strictly shorter than `W`, so `W.length ≤ N` suffices. -/
+lemma chord_piece_orient (N : ℕ) (hN : DichBelow N) (W : List ℂ) (h4 : 4 ≤ W.length)
+    (hWN : W.length ≤ N) (hsimple : PolygonSimple W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
     (hdiag : ∀ e ∈ closedEdges W, u ≠ e.1 → u ≠ e.2 → v ≠ e.1 → v ≠ e.2 →
@@ -200,7 +264,133 @@ lemma chord_piece_orient (W : List ℂ) (h4 : 4 ≤ W.length)
         ↔ (0:ℝ) < HexArea.shoelace2 W) ∧
     ((0:ℝ) < HexArea.shoelace2 (HexArea.chordRight W k)
         ↔ (0:ℝ) < HexArea.shoelace2 W) := by
-  sorry
+  classical
+  obtain ⟨pu, nu, hhead, hlast, hnu, hconv, ⟨d, hd⟩, htri⟩ := hint
+  obtain ⟨hsign1, hsign2, hXL, hXR⟩ := HexArea.corner_signs_of_inTriangleStrict pu u nu v htri
+  -- the chord index is genuinely interior: `2 ≤ k ≤ |W| - 2`
+  have hvnu : v ≠ nu := HexArea.inTriangleStrict_ne_c pu u nu v htri
+  have hvpu : v ≠ pu := HexArea.inTriangleStrict_ne_a pu u nu v htri
+  have hk2 : 2 ≤ k := by
+    rcases Nat.eq_or_lt_of_le hk1 with h1 | h1
+    · exfalso
+      rw [← h1, hnu] at hv
+      exact hvnu (Option.some_inj.mp hv).symm
+    · omega
+  have hklast : k + 2 ≤ W.length := by
+    by_contra hcon
+    have hkeq : k = W.length - 1 := by omega
+    have hgl : W.getLast? = W[k]? := by rw [List.getLast?_eq_getElem?, hkeq]
+    rw [hlast, hv] at hgl
+    exact hvpu (Option.some_inj.mp hgl).symm
+  -- write `W` out at its first two vertices
+  obtain ⟨tw, hWeq⟩ : ∃ tw, W = u :: nu :: tw := by
+    match W, h4 with
+    | w0 :: w1 :: tw, _ =>
+      have h0 : w0 = u := by simpa using hu
+      have h1 : w1 = nu := by simpa using hnu
+      exact ⟨tw, by rw [h0, h1]⟩
+  obtain ⟨j, rfl⟩ : ∃ j, k = j + 2 := ⟨k - 2, by omega⟩
+  have htwlen : tw.length = W.length - 2 := by rw [hWeq]; simp
+  have hjlt : j < tw.length := by omega
+  -- the two pieces, explicitly
+  have hLeq : HexArea.chordLeft W (j + 2) = u :: nu :: tw.take (j + 1) := by
+    rw [hWeq]; simp [HexArea.chordLeft]
+  have hdropk : W.drop (j + 2) = tw.drop j := by rw [hWeq]; simp
+  have htwj : tw[j]? = some v := by rw [hWeq] at hv; simpa using hv
+  have hdropj : tw.drop j = v :: tw.drop (j + 1) := by
+    rw [List.drop_eq_getElem_cons hjlt]
+    congr 1
+    exact (List.getElem?_eq_getElem hjlt ▸ htwj : some tw[j] = some v) |> Option.some_inj.mp
+  have hReq : HexArea.chordRight W (j + 2) = (v :: tw.drop (j + 1)) ++ [u] := by
+    rw [HexArea.chordRight, hdropk, hdropj, hWeq]; simp
+  -- the rotation of the right piece that puts the extreme corner `u` first
+  have hRrot : (HexArea.chordRight W (j + 2)).rotate (v :: tw.drop (j + 1)).length
+      = u :: v :: tw.drop (j + 1) := by
+    rw [hReq, List.rotate_append_length_eq]; rfl
+  -- simplicity of the two pieces
+  have huhead : W.head? = some u := by rw [hWeq]; simp
+  obtain ⟨hLsimple, hRsimple⟩ :=
+    chord_pieces_PolygonSimple W hsimple (j + 2) (by omega) (by omega) u v huhead hv hdiag
+  -- memberships
+  have hLmem : ∀ y ∈ u :: nu :: tw.take (j + 1), y ∈ W := by
+    intro y hy
+    rw [← hLeq] at hy
+    exact List.mem_of_mem_take hy
+  have hRmem : ∀ y ∈ u :: v :: tw.drop (j + 1), y ∈ W := by
+    intro y hy
+    rcases List.mem_cons.mp hy with rfl | hy'
+    · exact List.mem_of_mem_head? huhead
+    · have : y ∈ W.drop (j + 2) := by rw [hdropk, hdropj]; exact hy'
+      exact List.mem_of_mem_drop this
+  -- lengths
+  have hLlen : (u :: nu :: tw.take (j + 1)).length = j + 3 := by
+    simp [List.length_take]; omega
+  have hRlen : (u :: v :: tw.drop (j + 1)).length = W.length - j - 1 := by
+    simp [List.length_drop]; omega
+  -- the last vertex of the right piece is `pu`
+  have hRlast : (u :: v :: tw.drop (j + 1)).getLast? = some pu := by
+    have hne : (tw.drop (j + 1)) ≠ [] := by
+      intro hcon
+      have := congrArg List.length hcon
+      simp [List.length_drop] at this
+      omega
+    have hcons : ∀ (a : ℂ) (l : List ℂ), l ≠ [] → (a :: l).getLast? = l.getLast? := by
+      intro a l hl
+      cases l with
+      | nil => exact absurd rfl hl
+      | cons b t => simp [List.getLast?_cons_cons]
+    have h1 : (u :: v :: tw.drop (j + 1)).getLast? = (tw.drop (j + 1)).getLast? := by
+      rw [hcons u (v :: tw.drop (j + 1)) (by simp), hcons v _ hne]
+    have h2 : (tw.drop (j + 1)).getLast? = tw.getLast? := by
+      rw [List.getLast?_drop]
+      have : ¬ (tw.length ≤ j + 1) := by omega
+      simp [this]
+    have h3 : tw.getLast? = W.getLast? := by
+      have hne2 : tw ≠ [] := by
+        intro hcon; rw [hcon] at hjlt; simp at hjlt
+      rw [hWeq, hcons u (nu :: tw) (by simp), hcons nu tw hne2]
+    rw [h1, h2, h3, hlast]
+  -- **orientation of the left piece**, read off at the extreme corner `u`
+  have horL : ((0:ℝ) < HexArea.shoelace2 (HexArea.chordLeft W (j + 2)))
+      ↔ (0:ℝ) < HexArea.cross (u - v) (nu - u) := by
+    rw [hLeq]
+    refine HexArea.extreme_corner_orient N hN u nu v d (tw.take (j + 1)) ?_ ?_ ?_ ?_ ?_ hXL
+    · rw [hLlen]; omega
+    · rw [hLlen]; omega
+    · rw [← hLeq]; exact hLsimple
+    · rw [← hLeq, HexArea.chordLeft_getLast W (j + 2) (by omega)]; exact hv
+    · intro y hy hyu; exact hd y (hLmem y hy) hyu
+  -- **orientation of the right piece**, read off at the same corner
+  have horR : ((0:ℝ) < HexArea.shoelace2 (HexArea.chordRight W (j + 2)))
+      ↔ (0:ℝ) < HexArea.cross (u - pu) (v - u) := by
+    have hrotarea : HexArea.shoelace2 (HexArea.chordRight W (j + 2))
+        = HexArea.shoelace2 (u :: v :: tw.drop (j + 1)) := by
+      rw [← hRrot, shoelace2_rotate]
+    rw [hrotarea]
+    refine HexArea.extreme_corner_orient N hN u v pu d (tw.drop (j + 1)) ?_ ?_ ?_ hRlast ?_ hXR
+    · rw [hRlen]; omega
+    · rw [hRlen]; omega
+    · rw [← hRrot]; exact (PolygonSimple_rotate _ _).mpr hRsimple
+    · intro y hy hyu; exact hd y (hRmem y hy) hyu
+  -- assemble: both pieces have the sign of the corner `pu → u → nu`
+  have hLW : ((0:ℝ) < HexArea.shoelace2 (HexArea.chordLeft W (j + 2)))
+      ↔ (0:ℝ) < HexArea.cross (u - pu) (nu - u) := horL.trans hsign2
+  have hRW : ((0:ℝ) < HexArea.shoelace2 (HexArea.chordRight W (j + 2)))
+      ↔ (0:ℝ) < HexArea.cross (u - pu) (nu - u) := horR.trans hsign1
+  have hsplit := HexArea.shoelace2_chord_split W (j + 2) (by omega) (by omega)
+  refine ⟨⟨fun h => ?_, fun h => ?_⟩, ⟨fun h => ?_, fun h => ?_⟩⟩
+  · have h1 := hRW.mpr (hLW.mp h); linarith
+  · by_contra hcon
+    have h2 : ¬ ((0:ℝ) < HexArea.shoelace2 (HexArea.chordRight W (j + 2))) :=
+      fun hh => hcon (hLW.mpr (hRW.mp hh))
+    push_neg at hcon h2
+    linarith
+  · have h1 := hLW.mpr (hRW.mp h); linarith
+  · by_contra hcon
+    have h2 : ¬ ((0:ℝ) < HexArea.shoelace2 (HexArea.chordLeft W (j + 2))) :=
+      fun hh => hcon (hRW.mpr (hLW.mp hh))
+    push_neg at hcon h2
+    linarith
 
 /-- **Triangle piece: the other piece's vertices are outside it (PROVED).**
 If a chord piece `P` of the valid interior cut `W[0]–W[k]` is a *triangle*
@@ -234,7 +424,7 @@ lemma chord_triangle_piece_empty (W : List ℂ) (hsimple : PolygonSimple W) (k :
   split_ifs at h0 <;> linarith
 
 
-/-- **The triangle-piece ear package (PROVED, modulo `chord_piece_orient`).**
+/-- **The triangle-piece ear package (PROVED).**
 When a chord piece `P` of the valid interior cut `W[0]–W[k]` has only three
 vertices, the single vertex it cuts off is an ear of `W` itself: `P = [u, m, v]`
 (left piece, forcing `k = 2`) or `P = [v, m, u]` (right piece, forcing
@@ -247,7 +437,8 @@ from `chord_piece_orient` and the additivity `HexArea.shoelace2_chord_split`.
 
 This is the degenerate branch of the Meisters interior recursion, where the piece
 is too short to apply the induction hypothesis. -/
-lemma chord_triangle_piece_package (W : List ℂ) (h4 : 4 ≤ W.length)
+lemma chord_triangle_piece_package (N : ℕ) (hN : DichBelow N)
+    (W : List ℂ) (h4 : 4 ≤ W.length) (hWN : W.length ≤ N)
     (hsimple : PolygonSimple W) (hnd : polyCycNondeg W) (k : ℕ)
     (hk1 : 1 ≤ k) (hk : k + 1 ≤ W.length)
     (u v : ℂ) (hu : W[0]? = some u) (hv : W[k]? = some v)
@@ -267,7 +458,8 @@ lemma chord_triangle_piece_package (W : List ℂ) (h4 : 4 ≤ W.length)
   have hWnd : W.Nodup := hsimple.1
   have hklt : k < W.length := by omega
   have hsplit := HexArea.shoelace2_chord_split W k hk1 hklt
-  obtain ⟨hL, hR⟩ := chord_piece_orient W h4 hsimple hnd k hk1 hk u v hu hv hdiag hint
+  obtain ⟨hL, hR⟩ :=
+    chord_piece_orient N hN W h4 hWN hsimple k hk1 hk u v hu hv hdiag hint
   -- The generic orientation step, shared by the two cases.
   have horient_of : ∀ (T aP aQ : ℝ), aP + aQ = HexArea.shoelace2 W → T = aP →
       ((0:ℝ) < aP ↔ (0:ℝ) < HexArea.shoelace2 W) →

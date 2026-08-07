@@ -3,6 +3,8 @@ import RequestProject.SAWUmlaufPolyEscape
 import RequestProject.SAWUmlaufChordLiftAux
 import RequestProject.SAWUmlaufFlatSeamLift
 import RequestProject.SAWUmlaufJordanCore
+import RequestProject.SAWUmlaufEarOrient
+import RequestProject.SAWUmlaufFlatClipLift
 
 /-!
 # `SAWUmlaufPolygon`, part `SAWUmlaufPolyMeisters`
@@ -212,7 +214,8 @@ lemma chord_ear_lift (N : ℕ) (hN : DichBelow N)
       rw [← h1, hrotW]
       exact shoelace2_clip_second a' b' c' tl
     have hsplit := HexArea.shoelace2_chord_split W k hk1 hklt
-    obtain ⟨hL, hR⟩ := chord_piece_orient W hW4 hWsimple hWnondeg k hk1 hk u v hu hv hdiag hint
+    obtain ⟨hL, hR⟩ :=
+      chord_piece_orient N hN W hW4 (by omega) hWsimple k hk1 hk u v hu hv hdiag hint
     have hkey : ((0:ℝ) < HexArea.shoelace2 [a', b', c']
         ↔ (0:ℝ) < HexArea.shoelace2 W - HexArea.shoelace2 [a', b', c']) := by
       rcases hP with rfl | rfl
@@ -387,7 +390,8 @@ lemma interior_lift_via_piece (N : ℕ) (hN : DichBelow N)
       have hWlen : W.length = V.length := by rw [← hW]; simp
       obtain ⟨j, a', b', c', p', q', tl, hrotW, hb'P, hb'u, hb'v, hp', hq',
           hempty', hdiag', horient'⟩ :=
-        chord_triangle_piece_package W (by omega) hWsimple hWnd k hk1 hk u v hu hv hdiag hint
+        chord_triangle_piece_package N hN W (by omega) (by omega) hWsimple hWnd k hk1 hk u v
+          hu hv hdiag hint
           P (hPQ.elim (fun h => Or.inl h.1) (fun h => Or.inr h.1)) hP3
       have hrotV : V.rotate (ρ + j) = a' :: b' :: c' :: tl := by
         rw [← List.rotate_rotate, hW]; exact hrotW
@@ -606,62 +610,188 @@ lemma meisters_reduction_interior2 (N : ℕ) (hN : DichBelow N)
         (symmCyc _ (chordLeft_cut_isCycEdge (b :: c :: rest ++ [a]) k b w hklt hWhead hwk))
         hfsdL IH2 z1 z2 (Or.inl hz1Q) (Or.inl hz2Q)
 
-/-- **Empty-branch lift — the BAD-diagonal subcase (genuine remaining gap).**
-    Extracted from `meisters_reduction_empty2`'s non-clean / non-good case so it
-    is a single targetable declaration.  Here the corner `a,b,c` is empty
-    (`hcase`), but the clip diagonal `a–c` itself fails the clean test
-    (`hbad`): some clip neighbour `p`/`q` is collinear with `a–c`, or a far
-    vertex of `rest` sits on the *closed* diagonal `[a,c]`, or the ear
-    orientation is reversed relative to the clip.  In every such configuration
-    the clip `a :: c :: rest` is no longer a clean simple sub-polygon, so (as in
-    the interior branch) the proof needs the polygon-split machinery: a blocking
-    vertex on the diagonal yields a strictly-shorter interior diagonal to split
-    along, recurse via `IH2` on the piece NOT containing `{z1,z2}`, and lift.
+/-- **Lifting an ear of the clip back to the polygon (isolated remaining gap).**
 
-    **Status: `sorry`.**  This is the isolated remaining Jordan-content gap of
-    the empty branch.  Recorded, isolated partial progress — NOT a dead branch;
-    it is consumed directly by `meisters_reduction_empty2`. -/
-lemma empty_branch_bad_lift (V : List ℂ) (hlen : 4 ≤ V.length)
+    Setting: `V.rotate r = a :: b :: c :: rest`, the corner at `b` is empty
+    (`hcase`) with a clear base (`hbase`), the clip `M = a :: c :: rest` is
+    simple (`hMs`) and coherently oriented with the ear (`horient`), and the
+    apex `b` is a forbidden vertex (`hbf`) so the ear at `b` cannot be used.
+    Given a Meisters ear of the clip avoiding the clip diagonal `{a, c}`
+    (`hdata`), produce a Meisters ear of `V` avoiding `z1, z2`.
+
+    The tip `b'` of the clip ear lies in `rest`, hence avoids `a`, `c` and (by
+    `Nodup`) `b`; since `b`'s only cyclic neighbours in `V` are `a` and `c`, and
+    one of `z1, z2` is `b` while the other is `b`'s neighbour or `b` itself, the
+    tip avoids both forbidden vertices.  Re-inserting `b` between `a` and `c`
+    keeps the tip's cyclic neighbours unless the tip is adjacent to the junction,
+    and `b` stays outside the lifted ear triangle by `hbconv`.
+
+    This is exactly the lift that `empty_branch_good_lift`
+    (`RequestProject.SAWUmlaufPolyLift`) performs, sorry-free, in the special
+    case where the clip is cyclically non-degenerate; that proof reads the ear's
+    corner non-flatness `cross (b' - a') (c' - b') ≠ 0` off `polyCycNondeg M`,
+    which is unavailable here.  Carrying that clause inside `EmptyCornerData2`
+    (or re-deriving it from the flat-seam construction) is what remains.
+
+    **Status: `sorry`.**  NOT a dead branch: consumed by
+    `empty_branch_flat_clip_lift`. -/
+lemma empty_branch_lift_of_clip_data (V : List ℂ) (hlen : 5 ≤ V.length)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ) (p q : ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hbase : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
+    (hbf : b = z1 ∨ b = z2)
+    (hMs : PolygonSimple (a :: c :: rest))
+    (hdata : EmptyCornerData2 (a :: c :: rest) a c) :
+    EmptyCornerData2 V z1 z2 := by
+  sorry
+
+/-- **Empty-branch lift — the flat-clip subcase (isolated remaining gap).**
+
+    Here the corner `a, b, c` is empty (`hcase`), the base of the corner is
+    clear (`hbase` : no vertex of `rest` sits on the closed diagonal `[a, c]`),
+    so the clip `a :: c :: rest` is a *simple* sub-polygon and — the tip `b`
+    being strictly extreme — the ear is automatically coherently oriented with
+    it (`clip_orient_of_extreme_tip`).  The apex `b`, however, is one of the two
+    forbidden vertices (`hbf`), so the ear at `b` cannot be used and we must
+    recurse on the clip.  The obstruction addressed here is that the clip is
+    *cyclically degenerate at a seam*: one of its two new corners, at `a` (with
+    clip predecessor `p = rest.getLast?`) or at `c` (with clip successor
+    `q = rest.head?`), is flat, i.e. `cross (c - a) (p - a) = 0` or
+    `cross (c - a) (q - a) = 0` (`hflat`).  Then `polyCycNondeg (a :: c :: rest)`
+    fails and `IH2` is not directly applicable, unlike in the sorry-free
+    `empty_branch_good_lift`.
+
+    The recursion on the clip is now available: `clip_flat_ear`
+    (`RequestProject.SAWUmlaufFlatClipLift`) produces an ear of the clip avoiding
+    both `a` and `c` by deleting the flat seam vertex and running the flat-seam
+    lift `flatSeam_EmptyCornerData2_of_data` (proved there whenever exactly one
+    seam corner is flat; the both-flat configuration is the remaining gap, and it
+    is isolated in `clip_both_flat_ear`).  What remains here is the *lift* of
+    that clip ear back to `V`, `empty_branch_lift_of_clip_data`.
+
+    **Status: reduced to two isolated gaps** — `clip_both_flat_ear` and
+    `empty_branch_lift_of_clip_data`.  NOT a dead branch: it is consumed directly
+    by `meisters_reduction_empty2`. -/
+lemma empty_branch_flat_clip_lift (V : List ℂ) (hlen : 5 ≤ V.length)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
         PolygonSimple V' → polyCycNondeg V' →
         ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
-    (h4 : ¬ V.length = 4)
+    (r : ℕ) (a b c : ℂ) (rest : List ℂ) (p q : ℂ)
+    (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
+    (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
+        ¬ HexArea.inTriangleStrict x y w b)
+    (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (hp : rest.getLast? = some p) (hq : rest.head? = some q)
+    (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
+    (hbase : ∀ x ∈ rest, x ∉ segment ℝ a c)
+    (horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))
+    (hbf : b = z1 ∨ b = z2)
+    (hflat : HexArea.cross (c - a) (p - a) = 0 ∨ HexArea.cross (c - a) (q - a) = 0) :
+    EmptyCornerData2 V z1 z2 := by
+  have hlenrot := congrArg List.length hrot
+  simp only [List.length_rotate, List.length_cons] at hlenrot
+  have hrest2 : 2 ≤ rest.length := by omega
+  have hRs : PolygonSimple (a :: b :: c :: rest) :=
+    hrot ▸ (PolygonSimple_rotate V r).2 hsimple
+  have hRnd : polyCycNondeg (a :: b :: c :: rest) :=
+    hrot ▸ (polyCycNondeg_rotate V r (by omega)).mpr hnd
+  have hD : HexArea.cross (b - a) (c - b) ≠ 0 :=
+    polyCycNondeg_rotate_head V a b c rest r (by omega) hnd hrot
+  have hac : c - a ≠ 0 := by
+    refine sub_ne_zero.mpr (fun h => ?_)
+    exact (List.nodup_cons.mp hRs.1).1 (by simp [← h])
+  have hMs : PolygonSimple (a :: c :: rest) :=
+    PolygonSimple_clip a b c rest hRs
+      (diag_disjoint_of_empty_corner a b c rest hRs hD hac hcase hbase)
+  have IH : ∀ M : List ℂ, M.length < rest.length + 3 → 4 ≤ M.length → PolygonSimple M →
+      polyCycNondeg M → ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge M w1 w2) →
+      EmptyCornerData2 M w1 w2 := by
+    intro M hM
+    exact IH2 M (by omega)
+  exact empty_branch_lift_of_clip_data V hlen hsimple hnd z1 z2 hadj r a b c rest p q hrot
+    hbmem hbconv hbseg hp hq hcase hbase horient hbf hMs
+    (clip_flat_ear a b c p q rest hrest2 hp hq hMs hRnd IH)
+
+/-- **Empty-branch lift — the blocked-base subcase (isolated remaining gap).**
+
+    Here the corner `a, b, c` is empty in the *strict* sense (`hcase`: no vertex
+    of `rest` lies in the open corner triangle) but the base is *blocked*: some
+    vertex `x ∈ rest` lies on the closed segment `[a, c]` (`hblocked`).  This
+    genuinely happens: for
+    `V = [(1,1), (0,0), (1,-1), (3,-1), (3,1), (1,0)]` the lexicographically
+    minimal vertex is `b = (0,0)`, the corner `(1,1), (0,0), (1,-1)` contains no
+    vertex strictly, and `(1,0)` lies on the base `[(1,1), (1,-1)]`.  The clip
+    `a :: c :: rest` is then *not* a simple polygon (the diagonal passes through
+    a vertex), so neither the direct packaging nor `empty_branch_good_lift`
+    applies.
+
+    The intended proof splits `V` along the segment `b–x` instead: because the
+    open corner triangle contains no vertex and no edge of `V` crosses it, the
+    pair `b, x` is a valid diagonal of `V`, and splitting along it produces two
+    strictly shorter simple polygons, one of which avoids `{z1, z2}`; recursion
+    via `IH2` on that piece and the chord lift (`chord_ear_lift`) then transport
+    the ear back to `V`.  The available chord machinery is phrased through
+    `InteriorChord`, which demands `inTriangleStrict pu u nu v` at the chord's
+    base vertex, and that strictness fails exactly for `x` on the base; a
+    cone-based relaxation of `InteriorChord` is the missing ingredient.
+
+    **Status: `sorry`.**  NOT a dead branch: it is consumed directly by
+    `meisters_reduction_empty2`.  Recorded, isolated partial progress. -/
+lemma empty_branch_base_blocked_lift (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 5 ≤ V.length) (hVN : V.length ≤ N)
+    (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
+    (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
+    (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
+        PolygonSimple V' → polyCycNondeg V' →
+        ∀ w1 w2 : ℂ, (w1 = w2 ∨ IsCycEdge V' w1 w2) → EmptyCornerData2 V' w1 w2)
     (r : ℕ) (a b c : ℂ) (rest : List ℂ)
     (hrot : V.rotate r = a :: b :: c :: rest) (hbmem : b ∈ V)
     (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
         ¬ HexArea.inTriangleStrict x y w b)
     (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (hbdir : ∃ d : ℂ, ∀ y ∈ V, y ≠ b → 0 < HexArea.cdot d (y - b))
     (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x)
-    (p q : ℂ) (hp : rest.getLast? = some p) (hq : rest.head? = some q)
-    (hrest_len : 2 ≤ rest.length)
-    (hbad : ¬ (HexArea.cross (c - a) (p - a) ≠ 0 ∧
-        HexArea.cross (c - a) (q - a) ≠ 0 ∧
-        (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
-        ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)))) :
+    (hblocked : ∃ x ∈ rest, x ∈ segment ℝ a c) :
     EmptyCornerData2 V z1 z2 := by
   sorry
 
 /-- **Meisters empty/diagonal branch, two-forbidden form.**  No vertex of
-    `rest` lies in the strict interior of the convex corner `a, b, c`.  If `b`
-    is a *bona-fide* empty ear avoiding both `z1` and `z2` (the clean case,
-    proved here directly via the `EmptyCornerData2` packaging), use it.
-    Otherwise — `b` coincides with a forbidden vertex, or a clip endpoint is
-    collinear, or a far vertex sits on the closed diagonal, or the orientation
-    is reversed — recurse via `IH2` on the clip `a :: c :: rest` forbidding the
-    clip diagonal `{a, c}` (a cyclic edge of the clip), and lift the returned
-    ear (whose tip lies in `rest`, hence avoids `a`, `c`, and `b`) back to `V`.
+    `rest` lies in the strict interior of the convex corner `a, b, c`, and the
+    tip `b` is the lexicographically minimal — hence *strictly extreme* —
+    vertex, as witnessed by `hbdir`.
+
+    The branch splits on the geometry of the base diagonal `a–c`:
+
+    * **base clear** (`hbase`: no vertex of `rest` on the closed diagonal).
+      Then the orientation clause of `EmptyCornerData2` is **free**: the tip is
+      strictly extreme, so `clip_orient_of_extreme_tip`
+      (`RequestProject.SAWUmlaufEarOrient`) supplies it.  Two sub-cases:
+      - `b` avoids both forbidden vertices: package the ear at `b` directly;
+      - `b` is forbidden: recurse on the clip `a :: c :: rest`, which requires
+        the clip to be cyclically non-degenerate, i.e. both new corners
+        non-flat.  Non-flat is the sorry-free `empty_branch_good_lift`; flat is
+        `empty_branch_flat_clip_lift`.
+    * **base blocked**: `empty_branch_base_blocked_lift`.
+
     Consumed by `meisters_reduction2`.
 
-    **Status: clean case proved; non-clean case `sorry`.**  The non-clean lift
-    re-inserts the convex apex `b` between `a` and `c`; the returned ear's tip
-    in `rest` keeps its cyclic neighbours, and `b` stays outside the lifted ear
-    triangle by `hbconv`.  The clip preservation is already available as
-    `clip_simple_nondeg_of_empty`; the residual content is the list-surgery
-    lift.  Recorded partial progress. -/
-lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
+    **Status: the orientation obstruction is gone** (it was one of the four
+    original obstructions of this branch); the two remaining ones are isolated
+    in the two lemmas above. -/
+lemma meisters_reduction_empty2 (N : ℕ) (hN : DichBelow N)
+    (V : List ℂ) (hlen : 4 ≤ V.length) (hVN : V.length ≤ N)
     (hsimple : PolygonSimple V) (hnd : polyCycNondeg V) (z1 z2 : ℂ)
     (hadj : z1 = z2 ∨ IsCycEdge V z1 z2)
     (IH2 : ∀ V' : List ℂ, V'.length < V.length → 4 ≤ V'.length →
@@ -673,13 +803,13 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
     (hbconv : ∀ x y w : ℂ, x ∈ V → y ∈ V → w ∈ V →
         ¬ HexArea.inTriangleStrict x y w b)
     (hbseg : ∀ u w : ℂ, u ∈ V → w ∈ V → b ≠ u → b ≠ w → b ∉ segment ℝ u w)
+    (hbdir : ∃ d : ℂ, ∀ y ∈ V, y ≠ b → 0 < HexArea.cdot d (y - b))
     (hcase : ∀ x ∈ rest, ¬ HexArea.inTriangleStrict a b c x) :
     EmptyCornerData2 V z1 z2 := by
   -- `rest` is nonempty: `V.length ≥ 5`, so `rest.length = V.length - 3 ≥ 2`.
-  have hrest_len : 2 ≤ rest.length := by
-    have hl := congrArg List.length hrot
-    simp only [List.length_rotate, List.length_cons] at hl
-    omega
+  have hlenrot := congrArg List.length hrot
+  simp only [List.length_rotate, List.length_cons] at hlenrot
+  have hrest_len : 2 ≤ rest.length := by omega
   obtain ⟨p, hp⟩ : ∃ p, rest.getLast? = some p := by
     cases hr : rest.getLast? with
     | none => exfalso; rw [List.getLast?_eq_none_iff] at hr; subst hr; simp at hrest_len
@@ -688,47 +818,42 @@ lemma meisters_reduction_empty2 (V : List ℂ) (hlen : 4 ≤ V.length)
     cases hr : rest.head? with
     | none => exfalso; rw [List.head?_eq_none_iff] at hr; subst hr; simp at hrest_len
     | some q => exact ⟨q, rfl⟩
-  by_cases hclean : (b ≠ z1 ∧ b ≠ z2) ∧ HexArea.cross (c - a) (p - a) ≠ 0 ∧
-      HexArea.cross (c - a) (q - a) ≠ 0 ∧
-      (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
-      ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
-  · -- **Clean case (proved).**  `b` avoids both forbidden vertices, both clip
-    -- endpoints `p, q` lie off the line `a–c`, no far vertex sits on the closed
-    -- diagonal, and the ear orientation matches the clip: assemble
-    -- `EmptyCornerData2` directly.
-    obtain ⟨⟨hbz1, hbz2⟩, hpl, hql, hdiag, horient⟩ := hclean
-    exact ⟨r, a, b, c, p, q, rest, hrot, hbz1, hbz2, hp, hq,
-      hcase, hdiag, horient⟩
-  · -- **Non-clean case.**  Split on whether the clip diagonal `a–c` is itself
-    -- *clean* (neighbours `p, q` off the line, no far vertex on the closed
-    -- diagonal, ear orientation matching).
-    by_cases hgood : HexArea.cross (c - a) (p - a) ≠ 0 ∧
-        HexArea.cross (c - a) (q - a) ≠ 0 ∧
-        (∀ x ∈ rest, x ∉ segment ℝ a c) ∧
-        ((0:ℝ) < HexArea.shoelace2 [a, b, c]
-          ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest))
-    · -- **Good-diagonal subcase (consumed by `empty_branch_good_lift`).**  The
-      -- diagonal is clean, so the only reason the corner failed the clean test
-      -- is that the apex `b` is a forbidden vertex.  Recurse on the clip and
-      -- lift; no polygon splitting needed.
-      obtain ⟨hpl, hql, hdiag, horient⟩ := hgood
+  by_cases hbase : ∀ x ∈ rest, x ∉ segment ℝ a c
+  · -- **Base clear.**  The orientation clause comes for free from the strict
+    -- extremality of the tip.
+    have hRs : PolygonSimple (a :: b :: c :: rest) :=
+      hrot ▸ (PolygonSimple_rotate V r).2 hsimple
+    have hD : HexArea.cross (b - a) (c - b) ≠ 0 :=
+      polyCycNondeg_rotate_head V a b c rest r (by omega) hnd hrot
+    have hmemV : ∀ y ∈ (a :: b :: c :: rest), y ∈ V := by
+      intro y hy
+      rw [← hrot] at hy
+      exact (List.mem_rotate).1 hy
+    obtain ⟨d, hd⟩ := hbdir
+    have horient : ((0:ℝ) < HexArea.shoelace2 [a, b, c]
+        ↔ (0:ℝ) < HexArea.shoelace2 (a :: c :: rest)) := by
+      refine clip_orient_of_extreme_tip N hN a b c rest (by omega)
+        (by intro h; rw [h] at hrest_len; simp at hrest_len) hRs hD hcase hbase d ?_
+      intro y hy hyb
+      exact hd y (hmemV y hy) hyb
+    by_cases hbz : b ≠ z1 ∧ b ≠ z2
+    · -- **Clean case.**  Package the ear at the extreme tip directly.
+      exact ⟨r, a, b, c, p, q, rest, hrot, hbz.1, hbz.2, hp, hq, hcase, hbase, horient⟩
+    · -- `b` is one of the two forbidden vertices: recurse on the clip.
       have hbf : b = z1 ∨ b = z2 := by
-        by_contra h
-        push_neg at h
-        exact hclean ⟨h, hpl, hql, hdiag, horient⟩
-      exact empty_branch_good_lift V (by omega) hsimple hnd z1 z2 hadj IH2 r a b c rest
-        p q hrot hbmem hbconv hbseg hp hq hpl hql hcase hdiag horient hbf
-    · -- **Bad-diagonal subcase (remaining Jordan gap).**  A clip neighbour is
-      -- collinear with `a–c`, or a far vertex sits on the *closed* diagonal, or
-      -- the ear orientation is reversed.  The clip is then no longer a clean
-      -- simple sub-polygon, so this case genuinely needs the polygon-split
-      -- machinery (as in `meisters_reduction_interior2`): a blocking vertex on
-      -- the diagonal yields a strictly-shorter interior diagonal to split
-      -- along.  This is the isolated remaining gap of the empty branch,
-      -- extracted into `empty_branch_bad_lift`.
-      exact empty_branch_bad_lift V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c rest
-        hrot hbmem hbconv hbseg hcase p q hp hq hrest_len hgood
+        by_cases h1 : b = z1
+        · exact Or.inl h1
+        · exact Or.inr (by by_contra h2; exact hbz ⟨h1, h2⟩)
+      by_cases hflat : HexArea.cross (c - a) (p - a) = 0 ∨ HexArea.cross (c - a) (q - a) = 0
+      · exact empty_branch_flat_clip_lift V (by omega) hsimple hnd z1 z2 hadj IH2 r a b c
+          rest p q hrot hbmem hbconv hbseg hp hq hcase hbase horient hbf hflat
+      · push_neg at hflat
+        exact empty_branch_good_lift V (by omega) hsimple hnd z1 z2 hadj IH2 r a b c rest
+          p q hrot hbmem hbconv hbseg hp hq hflat.1 hflat.2 hcase hbase horient hbf
+  · -- **Base blocked.**
+    push_neg at hbase
+    exact empty_branch_base_blocked_lift N hN V (by omega) hVN hsimple hnd z1 z2 hadj IH2
+      r a b c rest hrot hbmem hbconv hbseg hbdir hcase hbase
 
 /-- **The geometric reduction step of the Meisters two-ears search (two-forbidden
     form), now carrying the strong-induction hypothesis.**  Dispatches the
@@ -754,8 +879,8 @@ lemma meisters_reduction2 (N : ℕ) (hN : DichBelow N)
       rest hrot hbmem hbconv hbseg hbdir hcase w hwrest hwin hwmax
   · -- **Empty/diagonal branch.**
     push_neg at hcase
-    exact meisters_reduction_empty2 V hlen hsimple hnd z1 z2 hadj IH2 h4 r a b c
-      rest hrot hbmem hbconv hbseg hcase
+    exact meisters_reduction_empty2 N hN V hlen hVN hsimple hnd z1 z2 hadj IH2 h4 r a b c
+      rest hrot hbmem hbconv hbseg hbdir hcase
 
 /-! ⚠ **FALSE AS STATED — see `RequestProject.SAWUmlaufFlatClipCounterexample`.**
 The declaration below demands that clipping the ear leave a *cyclically
